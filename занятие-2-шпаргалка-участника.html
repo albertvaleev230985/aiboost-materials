@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Boost — Шпаргалка. Занятие 2. Промпт-инженерия</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --coral: #E07461;
+    --coral-light: #F5DDD8;
+    --coral-bg: #FFF8F6;
+    --dark: #1a1a2e;
+    --gray: #64748b;
+    --light-gray: #f1f5f9;
+    --white: #ffffff;
+    --green: #10b981;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --amber: #f59e0b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--white);
+    color: var(--dark);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--coral), #c75a49);
+    color: white;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .header-logo { font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; opacity: 0.85; margin-bottom: 12px; }
+  .header h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; line-height: 1.2; }
+  .header p { font-size: 14px; opacity: 0.9; }
+
+  .container { max-width: 680px; margin: 0 auto; padding: 0 20px; }
+
+  .section { margin: 28px 0; }
+  .section-title {
+    font-size: 18px; font-weight: 800; color: var(--dark); margin-bottom: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .num {
+    background: var(--coral); color: white; width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0;
+  }
+  .section-subtitle { font-size: 13px; color: var(--gray); margin-bottom: 12px; margin-left: 36px; }
+
+  /* Formula cards */
+  .formula-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 16px 0;
+  }
+  @media (max-width: 500px) { .formula-grid { grid-template-columns: repeat(5, 1fr); gap: 4px; } }
+  .formula-card {
+    border-radius: 12px; padding: 12px 8px; text-align: center; border: 2px solid;
+  }
+  .formula-card .letter { font-size: 28px; font-weight: 900; }
+  .formula-card .name { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .formula-card .desc { font-size: 10px; color: var(--gray); margin-top: 2px; }
+  .fc-r { border-color: var(--coral); background: #FFF8F6; } .fc-r .letter { color: var(--coral); }
+  .fc-k { border-color: var(--blue); background: #eff6ff; } .fc-k .letter { color: var(--blue); }
+  .fc-z { border-color: var(--green); background: #ecfdf5; } .fc-z .letter { color: var(--green); }
+  .fc-f { border-color: var(--purple); background: #f5f3ff; } .fc-f .letter { color: var(--purple); }
+  .fc-o { border-color: var(--amber); background: #fffbeb; } .fc-o .letter { color: var(--amber); }
+
+  /* Prompt boxes */
+  .prompt-box {
+    background: var(--light-gray); border-left: 4px solid var(--coral); border-radius: 0 12px 12px 0;
+    padding: 16px 18px; margin: 12px 0; font-size: 14px; line-height: 1.6;
+    position: relative; cursor: pointer; transition: background 0.2s; white-space: pre-line;
+  }
+  .prompt-box:hover { background: #e8ecf1; }
+  .prompt-box::after {
+    content: 'скопировать'; position: absolute; top: 8px; right: 12px;
+    font-size: 11px; color: var(--gray); opacity: 0.7;
+  }
+  .prompt-box.copied::after { content: 'скопировано!'; color: var(--green); opacity: 1; }
+  .prompt-box.blue { border-left-color: var(--blue); }
+  .prompt-box.green { border-left-color: var(--green); }
+  .prompt-box.purple { border-left-color: var(--purple); }
+  .prompt-box.amber { border-left-color: var(--amber); }
+
+  .prompt-label {
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 6px; margin-top: 16px;
+  }
+  .pl-coral { color: var(--coral); }
+  .pl-blue { color: var(--blue); }
+  .pl-green { color: var(--green); }
+  .pl-purple { color: var(--purple); }
+  .pl-amber { color: var(--amber); }
+
+  /* Participant tag */
+  .participant-tag {
+    display: inline-block; padding: 2px 8px; border-radius: 6px;
+    font-size: 11px; font-weight: 700; background: var(--coral-light); color: var(--coral);
+    margin-bottom: 4px;
+  }
+
+  /* Tip/Warning */
+  .tip { background: #fef3c7; border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0; display: flex; gap: 8px; align-items: flex-start; }
+  .tip-icon { flex-shrink: 0; font-size: 16px; }
+  .warning { background: #fee2e2; border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0; display: flex; gap: 8px; align-items: flex-start; }
+  .info { background: #dbeafe; border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0; display: flex; gap: 8px; align-items: flex-start; }
+
+  /* Phrases grid */
+  .phrases-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+  @media (max-width: 500px) { .phrases-grid { grid-template-columns: 1fr; } }
+  .phrase-item {
+    background: var(--light-gray); border-radius: 10px; padding: 10px 14px; font-size: 13px;
+    cursor: pointer; transition: background 0.2s; position: relative;
+  }
+  .phrase-item:hover { background: #e8ecf1; }
+  .phrase-item.copied { background: #d1fae5; }
+
+  /* Rules cards */
+  .rule-card {
+    border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; margin: 10px 0;
+  }
+  .rule-card h4 { font-size: 15px; font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .rule-card p { font-size: 13px; line-height: 1.6; color: var(--gray); }
+  .rule-num { background: var(--coral); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+
+  .divider { height: 1px; background: #e2e8f0; margin: 28px 0; }
+
+  .footer { text-align: center; padding: 24px; font-size: 12px; color: var(--gray); border-top: 1px solid #e2e8f0; margin-top: 32px; }
+  .footer strong { color: var(--coral); }
+
+  .pdf-btn {
+    position: fixed; bottom: 20px; right: 20px; background: var(--coral); color: white;
+    border: none; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 700;
+    cursor: pointer; box-shadow: 0 4px 20px rgba(224, 116, 97, 0.4); z-index: 1000; transition: transform 0.2s;
+  }
+  .pdf-btn:hover { transform: translateY(-2px); }
+
+  @media print {
+    .prompt-box::after { display: none; }
+    .header { padding: 20px; }
+    body { font-size: 12px; }
+    .pdf-btn { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<button class="pdf-btn" onclick="window.print()">Скачать PDF</button>
+
+<div class="header">
+  <div class="header-logo">neovida.ai / ai-boost</div>
+  <h1>Шпаргалка участника</h1>
+  <p>Занятие 2. Промпт-инженерия от А до Я &middot; 19.03.2026</p>
+</div>
+
+<div class="container">
+
+  <!-- 1. FORMULA -->
+  <div class="section">
+    <div class="section-title"><span class="num">1</span> Формула РКЗФО</div>
+    <div class="section-subtitle">5 элементов идеального промпта. Минимум: Роль + Задача + Формат.</div>
+
+    <div class="formula-grid">
+      <div class="formula-card fc-r"><div class="letter">Р</div><div class="name">Роль</div><div class="desc">Кем быть ИИ</div></div>
+      <div class="formula-card fc-k"><div class="letter">К</div><div class="name">Контекст</div><div class="desc">Фон, ситуация</div></div>
+      <div class="formula-card fc-z"><div class="letter">З</div><div class="name">Задача</div><div class="desc">Что сделать</div></div>
+      <div class="formula-card fc-f"><div class="letter">Ф</div><div class="name">Формат</div><div class="desc">Вид ответа</div></div>
+      <div class="formula-card fc-o"><div class="letter">О</div><div class="name">Огранич.</div><div class="desc">Чего НЕ делать</div></div>
+    </div>
+
+    <div class="prompt-label pl-coral">Полный пример</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты ресторанный консультант с 10-летним опытом в HoReCa.
+
+У меня крафтовый пивной бар «Шемрак» в Уфе. 50 посадочных мест, средний чек 800 руб. Основная аудитория мужчины 25-45 лет. Будние дни загружены на 30%, выходные на 90%.
+
+Предложи 5 идей для акций, чтобы увеличить посещаемость в будние дни (пн-чт).
+
+Формат: таблица с колонками: название акции, описание (2-3 предложения), примерный бюджет, ожидаемый прирост.
+
+Ограничения:
+- Бюджет до 10 000 руб/мес на каждую
+- Без скидок более 20%
+- Реализуемо без доп. персонала</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 2. READY PROMPTS BY PARTICIPANT -->
+  <div class="section">
+    <div class="section-title"><span class="num">2</span> Готовые промпты для каждого</div>
+    <div class="section-subtitle">Скопируйте, вставьте в ChatGPT и получите результат</div>
+
+    <!-- АЙРАТ -->
+    <div class="participant-tag" style="margin-top: 12px;">Айрат &mdash; навесы</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты опытный менеджер по продажам металлоконструкций с 10-летним стажем.
+
+У меня компания по производству и установке навесов в Уфе. Работаем по Башкортостану. Навесы из поликарбоната, профнастила, металлочерепицы. Цены от 45 000 до 200 000 руб. с монтажом. 3 бригады. Срок установки 1-3 дня.
+
+Напиши 5 шаблонов ответов клиентам в WhatsApp на самые частые вопросы:
+1. Сколько стоит навес для машины?
+2. Какой материал лучше?
+3. Как быстро сделаете?
+4. Можно посмотреть ваши работы?
+5. А монтаж входит в цену?
+
+Формат: вопрос клиента, затем готовый ответ (3-4 предложения, дружелюбно, с призывом к действию).
+
+НЕ используй: «уникальный», «лучший на рынке», «индивидуальный подход».</div>
+
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты маркетолог, специализирующийся на строительных услугах.
+
+У меня компания по навесам в Уфе. Основные клиенты: владельцы частных домов, 35-55 лет.
+
+Напиши 3 поста для Instagram:
+1. До/после установки навеса
+2. Как выбрать материал для навеса (поликарбонат vs профнастил)
+3. Зимний навес: почему лучше ставить сейчас
+
+Формат: текст 100-150 слов, с эмодзи, призыв оставить заявку.
+Тон: экспертный, но простой.</div>
+
+    <!-- МАРАТ -->
+    <div class="participant-tag" style="margin-top: 20px;">Марат &mdash; пивной бар</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты опытный ресторанный маркетолог.
+
+У меня крафтовый пивной бар «Шемрак» в Уфе. 50 посадочных мест, средний чек 800 руб. Аудитория: мужчины 25-45 лет. Проблема: будние дни загружены на 30%.
+
+Составь контент-план на неделю для Instagram:
+- Понедельник по воскресенье, 1 пост в день
+- Чередуй: акции, закулисье, новинки, опросы, отзывы
+
+Формат: таблица. День, тема, текст поста (50-80 слов), хэштеги (5 штук).
+НЕ используй: банальные фразы, слово «уникальный», больше 3 эмодзи в посте.</div>
+
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты бар-менеджер с опытом крафтовых баров.
+
+Мне нужно обновить пивную карту. Сейчас 12 кранов. Аудитория: 70% пьют лагеры и пшеничное, 30% готовы пробовать новое.
+
+Рассуждай пошагово:
+1. Какое оптимальное соотношение стилей (лагер, эль, IPA, стаут, кислые)?
+2. Сколько позиций оставить «классических», сколько «ротация»?
+3. Средняя наценка на крафт в Уфе?
+4. Как подать новинку, чтобы гости решились попробовать?
+5. Итоговая рекомендация: список из 12 позиций по стилям.</div>
+
+    <!-- АЙГУЛЬ -->
+    <div class="participant-tag" style="margin-top: 20px;">Айгуль &mdash; детский центр</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты педагог-методист детских развивающих центров с 15-летним опытом.
+
+У меня детский центр в Уфе. Занятия для детей 3-10 лет: подготовка к школе, творчество, английский. Группы до 6 человек. 4 педагога.
+
+Составь программу летнего интенсива «Креативное лето» на 2 недели:
+- Возраст: 5-7 лет
+- 5 дней в неделю, 3 часа в день (10:00-13:00)
+- Каждый день: тема + 3 активности + перерыв
+
+Формат: таблица по дням. День, тема дня, активность 1, активность 2, активность 3, материалы.
+
+Ограничения: без гаджетов, без сложных материалов, всё должно быть в помещении.</div>
+
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты копирайтер для детских образовательных центров.
+
+Мне нужно написать 5 ответов родителям на типичные возражения:
+1. «Слишком дорого, 3000 в месяц за развивашки»
+2. «Ребёнок и так ходит в садик, зачем ещё центр?»
+3. «А у вас педагоги с образованием?»
+4. «Мы попробовали, ребёнку не понравилось»
+5. «А можно разовое посещение без абонемента?»
+
+Формат: возражение, затем ответ (3-4 предложения). Тон: тёплый, понимающий, без давления.
+НЕ используй: «индивидуальный подход», «качественные услуги».</div>
+
+    <!-- ИСКАНДЕР -->
+    <div class="participant-tag" style="margin-top: 20px;">Искандер &mdash; запчасти с/х техники</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты эксперт по сельскохозяйственной технике и запчастям.
+
+У меня магазин запчастей для тракторов и комбайнов в Башкортостане. Основные бренды: МТЗ, ЮМЗ, Т-150, комбайны «Акрос», «Вектор». Клиенты: фермеры, КФХ, совхозы.
+
+Составь каталог 10 самых ходовых запчастей для трактора МТЗ-82.
+
+Формат таблицы:
+1. Название запчасти
+2. Каталожный номер
+3. Средняя цена (опт/розница)
+4. Аналоги (OEM и неоригинал)
+5. Частота замены / когда менять
+6. Описание для сайта (1-2 предложения)
+
+Рассуждай пошагово: что чаще всего ломается, что покупают к сезону.</div>
+
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты менеджер по продажам запчастей для сельхозтехники.
+
+Клиент звонит и говорит: «У меня МТЗ-82, стучит двигатель, что может быть и какие запчасти нужны?»
+
+Рассуждай пошагово:
+1. Какие вопросы задать клиенту для диагностики?
+2. Какие 3 самых вероятных причины стука?
+3. Для каждой причины: какие запчасти нужны, примерная стоимость
+4. Готовый ответ клиенту (профессионально, но понятно)</div>
+
+    <!-- ИЛЬГИЗ -->
+    <div class="participant-tag" style="margin-top: 20px;">Ильгиз &mdash; газовое оборудование</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты опытный консультант по газовому оборудованию с 10-летним стажем.
+
+Клиент строит частный дом в Уфе, 120 кв.м. в 2 этажа. Нужно подобрать систему отопления на газу.
+
+Рассуждай пошагово:
+1. Какой тип котла (настенный/напольный, одноконтурный/двухконтурный)?
+2. Какая мощность нужна?
+3. Радиаторы или тёплый пол?
+4. Какой бренд в соотношении цена/качество?
+5. Примерный бюджет (оборудование + монтаж)
+6. Какие документы нужны для подключения газа?
+
+Формат: ответ клиенту, понятным языком, без лишнего жаргона. В конце: таблица с итоговой сметой.</div>
+
+    <!-- МИХАИЛ Г. -->
+    <div class="participant-tag" style="margin-top: 20px;">Михаил Г. &mdash; телекоммуникации</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты ведущий инженер телекоммуникаций, специалист по проектированию сетей.
+
+Задача: подготовить техническое задание на подключение коттеджного посёлка (30 домов) к оптоволоконному интернету. Расстояние от ближайшего узла связи 5 км.
+
+Составь ТЗ со следующими разделами:
+1. Общие сведения (объект, расстояние, количество абонентов)
+2. Технические требования (тип оптики, топология, оборудование)
+3. Перечень работ (этапы от проекта до сдачи)
+4. Перечень оборудования и материалов (таблица: наименование, количество, ед. измерения)
+5. Сроки выполнения
+6. Ориентировочная стоимость
+
+Формат: структурированный документ, готовый к согласованию.</div>
+
+    <!-- МИХАИЛ -->
+    <div class="participant-tag" style="margin-top: 20px;">Михаил &mdash; строительство линий связи</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты прораб с опытом строительства линий связи.
+
+Мне нужно составить план работ на прокладку оптоволоконной линии длиной 8 км по сельской местности. Условия: грунт средней сложности, переход через 2 дороги, 1 переход через реку (малая).
+
+Составь поэтапный план:
+1. Подготовительные работы (согласования, разрешения)
+2. Земляные работы (траншея, ГНБ на переходах)
+3. Прокладка кабеля
+4. Монтаж муфт и сварка
+5. Измерения и тестирование
+6. Сдача объекта
+
+Для каждого этапа укажи: сроки (в днях), состав бригады, основные материалы, на что обратить внимание.
+
+Формат: таблица.</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 3. TECHNIQUES -->
+  <div class="section">
+    <div class="section-title"><span class="num">3</span> 4 техники промптинга</div>
+    <div class="section-subtitle">Фразы, которые делают любой промпт мощнее</div>
+
+    <div class="rule-card">
+      <h4><span class="rule-num" style="background: var(--blue);">1</span> Few-shot: покажи пример</h4>
+      <p>Вместо объяснений покажите ИИ пример «как надо». Вставьте своё прошлое сообщение клиенту и скажите: «Напиши ещё одно в таком же стиле».</p>
+    </div>
+
+    <div class="rule-card">
+      <h4><span class="rule-num" style="background: var(--green);">2</span> Рассуждай пошагово</h4>
+      <p>Добавьте «Рассуждай пошагово» и перечислите 3-5 шагов. ИИ покажет ход мысли и не пропустит важное.</p>
+    </div>
+
+    <div class="rule-card">
+      <h4><span class="rule-num" style="background: var(--purple);">3</span> Итерации + запреты</h4>
+      <p>Первый ответ это черновик. Правьте: «короче», «другой тон», «3 варианта». Запрещайте штампы: «НЕ используй слово уникальный».</p>
+    </div>
+
+    <div class="rule-card">
+      <h4><span class="rule-num" style="background: var(--amber);">4</span> «Задай мне вопросы»</h4>
+      <p>Самая мощная техника. Напишите: «Я хочу [задача]. Задай мне уточняющие вопросы, прежде чем начинать». ИИ сам спросит, чего ему не хватает.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 4. PHRASE BOOSTERS -->
+  <div class="section">
+    <div class="section-title"><span class="num">4</span> Фразы-усилители</div>
+    <div class="section-subtitle">Скопируйте и добавляйте к любому промпту</div>
+
+    <div class="prompt-label pl-blue">Улучшить ответ</div>
+    <div class="phrases-grid">
+      <div class="phrase-item" onclick="copyExample(this)">Хорошо, но сделай короче</div>
+      <div class="phrase-item" onclick="copyExample(this)">Измени тон на более дружелюбный</div>
+      <div class="phrase-item" onclick="copyExample(this)">Дай 3 варианта: формальный, дружелюбный, дерзкий</div>
+      <div class="phrase-item" onclick="copyExample(this)">Оставь структуру, но поменяй примеры на мои</div>
+      <div class="phrase-item" onclick="copyExample(this)">Это не то. Я имел в виду... Попробуй ещё раз</div>
+      <div class="phrase-item" onclick="copyExample(this)">Задай мне уточняющие вопросы, прежде чем отвечать</div>
+    </div>
+
+    <div class="prompt-label pl-green">Углубить анализ</div>
+    <div class="phrases-grid">
+      <div class="phrase-item" onclick="copyExample(this)">Рассуждай пошагово</div>
+      <div class="phrase-item" onclick="copyExample(this)">Какие риски я не учёл?</div>
+      <div class="phrase-item" onclick="copyExample(this)">Приведи конкретные цифры и примеры</div>
+      <div class="phrase-item" onclick="copyExample(this)">Сравни 3 варианта в таблице: плюсы, минусы, цена</div>
+    </div>
+
+    <div class="prompt-label pl-amber">Запретить штампы</div>
+    <div class="phrases-grid">
+      <div class="phrase-item" onclick="copyExample(this)">НЕ используй слово «уникальный»</div>
+      <div class="phrase-item" onclick="copyExample(this)">НЕ используй канцеляризмы: «данный», «осуществлять»</div>
+      <div class="phrase-item" onclick="copyExample(this)">НЕ используй: «качественные услуги», «индивидуальный подход»</div>
+      <div class="phrase-item" onclick="copyExample(this)">Без воды, только конкретика</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 5. CONTEXT WINDOW -->
+  <div class="section">
+    <div class="section-title"><span class="num">5</span> Память ИИ: 4 правила</div>
+    <div class="section-subtitle">Как не потерять качество ответов в длинных диалогах</div>
+
+    <div class="info">
+      <span class="tip-icon">i</span>
+      <span>У бесплатного ChatGPT «память» ~100 страниц. Когда заполняется, ИИ начинает забывать начало. А середину он теряет даже раньше.</span>
+    </div>
+
+    <div class="rule-card">
+      <h4><span class="rule-num">1</span> Ключевое в начало и конец</h4>
+      <p>Для длинных промптов (10+ строк): самое важное требование ставьте первой строкой и дублируйте последней. Для коротких промптов это не нужно.</p>
+    </div>
+
+    <div class="rule-card">
+      <h4><span class="rule-num">2</span> Нумеруйте, не пишите стеной</h4>
+      <p>Нумерованный список ИИ понимает лучше, чем сплошной текст. Не пропустит ни одного пункта.</p>
+    </div>
+
+    <div class="rule-card">
+      <h4><span class="rule-num">3</span> Новый чат = чистая память</h4>
+      <p>Если чат длиннее 15-20 сообщений или ИИ начал «тупить», начните новый. Одна задача = один чат.</p>
+    </div>
+
+    <div class="rule-card">
+      <h4><span class="rule-num">4</span> Резюмируйте длинные диалоги</h4>
+      <p>Напишите: «Давай подведём итог: 1... 2... 3... Продолжим.» ИИ «вспомнит» весь контекст.</p>
+    </div>
+
+    <div class="prompt-label pl-coral">Шаблон резюме (скопируйте)</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Давай подведём итог нашего разговора:
+1. Мы обсуждаем [тема]
+2. Мы решили, что [решение]
+3. Ты предложил [идея]
+4. Мне понравился вариант [какой]
+
+Продолжим с этим. Теперь сделай [следующий шаг].</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 6. VOICE HACK -->
+  <div class="section">
+    <div class="section-title"><span class="num">6</span> Лайфхак: наговори голосом</div>
+    <div class="section-subtitle">Не обязательно писать по формуле. ИИ сам создаст промпт.</div>
+
+    <div class="tip">
+      <span class="tip-icon">*</span>
+      <span>Нажмите на микрофон в ChatGPT. Расскажите задачу своими словами, как рассказали бы другу. Потом отправьте эту фразу:</span>
+    </div>
+
+    <div class="prompt-box green" onclick="copyPrompt(this)">Я описал задачу своими словами, возможно сумбурно.
+
+Сделай следующее:
+1. Упакуй мою мысль в структурированный промпт (определи роль, контекст, задачу, формат, ограничения)
+2. Задай мне уточняющие вопросы, если чего-то не хватает
+3. Примени все правила промпт-инженерии
+4. Выполни получившийся промпт</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 7. MISTAKES -->
+  <div class="section">
+    <div class="section-title"><span class="num">7</span> 5 ошибок новичков</div>
+    <div class="section-subtitle">Запомните и не повторяйте</div>
+
+    <div class="warning">
+      <span class="tip-icon">!</span>
+      <span><strong>Размытый запрос.</strong> «Напиши текст про навесы» &rarr; «Описание навеса 3x6 м для сайта, 150 слов, продающий тон»</span>
+    </div>
+    <div class="warning">
+      <span class="tip-icon">!</span>
+      <span><strong>Всё в одном.</strong> «Бизнес-план + окупаемость + презентация» &rarr; Разбейте на 3 отдельных запроса</span>
+    </div>
+    <div class="warning">
+      <span class="tip-icon">!</span>
+      <span><strong>Нет контекста.</strong> «Какую цену поставить?» &rarr; «Закупка 450, конкуренты 700-900, мой плюс: доставка за день»</span>
+    </div>
+    <div class="warning">
+      <span class="tip-icon">!</span>
+      <span><strong>Первый ответ = финальный.</strong> Не копируйте сразу. Оцените, улучшите, проверьте.</span>
+    </div>
+    <div class="warning">
+      <span class="tip-icon">!</span>
+      <span><strong>Не проверяет факты.</strong> ИИ может ошибаться. Цифры, даты, законы всегда проверяйте!</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 8. HOMEWORK -->
+  <div class="section">
+    <div class="section-title"><span class="num">8</span> Домашнее задание</div>
+    <div class="section-subtitle">Две части. Обе важные для следующего урока.</div>
+
+    <div class="rule-card" style="border-color: var(--coral); background: #FFF8F6;">
+      <h4 style="color: var(--coral);">Часть 1: 3 промпта по формуле РКЗФО</h4>
+      <p>Напишите 3 промпта для реальных рабочих задач. Минимум: Роль + Контекст + Задача. Попробуйте хотя бы один раз наговорить голосом. Скриншоты (промпт + ответ) скиньте в Telegram-чат.</p>
+    </div>
+
+    <div class="rule-card" style="border-color: var(--green); background: #ecfdf5;">
+      <h4 style="color: var(--green);">Часть 2: Описание рабочих процессов (ГЛАВНАЯ)</h4>
+      <p>Опишите ВСЕ свои рабочие процессы. Что делаете каждый день? Какие задачи повторяются? На что уходит время? Чем подробнее напишете, тем мощнее будет ваш персональный ИИ-ассистент на следующем уроке.</p>
+    </div>
+
+    <div class="prompt-label pl-green">Шаблон для описания процессов (скопируйте)</div>
+    <div class="prompt-box green" onclick="copyPrompt(this)">МОИ РАБОЧИЕ ПРОЦЕССЫ
+
+1. [Процесс]: ответы клиентам в WhatsApp
+   - Как часто: 10-15 раз в день
+   - Что делаю: отвечаю на вопросы про цены, размеры, сроки
+   - Сколько времени: ~2 часа в день
+   - Что бесит: каждый раз одно и то же печатаю
+
+2. [Процесс]: составление коммерческих предложений
+   - Как часто: 2-3 раза в неделю
+   - Что делаю: считаю материалы, пишу описание, оформляю
+   - Сколько времени: 1-2 часа на каждое
+   - Что бесит: много ручной работы
+
+3. [Процесс]: ...
+4. [Процесс]: ...
+5. [Процесс]: ...</div>
+
+    <div class="tip">
+      <span class="tip-icon">*</span>
+      <span><strong>Лайфхак:</strong> наговорите голосом в ChatGPT: «Я работаю [кем]. Помоги составить список моих ежедневных рабочих процессов.» Он задаст вопросы, ответьте, и получите готовый список.</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <strong>neovida.ai</strong> / AI Boost &middot; Очный курс &middot; Занятие 2<br>
+  Промпт это не технология. Это умение формулировать мысль.
+</div>
+
+<script>
+function copyPrompt(el) {
+  const text = el.innerText.replace(/скопировать|скопировано!/g, '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    el.classList.add('copied');
+    setTimeout(() => el.classList.remove('copied'), 2000);
+  });
+}
+function copyExample(el) {
+  navigator.clipboard.writeText(el.innerText.trim()).then(() => {
+    el.classList.add('copied');
+    setTimeout(() => el.classList.remove('copied'), 2000);
+  });
+}
+</script>
+
+</body>
+</html>

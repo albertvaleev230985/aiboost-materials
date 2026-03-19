@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Boost — Занятие 2. Промпт-инженерия</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --coral: #E07461;
+    --coral-dark: #c75a49;
+    --blue: #3b82f6;
+    --blue-dark: #1d4ed8;
+    --purple: #8b5cf6;
+    --green: #10b981;
+    --amber: #f59e0b;
+    --dark: #0f172a;
+    --gray: #64748b;
+    --light: #f8fafc;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--dark);
+    color: #e2e8f0;
+    overflow: hidden;
+    height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .slide {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    padding: 60px 80px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+  }
+  .slide.active { display: flex; }
+  .slide.left { text-align: left; align-items: flex-start; }
+
+  /* Slide backgrounds */
+  .slide-title { background: linear-gradient(135deg, var(--coral), var(--coral-dark)); }
+  .slide-section { background: linear-gradient(135deg, #1e293b, #0f172a); }
+  .slide-theory { background: #0f172a; }
+  .slide-practice { background: linear-gradient(135deg, #064e3b, #022c22); }
+  .slide-demo { background: linear-gradient(135deg, #1e1b4b, #0f172a); }
+  .slide-break { background: linear-gradient(135deg, #78350f, #451a03); }
+
+  /* Typography */
+  .logo { font-size: 14px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; opacity: 0.6; margin-bottom: 20px; }
+  h1 { font-size: 64px; font-weight: 900; line-height: 1.1; margin-bottom: 16px; }
+  h2 { font-size: 48px; font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
+  h3 { font-size: 36px; font-weight: 700; line-height: 1.3; margin-bottom: 12px; }
+  .subtitle { font-size: 22px; font-weight: 400; opacity: 0.8; max-width: 700px; line-height: 1.5; }
+  .big-text { font-size: 28px; line-height: 1.6; max-width: 900px; }
+  .medium-text { font-size: 22px; line-height: 1.6; max-width: 850px; }
+
+  /* Tags */
+  .tag { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; }
+  .tag-theory { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+  .tag-practice { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+  .tag-demo { background: rgba(139,92,246,0.2); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.3); }
+  .tag-tip { background: rgba(245,158,11,0.2); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+  .tag-error { background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+
+  /* Code blocks */
+  .code-block {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 28px 32px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 18px;
+    line-height: 1.7;
+    text-align: left;
+    max-width: 850px;
+    width: 100%;
+    white-space: pre-wrap;
+    margin: 16px 0;
+  }
+  .code-block.small { font-size: 15px; padding: 20px 24px; }
+  .code-block.bad { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.05); }
+  .code-block.good { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.05); }
+
+  /* Table */
+  .slide-table {
+    border-collapse: collapse;
+    margin: 16px auto;
+    font-size: 20px;
+  }
+  .slide-table th {
+    background: var(--coral);
+    color: white;
+    padding: 14px 24px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .slide-table td {
+    padding: 14px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .slide-table tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+  .slide-table .hl { color: var(--coral); font-weight: 700; font-size: 24px; }
+
+  /* Two-column */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    width: 100%;
+    max-width: 1000px;
+    margin: 16px 0;
+  }
+  .col {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 24px 28px;
+    text-align: left;
+  }
+  .col h4 { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+  .col p, .col li { font-size: 17px; line-height: 1.6; }
+  .col.bad-col { border-color: rgba(239,68,68,0.3); }
+  .col.bad-col h4 { color: #fca5a5; }
+  .col.good-col { border-color: rgba(16,185,129,0.3); }
+  .col.good-col h4 { color: #6ee7b7; }
+
+  /* Lists */
+  .check-list { list-style: none; text-align: left; font-size: 22px; }
+  .check-list li { padding: 8px 0; display: flex; gap: 12px; align-items: flex-start; }
+  .check-list .icon { flex-shrink: 0; width: 28px; text-align: center; }
+
+  /* Highlight */
+  .hl { color: var(--coral); }
+  .hl-blue { color: #93c5fd; }
+  .hl-green { color: #6ee7b7; }
+  .hl-purple { color: #c4b5fd; }
+  .hl-amber { color: #fcd34d; }
+
+  /* RKZFO blocks */
+  .formula-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    max-width: 900px;
+    margin: 24px 0;
+  }
+  .formula-item {
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 20px 16px;
+    text-align: center;
+  }
+  .formula-item .letter {
+    font-size: 42px;
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+  .formula-item .name {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    opacity: 0.9;
+  }
+  .formula-item .desc {
+    font-size: 13px;
+    opacity: 0.6;
+    line-height: 1.4;
+  }
+  .fi-r { border-color: var(--coral); }
+  .fi-r .letter { color: var(--coral); }
+  .fi-k { border-color: var(--blue); }
+  .fi-k .letter { color: #93c5fd; }
+  .fi-z { border-color: var(--green); }
+  .fi-z .letter { color: #6ee7b7; }
+  .fi-f { border-color: var(--purple); }
+  .fi-f .letter { color: #c4b5fd; }
+  .fi-o { border-color: var(--amber); }
+  .fi-o .letter { color: #fcd34d; }
+
+  /* Navigation */
+  .nav {
+    position: fixed;
+    bottom: 24px;
+    right: 32px;
+    display: flex;
+    gap: 12px;
+    z-index: 100;
+  }
+  .nav button {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav button:hover { background: rgba(255,255,255,0.2); }
+  .slide-counter {
+    position: fixed;
+    bottom: 32px;
+    left: 32px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.3);
+    z-index: 100;
+  }
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 4px;
+    background: var(--coral);
+    transition: width 0.3s;
+    z-index: 100;
+  }
+
+  /* Participant table */
+  .participants-table {
+    border-collapse: collapse;
+    margin: 12px auto;
+    font-size: 18px;
+  }
+  .participants-table td {
+    padding: 10px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .participants-table td:first-child {
+    font-weight: 700;
+    color: var(--coral);
+  }
+
+  /* Animated highlight */
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+  .pulse { animation: pulse 2s infinite; }
+
+  /* Phrase cards */
+  .phrase-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    max-width: 850px;
+    margin: 16px 0;
+  }
+  .phrase-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-size: 17px;
+    text-align: left;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: TITLE -->
+<div class="slide slide-title active" id="s1">
+  <div class="logo">neovida.ai / ai-boost</div>
+  <h1>Промпт-инженерия</h1>
+  <h1 style="font-weight: 300; font-size: 48px; opacity: 0.9;">от А до Я</h1>
+  <div class="subtitle" style="margin-top: 24px;">Занятие 2 &middot; 19 марта 2026</div>
+</div>
+
+<!-- SLIDE 2: AGENDA -->
+<div class="slide slide-section" id="s2">
+  <h2>Сегодня вы научитесь</h2>
+  <ul class="check-list" style="margin-top: 24px;">
+    <li><span class="icon hl">1</span> Писать промпты по формуле <span class="hl">РКЗФО</span></li>
+    <li><span class="icon hl-blue">2</span> Использовать 4 мощных техники</li>
+    <li><span class="icon hl-green">3</span> Понимать «память» ИИ и работать с ней</li>
+    <li><span class="icon hl-purple">4</span> Создавать промпты голосом</li>
+    <li><span class="icon hl-amber">5</span> Готовить фундамент для ИИ-ассистента</li>
+  </ul>
+</div>
+
+<!-- SLIDE 3: BAD vs GOOD -->
+<div class="slide slide-section" id="s3">
+  <span class="tag tag-demo">Демонстрация</span>
+  <h2>Без ТЗ = результат ХЗ</h2>
+  <div class="two-col" style="margin-top: 24px;">
+    <div class="col bad-col">
+      <h4>Плохой промпт</h4>
+      <p style="font-family: monospace; font-size: 20px; margin-top: 12px; opacity: 0.8;">Напиши текст про навесы</p>
+    </div>
+    <div class="col good-col">
+      <h4>Хороший промпт</h4>
+      <p style="font-family: monospace; font-size: 15px; margin-top: 12px; opacity: 0.8; line-height: 1.6;">Ты маркетолог. Описание навеса 3x6 м из поликарбоната для сайта. Цена от 89 000 руб. Регион: Уфа. Структура: заголовок, боли, характеристики, призыв. 200 слов. Тон экспертный.</p>
+    </div>
+  </div>
+  <div class="subtitle" style="margin-top: 20px;">Как вы ставите задачу сотруднику, так и ставите задачу ИИ</div>
+</div>
+
+<!-- SLIDE 4: SECTION RKZFO -->
+<div class="slide slide-title" id="s4">
+  <div class="logo">Формула</div>
+  <h1>Р К З Ф О</h1>
+  <div class="subtitle">5 элементов идеального промпта</div>
+</div>
+
+<!-- SLIDE 5: RKZFO FORMULA -->
+<div class="slide slide-theory" id="s5">
+  <span class="tag tag-theory">Теория</span>
+  <h3>Формула РКЗФО</h3>
+  <div class="formula-grid">
+    <div class="formula-item fi-r">
+      <div class="letter">Р</div>
+      <div class="name">Роль</div>
+      <div class="desc">Кем должен быть ИИ</div>
+    </div>
+    <div class="formula-item fi-k">
+      <div class="letter">К</div>
+      <div class="name">Контекст</div>
+      <div class="desc">Фон, ситуация</div>
+    </div>
+    <div class="formula-item fi-z">
+      <div class="letter">З</div>
+      <div class="name">Задача</div>
+      <div class="desc">Что сделать</div>
+    </div>
+    <div class="formula-item fi-f">
+      <div class="letter">Ф</div>
+      <div class="name">Формат</div>
+      <div class="desc">В каком виде ответ</div>
+    </div>
+    <div class="formula-item fi-o">
+      <div class="letter">О</div>
+      <div class="name">Ограничения</div>
+      <div class="desc">Чего НЕ делать</div>
+    </div>
+  </div>
+  <div class="subtitle">Минимум: <span class="hl">Роль</span> + <span class="hl-green">Задача</span> + <span class="hl-purple">Формат</span></div>
+</div>
+
+<!-- SLIDE 6: ROLE -->
+<div class="slide slide-theory" id="s6">
+  <span class="tag tag-theory">Теория</span>
+  <h3>Почему <span class="hl">Роль</span> решает всё</h3>
+  <div class="two-col" style="margin-top: 24px;">
+    <div class="col bad-col">
+      <h4>Без роли</h4>
+      <p style="font-size: 18px; margin-top: 8px;">ИИ даёт «ответ из Википедии»</p>
+      <p style="font-size: 15px; opacity: 0.6; margin-top: 8px;">Общий, поверхностный, без нюансов</p>
+    </div>
+    <div class="col good-col">
+      <h4>С ролью</h4>
+      <p style="font-size: 18px; margin-top: 8px;">ИИ даёт «консультацию эксперта»</p>
+      <p style="font-size: 15px; opacity: 0.6; margin-top: 8px;">Терминология, нюансы, структура профи</p>
+    </div>
+  </div>
+  <div class="code-block small" style="margin-top: 24px; max-width: 600px;">«Ты [профессия] с [X]-летним опытом в [область]»</div>
+</div>
+
+<!-- SLIDE 7: ROLES TABLE -->
+<div class="slide slide-practice" id="s7">
+  <span class="tag tag-practice">Практика</span>
+  <h3>Ваши роли</h3>
+  <div class="subtitle" style="margin-bottom: 20px;">Напишите запрос БЕЗ роли. Потом добавьте роль. Сравните.</div>
+  <table class="participants-table">
+    <tr><td>Ильгиз</td><td>Ты опытный консультант по газовому оборудованию</td></tr>
+    <tr><td>Айгуль</td><td>Ты педагог-методист детских центров с 10-летним опытом</td></tr>
+    <tr><td>Михаил Г.</td><td>Ты ведущий инженер телекоммуникаций</td></tr>
+    <tr><td>Михаил</td><td>Ты прораб с опытом строительства линий связи</td></tr>
+    <tr><td>Искандер</td><td>Ты эксперт по сельхозтехнике и запчастям</td></tr>
+    <tr><td>Марат</td><td>Ты ресторанный консультант в сфере баров</td></tr>
+    <tr><td>Айрат</td><td>Ты инженер-конструктор металлических навесов</td></tr>
+  </table>
+</div>
+
+<!-- SLIDE 8: SECTION TECHNIQUES -->
+<div class="slide slide-title" id="s8">
+  <div class="logo">Блок 2</div>
+  <h1>4 техники</h1>
+  <div class="subtitle">Которые делают промпты мощнее</div>
+</div>
+
+<!-- SLIDE 9: FEW-SHOT THEORY -->
+<div class="slide slide-theory" id="s9">
+  <span class="tag tag-theory">Техника 1</span>
+  <h2>Few-shot</h2>
+  <h3 style="font-weight: 400; opacity: 0.8;">Покажи пример</h3>
+  <div class="big-text" style="margin-top: 24px;">
+    Вместо того чтобы <em>объяснять</em> ИИ, что вы хотите,<br>
+    <span class="hl">покажите ему пример</span>
+  </div>
+  <div class="subtitle" style="margin-top: 16px;">Как с новым сотрудником: дайте старый отчёт и скажите «делай так же»</div>
+</div>
+
+<!-- SLIDE 10: FEW-SHOT EXAMPLE 1 -->
+<div class="slide slide-demo left" id="s10">
+  <span class="tag tag-demo">Пример &mdash; Айрат</span>
+  <h3>Ответы клиентам по шаблону</h3>
+  <div class="code-block small">Напиши ответ клиенту по шаблону. Примеры:
+
+Клиент: «Сколько стоит навес 3x4?»
+Ответ: «Добрый день! Навес 3x4 м с монтажом от 65 000 руб.
+Точная цена зависит от материала. Пришлите фото участка,
+подготовлю 2-3 варианта с ценами. Айрат, 8-917-XXX»
+
+Теперь ответь на: «Делаете ли навесы из профнастила?»</div>
+</div>
+
+<!-- SLIDE 11: FEW-SHOT EXAMPLE 2 -->
+<div class="slide slide-demo left" id="s11">
+  <span class="tag tag-demo">Пример &mdash; Айгуль</span>
+  <h3>Ответы родителям</h3>
+  <div class="code-block small">Ответь родителю в стиле моих предыдущих сообщений:
+
+Родитель: «Мой ребёнок не хочет идти на занятие»
+Ответ: «Здравствуйте! Это нормальный этап. Давайте попробуем:
+приходите на 15 минут раньше, чтобы ребёнок освоился.
+Обычно к 3-му занятию дети втягиваются»
+
+Теперь ответь на: «Ребёнок стесняется других детей в группе»</div>
+</div>
+
+<!-- SLIDE 12: FEW-SHOT EXAMPLE 3 -->
+<div class="slide slide-demo left" id="s12">
+  <span class="tag tag-demo">Пример &mdash; Марат</span>
+  <h3>Посты для соцсетей</h3>
+  <div class="code-block small">Напиши пост в стиле моих предыдущих:
+
+Пример: «Четверг = день новинок. На кранах бельгийский
+витбир с кориандром и апельсиновой цедрой. Первые 10 бокалов
+250 руб вместо 350. Кто первый? Шемрак, ул. Ленина 42»
+
+Теперь напиши пост: анонс живой музыки в пятницу вечером</div>
+</div>
+
+<!-- SLIDE 13: FEW-SHOT PRACTICE -->
+<div class="slide slide-practice" id="s13">
+  <span class="tag tag-practice">Практика &mdash; 3 мин</span>
+  <h2>Попробуйте сейчас</h2>
+  <div class="big-text" style="margin-top: 20px;">
+    Возьмите ЛЮБОЕ своё прошлое сообщение<br>
+    клиенту или коллеге.<br><br>
+    Вставьте его как <span class="hl">пример</span><br>
+    и попросите написать ещё одно по шаблону.
+  </div>
+</div>
+
+<!-- SLIDE 14: CHAIN OF THOUGHT -->
+<div class="slide slide-theory" id="s14">
+  <span class="tag tag-theory">Техника 2</span>
+  <h2>Рассуждай пошагово</h2>
+  <h3 style="font-weight: 400; opacity: 0.8;">Chain of Thought</h3>
+  <div class="big-text" style="margin-top: 24px;">
+    Волшебная фраза:<br>
+    <span class="hl" style="font-size: 36px; font-weight: 700;">«Рассуждай пошагово»</span><br><br>
+    ИИ показывает ход мысли.<br>Как бухгалтер, который показывает расчёт.
+  </div>
+</div>
+
+<!-- SLIDE 15: COT EXAMPLES -->
+<div class="slide slide-demo left" id="s15">
+  <span class="tag tag-demo">Примеры</span>
+  <h3>Пошаговое мышление для каждого</h3>
+  <div class="code-block small" style="font-size: 14px;">Искандер: Какую наценку поставить на подшипник для МТЗ-82?
+         Рассуждай пошагово: закупка, конкуренты, расходы, маржа, итог.
+
+Марат:   Стоит ли добавить кухню в пивной бар?
+         Пошагово: чек, расходы на кухню, рост, окупаемость, риски.
+
+Айрат:   Что лучше для навеса: поликарбонат или профнастил?
+         Пошагово: цена, долговечность, вид, монтаж, климат Башкортостана.
+
+Михаил:  Как спланировать прокладку оптоволокна до посёлка за 15 км?
+         Пошагово: трасса, согласования, материалы, бригада, сроки.
+
+Айгуль:  Стоит ли открывать группу для детей 2-3 лет?
+         Пошагово: спрос, педагоги, помещение, конкуренты, цена.</div>
+</div>
+
+<!-- SLIDE 16: COT PRACTICE -->
+<div class="slide slide-practice" id="s16">
+  <span class="tag tag-practice">Практика &mdash; 3 мин</span>
+  <h2>Попробуйте сейчас</h2>
+  <div class="big-text" style="margin-top: 20px;">
+    Возьмите любой вопрос,<br>
+    на который нужен развёрнутый ответ.<br><br>
+    Добавьте <span class="hl">«Рассуждай пошагово»</span><br>
+    и перечислите 3-5 шагов.
+  </div>
+</div>
+
+<!-- SLIDE 17: ITERATION -->
+<div class="slide slide-theory" id="s17">
+  <span class="tag tag-theory">Техника 3</span>
+  <h2>Итерации + Запреты</h2>
+  <div class="phrase-grid" style="margin-top: 24px;">
+    <div class="phrase-card">Хорошо, но <span class="hl">сделай короче</span></div>
+    <div class="phrase-card">Измени тон на <span class="hl">более дружелюбный</span></div>
+    <div class="phrase-card">Это не то. <span class="hl">Я имел в виду...</span></div>
+    <div class="phrase-card">Дай <span class="hl">3 варианта</span> с разным тоном</div>
+    <div class="phrase-card"><span class="hl-amber">НЕ</span> используй канцеляризмы</div>
+    <div class="phrase-card"><span class="hl-amber">НЕ</span> используй слово «уникальный»</div>
+  </div>
+  <div class="subtitle" style="margin-top: 16px;">Первый ответ это черновик. Дальше правите в диалоге.</div>
+</div>
+
+<!-- SLIDE 18: ASK ME QUESTIONS -->
+<div class="slide slide-theory" id="s18">
+  <span class="tag tag-theory">Техника 4 &mdash; самая мощная</span>
+  <h2>«Задай мне вопросы»</h2>
+  <div class="code-block" style="margin-top: 24px; font-size: 22px; text-align: center;">Я хочу [задача].
+Задай мне 10 уточняющих вопросов,
+прежде чем начинать.</div>
+  <div class="subtitle" style="margin-top: 20px;">ИИ спросит про бюджет, аудиторию, сроки,<br>о чём вы сами не подумали</div>
+</div>
+
+<!-- SLIDE 19: ASK EXAMPLES -->
+<div class="slide slide-demo left" id="s19">
+  <span class="tag tag-demo">Примеры</span>
+  <h3>«Задай мне вопросы» для каждого</h3>
+  <div class="code-block small" style="font-size: 16px;">Искандер: Я хочу открыть точку по продаже запчастей для тракторов.
+          Задай мне 10 уточняющих вопросов, прежде чем составлять бизнес-план.
+
+Айгуль:  Мне нужно составить расписание занятий на лето для детского центра.
+          Задай мне уточняющие вопросы.
+
+Марат:   Хочу сделать акцию для бара на 23 февраля.
+          Задай мне вопросы, чтобы придумать лучший вариант.
+
+Айрат:   Хочу сделать лендинг для продажи навесов.
+          Задай мне вопросы прежде чем писать текст.
+
+Ильгиз:  Хочу составить каталог газового оборудования для клиентов.
+          Задай мне вопросы.</div>
+</div>
+
+<!-- SLIDE 20: ASK PRACTICE -->
+<div class="slide slide-practice" id="s20">
+  <span class="tag tag-practice">Практика &mdash; 3 мин</span>
+  <h2>Попробуйте сейчас</h2>
+  <div class="big-text" style="margin-top: 20px;">
+    Напишите:<br><br>
+    <span class="hl" style="font-size: 32px;">«Я хочу [ваша задача].<br>Задай мне уточняющие вопросы.»</span><br><br>
+    Ответьте на вопросы ИИ.<br>Оцените результат.
+  </div>
+</div>
+
+<!-- SLIDE 21: BREAK -->
+<div class="slide slide-break" id="s21">
+  <h1 style="font-size: 72px;">Перерыв</h1>
+  <div class="subtitle" style="font-size: 28px;">10 минут</div>
+</div>
+
+<!-- SLIDE 22: SECTION CONTEXT -->
+<div class="slide slide-title" id="s22">
+  <div class="logo">Блок 3</div>
+  <h1>Память ИИ</h1>
+  <div class="subtitle">Почему ИИ «тупеет» в длинных чатах</div>
+</div>
+
+<!-- SLIDE 23: CONTEXT WINDOW -->
+<div class="slide slide-theory" id="s23">
+  <span class="tag tag-theory">Теория</span>
+  <h2>Контекстное окно</h2>
+  <div class="big-text" style="margin-top: 24px;">
+    У ИИ есть «стол», на который он раскладывает<br>ваш разговор. Стол <span class="hl">конечный</span>.<br><br>
+    Бесплатный ChatGPT: <span class="hl" style="font-size: 36px;">~100 страниц</span><br><br>
+    <span style="opacity: 0.6;">Когда стол заполняется, ИИ начинает<br>сбрасывать старые «листки» и забывать.</span>
+  </div>
+</div>
+
+<!-- SLIDE 24: LOST IN THE MIDDLE -->
+<div class="slide slide-theory" id="s24">
+  <span class="tag tag-theory">Исследование Стэнфорда</span>
+  <h2>«Гниение посередине»</h2>
+  <div style="margin-top: 32px; display: flex; gap: 0; max-width: 700px; width: 100%;">
+    <div style="flex: 1; background: rgba(16,185,129,0.2); border-radius: 16px 0 0 16px; padding: 24px; text-align: center;">
+      <div style="font-size: 36px; font-weight: 800; color: #6ee7b7;">Начало</div>
+      <div style="font-size: 16px; opacity: 0.7; margin-top: 8px;">Помнит хорошо</div>
+    </div>
+    <div style="flex: 1; background: rgba(239,68,68,0.15); padding: 24px; text-align: center;">
+      <div style="font-size: 36px; font-weight: 800; color: #fca5a5;">Середина</div>
+      <div style="font-size: 16px; opacity: 0.7; margin-top: 8px;">Теряет</div>
+    </div>
+    <div style="flex: 1; background: rgba(16,185,129,0.2); border-radius: 0 16px 16px 0; padding: 24px; text-align: center;">
+      <div style="font-size: 36px; font-weight: 800; color: #6ee7b7;">Конец</div>
+      <div style="font-size: 16px; opacity: 0.7; margin-top: 8px;">Помнит хорошо</div>
+    </div>
+  </div>
+  <div class="subtitle" style="margin-top: 24px;">ИИ лучше всего помнит начало и конец. Середину теряет.</div>
+</div>
+
+<!-- SLIDE 25: RULE 1 -->
+<div class="slide slide-theory" id="s25">
+  <span class="tag tag-tip">Правило 1</span>
+  <h2>Ключевое в начало и конец</h2>
+  <div class="subtitle" style="margin-bottom: 20px;">Для длинных промптов (10+ строк)</div>
+  <div class="two-col">
+    <div class="col bad-col">
+      <h4>Неправильно</h4>
+      <p style="font-size: 15px; font-family: monospace; line-height: 1.7; margin-top: 8px;">Ты маркетолог.<br>Мой бизнес навесы...<br>3 бригады, 1-3 дня...<br><span style="color: #fca5a5; font-weight: 700;">ЦЕНЫ ТОЛЬКО В РУБЛЯХ</span><br>Клиенты частники...<br>Напиши текст.</p>
+    </div>
+    <div class="col good-col">
+      <h4>Правильно</h4>
+      <p style="font-size: 15px; font-family: monospace; line-height: 1.7; margin-top: 8px;"><span style="color: #6ee7b7; font-weight: 700;">ЦЕНЫ ТОЛЬКО В РУБЛЯХ</span><br>Ты маркетолог.<br>Навесы в Уфе, 5 лет...<br>3 бригады, 1-3 дня...<br>Напиши текст.<br><span style="color: #6ee7b7; font-weight: 700;">Напоминаю: РУБЛИ</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 26: RULE 2 -->
+<div class="slide slide-theory" id="s26">
+  <span class="tag tag-tip">Правило 2</span>
+  <h2>Структурируйте: нумеруйте</h2>
+  <div class="two-col" style="margin-top: 20px;">
+    <div class="col bad-col">
+      <h4>Стена текста</h4>
+      <p style="font-size: 14px; font-family: monospace; line-height: 1.7; margin-top: 8px;">Мне нужен пост для инстаграма про детский центр он должен быть не длинный примерно 100 слов с эмодзи с призывом записаться тон дружелюбный...</p>
+    </div>
+    <div class="col good-col">
+      <h4>Нумерованный список</h4>
+      <p style="font-size: 14px; font-family: monospace; line-height: 1.7; margin-top: 8px;">1. Длина: ~100 слов<br>2. Эмодзи: да, умеренно<br>3. Тон: дружелюбный<br>4. Упомянуть:<br>&nbsp;&nbsp;- Первое занятие бесплатно<br>&nbsp;&nbsp;- Группы до 6 человек<br>5. Призыв записаться</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 27: RULE 3 -->
+<div class="slide slide-theory" id="s27">
+  <span class="tag tag-tip">Правило 3</span>
+  <h2>Новый чат = чистая память</h2>
+  <div class="two-col" style="margin-top: 20px;">
+    <div class="col good-col">
+      <h4 style="color: #6ee7b7;">Когда новый чат</h4>
+      <ul style="list-style: none; font-size: 17px; line-height: 2;">
+        <li>Сменили тему</li>
+        <li>Чат длиннее 15-20 сообщений</li>
+        <li>ИИ начал «тупить»</li>
+        <li>Хотите новую задачу</li>
+      </ul>
+    </div>
+    <div class="col bad-col">
+      <h4 style="color: #fca5a5;">Когда НЕ надо</h4>
+      <ul style="list-style: none; font-size: 17px; line-height: 2;">
+        <li>Правите один и тот же текст</li>
+        <li>В середине пошаговой задачи</li>
+        <li>ИИ задал вам вопросы</li>
+      </ul>
+    </div>
+  </div>
+  <div class="subtitle" style="margin-top: 16px;">Одна задача = один чат</div>
+</div>
+
+<!-- SLIDE 28: RULE 4 -->
+<div class="slide slide-theory" id="s28">
+  <span class="tag tag-tip">Правило 4</span>
+  <h2>Резюмируйте в длинных диалогах</h2>
+  <div class="code-block" style="margin-top: 24px; font-size: 19px;">Давай подведём итог:
+1. Мы составляем меню акций для бара на будние дни
+2. Остановились на 3 акциях: «Пивной вторник»,
+   «Кино+крафт», «Бизнес-ланч»
+3. Бюджет каждой до 10 000 руб/мес
+
+Теперь сделай макет поста для «Пивного вторника».</div>
+  <div class="subtitle" style="margin-top: 16px;">Напоминаете ИИ всё важное. Как после обеда:<br>«Так, мы остановились на том, что...»</div>
+</div>
+
+<!-- SLIDE 29: SECTION BIG PRACTICE -->
+<div class="slide slide-title" id="s29">
+  <div class="logo">Блок 4</div>
+  <h1>Практика</h1>
+  <div class="subtitle">Пишем промпт для своей работы по формуле РКЗФО</div>
+</div>
+
+<!-- SLIDE 30: FULL EXAMPLE -->
+<div class="slide slide-demo left" id="s30">
+  <span class="tag tag-demo">Полный пример &mdash; Марат</span>
+  <div class="code-block small" style="font-size: 15px;"><span style="color: var(--coral); font-weight: 700;">Р:</span> Ты ресторанный консультант с 10-летним опытом в HoReCa.
+
+<span style="color: #93c5fd; font-weight: 700;">К:</span> У меня крафтовый пивной бар «Шемрак» в Уфе.
+   50 мест, средний чек 800 руб. Аудитория мужчины 25-45.
+   Будние дни загружены на 30%, выходные на 90%.
+
+<span style="color: #6ee7b7; font-weight: 700;">З:</span> Предложи 5 идей для акций, увеличить посещаемость пн-чт.
+
+<span style="color: #c4b5fd; font-weight: 700;">Ф:</span> Таблица: название, описание, бюджет, ожидаемый прирост.
+
+<span style="color: #fcd34d; font-weight: 700;">О:</span> Бюджет до 10 000 руб/мес. Без скидок более 20%.
+   Реализуемо без доп. персонала.</div>
+</div>
+
+<!-- SLIDE 31: PRACTICE GO -->
+<div class="slide slide-practice" id="s31">
+  <span class="tag tag-practice">Практика &mdash; 7 мин</span>
+  <h1 style="font-size: 56px;">Пишем!</h1>
+  <div class="big-text" style="margin-top: 16px;">
+    Возьмите <span class="hl">реальную рабочую задачу</span><br><br>
+    Минимум: <span class="hl">Роль</span> + <span class="hl-blue">Контекст</span> + <span class="hl-green">Задача</span><br><br>
+    <span style="opacity: 0.6;">Если затрудняетесь, поднимите руку</span>
+  </div>
+</div>
+
+<!-- SLIDE 32: VOICE HACK -->
+<div class="slide slide-section" id="s32">
+  <span class="tag tag-demo">Лайфхак</span>
+  <h2>Наговори голосом</h2>
+  <div class="big-text" style="margin-top: 20px;">
+    Не обязательно писать по формуле.<br>
+    <span class="hl">Наговорите задачу голосом</span> как думаете.<br><br>
+    Потом скажите ИИ:
+  </div>
+  <div class="code-block" style="margin-top: 16px; font-size: 19px; text-align: center;">Упакуй мою мысль в структурированный промпт.
+Определи роль, контекст, задачу, формат.
+Примени все правила промпт-инженерии.
+Выполни получившийся промпт.</div>
+</div>
+
+<!-- SLIDE 33: WOW -->
+<div class="slide slide-section" id="s33">
+  <h2>ИИ <span class="hl">сам</span> создал промпт</h2>
+  <ul class="check-list" style="margin-top: 24px; font-size: 24px;">
+    <li><span class="icon hl">1</span> Определил роль из вашего рассказа</li>
+    <li><span class="icon hl-blue">2</span> Вытащил контекст</li>
+    <li><span class="icon hl-green">3</span> Сформулировал задачу чётко</li>
+    <li><span class="icon hl-purple">4</span> Применил правила промпт-инженерии</li>
+    <li><span class="icon hl-amber">5</span> И сразу выполнил!</li>
+  </ul>
+  <div class="subtitle" style="margin-top: 24px;">Объяснили как другу. ИИ сам упаковал.</div>
+</div>
+
+<!-- SLIDE 34: ASSISTANT BRIDGE -->
+<div class="slide slide-title" id="s34">
+  <div class="logo">Следующий уровень</div>
+  <h1>Ассистентный<br>подход</h1>
+  <div class="subtitle">От разовых промптов к постоянному помощнику</div>
+</div>
+
+<!-- SLIDE 35: TODAY VS NEXT -->
+<div class="slide slide-theory" id="s35">
+  <h3>Сегодня vs Следующий уровень</h3>
+  <div class="two-col" style="margin-top: 24px;">
+    <div class="col bad-col">
+      <h4 style="color: #fca5a5;">Сегодня: разовый промпт</h4>
+      <p style="font-size: 17px; line-height: 1.8; margin-top: 12px;">
+        Каждый раз пишете:<br>
+        Роль + Контекст + Задача<br><br>
+        Каждый раз объясняете<br>
+        кто вы и чем занимаетесь
+      </p>
+    </div>
+    <div class="col good-col">
+      <h4 style="color: #6ee7b7;">Следующий уровень: ассистент</h4>
+      <p style="font-size: 17px; line-height: 1.8; margin-top: 12px;">
+        Один раз настроили.<br>
+        ИИ уже знает вас, ваш бизнес,<br>
+        ваших клиентов.<br><br>
+        Просто пишете задачу.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 36: ASSISTANTS FOR EACH -->
+<div class="slide slide-section" id="s36">
+  <h3>Ваши будущие ассистенты</h3>
+  <table class="participants-table" style="margin-top: 20px; font-size: 17px;">
+    <tr><td>Айрат</td><td>Менеджер по навесам: ответы, цены, КП</td></tr>
+    <tr><td>Марат</td><td>Управляющий баром: акции, посты, меню</td></tr>
+    <tr><td>Айгуль</td><td>Методист: расписание, ответы, программы</td></tr>
+    <tr><td>Искандер</td><td>Менеджер запчастей: каталог, аналоги, КП</td></tr>
+    <tr><td>Ильгиз</td><td>Консультант газового оборудования</td></tr>
+    <tr><td>Михаил Г.</td><td>Инженер телеком: ТЗ, сметы, расчёты</td></tr>
+    <tr><td>Михаил</td><td>Прораб: планы работ, заявки, отчёты</td></tr>
+  </table>
+  <div class="subtitle" style="margin-top: 20px;">На следующем занятии создадим каждому</div>
+</div>
+
+<!-- SLIDE 37: TOP MISTAKES -->
+<div class="slide slide-theory" id="s37">
+  <span class="tag tag-error">Ошибки новичков</span>
+  <h3>5 главных ошибок</h3>
+  <table class="slide-table" style="margin-top: 20px; font-size: 16px;">
+    <tr><th style="width: 30%;">Ошибка</th><th style="width: 35%;">Плохо</th><th>Хорошо</th></tr>
+    <tr><td>Размытый запрос</td><td style="color: #fca5a5;">«Напиши текст про навесы»</td><td style="color: #6ee7b7;">«Описание навеса 3x6 м, 150 слов»</td></tr>
+    <tr><td>Всё в одном</td><td style="color: #fca5a5;">«Бизнес-план + окупаемость + презентация»</td><td style="color: #6ee7b7;">Разбить на 3 запроса</td></tr>
+    <tr><td>Нет контекста</td><td style="color: #fca5a5;">«Какую цену поставить?»</td><td style="color: #6ee7b7;">«Закупка 450, конкуренты 700-900»</td></tr>
+    <tr><td>Первый = финальный</td><td style="color: #fca5a5;">Скопировал, использовал</td><td style="color: #6ee7b7;">Оценил, улучшил, проверил</td></tr>
+    <tr><td>Не проверяет факты</td><td style="color: #fca5a5;">«ИИ написал = правда»</td><td style="color: #6ee7b7;">Цифры, законы, даты проверять</td></tr>
+  </table>
+</div>
+
+<!-- SLIDE 38: HOMEWORK -->
+<div class="slide slide-section" id="s38">
+  <h2>Домашнее задание</h2>
+  <div class="two-col" style="margin-top: 24px;">
+    <div class="col" style="border-color: var(--coral);">
+      <h4 style="color: var(--coral);">Часть 1: Промпты</h4>
+      <ul style="list-style: none; font-size: 17px; line-height: 2; margin-top: 12px;">
+        <li>3 промпта по формуле РКЗФО</li>
+        <li>Минимум: Роль + Контекст + Задача</li>
+        <li>Попробуйте наговорить голосом</li>
+        <li>Скриншоты в Telegram-чат</li>
+      </ul>
+    </div>
+    <div class="col" style="border-color: var(--green);">
+      <h4 style="color: #6ee7b7;">Часть 2: Рабочие процессы</h4>
+      <ul style="list-style: none; font-size: 17px; line-height: 2; margin-top: 12px;">
+        <li>Опишите ВСЕ рабочие процессы</li>
+        <li>Что делаете каждый день?</li>
+        <li>Какие задачи повторяются?</li>
+        <li>На что уходит время?</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 39: HOMEWORK TEMPLATE -->
+<div class="slide slide-demo left" id="s39">
+  <span class="tag tag-demo">Шаблон</span>
+  <h3>Описание рабочих процессов</h3>
+  <div class="code-block small" style="font-size: 16px;">МОИ РАБОЧИЕ ПРОЦЕССЫ
+
+1. [Процесс]: ответы клиентам в WhatsApp
+   - Как часто: 10-15 раз в день
+   - Что делаю: отвечаю на вопросы про цены, размеры, сроки
+   - Сколько времени: ~2 часа в день
+   - Что бесит: каждый раз одно и то же печатаю
+
+2. [Процесс]: составление коммерческих предложений
+   - Как часто: 2-3 раза в неделю
+   - Что делаю: считаю материалы, пишу описание, оформляю
+   - Сколько времени: 1-2 часа на каждое
+
+3. ...</div>
+  <div class="subtitle" style="margin-top: 16px;">Чем подробнее, тем мощнее будет ваш ассистент</div>
+</div>
+
+<!-- SLIDE 40: NEXT LESSON -->
+<div class="slide slide-title" id="s40">
+  <div class="logo">Следующее занятие &mdash; вторник</div>
+  <h1 style="font-size: 48px;">Google Gemini<br>+<br>Ваш ИИ-ассистент</h1>
+  <div class="subtitle" style="margin-top: 24px;">Установим Gemini. Создадим персональных ассистентов<br>из ваших рабочих процессов.</div>
+</div>
+
+<!-- SLIDE 41: FINAL -->
+<div class="slide slide-title" id="s41">
+  <h1 style="font-size: 48px;">Спасибо!</h1>
+  <div class="subtitle" style="font-size: 24px; margin-top: 16px;">Вопросы? Пишите в чат. До вторника!</div>
+  <div class="logo" style="margin-top: 40px; margin-bottom: 0;">neovida.ai / ai-boost</div>
+</div>
+
+<!-- NAVIGATION -->
+<div class="progress-bar" id="progress"></div>
+<div class="slide-counter"><span id="current">1</span> / <span id="total"></span></div>
+<div class="nav">
+  <button onclick="prev()" title="Назад">&larr;</button>
+  <button onclick="next()" title="Вперёд">&rarr;</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let currentSlide = 0;
+document.getElementById('total').textContent = slides.length;
+
+function showSlide(n) {
+  slides[currentSlide].classList.remove('active');
+  currentSlide = Math.max(0, Math.min(n, slides.length - 1));
+  slides[currentSlide].classList.add('active');
+  document.getElementById('current').textContent = currentSlide + 1;
+  document.getElementById('progress').style.width = ((currentSlide + 1) / slides.length * 100) + '%';
+}
+
+function next() { showSlide(currentSlide + 1); }
+function prev() { showSlide(currentSlide - 1); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft' || e.key === 'Backspace') { e.preventDefault(); prev(); }
+  if (e.key === 'Home') { e.preventDefault(); showSlide(0); }
+  if (e.key === 'End') { e.preventDefault(); showSlide(slides.length - 1); }
+});
+
+// Touch support
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) { diff > 0 ? next() : prev(); }
+});
+</script>
+
+</body>
+</html>
