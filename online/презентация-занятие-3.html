@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность | Занятие 3 — Ассистентный подход</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #1a1a2e;
+  --bg-light: #222244;
+  --accent: #8B6EB5;
+  --accent-dark: #6B4E95;
+  --coral: #E07461;
+  --white: #ffffff;
+  --white-80: rgba(255,255,255,0.8);
+  --white-60: rgba(255,255,255,0.6);
+  --white-40: rgba(255,255,255,0.4);
+  --white-20: rgba(255,255,255,0.2);
+  --white-10: rgba(255,255,255,0.1);
+  --yellow: #f0c040;
+  --orange: #e8944a;
+  --red: #e05555;
+  --green: #5ec47a;
+  --purple: #8B6EB5;
+  --blue: #4285f4;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--white);
+  -webkit-font-smoothing: antialiased;
+}
+
+.deck { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+
+.slide {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 60px 80px;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translateX(40px);
+  overflow-y: auto;
+}
+.slide.active { opacity: 1; visibility: visible; transform: translateX(0); }
+.slide.prev { transform: translateX(-40px); }
+
+/* TYPOGRAPHY */
+.slide-title { font-size: 46px; font-weight: 800; line-height: 1.15; margin-bottom: 32px; color: var(--white); }
+.slide-title .accent { color: var(--accent); }
+.slide-title .coral { color: var(--coral); }
+
+.slide-subtitle { font-size: 26px; font-weight: 400; color: var(--white-80); margin-bottom: 40px; line-height: 1.4; }
+.slide-body { font-size: 24px; line-height: 1.6; color: var(--white-80); }
+
+.point { margin-bottom: 18px; padding-left: 8px; font-size: 24px; line-height: 1.5; color: var(--white-80); }
+.point strong { color: var(--white); font-weight: 600; }
+.point .emoji { margin-right: 10px; font-style: normal; }
+
+/* QUOTE */
+.quote {
+  margin-top: 40px; padding: 24px 32px;
+  border-left: 4px solid var(--accent);
+  background: var(--white-10);
+  border-radius: 0 12px 12px 0;
+  font-size: 22px; font-weight: 500; line-height: 1.5;
+  color: var(--white); font-style: italic;
+}
+
+/* BIG STATEMENT */
+.big-statement { font-size: 36px; font-weight: 700; line-height: 1.4; text-align: center; max-width: 900px; margin: 0 auto; color: var(--white); }
+.big-statement .accent { color: var(--accent); }
+.big-statement-sub { font-size: 24px; font-weight: 400; color: var(--white-60); text-align: center; margin-top: 24px; max-width: 800px; margin-left: auto; margin-right: auto; line-height: 1.5; }
+
+/* TWO COLUMNS */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 16px; }
+.col-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; color: var(--accent); }
+
+/* CARDS */
+.card { background: var(--white-10); border-radius: 16px; padding: 28px; margin-bottom: 20px; }
+.card-title { font-size: 22px; font-weight: 700; margin-bottom: 10px; color: var(--white); }
+.card-body { font-size: 20px; color: var(--white-80); line-height: 1.5; }
+.cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px; }
+.cards-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 16px; }
+
+/* TABLE */
+.tbl { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 16px; font-size: 20px; }
+.tbl th { text-align: left; padding: 14px 20px; background: var(--white-10); color: var(--accent); font-weight: 700; border-bottom: 2px solid var(--white-20); }
+.tbl td { padding: 12px 20px; border-bottom: 1px solid var(--white-10); color: var(--white-80); }
+.tbl th:first-child { border-radius: 10px 0 0 0; }
+.tbl th:last-child { border-radius: 0 10px 0 0; }
+
+/* COMPARISON */
+.vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 16px; }
+.vs-card { border-radius: 16px; padding: 28px; }
+.vs-card.bad { background: rgba(224,85,85,0.15); border: 1px solid rgba(224,85,85,0.3); }
+.vs-card.good { background: rgba(139,110,181,0.15); border: 1px solid rgba(139,110,181,0.3); }
+
+/* STEPS */
+.step { display: flex; align-items: flex-start; margin-bottom: 18px; font-size: 22px; line-height: 1.5; color: var(--white-80); }
+.step-num {
+  flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+  background: var(--accent); color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 18px; margin-right: 16px; margin-top: 2px;
+}
+
+/* TAGS */
+.tag-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 16px; }
+.tag { background: var(--white-10); border-radius: 12px; padding: 20px; text-align: center; font-size: 20px; color: var(--white-80); }
+.tag .emoji { font-size: 32px; display: block; margin-bottom: 8px; }
+
+/* WARNING */
+.warning-card { background: rgba(240,192,64,0.1); border: 2px solid rgba(240,192,64,0.4); border-radius: 16px; padding: 32px; margin-top: 16px; }
+
+/* PRACTICE */
+.practice-card { background: rgba(139,110,181,0.12); border: 2px solid rgba(139,110,181,0.4); border-radius: 16px; padding: 32px; margin-top: 16px; }
+
+/* CODE/PROMPT BLOCK */
+.prompt-block {
+  background: rgba(139,110,181,0.1); border: 1px solid rgba(139,110,181,0.3);
+  border-radius: 12px; padding: 24px 28px; margin-top: 16px;
+  font-size: 20px; line-height: 1.7; color: var(--white-80);
+  font-family: 'Inter', sans-serif; white-space: pre-wrap;
+}
+
+/* CONTROLS */
+.slide-counter { position: fixed; bottom: 24px; right: 32px; font-size: 16px; font-weight: 600; color: var(--white-40); z-index: 100; pointer-events: none; }
+.fullscreen-btn {
+  position: fixed; top: 20px; right: 24px; z-index: 100;
+  background: var(--white-10); border: 1px solid var(--white-20);
+  color: var(--white-60); width: 40px; height: 40px; border-radius: 8px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; transition: background 0.2s;
+}
+.fullscreen-btn:hover { background: var(--white-20); color: var(--white); }
+
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 100; transition: width 0.4s ease; }
+
+/* TITLE SLIDE */
+.slide.title-slide {
+  text-align: center; justify-content: center; align-items: center;
+  background: radial-gradient(ellipse at 50% 40%, rgba(139,110,181,0.15) 0%, transparent 60%);
+}
+.title-big { font-size: 68px; font-weight: 900; letter-spacing: -2px; color: var(--accent); margin-bottom: 24px; }
+.title-sub { font-size: 32px; font-weight: 500; color: var(--white-80); margin-bottom: 48px; line-height: 1.3; }
+.title-meta { font-size: 20px; color: var(--white-40); font-weight: 400; }
+
+/* BREAK SLIDE */
+.slide.break-slide { text-align: center; align-items: center; background: radial-gradient(ellipse at 50% 50%, rgba(139,110,181,0.1) 0%, transparent 60%); }
+
+.small-text { font-size: 18px; color: var(--white-40); margin-top: 24px; }
+.centered { text-align: center; align-items: center; }
+
+/* SPLIT LAYOUT */
+.slide-split { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; width: 100%; }
+.slide-split .visual-side { display: flex; align-items: center; justify-content: center; }
+
+/* GOOGLE COLORS */
+.google-blue { color: #4285f4; }
+.google-red { color: #ea4335; }
+.google-yellow { color: #fbbc05; }
+.google-green { color: #34a853; }
+
+/* ACCENT HIGHLIGHT */
+.highlight { background: rgba(139,110,181,0.2); padding: 2px 8px; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="slide-counter" id="slideCounter"></div>
+<button class="fullscreen-btn" id="fsBtn" title="Полный экран">⛶</button>
+
+<div class="deck">
+
+<!-- СЛАЙД 1: ТИТУЛ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;">neovida.ai / ИИ. Новая реальность</div>
+  <div class="title-big">Ассистентный подход</div>
+  <div class="title-sub">Автоматизация на минималках</div>
+  <div class="title-meta">Занятие 3</div>
+</div>
+
+<!-- СЛАЙД 2: ЧТО МЫ ПРОШЛИ -->
+<div class="slide">
+  <div class="slide-title">Что мы <span class="accent">уже умеем</span></div>
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-title">🧭 Занятие 1 — Погружение</div>
+      <div class="card-body">Установили ChatGPT, Qwen, Gemini. Узнали что такое ИИ, как работает, зачем нужен. Попробовали первые запросы.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🧠 Занятие 2 — Промпт-инженерия</div>
+      <div class="card-body">Формула РКЗФО. Техники: примеры, пошагово, итерации, «задай мне вопросы». Контекстное окно. Голосовой ввод.</div>
+    </div>
+  </div>
+  <div class="quote">Сегодня мы поднимемся на следующий уровень — от разовых запросов к персональным ИИ-помощникам.</div>
+</div>
+
+<!-- СЛАЙД 3: РАЗБОР ДОМАШКИ -->
+<div class="slide">
+  <div class="slide-title">Разбор <span class="accent">домашки</span></div>
+  <div class="slide-subtitle">Вы описали свои рабочие процессы — это фундамент сегодняшнего занятия</div>
+  <div class="prompt-block">МОИ РАБОЧИЕ ПРОЦЕССЫ
+
+1. Ответы клиентам в WhatsApp
+   — Как часто: 10-15 раз в день
+   — Что делаю: отвечаю на вопросы про цены, размеры, сроки
+   — Сколько времени: ~2 часа в день
+
+2. Составление коммерческих предложений
+   — Как часто: 2-3 раза в неделю
+   — Что делаю: считаю материалы, описание, оформление
+   — Сколько времени: 1-2 часа на каждое</div>
+  <div class="small-text">Пример — у каждого из вас свой список. Сейчас он нам понадобится.</div>
+</div>
+
+<!-- СЛАЙД 4: ПРОБЛЕМА -->
+<div class="slide centered">
+  <div class="big-statement">Каждый раз, когда вы пишете запрос в ChatGPT,<br>вы <span class="accent">начинаете с нуля</span></div>
+  <div class="big-statement-sub">Заново объясняете кто вы, чем занимаетесь, что вам нужно. Каждый. Раз.</div>
+</div>
+
+<!-- СЛАЙД 5: СРАВНЕНИЕ -->
+<div class="slide">
+  <div class="slide-title">Разовый промпт <span class="accent">vs</span> Ассистент</div>
+  <div class="vs-grid">
+    <div class="vs-card bad">
+      <div style="font-size:22px; font-weight:700; color:var(--red); margin-bottom:16px;">❌ Сейчас: разовый промпт</div>
+      <div class="point"><em class="emoji">📝</em> Каждый раз пишете роль, контекст, задачу</div>
+      <div class="point"><em class="emoji">🔄</em> Каждый раз объясняете заново кто вы</div>
+      <div class="point"><em class="emoji">⏰</em> Тратите время на одно и то же</div>
+      <div class="point"><em class="emoji">📉</em> Качество ответов — нестабильное</div>
+    </div>
+    <div class="vs-card good">
+      <div style="font-size:22px; font-weight:700; color:var(--accent); margin-bottom:16px;">✅ Ассистент: настроил один раз</div>
+      <div class="point"><em class="emoji">🤖</em> ИИ уже знает вашу роль и контекст</div>
+      <div class="point"><em class="emoji">⚡</em> Просто пишете задачу — он делает</div>
+      <div class="point"><em class="emoji">🎯</em> Ответы сразу точные и релевантные</div>
+      <div class="point"><em class="emoji">📈</em> Качество растёт с каждым использованием</div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 6: АНАЛОГИЯ -->
+<div class="slide centered">
+  <div class="big-statement">Ассистент — это как <span class="accent">нанять сотрудника</span>,<br>которому вы один раз объяснили всё о вашей работе</div>
+  <div class="big-statement-sub">Дальше он работает сам — вы только ставите задачи</div>
+</div>
+
+<!-- СЛАЙД 7: ГДЕ СОЗДАТЬ -->
+<div class="slide">
+  <div class="slide-title">Где можно создать <span class="accent">ассистента</span>?</div>
+  <div class="cards-grid-3">
+    <div class="card" style="border: 1px solid rgba(255,255,255,0.15);">
+      <div class="card-title">💬 ChatGPT — GPTs</div>
+      <div class="card-body">Мощные кастомные боты. Можно загружать файлы, подключать действия.<br><br><strong style="color:var(--red);">⚠️ Платно ($20/мес)</strong></div>
+    </div>
+    <div class="card" style="border: 2px solid var(--accent);">
+      <div class="card-title">✨ Gemini — Gems</div>
+      <div class="card-body">Персональные ассистенты в Google Gemini. Простые и мощные.<br><br><strong style="color:var(--green);">✅ Бесплатно!</strong></div>
+    </div>
+    <div class="card" style="border: 1px solid rgba(255,255,255,0.15);">
+      <div class="card-title">🔍 Perplexity — Spaces</div>
+      <div class="card-body">Коллекции источников с персональным контекстом.<br><br><strong style="color:var(--yellow);">Частично бесплатно</strong></div>
+    </div>
+  </div>
+  <div class="quote">Сегодня работаем в <strong>Gems</strong> — это бесплатно и очень удобно.</div>
+</div>
+
+<!-- СЛАЙД 8: GPTs ОБЗОР -->
+<div class="slide">
+  <div class="slide-title">GPTs в ChatGPT — <span class="accent">что это?</span></div>
+  <div class="slide-body" style="margin-bottom:24px;">GPTs — это кастомные версии ChatGPT, «заточенные» под конкретную задачу. У каждого GPT свои инструкции, знания и возможности.</div>
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-title">Что можно</div>
+      <div class="card-body">• Загрузить файлы как базу знаний<br>• Задать роль и инструкции<br>• Подключить внешние действия (API)<br>• Делиться с другими</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Ограничения</div>
+      <div class="card-body">• Создание — только ChatGPT Plus ($20/мес)<br>• Использовать чужие GPTs — можно бесплатно<br>• Есть магазин готовых GPTs</div>
+    </div>
+  </div>
+  <div class="small-text">Мы не будем создавать GPTs — но полезно знать, что это есть. Бесплатная альтернатива — Gems в Gemini.</div>
+</div>
+
+<!-- СЛАЙД 9: ПЕРЕХОД К GEMINI -->
+<div class="slide break-slide">
+  <div style="font-size:64px; margin-bottom:24px;">✨</div>
+  <div class="big-statement"><span class="google-blue">G</span><span class="google-red">o</span><span class="google-yellow">o</span><span class="google-blue">g</span><span class="google-green">l</span><span class="google-red">e</span> Gemini</div>
+  <div class="big-statement-sub">Бесплатный ИИ от Google с мощной экосистемой</div>
+</div>
+
+<!-- СЛАЙД 10: УСТАНОВКА GEMINI -->
+<div class="slide">
+  <div class="slide-title">Установка <span class="accent">Google Gemini</span></div>
+  <div class="step"><div class="step-num">1</div><div>Откройте <strong>gemini.google.com</strong> (работает без VPN!)</div></div>
+  <div class="step"><div class="step-num">2</div><div>Войдите через Google-аккаунт (тот же, что у вас на телефоне)</div></div>
+  <div class="step"><div class="step-num">3</div><div>На телефоне: скачайте приложение <strong>Gemini</strong> из Google Play / App Store</div></div>
+  <div class="step"><div class="step-num">4</div><div>Готово — теперь у вас есть ещё один мощный ИИ-инструмент</div></div>
+  <div class="warning-card">
+    <div class="point"><em class="emoji">💡</em> <strong>Gemini работает БЕЗ VPN</strong> — в отличие от ChatGPT. Это ваш запасной вариант, если VPN не работает.</div>
+  </div>
+</div>
+
+<!-- СЛАЙД 11: ЧТО УМЕЕТ GEMINI -->
+<div class="slide">
+  <div class="slide-title">Что умеет <span class="accent">Gemini</span></div>
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-title">💬 Текст</div>
+      <div class="card-body">Генерация, анализ, перевод, суммаризация — как ChatGPT</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🖼️ Картинки</div>
+      <div class="card-body">Генерация изображений встроена (бесплатно!)</div>
+    </div>
+    <div class="card">
+      <div class="card-title">📄 Canvas</div>
+      <div class="card-body">Работа с документами прямо в чате — редактирование, форматирование</div>
+    </div>
+    <div class="card">
+      <div class="card-title">✨ Gems</div>
+      <div class="card-body">Персональные ассистенты — главная тема сегодня</div>
+    </div>
+  </div>
+  <div class="quote">Плюс полная интеграция с Google Workspace: Docs, Sheets, Slides, Gmail, Calendar.</div>
+</div>
+
+<!-- СЛАЙД 12: ЧТО ТАКОЕ GEMS -->
+<div class="slide">
+  <div class="slide-title">Gems — ваш <span class="accent">персональный ассистент</span></div>
+  <div class="slide-subtitle">Gem = мини-версия Gemini, «обученная» под вашу задачу</div>
+  <div class="two-col">
+    <div class="col">
+      <div class="col-title">Обычный Gemini</div>
+      <div class="point">Не знает кто вы</div>
+      <div class="point">Каждый раз объясняете контекст</div>
+      <div class="point">Универсальный, но неточный</div>
+    </div>
+    <div class="col">
+      <div class="col-title" style="color:var(--green);">Ваш Gem</div>
+      <div class="point">Знает вашу роль, бизнес, клиентов</div>
+      <div class="point">Сразу отвечает по делу</div>
+      <div class="point">Заточен под конкретные задачи</div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 13: СОЗДАНИЕ GEM ПОШАГОВО -->
+<div class="slide">
+  <div class="slide-title">Создаём <span class="accent">Gem</span> — пошагово</div>
+  <div class="step"><div class="step-num">1</div><div>Откройте <strong>gemini.google.com</strong></div></div>
+  <div class="step"><div class="step-num">2</div><div>В левом меню найдите <strong>«Gem Manager»</strong> (или «Менеджер Gems»)</div></div>
+  <div class="step"><div class="step-num">3</div><div>Нажмите <strong>«Create Gem»</strong> (Создать)</div></div>
+  <div class="step"><div class="step-num">4</div><div>Заполните <strong>название</strong> — как зовут вашего ассистента</div></div>
+  <div class="step"><div class="step-num">5</div><div>Напишите <strong>инструкции</strong> — кто он, что знает, как отвечает</div></div>
+  <div class="step"><div class="step-num">6</div><div>Нажмите <strong>«Сохранить»</strong> — готово!</div></div>
+</div>
+
+<!-- СЛАЙД 14: ШАБЛОН ИНСТРУКЦИИ -->
+<div class="slide">
+  <div class="slide-title">Шаблон <span class="accent">инструкции</span> для Gem</div>
+  <div class="prompt-block">Ты — [роль: менеджер по продажам / маркетолог / помощник учителя].
+Ты работаешь в [сфера/компания: продажа навесов / детский центр / IT-компания].
+
+Твои основные задачи:
+— [процесс 1 из домашки]
+— [процесс 2 из домашки]
+— [процесс 3 из домашки]
+
+Стиль общения: [дружелюбный / деловой / экспертный].
+Отвечай [коротко и по делу / развёрнуто с примерами].
+
+Что ты знаешь о бизнесе:
+— [ключевая информация: цены, услуги, регион, клиенты]</div>
+  <div class="small-text">Берите процессы прямо из вашей домашки — копируйте и вставляйте.</div>
+</div>
+
+<!-- СЛАЙД 15: ПРИМЕР GEM 1 -->
+<div class="slide">
+  <div class="slide-title">Пример: <span class="accent">менеджер по продажам</span></div>
+  <div class="prompt-block">Ты — менеджер по продажам металлоконструкций и навесов.
+Ты работаешь в Уфе. Компания производит навесы, козырьки, ворота.
+
+Твои задачи:
+— Отвечать клиентам на вопросы про цены и размеры
+— Составлять коммерческие предложения
+— Писать ответы на отзывы
+
+Стиль: дружелюбный, профессиональный, без канцелярита.
+Отвечай коротко, по делу, с конкретными цифрами.
+
+Ключевая информация:
+— Навес 3×6 м — от 65 000 руб.
+— Монтаж входит в стоимость
+— Срок изготовления: 5-7 рабочих дней
+— Бесплатный замер по Уфе и пригороду</div>
+</div>
+
+<!-- СЛАЙД 16: ПРИМЕР GEM 2 -->
+<div class="slide">
+  <div class="slide-title">Пример: <span class="accent">помощник маркетолога</span></div>
+  <div class="prompt-block">Ты — маркетолог для малого бизнеса.
+Специализируешься на SMM и контент-маркетинге.
+
+Твои задачи:
+— Генерировать идеи для постов в соцсетях
+— Писать тексты для Instagram и Telegram
+— Составлять контент-планы на неделю и месяц
+— Анализировать конкурентов
+
+Стиль: живой, без штампов, с эмодзи. Пиши так,
+чтобы хотелось дочитать до конца.
+
+Аудитория: женщины 25-45 лет, Россия.</div>
+</div>
+
+<!-- СЛАЙД 17: ПРАКТИКА -->
+<div class="slide centered">
+  <div style="font-size:64px; margin-bottom:24px;">🛠️</div>
+  <div class="big-statement"><span class="accent">Практика:</span> создаём свой первый Gem</div>
+  <div class="big-statement-sub">Откройте Gemini → Gem Manager → Create Gem<br>Используйте свои процессы из домашки + шаблон со слайда</div>
+  <div class="practice-card" style="margin-top:32px; text-align:left;">
+    <div class="point"><em class="emoji">1️⃣</em> <strong>Дайте имя</strong> — что делает ваш ассистент</div>
+    <div class="point"><em class="emoji">2️⃣</em> <strong>Вставьте процессы</strong> — из вашей домашки</div>
+    <div class="point"><em class="emoji">3️⃣</em> <strong>Добавьте контекст</strong> — цены, услуги, регион</div>
+    <div class="point"><em class="emoji">4️⃣</em> <strong>Протестируйте</strong> — задайте реальный рабочий вопрос</div>
+    <div class="point"><em class="emoji">⏱️</em> <strong>15 минут</strong> — потом смотрим результаты</div>
+  </div>
+</div>
+
+<!-- СЛАЙД 18: ПЕРЕРЫВ -->
+<div class="slide break-slide">
+  <div style="font-size:80px; margin-bottom:24px;">☕</div>
+  <div class="big-statement">Перерыв 10 минут</div>
+  <div class="big-statement-sub">Доделайте Gem, если не успели. После перерыва — Google Workspace и NotebookLM.</div>
+</div>
+
+<!-- СЛАЙД 19: GOOGLE WORKSPACE -->
+<div class="slide">
+  <div class="slide-title"><span class="google-blue">G</span><span class="google-red">o</span><span class="google-yellow">o</span><span class="google-blue">g</span><span class="google-green">l</span><span class="google-red">e</span> <span class="accent">Workspace + Gemini</span></div>
+  <div class="slide-subtitle">Gemini встроен во всю экосистему Google</div>
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-title">📄 Google Docs</div>
+      <div class="card-body">«Помоги написать» — генерация и редактирование текста прямо в документе</div>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 Google Sheets</div>
+      <div class="card-body">Формулы, анализ данных, создание таблиц с помощью ИИ</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🎨 Google Slides</div>
+      <div class="card-body">Генерация слайдов, картинок, оформление презентаций</div>
+    </div>
+    <div class="card">
+      <div class="card-title">📧 Gmail</div>
+      <div class="card-body">«Помоги ответить» — ИИ пишет ответы на письма</div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 20: CANVAS -->
+<div class="slide">
+  <div class="slide-title">Canvas в <span class="accent">Gemini</span></div>
+  <div class="slide-body" style="margin-bottom:24px;">Canvas — это режим работы с документами прямо в чате Gemini. Вы можете создавать, редактировать и форматировать текст — и ИИ помогает вам в процессе.</div>
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-title">Что можно</div>
+      <div class="card-body">• Писать документы совместно с ИИ<br>• Редактировать отдельные части<br>• Менять стиль и тон<br>• Экспортировать в Google Docs</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Когда использовать</div>
+      <div class="card-body">• Длинные тексты (статьи, отчёты)<br>• Когда нужно итеративно править<br>• Когда важно форматирование<br>• Работа с таблицами и списками</div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 21: ПЕРЕХОД К NOTEBOOKLM -->
+<div class="slide break-slide">
+  <div style="font-size:64px; margin-bottom:24px;">📓</div>
+  <div class="big-statement">NotebookLM</div>
+  <div class="big-statement-sub">Персональный исследователь на основе ваших документов</div>
+</div>
+
+<!-- СЛАЙД 22: ЧТО ТАКОЕ NOTEBOOKLM -->
+<div class="slide">
+  <div class="slide-title">NotebookLM — <span class="accent">что это?</span></div>
+  <div class="slide-body" style="margin-bottom:24px;">NotebookLM — это ИИ от Google, который работает <strong>только с вашими документами</strong>. Он не выдумывает — он отвечает строго на основе того, что вы загрузили.</div>
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-title">🔒 Не галлюцинирует</div>
+      <div class="card-body">Отвечает только на основе ваших источников. Если информации нет — скажет об этом.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">📚 Работает с любыми документами</div>
+      <div class="card-body">PDF, Google Docs, сайты, YouTube-видео, текстовые файлы — загружайте что угодно.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🎙️ Audio Overview</div>
+      <div class="card-body">Превращает ваши документы в подкаст — два ведущих обсуждают ваш материал!</div>
+    </div>
+    <div class="card">
+      <div class="card-title">💰 Бесплатно</div>
+      <div class="card-body">notebooklm.google.com — полностью бесплатный инструмент от Google.</div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 23: ЗАЧЕМ NOTEBOOKLM -->
+<div class="slide">
+  <div class="slide-title">Зачем вам <span class="accent">NotebookLM</span>?</div>
+  <div class="tag-grid">
+    <div class="tag"><span class="emoji">📋</span>Загрузить прайс-лист и задавать вопросы по нему</div>
+    <div class="tag"><span class="emoji">📖</span>Проанализировать книгу или курс за 5 минут</div>
+    <div class="tag"><span class="emoji">📹</span>Получить конспект YouTube-видео</div>
+    <div class="tag"><span class="emoji">📄</span>Изучить договор или инструкцию</div>
+  </div>
+  <div class="quote">NotebookLM — это как «нанять аналитика», который прочитает за вас 500 страниц и ответит на любой вопрос.</div>
+</div>
+
+<!-- СЛАЙД 24: СОЗДАНИЕ БЛОКНОТА -->
+<div class="slide">
+  <div class="slide-title">Создаём <span class="accent">блокнот</span> в NotebookLM</div>
+  <div class="step"><div class="step-num">1</div><div>Откройте <strong>notebooklm.google.com</strong></div></div>
+  <div class="step"><div class="step-num">2</div><div>Нажмите <strong>«New Notebook»</strong> (Новый блокнот)</div></div>
+  <div class="step"><div class="step-num">3</div><div>Загрузите <strong>источники</strong> — PDF, ссылку на сайт, YouTube-видео, Google Doc</div></div>
+  <div class="step"><div class="step-num">4</div><div>Подождите, пока NotebookLM проанализирует документы</div></div>
+  <div class="step"><div class="step-num">5</div><div>Задайте <strong>любой вопрос</strong> по загруженным материалам</div></div>
+  <div class="warning-card">
+    <div class="point"><em class="emoji">📊</em> <strong>Ограничения:</strong> до 50 источников на блокнот, до 500 000 слов на источник. Более чем достаточно!</div>
+  </div>
+</div>
+
+<!-- СЛАЙД 25: AUDIO OVERVIEW -->
+<div class="slide">
+  <div class="slide-title">Audio Overview — <span class="accent">подкаст из ваших документов</span></div>
+  <div class="slide-body" style="margin-bottom:24px;">Самая необычная функция NotebookLM: два ведущих обсуждают ваши документы в формате подкаста. Звучит невероятно — но это реально работает.</div>
+  <div class="step"><div class="step-num">1</div><div>Загрузите документы в блокнот</div></div>
+  <div class="step"><div class="step-num">2</div><div>Нажмите <strong>«Audio Overview»</strong> → <strong>«Generate»</strong></div></div>
+  <div class="step"><div class="step-num">3</div><div>Подождите 2-3 минуты</div></div>
+  <div class="step"><div class="step-num">4</div><div>Слушайте подкаст о вашем материале!</div></div>
+  <div class="quote">Загрузите свой прайс-лист — и послушайте, как два ведущих обсуждают ваш бизнес. WOW-эффект гарантирован.</div>
+</div>
+
+<!-- СЛАЙД 26: NOTEBOOKLM + GEM -->
+<div class="slide">
+  <div class="slide-title">Суперсила: <span class="accent">NotebookLM + Gem</span></div>
+  <div class="slide-body" style="margin-bottom:24px;">А теперь самое мощное: берём знания из NotebookLM и добавляем их в инструкцию вашего Gem.</div>
+  <div class="step"><div class="step-num">1</div><div>В NotebookLM: загрузите рабочие документы (прайс, каталог, FAQ)</div></div>
+  <div class="step"><div class="step-num">2</div><div>Спросите: <strong>«Собери ключевую информацию в краткое описание»</strong></div></div>
+  <div class="step"><div class="step-num">3</div><div>Скопируйте результат</div></div>
+  <div class="step"><div class="step-num">4</div><div>Вставьте в инструкцию вашего Gem — в раздел «Что ты знаешь о бизнесе»</div></div>
+  <div class="practice-card" style="margin-top:16px;">
+    <div class="point"><strong>Результат:</strong> ваш Gem теперь знает не только процессы (из домашки), но и конкретные данные (из документов). Это уже <span class="accent">полноценный ИИ-сотрудник</span>.</div>
+  </div>
+</div>
+
+<!-- СЛАЙД 27: ПРАКТИКА 2 -->
+<div class="slide centered">
+  <div style="font-size:64px; margin-bottom:24px;">🚀</div>
+  <div class="big-statement"><span class="accent">Практика:</span> прокачиваем Gem</div>
+  <div class="big-statement-sub">NotebookLM → собираем знания → добавляем в Gem</div>
+  <div class="practice-card" style="margin-top:32px; text-align:left;">
+    <div class="point"><em class="emoji">1️⃣</em> <strong>Откройте NotebookLM</strong> — notebooklm.google.com</div>
+    <div class="point"><em class="emoji">2️⃣</em> <strong>Загрузите документ</strong> — прайс, каталог, описание услуг</div>
+    <div class="point"><em class="emoji">3️⃣</em> <strong>Попросите суммаризировать</strong> ключевую информацию</div>
+    <div class="point"><em class="emoji">4️⃣</em> <strong>Добавьте в Gem</strong> — обновите инструкцию ассистента</div>
+    <div class="point"><em class="emoji">5️⃣</em> <strong>Протестируйте</strong> — задайте сложный вопрос клиента</div>
+    <div class="point"><em class="emoji">⏱️</em> <strong>10 минут</strong></div>
+  </div>
+</div>
+
+<!-- СЛАЙД 28: ИТОГ -->
+<div class="slide">
+  <div class="slide-title">Что мы сделали <span class="accent">сегодня</span></div>
+  <div class="step"><div class="step-num">✓</div><div>Узнали разницу между <strong>разовым промптом</strong> и <strong>ассистентом</strong></div></div>
+  <div class="step"><div class="step-num">✓</div><div>Познакомились с <strong>GPTs</strong> (ChatGPT) и <strong>Gems</strong> (Gemini)</div></div>
+  <div class="step"><div class="step-num">✓</div><div>Установили <strong>Google Gemini</strong> — бесплатный ИИ без VPN</div></div>
+  <div class="step"><div class="step-num">✓</div><div>Создали <strong>персонального Gem</strong> из своих рабочих процессов</div></div>
+  <div class="step"><div class="step-num">✓</div><div>Изучили <strong>Google Workspace + Canvas</strong></div></div>
+  <div class="step"><div class="step-num">✓</div><div>Глубоко разобрали <strong>NotebookLM</strong> — загрузка, вопросы, Audio Overview</div></div>
+  <div class="step"><div class="step-num">✓</div><div>Прокачали Gem — <strong>добавили базу знаний</strong> из NotebookLM</div></div>
+</div>
+
+<!-- СЛАЙД 29: ДОМАШКА -->
+<div class="slide">
+  <div class="slide-title">Домашнее <span class="accent">задание</span></div>
+  <div class="practice-card">
+    <div style="font-size:22px; font-weight:700; margin-bottom:16px; color:var(--accent);">⭐ Главное задание</div>
+    <div class="point"><em class="emoji">1️⃣</em> <strong>Доработайте свой Gem</strong> — добавьте все процессы, уточните инструкции</div>
+    <div class="point"><em class="emoji">2️⃣</em> <strong>Загрузите в NotebookLM</strong> рабочие документы (прайс, каталог, FAQ, инструкции)</div>
+    <div class="point"><em class="emoji">3️⃣</em> <strong>Перенесите знания</strong> из NotebookLM в инструкцию Gem</div>
+    <div class="point"><em class="emoji">4️⃣</em> <strong>Протестируйте</strong> на 5 реальных рабочих задачах</div>
+    <div class="point"><em class="emoji">5️⃣</em> <strong>Скриншоты в чат</strong> — покажите, как отвечает ваш ассистент!</div>
+  </div>
+  <div class="warning-card" style="margin-top:16px;">
+    <div class="point"><em class="emoji">📋</em> <strong>К следующему занятию:</strong> подготовьте данные для анализа — таблицу, отчёт, или любой документ с цифрами. Будем работать с данными!</div>
+  </div>
+</div>
+
+<!-- СЛАЙД 30: АНОНС -->
+<div class="slide centered">
+  <div class="big-statement">Следующее занятие:<br><span class="accent">Данные/Исследование</span></div>
+  <div class="big-statement-sub">ИИ как аналитик — работа с таблицами, отчётами, исследованиями.<br>Научимся извлекать инсайты из данных за минуты.</div>
+</div>
+
+<!-- СЛАЙД 31: ФИНАЛ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;">neovida.ai / ИИ. Новая реальность</div>
+  <div class="title-big">Спасибо!</div>
+  <div class="title-sub">Вопросы? Пишите в чат — разберёмся вместе.</div>
+  <div class="title-meta">До следующей субботы! 💪</div>
+</div>
+
+</div>
+
+<script>
+(function() {
+  const slides = document.querySelectorAll('.slide');
+  const counter = document.getElementById('slideCounter');
+  const progress = document.getElementById('progressBar');
+  const fsBtn = document.getElementById('fsBtn');
+  const total = slides.length;
+  let current = 0;
+
+  function show(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[current].classList.remove('active');
+    slides[current].classList.add('prev');
+    current = idx;
+    slides.forEach((s, i) => {
+      s.classList.remove('active', 'prev');
+      if (i < current) s.classList.add('prev');
+    });
+    slides[current].classList.add('active');
+    counter.textContent = (current + 1) + ' / ' + total;
+    progress.style.width = ((current + 1) / total * 100) + '%';
+    slides[current].scrollTop = 0;
+  }
+
+  function next() { show(current + 1); }
+  function prev() { show(current - 1); }
+
+  slides[0].classList.add('active');
+  counter.textContent = '1 / ' + total;
+  progress.style.width = (1 / total * 100) + '%';
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+    if (e.key === 'Home') { e.preventDefault(); show(0); }
+    if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+  });
+
+  let touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    const dx = e.changedTouches[0].screenX - touchStartX;
+    const dy = e.changedTouches[0].screenY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0) next(); else prev();
+    }
+  }, { passive: true });
+
+  fsBtn.addEventListener('click', function() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(function(){});
+    } else {
+      document.exitFullscreen();
+    }
+  });
+})();
+</script>
+</body>
+</html>
