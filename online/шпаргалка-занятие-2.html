@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность — Шпаргалка. Занятие 2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #1a1a2e;
+    --bg-light: #1e3a2e;
+    --bg-card: rgba(255,255,255,0.06);
+    --bg-card-hover: rgba(255,255,255,0.1);
+    --accent: #10b981;
+    --accent-dark: #059669;
+    --accent-glow: rgba(16,185,129,0.15);
+    --coral: #E07461;
+    --white: #ffffff;
+    --white-90: rgba(255,255,255,0.9);
+    --white-70: rgba(255,255,255,0.7);
+    --white-50: rgba(255,255,255,0.5);
+    --white-30: rgba(255,255,255,0.3);
+    --white-15: rgba(255,255,255,0.15);
+    --white-08: rgba(255,255,255,0.08);
+    --green: #5ec47a;
+    --red: #e05555;
+    --yellow: #f0c040;
+    --blue: #4285f4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--white-90);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .header-logo {
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    opacity: 0.85; margin-bottom: 12px;
+  }
+  .header h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; line-height: 1.2; }
+  .header p { font-size: 14px; opacity: 0.9; }
+
+  .container { max-width: 720px; margin: 0 auto; padding: 0 20px 40px; }
+
+  .section { margin: 28px 0; }
+  .section-title {
+    font-size: 18px; font-weight: 800; color: var(--white);
+    margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .num {
+    background: var(--accent); color: white;
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; flex-shrink: 0;
+  }
+  .section-subtitle {
+    font-size: 13px; color: var(--white-50);
+    margin-bottom: 12px; margin-left: 36px;
+  }
+  .section-tag {
+    display: inline-block; margin-left: 36px; margin-bottom: 10px;
+    padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(16,185,129,0.25);
+  }
+
+  /* PROMPT BOXES */
+  .prompt-box {
+    background: var(--bg-light);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 16px 18px; margin: 12px 0;
+    font-size: 14px; line-height: 1.6;
+    position: relative; cursor: pointer;
+    transition: background 0.2s; white-space: pre-line;
+    color: var(--white-90);
+  }
+  .prompt-box:hover { background: rgba(16,185,129,0.15); }
+  .prompt-box::after {
+    content: 'нажмите, чтобы скопировать';
+    position: absolute; top: 8px; right: 12px;
+    font-size: 11px; color: var(--white-50); opacity: 0.7;
+  }
+  .prompt-box.copied { border-left-color: var(--green); }
+  .prompt-box.copied::after { content: 'скопировано!'; color: var(--green); opacity: 1; }
+
+  .prompt-label {
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 6px; margin-top: 16px;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--bg-card); border: 1px solid var(--white-08);
+    border-radius: 12px; padding: 16px 18px; margin: 8px 0;
+  }
+  .card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--white); }
+  .card-body { font-size: 13px; color: var(--white-70); line-height: 1.6; }
+
+  .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+  @media (max-width: 560px) { .cards-grid { grid-template-columns: 1fr; } }
+
+  /* STEP LIST */
+  .step-list { margin: 12px 0; }
+  .step-item {
+    display: flex; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid var(--white-08);
+    font-size: 14px; line-height: 1.5;
+  }
+  .step-item:last-child { border-bottom: none; }
+  .step-num {
+    width: 24px; height: 24px; background: var(--accent); color: white;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+  }
+
+  /* FORMULA VISUAL */
+  .formula-row {
+    display: flex; gap: 6px; justify-content: center;
+    flex-wrap: wrap; margin: 16px 0;
+  }
+  .formula-letter {
+    width: 56px; height: 56px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 800; color: white;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .formula-plus {
+    display: flex; align-items: center; font-size: 20px;
+    font-weight: 700; color: var(--white-50);
+  }
+
+  /* TIP / WARNING / INFO / SUCCESS */
+  .tip {
+    background: rgba(94,196,122,0.1); border: 1px solid rgba(94,196,122,0.2);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+  .tip-icon { flex-shrink: 0; font-size: 16px; }
+
+  .warning {
+    background: rgba(224,85,85,0.1); border: 1px solid rgba(224,85,85,0.2);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+
+  .success {
+    background: var(--accent-glow); border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+
+  .info {
+    background: rgba(240,192,64,0.1); border: 1px solid rgba(240,192,64,0.2);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+
+  /* VS GRID */
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+  @media (max-width: 560px) { .vs-grid { grid-template-columns: 1fr; } }
+  .vs-card { border-radius: 12px; padding: 14px 16px; font-size: 13px; line-height: 1.6; }
+  .vs-card.bad { background: rgba(224,85,85,0.08); border: 1px solid rgba(224,85,85,0.2); }
+  .vs-card.good { background: var(--accent-glow); border: 1px solid rgba(16,185,129,0.25); }
+
+  /* CHECKLIST */
+  .checklist { margin: 12px 0; }
+  .checklist-item {
+    display: flex; gap: 10px; padding: 8px 0;
+    font-size: 14px; line-height: 1.5;
+    border-bottom: 1px solid var(--white-08);
+  }
+  .checklist-item:last-child { border-bottom: none; }
+  .check-icon { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+
+  /* TABLE */
+  .info-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  .info-table th {
+    text-align: left; padding: 10px 12px; background: var(--accent-glow);
+    border-bottom: 2px solid var(--accent); color: var(--accent); font-weight: 700;
+  }
+  .info-table td {
+    padding: 10px 12px; border-bottom: 1px solid var(--white-08);
+    color: var(--white-70); vertical-align: top;
+  }
+  .info-table tr:hover td { background: var(--bg-card); }
+
+  /* IDEAS LIST */
+  .ideas-list { margin: 10px 0; }
+  .idea-item {
+    display: flex; gap: 10px; padding: 6px 0; font-size: 13px;
+    color: var(--white-70); line-height: 1.5;
+  }
+  .idea-name { font-weight: 700; color: var(--accent); min-width: 70px; flex-shrink: 0; }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--white-15); margin: 28px 0; }
+
+  /* TECHNIQUE CARD */
+  .technique-card {
+    background: var(--bg-card); border: 1px solid var(--white-08);
+    border-radius: 12px; padding: 14px 16px; margin: 8px 0;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .technique-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0; background: var(--accent-glow);
+  }
+  .technique-text { flex: 1; }
+  .technique-name { font-weight: 700; font-size: 14px; color: var(--white); margin-bottom: 3px; }
+  .technique-desc { font-size: 12px; color: var(--white-70); line-height: 1.5; }
+
+  /* ITERATION CHIPS */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+  .chip {
+    background: var(--accent-glow); border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 8px; padding: 6px 12px; font-size: 12px;
+    color: var(--accent); font-weight: 600; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .chip:hover { background: rgba(16,185,129,0.25); }
+
+  /* FOOTER */
+  .footer {
+    text-align: center; padding: 24px; font-size: 12px;
+    color: var(--white-50); border-top: 1px solid var(--white-08); margin-top: 32px;
+  }
+  .footer strong { color: var(--accent); }
+
+  /* PDF BUTTON */
+  .pdf-btn {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--accent); color: white; border: none;
+    padding: 14px 24px; border-radius: 12px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(16,185,129,0.4);
+    z-index: 1000; transition: transform 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .pdf-btn:hover { transform: translateY(-2px); }
+
+  @media print {
+    .prompt-box::after { display: none; }
+    .header { padding: 20px; }
+    body { font-size: 12px; background: #fff; color: #1a1a2e; }
+    .prompt-box { font-size: 12px; padding: 10px 14px; color: #1a1a2e; background: #f1f5f9; }
+    .pdf-btn { display: none; }
+    .card, .technique-card { border: 1px solid #ddd; }
+    .section-title, .card-title, .technique-name { color: #1a1a2e; }
+    .card-body, .section-subtitle, .step-item, .technique-desc { color: #333; }
+    .info-table th { background: #e8f5e9; color: #059669; }
+    .info-table td { color: #333; }
+  }
+</style>
+</head>
+<body>
+
+<button class="pdf-btn" onclick="window.print()">Скачать PDF</button>
+
+<div class="header">
+  <div class="header-logo">neovida.ai / ИИ. Новая реальность</div>
+  <h1>Шпаргалка. Занятие 2</h1>
+  <p>Промпт-инженерия от А до Я</p>
+</div>
+
+<div class="container">
+
+  <!-- ==================== СЕКЦИЯ 1: ФОРМУЛА РКЗФО ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">1</span> Формула РКЗФО</div>
+    <div class="section-tag">📖 Тема урока: Основы промпт-инженерии</div>
+    <div class="section-subtitle">Универсальная формула для любого запроса к ИИ</div>
+
+    <div class="formula-row">
+      <div class="formula-letter" style="background: #ef4444;">Р</div>
+      <div class="formula-plus">+</div>
+      <div class="formula-letter" style="background: #f59e0b;">К</div>
+      <div class="formula-plus">+</div>
+      <div class="formula-letter" style="background: #10b981;">З</div>
+      <div class="formula-plus">+</div>
+      <div class="formula-letter" style="background: #3b82f6;">Ф</div>
+      <div class="formula-plus">+</div>
+      <div class="formula-letter" style="background: #8b5cf6;">О</div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-title" style="color: #ef4444;">Р &mdash; Роль</div>
+        <div class="card-body">Кем должен быть ИИ?<br><em>Ты &mdash; опытный маркетолог с 10-летним опытом</em></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color: #f59e0b;">К &mdash; Контекст</div>
+        <div class="card-body">Что за ситуация?<br><em>У меня кофейня в городе на 500к жителей, работаем 2 года</em></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color: #10b981;">З &mdash; Задача</div>
+        <div class="card-body">Что конкретно сделать?<br><em>Составь контент-план на месяц для Instagram</em></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color: #3b82f6;">Ф &mdash; Формат</div>
+        <div class="card-body">В каком виде ответ?<br><em>Таблица: дата, тема, формат поста, описание</em></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top: 0;">
+      <div class="card-title" style="color: #8b5cf6;">О &mdash; Ограничения</div>
+      <div class="card-body">Чего НЕ делать, лимиты, рамки<br><em>Бюджет 30 000 руб./мес, не использовать платную рекламу, только органический контент</em></div>
+    </div>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span><strong>Минимальная формула:</strong> Роль + Задача + Формат. Этих трёх элементов достаточно для большинства запросов. Контекст и Ограничения &mdash; для точности.</span>
+    </div>
+
+    <div class="prompt-label">Полный пример по РКЗФО</div>
+    <div class="prompt-box">Роль: ты — бизнес-консультант с 15-летним опытом анализа рынков в России.
+
+Контекст: я открываю онлайн-школу по подготовке к ЕГЭ. Город — миллионник, целевая аудитория — родители школьников 9-11 классов. Бюджет на запуск — 300 000 руб.
+
+Задача: проанализируй рынок онлайн-подготовки к ЕГЭ и составь план выхода на рынок.
+
+Формат:
+1. Обзор рынка (объём, тренды, конкуренты) — 3-5 абзацев
+2. SWOT-анализ — таблица
+3. Пошаговый план запуска на 3 месяца — нумерованный список
+4. Рекомендации по каналам привлечения — топ-5 с бюджетом
+
+Ограничения: не предлагай офлайн-рекламу. Фокус на digital-каналы. Учитывай, что я один, без команды на старте.</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 2: ШАБЛОН РКЗФО ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">2</span> Шаблон РКЗФО</div>
+    <div class="section-tag">📋 Шаблон для практики — копируй и подставляй</div>
+    <div class="section-subtitle">Скопируйте, заполните квадратные скобки и вставьте в ИИ</div>
+
+    <div class="prompt-box">Роль: ты — [профессия] с [X]-летним опытом в [область].
+
+Контекст: [кто вы, ваш бизнес/работа, ситуация, город].
+
+Задача: [что конкретно нужно сделать].
+
+Формат: [таблица / список / пошагово / текст на N слов].
+
+Ограничения: [чего НЕ делать, бюджет, сроки, другие рамки].</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 3: 5 ГОТОВЫХ РОЛЕЙ ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">3</span> 5 готовых ролей</div>
+    <div class="section-tag">📋 Готовые роли — вставляй в начало любого промпта</div>
+    <div class="section-subtitle">Копируйте и подставляйте в начало любого промпта</div>
+
+    <div class="prompt-label">Маркетолог</div>
+    <div class="prompt-box">Ты — опытный маркетолог с 10-летним опытом в digital-маркетинге и SMM. Ты знаешь, как продвигать бизнес в социальных сетях, настраивать таргет и создавать контент, который привлекает клиентов.</div>
+
+    <div class="prompt-label">Бизнес-консультант</div>
+    <div class="prompt-box">Ты — бизнес-консультант, специализирующийся на малом бизнесе в России. Ты помогаешь предпринимателям находить точки роста, оптимизировать процессы и увеличивать прибыль.</div>
+
+    <div class="prompt-label">HR-директор</div>
+    <div class="prompt-box">Ты — HR-директор с опытом управления командами от 10 до 100 человек. Ты знаешь, как нанимать, мотивировать и удерживать сотрудников. Разбираешься в трудовом законодательстве РФ.</div>
+
+    <div class="prompt-label">Копирайтер</div>
+    <div class="prompt-box">Ты — копирайтер-продажник, пишущий тексты, которые продают. Ты владеешь формулами AIDA, PAS, 4U. Пишешь живым языком без канцеляризмов и воды.</div>
+
+    <div class="prompt-label">Финансовый аналитик</div>
+    <div class="prompt-box">Ты — финансовый аналитик, помогающий предпринимателям считать деньги. Ты умеешь строить финансовые модели, считать unit-экономику, анализировать P&L и находить, где бизнес теряет прибыль.</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 4: ОБРАТНЫЙ ПРОМПТИНГ ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">4</span> Техника: Обратный промптинг</div>
+    <div class="section-tag">⚡ Техника 1 — используй когда есть пример, который нравится</div>
+    <div class="section-subtitle">Покажи ИИ пример &mdash; он извлечёт паттерн и воспроизведёт для вашей задачи</div>
+
+    <div class="cards-grid">
+      <div class="technique-card">
+        <div class="technique-icon">📸</div>
+        <div class="technique-text">
+          <div class="technique-name">Картинка &rarr; промпт</div>
+          <div class="technique-desc">Загрузите картинку, попросите описать и сделать промпт для генерации похожей</div>
+        </div>
+      </div>
+      <div class="technique-card">
+        <div class="technique-icon">📝</div>
+        <div class="technique-text">
+          <div class="technique-name">Стиль блогера &rarr; ваши посты</div>
+          <div class="technique-desc">Скопируйте 3 поста, попросите извлечь стиль и писать так же</div>
+        </div>
+      </div>
+      <div class="technique-card">
+        <div class="technique-icon">📧</div>
+        <div class="technique-text">
+          <div class="technique-name">Удачное письмо &rarr; шаблон</div>
+          <div class="technique-desc">Покажите письмо, которое сработало &mdash; ИИ извлечёт тон и структуру</div>
+        </div>
+      </div>
+      <div class="technique-card">
+        <div class="technique-icon">🌐</div>
+        <div class="technique-text">
+          <div class="technique-name">Сайт конкурента &rarr; свой</div>
+          <div class="technique-desc">Опишите или покажите скриншот &mdash; ИИ воспроизведёт дизайн и структуру</div>
+        </div>
+      </div>
+      <div class="technique-card" style="grid-column: 1 / -1;">
+        <div class="technique-icon">📄</div>
+        <div class="technique-text">
+          <div class="technique-name">Хорошее КП &rarr; формула</div>
+          <div class="technique-desc">Загрузите коммерческое предложение, которое закрыло сделку &mdash; ИИ извлечёт структуру</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prompt-label">📸 Вариант 1: Извлечь промпт из изображения</div>
+    <div class="prompt-box">Посмотри на это изображение.
+
+Опиши его максимально подробно:
+— Что изображено (объекты, люди, фон)
+— Стиль (фотореализм, иллюстрация, 3D, минимализм)
+— Цветовая палитра (тёплые/холодные, основные цвета)
+— Композиция (ракурс, свет, глубина)
+— Настроение и атмосфера
+
+Теперь сделай из этого описания готовый промпт для генерации похожего изображения. Промпт должен быть на английском языке, подробный, 3-5 предложений.</div>
+
+    <div class="prompt-label">📝 Вариант 2: Извлечь стиль из текстов/постов</div>
+    <div class="prompt-box">Вот 3 примера текстов, которые мне нравятся:
+
+[Вставьте пример 1]
+[Вставьте пример 2]
+[Вставьте пример 3]
+
+Проанализируй эти тексты. Извлеки:
+— Тон и стиль (формальный/неформальный, длина предложений)
+— Структуру (как начинается, развивается, заканчивается)
+— Приёмы (метафоры, вопросы, призывы, эмодзи)
+— Особенности (фирменные фразы, обращения)
+
+Сделай из этого промпт-инструкцию, чтобы я мог писать тексты в таком же стиле на любую тему.</div>
+
+    <div class="prompt-label">📄 Вариант 3: Извлечь структуру из договора/КП</div>
+    <div class="prompt-box">Вот документ (договор / коммерческое предложение / презентация), который хорошо работает.
+
+Проанализируй его и извлеки:
+— Структуру (какие разделы, в каком порядке)
+— Логику убеждения (как подводит к решению)
+— Ключевые формулировки (что цепляет, что вызывает доверие)
+— Форматирование (заголовки, списки, акценты)
+
+Сделай из этого универсальный шаблон, чтобы я мог создавать такие же документы для других клиентов. Шаблон должен быть с пояснениями: [что писать в каждом разделе].</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 5: РАССУЖДАЙ ПОШАГОВО ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">5</span> Техника: Рассуждай пошагово</div>
+    <div class="section-tag">⚡ Техника 2 — используй для сложных решений и анализа</div>
+    <div class="section-subtitle">Магическая фраза, которая делает ответы ИИ в разы глубже и точнее</div>
+
+    <div class="success">
+      <span class="tip-icon">🧠</span>
+      <span><strong>Когда использовать:</strong> сложные решения, расчёты, стратегии, анализ &mdash; любые задачи, где нужна логика, а не просто текст.</span>
+    </div>
+
+    <div class="prompt-label">Промпт: пошаговое рассуждение</div>
+    <div class="prompt-box">[Ваш вопрос].
+
+Рассуждай пошагово:
+1. Сначала проанализируй исходные данные
+2. Рассмотри все варианты
+3. Для каждого варианта оцени плюсы и минусы
+4. Дай финальную рекомендацию с обоснованием</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 6: УСИЛЬ ОТВЕТ ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">6</span> Техника: Усиль ответ</div>
+    <div class="section-tag">⚡ Техника 3 — используй после получения первого результата</div>
+    <div class="section-subtitle">Три приёма, чтобы получить от ИИ экспертный результат</div>
+
+    <div class="card" style="margin-bottom: 12px;">
+      <div class="card-title">🎯 Приём 1: Три эксперта</div>
+      <div class="card-body">ИИ отвечает от лица трёх разных специалистов, потом они спорят и дают общую рекомендацию.</div>
+    </div>
+    <div class="prompt-box">Ответь на мой вопрос от лица трёх специалистов:
+1. Маркетолог с опытом 15 лет
+2. Финансист-практик
+3. Предприниматель, который прошёл этот путь
+
+Пусть каждый даст свою оценку, а потом обсудите между собой и дайте общую рекомендацию.
+
+Мой вопрос: [ваш вопрос]</div>
+
+    <div class="card" style="margin-top: 20px; margin-bottom: 12px;">
+      <div class="card-title">😈 Приём 2: Адвокат дьявола</div>
+      <div class="card-body">Просите ИИ раскритиковать собственный ответ &mdash; находит слабые места, о которых вы не подумали.</div>
+    </div>
+    <div class="prompt-box">Теперь раскритикуй свой же ответ. Найди:
+— 5 слабых мест
+— 3 риска, о которых я не подумал
+— 2 причины, почему это может не сработать
+— 1 альтернативный подход, который может быть лучше
+
+Будь максимально жёстким и честным.</div>
+
+    <div class="card" style="margin-top: 20px; margin-bottom: 12px;">
+      <div class="card-title">🔄 Приём 3: Адаптируй</div>
+      <div class="card-body">Один текст &mdash; три аудитории. ИИ перепишет, сохранив суть, но изменив подачу.</div>
+    </div>
+    <div class="prompt-box">Перепиши этот текст для трёх разных аудиторий:
+1. Для клиента — просто, с выгодами, призыв к действию
+2. Для инвестора — цифры, рынок, потенциал роста
+3. Для сотрудника-новичка — пошагово, без сложных терминов
+
+Сохрани суть, измени подачу и тон.</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 7: ИТЕРАЦИИ + ЗАПРЕТЫ ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">7</span> Техника: Итерации + Запреты</div>
+    <div class="section-tag">⚡ Техника 4 — используй когда результат «почти, но не то»</div>
+    <div class="section-subtitle">Первый ответ &mdash; это черновик. Дорабатывайте в диалоге</div>
+
+    <div class="info">
+      <span class="tip-icon">🔁</span>
+      <span><strong>Принцип:</strong> не пытайтесь получить идеал с первого раза. Задайте промпт &rarr; получите ответ &rarr; уточните. 2-3 итерации = отличный результат.</span>
+    </div>
+
+    <div class="prompt-label">Фразы для итераций (нажмите, чтобы скопировать)</div>
+    <div class="chips">
+      <div class="chip" onclick="copyChip(this)">Хорошо, но сделай короче</div>
+      <div class="chip" onclick="copyChip(this)">Измени тон на более дружелюбный</div>
+      <div class="chip" onclick="copyChip(this)">Дай 3 варианта с разным тоном</div>
+      <div class="chip" onclick="copyChip(this)">НЕ используй канцеляризмы</div>
+      <div class="chip" onclick="copyChip(this)">НЕ используй слово «уникальный»</div>
+      <div class="chip" onclick="copyChip(this)">Это не то. Я имел в виду...</div>
+    </div>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span><strong>Запреты работают!</strong> Фраза &laquo;НЕ используй&raquo; &mdash; мощный инструмент. Если ИИ пишет штампами &mdash; запретите конкретные слова.</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 8: ЗАДАЙ МНЕ ВОПРОСЫ ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">8</span> Техника: Задай мне вопросы</div>
+    <div class="section-tag">⚡ Техника 5 — используй когда не знаешь с чего начать</div>
+    <div class="section-subtitle">Самая мощная техника &mdash; ИИ сам выяснит, что ему нужно</div>
+
+    <div class="success">
+      <span class="tip-icon">🏆</span>
+      <span><strong>Почему это работает:</strong> вы не всегда знаете, какой контекст важен. ИИ задаёт правильные вопросы &mdash; и результат получается в 3-5 раз точнее.</span>
+    </div>
+
+    <div class="prompt-box">Я хочу [ваша задача].
+
+Прежде чем начинать — задай мне 10 уточняющих вопросов, чтобы результат был максимально полезным.
+
+После моих ответов выполни задачу.</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 9: СУПЕРТЕХНИКА ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">9</span> Супертехника: Наговори голосом</div>
+    <div class="section-tag">⭐ Главная техника — заменяет все остальные</div>
+    <div class="section-subtitle">Не нужно писать промпты руками &mdash; расскажите голосом, ИИ сам упакует</div>
+
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div><strong>Наговорите голосом</strong> в чат с ИИ, что вам нужно. Не думайте о формулировках &mdash; просто расскажите задачу своими словами, как будто объясняете коллеге.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div><strong>Отправьте магическую фразу</strong> (скопируйте ниже) &mdash; ИИ превратит вашу речь в идеальный промпт и сразу выполнит задачу.</div>
+      </div>
+    </div>
+
+    <div class="prompt-label">Магическая фраза после голосового сообщения</div>
+    <div class="prompt-box">Упакуй мою мысль в промпт по формуле РКЗФО. Примени все правила промпт-инженерии. Выполни получившийся промпт.</div>
+
+    <div class="info">
+      <span class="tip-icon">🎙️</span>
+      <span><strong>Важно:</strong> РКЗФО &mdash; это фундамент, который нужно понимать. Но писать промпты вручную каждый раз не обязательно &mdash; голос + эта фраза дают тот же результат.</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 9.5: МЕТА-ПРОМПТ ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">+</span> Техника: Мета-промпт</div>
+    <div class="section-tag">⚡ Техника 6 — промпт для создания промпта</div>
+    <div class="section-subtitle">Приём, при котором вы даёте ИИ сырую идею в свободной форме, а он сам превращает это в готовый промпт</div>
+
+    <div class="info">
+      <span class="tip-icon">🍳</span>
+      <span><strong>Аналогия:</strong> вы не готовите блюдо сами — вы объясняете повару, какой рецепт написать. Повар пишет рецепт, вы проверяете и говорите: «Теперь готовь по нему.»</span>
+    </div>
+
+    <div class="prompt-label">Промпт: мета-промпт</div>
+    <div class="prompt-box">Вот моя задача (описываю как получится):
+
+[Опишите задачу своими словами — хоть 2 предложения, хоть абзац]
+
+Теперь возьми то, что я сказал, и собери из этого правильный промпт — с ролью, контекстом, задачей, форматом и всеми нужными инструкциями по формуле РКЗФО.
+
+Покажи мне готовый промпт, дай проверить, и после моего одобрения — выполни его.</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 9.6: ФРАЗЫ-УСИЛИТЕЛИ ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">+</span> Фразы-усилители</div>
+    <div class="section-tag">💎 Добавляй в любой промпт — выбирай те, что подходят к задаче</div>
+    <div class="section-subtitle">15 инструкций, которые делают ответ ИИ точнее, честнее и полезнее</div>
+
+    <div class="cards-grid">
+      <div class="card"><div class="card-body"><strong style="color:var(--accent);">1.</strong> «Если не знаешь — скажи прямо, не выдумывай»</div></div>
+      <div class="card"><div class="card-body"><strong style="color:var(--accent);">2.</strong> «Не уверен — перепроверь, не отвечай наугад»</div></div>
+      <div class="card"><div class="card-body"><strong style="color:var(--accent);">3.</strong> «Отвечай развёрнуто, не сокращай»</div></div>
+      <div class="card"><div class="card-body"><strong style="color:var(--accent);">4.</strong> «Мало контекста — сначала спроси, потом делай»</div></div>
+      <div class="card"><div class="card-body"><strong style="color:var(--accent);">5.</strong> «Не додумывай за меня — спроси»</div></div>
+      <div class="card"><div class="card-body"><strong style="color:var(--accent);">6.</strong> «Ошибся — не спорь, исправь»</div></div>
+      <div class="card"><div class="card-body"><strong style="color:var(--accent);">7.</strong> «Держи фокус, не уходи в сторону»</div></div>
+      <div class="card"><div class="card-body"><strong style="color:var(--accent);">8.</strong> «Помни всё, что я сказал выше»</div></div>
+      <div class="card"><div class="card-body"><strong style="color:var(--yellow);">9.</strong> «Моя идея слабая — скажи честно»</div></div>
+      <div class="card"><div class="card-body"><strong style="color:var(--yellow);">10.</strong> «Видишь лучший вариант — предложи»</div></div>
+      <div class="card"><div class="card-body"><strong style="color:var(--yellow);">11.</strong> «Качество важнее скорости»</div></div>
+      <div class="card"><div class="card-body"><strong style="color:var(--yellow);">12.</strong> «Не повторяй одну мысль ради объёма»</div></div>
+      <div class="card"><div class="card-body"><strong style="color:var(--coral);">13.</strong> «Факт или мнение — обозначай»</div></div>
+      <div class="card"><div class="card-body"><strong style="color:var(--coral);">14.</strong> «Три вопроса — три отдельных ответа»</div></div>
+      <div class="card"><div class="card-body"><strong style="color:var(--coral);">15.</strong> «Сначала суть, потом объяснение»</div></div>
+    </div>
+
+    <div class="tip" style="margin-top:12px;">
+      <span class="tip-icon">🎨</span>
+      <span><strong>Температура мышления:</strong> хочешь креатив — «будь смелее, предложи нестандартное». Хочешь точность — «строго по фактам, без фантазий».</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 10: ПАМЯТЬ ИИ ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">10</span> Память ИИ &mdash; правила</div>
+    <div class="section-tag">📖 Тема урока: Как работает память ИИ</div>
+    <div class="section-subtitle">Как работать с контекстным окном, чтобы ИИ не &laquo;забывал&raquo;</div>
+
+    <div class="vs-grid">
+      <div class="vs-card good">
+        <strong style="color: var(--accent);">Бесплатный план</strong><br>
+        ~100 страниц контекста
+      </div>
+      <div class="vs-card good">
+        <strong style="color: var(--accent);">Платный план</strong><br>
+        ~500 страниц контекста
+      </div>
+    </div>
+
+    <div class="cards-grid" style="margin-top: 12px;">
+      <div class="card">
+        <div class="card-title">1. Важное &mdash; в начало и конец</div>
+        <div class="card-body">ИИ лучше запоминает начало и конец разговора. Ключевую информацию размещайте там.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">2. Списки, а не стены текста</div>
+        <div class="card-body">Нумерованные списки ИИ обрабатывает лучше, чем сплошной текст. Структурируйте вводные.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">3. Новая тема = новый чат</div>
+        <div class="card-body">Не мешайте задачи в одном чате. Каждая тема &mdash; отдельный разговор. Так контекст чище.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">4. Подводите итоги</div>
+        <div class="card-body">В длинных разговорах периодически просите ИИ подвести итог &mdash; это &laquo;обновляет&raquo; память.</div>
+      </div>
+    </div>
+
+    <div class="prompt-label">Промпт: подведение итогов</div>
+    <div class="prompt-box">Давай подведём итог нашего разговора:
+1. Мы работаем над [задача]
+2. Остановились на [что решили]
+3. Осталось сделать [что дальше]
+
+Теперь продолжим с [следующий шаг].</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 11: 5 ГЛАВНЫХ ОШИБОК ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">11</span> 5 главных ошибок</div>
+    <div class="section-tag">⚠️ Проверь себя — не допускаешь ли ты эти ошибки?</div>
+    <div class="section-subtitle">Что делает промпт плохим и как это исправить</div>
+
+    <table class="info-table">
+      <thead>
+        <tr>
+          <th>Ошибка</th>
+          <th>Пример</th>
+          <th>Как исправить</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color: var(--red);">Размытый запрос</strong></td>
+          <td>&laquo;Напиши текст про бизнес&raquo;</td>
+          <td>Добавить роль, конкретику, формат</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--red);">Всё в одном</strong></td>
+          <td>&laquo;Сделай сайт, логотип и рекламу&raquo;</td>
+          <td>Разбить на отдельные задачи</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--red);">Нет контекста</strong></td>
+          <td>&laquo;Как увеличить продажи?&raquo;</td>
+          <td>Добавить: кто вы, что продаёте, кому</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--red);">Первый = финальный</strong></td>
+          <td>Взяли первый ответ без правок</td>
+          <td>Итерировать: 2-3 уточнения</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--red);">Не проверяет факты</strong></td>
+          <td>ИИ написал &mdash; значит правда</td>
+          <td>Всегда проверять цифры и факты</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="warning">
+      <span class="tip-icon">⚠️</span>
+      <span><strong>Золотое правило:</strong> ИИ &mdash; это инструмент, а не оракул. Он может ошибаться, выдумывать факты и путать цифры. Всегда проверяйте критически важную информацию.</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 12: ДОМАШНЕЕ ЗАДАНИЕ ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">12</span> Домашнее задание</div>
+    <div class="section-tag">📝 В понедельник ждите первое задание — каждый день новая домашка</div>
+    <div class="section-subtitle">Домашки приходят ежедневно. Пока — попрактикуйтесь с тем, что узнали сегодня</div>
+
+    <div class="card" style="border-left: 4px solid var(--accent);">
+      <div class="card-title">Часть 1: Формула РКЗФО</div>
+      <div class="card-body">
+        Напишите <strong>3 промпта по формуле РКЗФО</strong> для своих реальных задач. Хотя бы один &mdash; попробуйте <strong>наговорить голосом</strong> и попросить ИИ упаковать по формуле.
+      </div>
+    </div>
+
+    <div class="card" style="border-left: 4px solid var(--yellow); margin-top: 10px;">
+      <div class="card-title">Часть 2: Опишите ВСЕ рабочие процессы</div>
+      <div class="card-body">
+        Составьте список ВСЕХ процессов, которые вы делаете на работе. Для каждого напишите: что делаете, сколько занимает, как часто. Это основа для автоматизации на следующих занятиях.
+      </div>
+    </div>
+    <div class="prompt-box">Помоги мне описать все мои рабочие процессы.
+
+Я работаю [профессия] в [компания/сфера].
+
+Задай мне вопросы о моей работе, чтобы составить полный список процессов. Для каждого процесса определи:
+— Название
+— Что конкретно делаю
+— Сколько времени занимает
+— Как часто (ежедневно / еженедельно / ежемесячно)
+— Можно ли автоматизировать с помощью ИИ (да / частично / нет)</div>
+
+    <div class="card" style="border-left: 4px solid #8b5cf6; margin-top: 10px;">
+      <div class="card-title">Часть 3: Обратный промптинг</div>
+      <div class="card-body">
+        Найдите текст или стиль, который вам нравится (пост блогера, письмо, статья). Загрузите в ИИ, попросите извлечь стиль, а затем напишите свой текст в таком же стиле.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <strong>neovida.ai</strong> / ИИ. Новая реальность<br>
+  Занятие 2 &mdash; Промпт-инженерия от А до Я
+</div>
+
+<script>
+  // Copy prompt-box on click
+  document.querySelectorAll('.prompt-box').forEach(box => {
+    box.addEventListener('click', function() {
+      const text = this.innerText.replace('нажмите, чтобы скопировать', '').trim();
+      navigator.clipboard.writeText(text).then(() => {
+        this.classList.add('copied');
+        setTimeout(() => this.classList.remove('copied'), 2000);
+      });
+    });
+  });
+
+  // Copy chip on click
+  function copyChip(el) {
+    const text = el.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = el.innerText;
+      el.innerText = 'Скопировано!';
+      el.style.background = 'rgba(94,196,122,0.2)';
+      el.style.color = '#5ec47a';
+      el.style.borderColor = 'rgba(94,196,122,0.4)';
+      setTimeout(() => {
+        el.innerText = orig;
+        el.style.background = '';
+        el.style.color = '';
+        el.style.borderColor = '';
+      }, 1500);
+    });
+  }
+</script>
+
+</body>
+</html>
