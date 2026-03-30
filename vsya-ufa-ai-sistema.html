@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-система редакции — Вся Уфа</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: #f0fdfa;
+  color: #0f172a;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 16px 100px;
+}
+/* Header */
+.header {
+  background: linear-gradient(135deg, #0891b2, #065f73);
+  color: #fff;
+  padding: 40px 24px 36px;
+  text-align: center;
+  margin-bottom: 32px;
+}
+.header-logo {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-bottom: 16px;
+}
+.header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.header p {
+  font-size: 15px;
+  opacity: 0.9;
+}
+/* Section */
+.section {
+  margin-bottom: 36px;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.section-number {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #0891b2;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+}
+.section-subtitle {
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 16px;
+  margin-top: -10px;
+  padding-left: 50px;
+}
+.section-text {
+  font-size: 15px;
+  margin-bottom: 16px;
+  color: #334155;
+}
+/* Info cards */
+.info-grid {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.info-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.info-card h4 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.info-card ul {
+  list-style: none;
+  padding: 0;
+}
+.info-card ul li {
+  font-size: 14px;
+  color: #334155;
+  padding: 3px 0 3px 20px;
+  position: relative;
+}
+.info-card ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0891b2;
+}
+/* Role badges */
+.role-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+}
+.role-editor { background: #0891b2; }
+.role-corr { background: #8b5cf6; }
+.role-smm { background: #f59e0b; }
+/* Inline tags */
+.tag {
+  display: inline-block;
+  background: #e0f2fe;
+  color: #0891b2;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin: 2px 4px 2px 0;
+}
+/* Tip box */
+.tip {
+  background: #fef3c7;
+  border-radius: 12px;
+  padding: 16px 18px;
+  font-size: 14px;
+  color: #78350f;
+  margin: 16px 0;
+  line-height: 1.55;
+}
+.tip strong {
+  font-weight: 700;
+}
+/* Prompt box */
+.prompt-box {
+  background: #f1f5f9;
+  border-left: 4px solid #0891b2;
+  border-radius: 0 12px 12px 0;
+  padding: 18px 18px 18px 20px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  cursor: pointer;
+  position: relative;
+  margin: 12px 0 16px;
+  transition: background 0.2s;
+}
+.prompt-box:hover {
+  background: #e8eef4;
+}
+.prompt-box::after {
+  content: 'нажмите, чтобы скопировать';
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+  pointer-events: none;
+  transition: all 0.2s;
+}
+.prompt-box.copied::after {
+  content: 'скопировано!';
+  color: #10b981;
+  font-weight: 600;
+}
+.prompt-label {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.prompt-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.prompt-meta {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+/* Table */
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 16px 0;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.schedule-table th {
+  background: #0891b2;
+  color: #fff;
+  padding: 12px 14px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+}
+.schedule-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: top;
+}
+.schedule-table tr:last-child td {
+  border-bottom: none;
+}
+.schedule-table tr:nth-child(even) td {
+  background: #f8fafc;
+}
+.time-cell {
+  font-weight: 600;
+  color: #0891b2;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.block-cell {
+  font-weight: 600;
+}
+/* Chain/flow */
+.chain {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.chain-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.chain-step {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+  align-items: flex-start;
+}
+.chain-role {
+  flex-shrink: 0;
+  width: 10px;
+  min-height: 100%;
+  border-radius: 5px;
+}
+.chain-role-editor { background: #0891b2; }
+.chain-role-corr { background: #8b5cf6; }
+.chain-role-smm { background: #f59e0b; }
+.chain-content {
+  flex: 1;
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.55;
+  padding-bottom: 4px;
+}
+.chain-content strong {
+  font-weight: 700;
+}
+.chain-arrow {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 18px;
+  margin: 2px 0 2px 22px;
+}
+.gem-tag {
+  display: inline;
+  background: #e0f2fe;
+  color: #0891b2;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 6px;
+}
+/* Growth cards */
+.growth-grid {
+  display: grid;
+  gap: 14px;
+  margin: 16px 0;
+}
+.growth-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  border-left: 4px solid #10b981;
+}
+.growth-card h4 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #065f46;
+}
+.growth-card p {
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.55;
+}
+/* Checklist */
+.checklist {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  margin: 16px 0;
+}
+.checklist h4 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.checklist-item {
+  font-size: 14px;
+  padding: 6px 0;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  line-height: 1.55;
+}
+.checklist-item:last-child {
+  border-bottom: none;
+}
+.checklist-num {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #fff;
+  text-align: center;
+  line-height: 22px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 32px 16px;
+  color: #94a3b8;
+  font-size: 13px;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 40px;
+}
+/* PDF button */
+.pdf-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: linear-gradient(135deg, #0891b2, #065f73);
+  color: #fff;
+  border: none;
+  padding: 14px 22px;
+  border-radius: 50px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(8,145,178,0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pdf-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(8,145,178,0.5);
+}
+.pdf-btn svg {
+  width: 18px;
+  height: 18px;
+}
+/* Save note */
+.save-note {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  margin: 16px 0;
+  text-align: center;
+}
+.save-note p {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.55;
+}
+@media print {
+  .pdf-btn { display: none; }
+  body { background: #fff; }
+  .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .prompt-box::after { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">neovida.ai / AI Boost</div>
+  <h1>AI-система редакции</h1>
+  <p>Телеканал «Вся Уфа» · Рабочая сессия</p>
+</div>
+
+<div class="container">
+
+  <!-- SECTION 1 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">1</div>
+      <div class="section-title">Цель сессии</div>
+    </div>
+    <p class="section-text">У каждой роли (редактор, корреспонденты, СММ) стандартный набор AI-ассистентов (Gems), единый для всей группы. Одинаковые промпты, одинаковые инструменты, одинаковое качество на выходе.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+      <span class="tag">Google Gemini</span>
+      <span class="tag">Gems</span>
+      <span class="tag">Projects</span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+      <span class="role-badge role-editor">Редактор (1)</span>
+      <span class="role-badge role-corr">Корреспонденты (6)</span>
+      <span class="role-badge role-smm">СММ-редактор (1)</span>
+    </div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">2</div>
+      <div class="section-title">Что подготовить заранее</div>
+    </div>
+    <div class="info-grid">
+      <div class="info-card">
+        <h4><span class="role-badge role-editor">Редактор</span></h4>
+        <ul>
+          <li>Редакционная политика канала (если есть)</li>
+          <li>Пример верстки выпуска (порядок сюжетов)</li>
+          <li>3-5 примеров хороших подводок ведущего</li>
+          <li>Список постоянных спикеров и экспертов</li>
+          <li>Шаблон чек-листа проверки материала</li>
+        </ul>
+      </div>
+      <div class="info-card">
+        <h4><span class="role-badge role-corr">Корреспонденты</span></h4>
+        <ul>
+          <li>3-5 примеров своих лучших текстов (БЗ, подводки)</li>
+          <li>Пример хорошо структурированного сюжета</li>
+          <li>Список источников и баз для поиска информации</li>
+        </ul>
+      </div>
+      <div class="info-card">
+        <h4><span class="role-badge role-smm">СММ-редактор</span></h4>
+        <ul>
+          <li>Примеры постов для каждой платформы (Telegram, VK, ОК, MAX)</li>
+          <li>Медиаплан (если есть)</li>
+          <li>Гайд по тональности для каждой соцсети</li>
+          <li>Шаблон оформления маркировки рекламы</li>
+        </ul>
+      </div>
+    </div>
+    <div class="tip"><strong>Эти документы будут загружены в Gems как контекст.</strong> Чем больше качественных примеров, тем точнее AI будет работать в стиле канала.</div>
+  </div>
+
+  <!-- SECTION 3 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">3</div>
+      <div class="section-title">План сессии: 2 часа</div>
+    </div>
+    <table class="schedule-table">
+      <thead>
+        <tr>
+          <th>Время</th>
+          <th>Блок</th>
+          <th>Что делаем</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="time-cell">0:00 - 0:15</td>
+          <td class="block-cell">Аудит</td>
+          <td>Обсуждение: кто что использует после обучения. Разбиваемся на 3 группы по ролям</td>
+        </tr>
+        <tr>
+          <td class="time-cell">0:15 - 0:45</td>
+          <td class="block-cell">Мета-промпт по группам</td>
+          <td>Каждая группа запускает мета-промпт. Обсуждают ответы вместе. На выходе: набор Gems для роли</td>
+        </tr>
+        <tr>
+          <td class="time-cell">0:45 - 0:55</td>
+          <td class="block-cell">Перерыв</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="time-cell">0:55 - 1:25</td>
+          <td class="block-cell">Создание Gems</td>
+          <td>Каждый создает Gems из карточек. Тестирует на реальной задаче</td>
+        </tr>
+        <tr>
+          <td class="time-cell">1:25 - 1:45</td>
+          <td class="block-cell">Связки и система</td>
+          <td>Общая картина. Цепочки передачи материалов. Project в Gemini</td>
+        </tr>
+        <tr>
+          <td class="time-cell">1:45 - 2:00</td>
+          <td class="block-cell">Выращивание + итоги</td>
+          <td>Как улучшать Gems. Домашнее задание</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="tip"><strong>Ключевой принцип:</strong> Проектирование коллективное (одна группа = один набор Gems), создание и тестирование индивидуальное (каждый у себя).</div>
+  </div>
+
+  <!-- SECTION 4 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">4</div>
+      <div class="section-title">Схема взаимодействия команды</div>
+    </div>
+    <p class="section-subtitle" style="padding-left:0;">Как материал проходит через AI-ассистентов от задумки до публикации</p>
+
+    <!-- Chain 1 -->
+    <div class="chain">
+      <div class="chain-title">Цепочка 1: Обычный новостной сюжет</div>
+      <div class="chain-step">
+        <div class="chain-role chain-role-editor"></div>
+        <div class="chain-content"><strong>РЕДАКТОР</strong> формирует повестку <span class="gem-tag">Gem «Планирование»</span> &rarr; ставит задачу корреспонденту</div>
+      </div>
+      <div class="chain-arrow">&darr;</div>
+      <div class="chain-step">
+        <div class="chain-role chain-role-corr"></div>
+        <div class="chain-content"><strong>КОРРЕСПОНДЕНТ</strong> исследует тему <span class="gem-tag">Gem «Разведка темы»</span> &rarr; готовит вопросы <span class="gem-tag">Gem «Интервью»</span> &rarr; едет на съемку &rarr; структурирует сюжет <span class="gem-tag">Gem «Структура»</span> &rarr; пишет БЗ <span class="gem-tag">Gem «Текстовик»</span> &rarr; передает редактору</div>
+      </div>
+      <div class="chain-arrow">&darr;</div>
+      <div class="chain-step">
+        <div class="chain-role chain-role-editor"></div>
+        <div class="chain-content"><strong>РЕДАКТОР</strong> проверяет и правит <span class="gem-tag">Gem «Редактура»</span> &rarr; проверяет по чек-листу <span class="gem-tag">Gem «Контроль качества»</span> &rarr; утверждает</div>
+      </div>
+      <div class="chain-arrow">&darr;</div>
+      <div class="chain-step">
+        <div class="chain-role chain-role-smm"></div>
+        <div class="chain-content"><strong>СММ-РЕДАКТОР</strong> берет готовый текст &rarr; адаптирует под 4 платформы <span class="gem-tag">Gem «Адаптер»</span> &rarr; оптимизирует для Rutube <span class="gem-tag">Gem «Rutube»</span> &rarr; публикует</div>
+      </div>
+    </div>
+
+    <!-- Chain 2 -->
+    <div class="chain">
+      <div class="chain-title">Цепочка 2: Аналитическая программа</div>
+      <div class="chain-step">
+        <div class="chain-role chain-role-editor"></div>
+        <div class="chain-content"><strong>РЕДАКТОР</strong> определяет тему <span class="gem-tag">Gem «Продюсер аналитики»</span> &rarr; подбирает спикеров <span class="gem-tag">Gem «Подбор спикеров»</span> &rarr; пишет сценарий &rarr; ставит задачи корреспондентам</div>
+      </div>
+      <div class="chain-arrow">&darr;</div>
+      <div class="chain-step">
+        <div class="chain-role chain-role-corr"></div>
+        <div class="chain-content"><strong>КОРРЕСПОНДЕНТЫ</strong> готовят вставки по обычной цепочке</div>
+      </div>
+      <div class="chain-arrow">&darr;</div>
+      <div class="chain-step">
+        <div class="chain-role chain-role-smm"></div>
+        <div class="chain-content"><strong>СММ-РЕДАКТОР</strong> готовит анонсы, потом адаптирует выпуск</div>
+      </div>
+    </div>
+
+    <!-- Chain 3 -->
+    <div class="chain">
+      <div class="chain-title">Цепочка 3: Оперативная новость (без съемки)</div>
+      <div class="chain-step">
+        <div class="chain-role chain-role-editor"></div>
+        <div class="chain-content"><strong>РЕДАКТОР</strong> или <strong>КОРРЕСПОНДЕНТ</strong> получает информацию &rarr; быстро пишет текст <span class="gem-tag">Gem «Текстовик»</span> &rarr; редактор проверяет <span class="gem-tag">Gem «Редактура»</span></div>
+      </div>
+      <div class="chain-arrow">&darr;</div>
+      <div class="chain-step">
+        <div class="chain-role chain-role-smm"></div>
+        <div class="chain-content"><strong>СММ-РЕДАКТОР</strong> сразу адаптирует и публикует <span class="gem-tag">Gem «Адаптер»</span> &rarr; загружает на Rutube</div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 8px;">
+      <span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><span style="width:12px;height:12px;border-radius:3px;background:#0891b2;display:inline-block;"></span> Редактор</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><span style="width:12px;height:12px;border-radius:3px;background:#8b5cf6;display:inline-block;"></span> Корреспондент</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><span style="width:12px;height:12px;border-radius:3px;background:#f59e0b;display:inline-block;"></span> СММ</span>
+    </div>
+
+    <div class="tip"><strong>Project в Gemini:</strong> Создайте один общий Project «Вся Уфа, редакция» и загрузите туда: редполитику, стандарты стиля, список спикеров, шаблоны. Gemini автоматически учитывает весь контекст канала.</div>
+  </div>
+
+  <!-- SECTION 5 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">5</div>
+      <div class="section-title">Мета-промпт: Редактор</div>
+    </div>
+    <p class="section-subtitle" style="padding-left:0;">Запускается один раз, редактором. Создает набор Gems для управления и редакторской работы.</p>
+    <div class="prompt-label">Скопируйте и вставьте в Gemini</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты, архитектор AI-ассистентов для руководителя редакции городского телеканала.
+
+КОНТЕКСТ:
+Телеканал "Вся Уфа", муниципальный городской телеканал столицы Башкортостана. Аудитория: жители Уфы, семьи, бизнес-сообщество. Форматы: новостные выпуски, информационно-аналитические программы, развлекательный контент, спецпроекты. Команда уже работает с AI, сейчас задача: выстроить системную инфраструктуру.
+
+РОЛЬ СОТРУДНИКА: Редактор новостного отдела.
+
+РЕАЛЬНЫЕ ПРОЦЕССЫ РЕДАКТОРА (описаны самим сотрудником):
+
+1. Общие функции: общее руководство редакционной работой новостного отдела, формирование редакционной политики и повестки дня, обеспечение качества и актуальности выпускаемого контента.
+
+2. Формирование новостного выпуска: определение ключевых тем и новостной повестки, планирование структуры выпуска (верстка), расстановка приоритетов материалов, контроль баланса тем (политика, общество, экономика и др.).
+
+3. Работа с журналистами: постановка задач журналистам, редакторская вычитка и правка материалов перед эфиром, переписывание и доработка текстов при необходимости, контроль соответствия материалов редакционным стандартам.
+
+4. Продюсирование информационно-аналитической программы: определение тем выпусков программы, разработка концепции и структуры, формирование пула спикеров и экспертов, организация подготовки программы, написание сценариев выпусков и программ, подготовка подводок и связующих текстов, разработка вопросов для интервью и дискуссий, редактирование и адаптация материалов под формат программы.
+
+5. Контроль качества и редакционные стандарты: обеспечение точности, достоверности и корректности информации, соблюдение этических и профессиональных стандартов журналистики, контроль стилистики и тональности контента.
+
+6. Коммуникация и координация: взаимодействие с другими отделами (продакшн, техническая служба и др.), участие в редакционных планерках.
+
+ЗАДАЧА: Проанализируй эти процессы и создай набор из 6-8 AI-ассистентов (Gems в Google Gemini), которые закроют две зоны: (1) редакционно-творческие задачи и (2) управленческий контроль. Каждый Gem должен быть привязан к конкретным процессам из списка выше.
+
+ПЕРЕД СОЗДАНИЕМ КАРТОЧЕК:
+Задай 3-5 уточняющих вопросов, чтобы создать максимально точных ассистентов. Например:
+- Есть ли у вас письменная редполитика или стандарты стиля, которые можно загрузить?
+- Сколько сюжетов в среднем в одном выпуске?
+- Какие темы чаще всего вызывают сложности при подготовке?
+- Есть ли постоянный пул спикеров, который можно оформить списком?
+- Какие аналитические программы вы выпускаете, с какой периодичностью?
+Дождись ответов, затем создавай карточки.
+
+ФОРМАТ КАЖДОЙ КАРТОЧКИ:
+
+===========================
+GEM #[номер]: [Название]
+===========================
+КАКИЕ ПРОЦЕССЫ ЗАКРЫВАЕТ: [перечисли конкретные пункты из списка процессов выше, которые этот Gem автоматизирует]
+
+РОЛЬ: [1-2 предложения]
+
+СИСТЕМНЫЙ ПРОМПТ (готов к копированию в Gem):
+[Полный текст: роль, контекст канала "Вся Уфа", стиль, формат выдачи. Без [квадратных скобок]]
+
+ЧТО ЗАГРУЗИТЬ В GEM (и зачем):
+[Для каждого документа объясни, зачем он нужен. Например:]
+- Редполитика канала -> чтобы Gem знал стандарты и тональность
+- 5 примеров лучших подводок -> чтобы Gem писал в вашем стиле
+- Список спикеров с должностями -> чтобы не искать каждый раз заново
+
+КАКИЕ ИНСТРУМЕНТЫ ПОДКЛЮЧИТЬ (и зачем каждый):
+Для каждого инструмента объясни простым языком, зачем он нужен именно этому Gem:
+- Google Поиск -> [объясни]
+- Deep Research -> [объясни]
+- Canvas -> [объясни]
+- Генерация изображений -> [объясни, если нужна]
+Если какой-то инструмент не нужен этому Gem, напиши "не нужен" и объясни почему.
+
+ДОПОЛНИТЕЛЬНЫЕ ИНСТРУМЕНТЫ (если применимо):
+- Google NotebookLM -> если этому Gem полезно работать с большими документами, исследованиями, архивами. Объясни, как использовать в связке.
+
+КАК СОЗДАТЬ ЭТОТ GEM (пошагово):
+1. Откройте Gemini -> боковое меню -> Gems -> Создать Gem
+2. Вставьте системный промпт выше в поле инструкций
+3. Дайте имя: [предложи имя]
+4. Загрузите файлы из списка "Что загрузить"
+5. В настройках включите: [перечисли конкретные тумблеры]
+
+ПРИМЕР ЗАПРОСА:
+[Реалистичный пример для работы на "Всей Уфе"]
+===========================
+
+ОБЯЗАТЕЛЬНО ВКЛЮЧИ АССИСТЕНТОВ ДЛЯ:
+- Верстка новостного выпуска (баланс тем, приоритеты, структура)
+- Продюсирование аналитической программы (сценарий, спикеры, структура)
+- Редакторская правка текстов (стиль, факты, логика подачи)
+- Генерация подводок и связок между сюжетами
+- Подбор спикеров и экспертов по теме (с исследованием)
+- Контроль качества: чек-лист проверки материала перед эфиром
+- Планирование: формирование повестки на день/неделю
+- Дашборд руководителя: анализ выпусков, выявление слабых мест
+
+После карточек создай:
+1. ЕЖЕДНЕВНЫЙ РИТМ РЕДАКТОРА: утро (планирование) -> день (контроль и правка) -> вечер (анализ и подготовка к завтра)
+2. СВЯЗКИ С ДРУГИМИ РОЛЯМИ: как результаты Gems редактора передаются корреспондентам и СММ</div>
+  </div>
+
+  <!-- SECTION 6 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">6</div>
+      <div class="section-title">Мета-промпт: Корреспонденты</div>
+    </div>
+    <p class="section-subtitle" style="padding-left:0;">Запускается один раз, всей группой за одним экраном. Единый набор Gems для всех 6 человек.</p>
+    <div class="prompt-label">Скопируйте и вставьте в Gemini</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты, архитектор AI-ассистентов для группы корреспондентов городского телеканала.
+
+КОНТЕКСТ:
+Телеканал "Вся Уфа", муниципальный городской телеканал столицы Башкортостана. Аудитория: жители Уфы, семьи, бизнес-сообщество. Форматы: новостные выпуски, информационно-аналитические программы, спецпроекты. Команда знакома с AI, задача: стандартизировать инструменты для всей группы корреспондентов (6 человек), чтобы у всех был одинаковый набор и одинаковое качество на выходе.
+
+РОЛЬ: Корреспондент/журналист новостного отдела (группа из 6 человек).
+
+РЕАЛЬНЫЕ ПРОЦЕССЫ КОРРЕСПОНДЕНТА (описаны самими сотрудниками):
+
+1. Общие функции: подготовка информационных материалов для выпусков новостей, сбор, проверка и оперативная обработка информации, соблюдение редакционной политики и стандартов телеканала, обеспечение достоверности, точности и актуальности материалов.
+
+2. Подготовка новостных материалов: выезд на съемки и освещение событий, поиск и разработка информационных поводов, формирование структуры сюжета (логика подачи материала), отбор ключевых фактов для подводки, закадра и стендапа, подготовка текстов новостей (подводки, БЗ, сюжеты).
+
+3. Работа на месте событий: проведение интервью и сбор комментариев (синхроны), фиксация ключевых моментов события (лайф, перебивки, детали), взаимодействие с оператором для формирования визуального ряда, контроль полноты собранного материала на месте съемки.
+
+4. Подготовка текстов и сюжетов: написание подводок, закадровых текстов и сценариев сюжетов, редактирование и адаптация материалов под эфирный формат, структурирование информации по принципу «что, где, когда», исключение дублирования информации между подводкой, БЗ и синхронами, соблюдение новостного стиля и телевизионного языка.
+
+5. Редакционные стандарты: обеспечение точности и достоверности информации, соблюдение этических норм журналистики, соблюдение логики подачи информации в сюжете, недопущение искажений фактов и некорректных формулировок.
+
+ВАЖНО: Ты создаешь ЕДИНЫЙ СТАНДАРТНЫЙ НАБОР Gems для всех 6 корреспондентов. Не индивидуальные, а командные. Все используют одни и те же Gems с одинаковыми промптами. Это гарантирует единый стиль и качество на выходе.
+
+ЗАДАЧА: Проанализируй эти процессы и создай 5-7 AI-ассистентов. Каждый Gem должен быть привязан к конкретным процессам из списка выше.
+
+ПЕРЕД СОЗДАНИЕМ КАРТОЧЕК:
+Задай 3-5 уточняющих вопросов группе корреспондентов:
+- Есть ли у вас примеры текстов (БЗ, подводки), которые считаете эталонными? Сколько можете собрать?
+- Как обычно получаете задание от редактора: устно, в чате, на планерке?
+- Какой этап подготовки сюжета занимает больше всего времени?
+- Есть ли список источников или баз, где вы ищете информацию?
+- Используете ли вы какие-то шаблоны для структуры сюжета или пишете каждый раз с нуля?
+Дождись ответов, затем создавай карточки.
+
+ФОРМАТ КАЖДОЙ КАРТОЧКИ:
+
+===========================
+GEM #[номер]: [Название]
+===========================
+КАКИЕ ПРОЦЕССЫ ЗАКРЫВАЕТ: [перечисли конкретные пункты из списка процессов выше]
+
+РОЛЬ: [1-2 предложения]
+
+СИСТЕМНЫЙ ПРОМПТ (готов к копированию):
+[Роль, контекст "Вся Уфа", стиль телевизионной журналистики, формат выдачи. Промпт должен содержать стандарты канала: длина предложений до 15-18 слов, активный залог, структура что-где-когда, нет канцелярита. Без [квадратных скобок]]
+
+ЧТО ЗАГРУЗИТЬ В GEM (и зачем):
+[Для каждого документа объясни простым языком, зачем он нужен.]
+
+КАКИЕ ИНСТРУМЕНТЫ ПОДКЛЮЧИТЬ (и зачем каждый):
+[Объясни простым языком, зачем именно этому Gem нужен каждый инструмент]
+
+ДОПОЛНИТЕЛЬНЫЕ ИНСТРУМЕНТЫ (если применимо):
+- Google NotebookLM -> [если применимо]
+
+КАК СОЗДАТЬ ЭТОТ GEM (пошагово):
+[5 шагов]
+
+ПРИМЕР ЗАПРОСА:
+[Реалистичный пример]
+===========================
+
+ОБЯЗАТЕЛЬНО ВКЛЮЧИ:
+- Структура сюжета из сырых заметок
+- Закадровый текст (БЗ) по тезисам
+- Подготовка к интервью (исследование спикера, вопросы)
+- Подводка к сюжету
+- Проверка фактов и контекст события
+- Генератор информационных поводов
+
+После карточек:
+1. ЦЕПОЧКА РАБОТЫ КОРРЕСПОНДЕНТА: получил задание -> исследовал тему -> подготовил вопросы -> вернулся со съемки -> структурировал сюжет -> написал БЗ -> передал редактору
+2. ЧТО ПЕРЕДАЕТСЯ ДАЛЬШЕ: готовый текст идет редактору на правку, потом СММ-редактору на адаптацию</div>
+  </div>
+
+  <!-- SECTION 7 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">7</div>
+      <div class="section-title">Мета-промпт: СММ-редактор</div>
+    </div>
+    <p class="section-subtitle" style="padding-left:0;">Запускается один раз, СММ-редактором. Создает набор Gems для работы с контентом и платформами.</p>
+    <div class="prompt-label">Скопируйте и вставьте в Gemini</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты, архитектор AI-ассистентов для СММ-редактора городского телеканала.
+
+КОНТЕКСТ:
+Телеканал "Вся Уфа", муниципальный городской телеканал столицы Башкортостана. Платформы: Telegram, VKontakte, Одноклассники, MAX, Rutube, сайт канала. Команда знакома с AI, задача: выстроить системную работу СММ-редактора через постоянных ассистентов.
+
+РОЛЬ: СММ-редактор телеканала.
+
+РЕАЛЬНЫЕ ПРОЦЕССЫ СММ-РЕДАКТОРА (описаны самим сотрудником):
+
+1. Подготовка утренних постов: заготовка постов с вечера (например, прогноз погоды с мемом), подготовка свежих постов, поступивших ночью.
+
+2. Загрузка новостных выпусков: полный выпуск новостей загружается на Rutube, загрузка выпуска и каждого фрагмента (сюжеты, БЗ).
+
+3. Работа с сайтом телеканала: подгрузка видео и прикрепление к постам, копирование текста из фабрики контента и оформление постов, одновременная обработка нескольких видео.
+
+4. Публикация и мониторинг контента: публикация материалов в соцсетях: Телеграм, VK, Одноклассники, MAX, мониторинг официальных источников для актуальных новостей, переписывание и адаптация текстов для публикации в разных каналах.
+
+5. Монтаж и корректировка видео: быстрое редактирование видео, присланного корреспондентами, исправление текста, синхронизация с видео перед публикацией.
+
+6. Рутинная проверка и повторяющиеся задачи: постоянная проверка, чтобы все материалы корректно загрузились и были доступны, обеспечение полноты и актуальности контента на всех платформах.
+
+7. Маркировка рекламы: получение токена для рекламы, её оформление, подкрепление токенов к видео, выкладка.
+
+ЗАДАЧА: Проанализируй эти процессы и создай 5-7 AI-ассистентов. Каждый Gem должен быть привязан к конкретным процессам из списка выше.
+
+ПЕРЕД СОЗДАНИЕМ КАРТОЧЕК:
+Задай 3-5 уточняющих вопросов:
+- Есть ли у вас гайд по тональности для каждой платформы или пишете интуитивно?
+- Какие посты заходят лучше всего (тип контента, формат)?
+- Сколько постов в день публикуете в среднем на каждую платформу?
+- Есть ли медиаплан или расписание публикаций?
+- Как устроен процесс маркировки рекламы: есть ли чек-лист или каждый раз вспоминаете заново?
+Дождись ответов, затем создавай карточки.
+
+ФОРМАТ КАЖДОЙ КАРТОЧКИ:
+
+===========================
+GEM #[номер]: [Название]
+===========================
+КАКИЕ ПРОЦЕССЫ ЗАКРЫВАЕТ: [перечисли конкретные пункты]
+
+РОЛЬ: [1-2 предложения]
+
+СИСТЕМНЫЙ ПРОМПТ (готов к копированию):
+[Роль, контекст "Вся Уфа", тональность для каждой платформы: Telegram коротко и информативно, VK развернуто с хэштегами, ОК тепло и доступно для 45+, MAX по формату платформы. Без [квадратных скобок]]
+
+ЧТО ЗАГРУЗИТЬ В GEM (и зачем):
+[Объяснения]
+
+КАКИЕ ИНСТРУМЕНТЫ ПОДКЛЮЧИТЬ (и зачем каждый):
+[Объяснения]
+
+ДОПОЛНИТЕЛЬНЫЕ ИНСТРУМЕНТЫ (если применимо):
+- Google NotebookLM -> [если применимо]
+
+КАК СОЗДАТЬ ЭТОТ GEM (пошагово):
+[5 шагов]
+
+ПРИМЕР ЗАПРОСА:
+[Реалистичный пример]
+===========================
+
+ОБЯЗАТЕЛЬНО ВКЛЮЧИ:
+- Адаптер новостей: один текст -> 4 платформы за один запрос
+- Заголовочник: цепляющие заголовки под каждую соцсеть
+- Rutube-оптимизатор: названия, описания, теги, таймкоды
+- Утренний помощник: подготовка утренних постов
+- Мониторщик: отслеживание инфоповодов
+- Помощник по маркировке рекламы: чек-лист, напоминания по токенам
+
+После карточек:
+1. ЕЖЕДНЕВНЫЙ РИТМ СММ: утро (посты + загрузка) -> день (адаптация, публикация) -> вечер (заготовки, проверка)
+2. ЧТО ПОЛУЧАЕТ ОТ ДРУГИХ РОЛЕЙ: готовые тексты от корреспондентов/редактора -> адаптация и публикация</div>
+  </div>
+
+  <!-- SECTION 8 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">8</div>
+      <div class="section-title">Как выращивать Gems</div>
+    </div>
+    <p class="section-subtitle" style="padding-left:0;">Gem с сессии — стартовая версия. Вот план, как сделать его по-настоящему вашим.</p>
+
+    <div class="growth-grid">
+      <div class="growth-card">
+        <h4>Неделя 1: Калибровка</h4>
+        <p>Используйте каждый Gem на реальных задачах. Записывайте: что понравилось, что не так. В конце недели допишите в промпт уточнения. Например: «Подводки делай не длиннее 3 предложений» или «Не используй слово "осуществлять"».</p>
+      </div>
+      <div class="growth-card">
+        <h4>Неделя 2: Загрузка примеров</h4>
+        <p>Соберите 5-10 лучших текстов, написанных вручную. Загрузите в контекст Gem. Допишите: «Ориентируйся на загруженные примеры как на образец стиля». Gem начнет писать в вашем стиле.</p>
+      </div>
+      <div class="growth-card">
+        <h4>Неделя 3-4: Расширение контекста</h4>
+        <p>Добавьте: редполитику канала, список спикеров с должностями, шаблоны оформления, медиаплан. Чем больше контекста, тем точнее результат.</p>
+      </div>
+      <div class="growth-card">
+        <h4>Ежемесячно: Итерация</h4>
+        <p>Пересматривайте набор Gems: какой используете каждый день (работает), какой не открывали (не нужен или плохо настроен). Обновляйте промпты, добавляйте примеры.</p>
+      </div>
+    </div>
+
+    <div class="checklist">
+      <h4>Чек-лист улучшения Gem</h4>
+      <div class="checklist-item"><span class="checklist-num">1</span> Результат слишком длинный? &rarr; Добавьте ограничение по объему</div>
+      <div class="checklist-item"><span class="checklist-num">2</span> Не тот стиль? &rarr; Загрузите 3-5 примеров вашего стиля</div>
+      <div class="checklist-item"><span class="checklist-num">3</span> Не хватает контекста? &rarr; Загрузите редполитику, списки, шаблоны</div>
+      <div class="checklist-item"><span class="checklist-num">4</span> Повторяет формулировки? &rarr; Добавьте: «Избегай шаблонных фраз»</div>
+      <div class="checklist-item"><span class="checklist-num">5</span> Не знает специфику? &rarr; Загрузите глоссарий, имена, должности</div>
+      <div class="checklist-item"><span class="checklist-num">6</span> Хочется новую функцию? &rarr; Создайте новый Gem, не перегружайте существующий</div>
+      <div class="checklist-item"><span class="checklist-num">7</span> Gem стал хуже? &rarr; Промпт слишком длинный. Уберите лишнее</div>
+    </div>
+
+    <div class="tip"><strong>Главное правило:</strong> Gem, который вы не используете каждый день, не нужен. Лучше 3 отлично настроенных, чем 10 заброшенных.</div>
+  </div>
+
+  <!-- SECTION 9 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">9</div>
+      <div class="section-title">Готовые промпты</div>
+    </div>
+    <p class="section-subtitle" style="padding-left:0;">Быстрый набор для ежедневных задач. Можно использовать как есть или как основу для Gems.</p>
+
+    <!-- Prompt 1 -->
+    <div class="prompt-title">1. Подводка к сюжету</div>
+    <div class="prompt-meta"><span class="role-badge role-corr" style="font-size:11px;">Корреспондент</span> <span class="role-badge role-editor" style="font-size:11px;">Редактор</span> &nbsp; Canvas</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты, ведущий новостей телеканала "Вся Уфа". Напиши подводку к сюжету.
+
+Тема: [тема]
+Ключевые факты: [факты]
+Хронометраж: [20 секунд]
+
+Требования: новостной стиль, без канцелярита, не дублировать содержание сюжета, зацепить зрителя и дать контекст.</div>
+
+    <!-- Prompt 2 -->
+    <div class="prompt-title">2. Закадровый текст (БЗ)</div>
+    <div class="prompt-meta"><span class="role-badge role-corr" style="font-size:11px;">Корреспондент</span> &nbsp; Canvas</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты, корреспондент "Всей Уфы". Напиши БЗ по моим заметкам.
+
+Тема: [тема]
+Заметки: [вставь сырые заметки]
+Синхроны: [кто, сколько секунд, о чем]
+Хронометраж БЗ: [например 1:20]
+
+Требования: телевизионный язык, короткие предложения (до 15-18 слов), активный залог, структура что-где-когда, не дублировать синхрон, отметить места для лайфов.</div>
+
+    <!-- Prompt 3 -->
+    <div class="prompt-title">3. Структура сюжета</div>
+    <div class="prompt-meta"><span class="role-badge role-corr" style="font-size:11px;">Корреспондент</span> &nbsp; Canvas</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты, выпускающий редактор "Всей Уфы". Структурируй сюжет.
+
+Тема: [тема]
+Все заметки: [вставь все]
+Синхроны: [кто записан]
+Хронометраж: [общий]
+
+Задача: оптимальная структура, распределение (подводка / БЗ / синхрон), где лайфы, чего не хватает, сильное начало и конец.</div>
+
+    <!-- Prompt 4 -->
+    <div class="prompt-title">4. Подготовка к интервью</div>
+    <div class="prompt-meta"><span class="role-badge role-corr" style="font-size:11px;">Корреспондент</span> &nbsp; Deep Research, Google Поиск</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты, журналист "Всей Уфы", готовишься к интервью.
+
+Спикер: [кто]
+Тема: [тема]
+Формат: [синхрон 30 сек / интервью 5 мин]
+Контекст: [что известно]
+
+Задача: найди информацию о спикере, 7-10 вопросов от простых к острым, 2-3 обязательных, 1-2 неожиданных.</div>
+
+    <!-- Prompt 5 -->
+    <div class="prompt-title">5. Адаптация под 4 платформы</div>
+    <div class="prompt-meta"><span class="role-badge role-smm" style="font-size:11px;">СММ</span> &nbsp; Canvas, Генерация изображений</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты, СММ-редактор "Всей Уфы". Адаптируй новость.
+
+Текст: [вставь]
+Есть видео: [да/нет]
+
+Подготовь для: Telegram (коротко, эмодзи), VK (развернуто, хэштеги), ОК (теплый тон, 45+), MAX. Для каждого: текст + визуал + время публикации.</div>
+
+    <!-- Prompt 6 -->
+    <div class="prompt-title">6. Оптимизация для Rutube</div>
+    <div class="prompt-meta"><span class="role-badge role-smm" style="font-size:11px;">СММ</span></div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты, СММ-специалист "Всей Уфы". Оптимизируй видео для Rutube.
+
+Название: [рабочее название]
+О чем: [описание]
+Тип: [выпуск / сюжет / программа]
+Хронометраж: [время]
+
+Задача: цепляющее название (до 100 символов), описание (до 500 символов), 10-15 тегов, таймкоды, рекомендация по обложке.</div>
+
+    <!-- Prompt 7 -->
+    <div class="prompt-title">7. Редакторская правка</div>
+    <div class="prompt-meta"><span class="role-badge role-editor" style="font-size:11px;">Редактор</span> &nbsp; Canvas</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты, главный редактор "Всей Уфы" с 20-летним опытом.
+
+Текст: [вставь]
+
+Проверь: фактическая точность, телевизионный язык (убрать канцелярит, страдательный залог), логика подачи, дублирование с подводкой/синхроном, длина предложений (до 15-18 слов), единый стиль.
+
+Выдай: исправленную версию + замечания.</div>
+
+    <!-- Prompt 8 -->
+    <div class="prompt-title">8. Верстка выпуска</div>
+    <div class="prompt-meta"><span class="role-badge role-editor" style="font-size:11px;">Редактор</span></div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты, выпускающий редактор "Всей Уфы".
+
+Хронометраж: [15 минут]
+Сюжеты: [перечисли темы с хронометражем]
+
+Задача: оптимальный порядок, баланс тем, выбор "открывашки", подводки-связки, что сократить если не влезает.</div>
+
+    <!-- Save note -->
+    <div class="save-note">
+      <p><strong>Где хранить все это:</strong> сохраните этот документ в общую рабочую папку. Когда Gemini сгенерирует карточки ассистентов через мета-промпт, скопируйте системные промпты из чата и добавьте в этот же файл. Так у команды всегда будет актуальная база.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  neovida.ai / AI Boost · Командная AI-система для редакции телеканала «Вся Уфа»
+</div>
+
+<!-- PDF button -->
+<button class="pdf-btn" onclick="window.print()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+  Скачать PDF
+</button>
+
+<script>
+function copyPrompt(el) {
+  const text = el.innerText.replace(/нажмите, чтобы скопировать|скопировано!/g, '').trim();
+  navigator.clipboard.writeText(text).then(function() {
+    el.classList.add('copied');
+    setTimeout(function() { el.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>
