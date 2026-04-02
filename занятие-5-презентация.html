@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность | Занятие 5 — Данные, анализ и исследования</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #1a1a2e;
+  --accent: #f59e0b;
+  --accent-dark: #d97706;
+  --coral: #E07461;
+  --white: #ffffff;
+  --white-80: rgba(255,255,255,0.8);
+  --white-60: rgba(255,255,255,0.6);
+  --white-40: rgba(255,255,255,0.4);
+  --white-20: rgba(255,255,255,0.2);
+  --white-10: rgba(255,255,255,0.1);
+  --yellow: #f0c040;
+  --orange: #e8944a;
+  --red: #e05555;
+  --green: #5ec47a;
+  --purple: #8B6EB5;
+  --blue: #4285f4;
+  --cyan: #0891b2;
+}
+
+html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--white); -webkit-font-smoothing: antialiased; }
+a { color: var(--accent); text-decoration: underline; cursor: pointer; }
+a:hover { color: var(--yellow); }
+
+.deck { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+.slide {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 60px 80px; opacity: 0; visibility: hidden;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translateX(40px); overflow-y: auto;
+}
+.slide.active { opacity: 1; visibility: visible; transform: translateX(0); }
+.slide.prev { transform: translateX(-40px); }
+
+.slide-title { font-size: 44px; font-weight: 800; line-height: 1.15; margin-bottom: 28px; }
+.slide-title .accent { color: var(--accent); }
+.slide-subtitle { font-size: 24px; font-weight: 400; color: var(--white-80); margin-bottom: 32px; line-height: 1.4; }
+
+.point { margin-bottom: 14px; padding-left: 8px; font-size: 22px; line-height: 1.5; color: var(--white-80); }
+.point strong { color: var(--white); font-weight: 600; }
+
+.quote { margin-top: 32px; padding: 20px 28px; border-left: 4px solid var(--accent); background: var(--white-10); border-radius: 0 12px 12px 0; font-size: 21px; font-weight: 500; line-height: 1.5; font-style: italic; }
+
+.card { background: var(--white-10); border-radius: 16px; padding: 24px; margin-bottom: 16px; }
+.card-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.card-body { font-size: 18px; color: var(--white-80); line-height: 1.5; }
+.cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+.cards-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 12px; }
+
+.tbl { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 12px; font-size: 18px; }
+.tbl th { text-align: left; padding: 12px 16px; background: var(--white-10); color: var(--accent); font-weight: 700; border-bottom: 2px solid var(--white-20); }
+.tbl td { padding: 10px 16px; border-bottom: 1px solid var(--white-10); color: var(--white-80); }
+.tbl th:first-child { border-radius: 10px 0 0 0; } .tbl th:last-child { border-radius: 0 10px 0 0; }
+
+.vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 12px; }
+.vs-card { border-radius: 16px; padding: 24px; }
+.vs-card.bad { background: rgba(224,85,85,0.15); border: 1px solid rgba(224,85,85,0.3); }
+.vs-card.good { background: rgba(94,196,122,0.15); border: 1px solid rgba(94,196,122,0.3); }
+
+.step { display: flex; align-items: flex-start; margin-bottom: 14px; font-size: 20px; line-height: 1.5; color: var(--white-80); }
+.step-num { flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; margin-right: 14px; margin-top: 2px; }
+
+.prompt-block { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 12px; padding: 20px 24px; margin-top: 12px; font-size: 18px; line-height: 1.7; color: var(--white-80); white-space: pre-wrap; }
+
+/* РАСШИФРОВКА ПРОМПТА */
+.prompt-explained { background: var(--white-10); border-radius: 12px; padding: 20px 24px; margin-top: 12px; font-size: 17px; line-height: 1.8; }
+.prompt-explained .pe-line { margin-bottom: 6px; }
+.prompt-explained .pe-why { font-size: 14px; color: var(--white-40); font-weight: 500; margin-left: 8px; font-style: italic; }
+
+/* ANALOGY */
+.analogy-card { background: linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.05) 100%); border: 2px solid rgba(245,158,11,0.3); border-radius: 20px; padding: 32px; margin-top: 12px; text-align: center; }
+.analogy-emoji { font-size: 56px; margin-bottom: 12px; }
+.analogy-title { font-size: 26px; font-weight: 800; color: var(--accent); margin-bottom: 10px; }
+.analogy-body { font-size: 21px; line-height: 1.6; color: var(--white-80); max-width: 800px; margin: 0 auto; }
+
+.warning-card { background: rgba(240,192,64,0.1); border: 2px solid rgba(240,192,64,0.4); border-radius: 16px; padding: 24px; margin-top: 12px; }
+
+.badge { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 13px; font-weight: 700; }
+.badge-free { background: rgba(94,196,122,0.2); color: var(--green); }
+.badge-paid { background: rgba(224,85,85,0.2); color: var(--red); }
+
+.tool-card { background: var(--white-10); border-radius: 16px; padding: 20px; border: 1px solid var(--white-20); text-align: center; }
+.tool-card .tool-name { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+.tool-card .tool-desc { font-size: 15px; color: var(--white-60); line-height: 1.4; margin-bottom: 10px; }
+
+/* CONTROLS */
+.slide-counter { position: fixed; bottom: 24px; right: 32px; font-size: 16px; font-weight: 600; color: var(--white-40); z-index: 100; pointer-events: none; }
+.fullscreen-btn { position: fixed; top: 20px; right: 24px; z-index: 100; background: var(--white-10); border: 1px solid var(--white-20); color: var(--white-60); width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.fullscreen-btn:hover { background: var(--white-20); color: var(--white); }
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 100; transition: width 0.4s ease; }
+
+.slide.title-slide { text-align: center; justify-content: center; align-items: center; background: radial-gradient(ellipse at 50% 40%, rgba(245,158,11,0.15) 0%, transparent 60%); }
+.title-big { font-size: 68px; font-weight: 900; letter-spacing: -2px; color: var(--accent); margin-bottom: 24px; }
+.title-sub { font-size: 30px; font-weight: 500; color: var(--white-80); margin-bottom: 48px; line-height: 1.3; }
+.title-meta { font-size: 20px; color: var(--white-40); }
+
+.slide.practice-slide { background: #f0f2f5 !important; }
+.slide.practice-slide .slide-title { color: #1e293b; }
+.slide.practice-slide .slide-title .accent { color: var(--accent-dark); }
+.slide.practice-slide .slide-subtitle { color: #475569; }
+.slide.practice-slide .point { color: #334155; }
+.slide.practice-slide .point strong { color: #1e293b; }
+.slide.practice-slide .step { color: #334155; }
+.slide.practice-slide .step strong { color: #1e293b; }
+.slide.practice-slide .prompt-block { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.2); color: #334155; }
+.slide.practice-slide .prompt-explained { background: rgba(0,0,0,0.04); color: #334155; }
+.slide.practice-slide .prompt-explained .pe-why { color: #94a3b8; font-style: italic; }
+.slide.practice-slide .tbl th { background: rgba(0,0,0,0.05); color: var(--accent-dark); border-bottom-color: rgba(0,0,0,0.1); }
+.slide.practice-slide .tbl td { color: #334155; border-bottom-color: rgba(0,0,0,0.06); }
+.slide.practice-slide a { color: #b45309; }
+.slide.practice-slide .quote { color: #334155; border-left-color: var(--accent-dark); background: rgba(0,0,0,0.04); }
+.slide.practice-slide .card { background: rgba(0,0,0,0.04); }
+.slide.practice-slide .card-title { color: #1e293b; }
+.slide.practice-slide .card-body { color: #475569; }
+.slide.practice-slide .step-num { color: #fff; }
+
+.small-text { font-size: 16px; color: var(--white-40); margin-top: 20px; }
+.flow { display: flex; align-items: stretch; gap: 0; margin-top: 12px; }
+.flow-step { flex: 1; background: var(--white-10); border-radius: 12px; padding: 16px; text-align: center; }
+.flow-step .flow-label { font-size: 13px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.flow-step .flow-body { font-size: 16px; color: var(--white-80); line-height: 1.4; }
+.flow-arrow { display: flex; align-items: center; font-size: 24px; color: var(--accent); padding: 0 6px; }
+
+/* ANIMATIONS */
+@keyframes pulseGlow { 0%,100% { box-shadow: 0 0 20px rgba(245,158,11,0.2); } 50% { box-shadow: 0 0 40px rgba(245,158,11,0.5); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+@keyframes typewriter { from { width: 0; } to { width: 100%; } }
+@keyframes orbit { 0% { transform: rotate(0deg) translateX(60px) rotate(0deg); } 100% { transform: rotate(360deg) translateX(60px) rotate(-360deg); } }
+
+.pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+.slide.active .anim-up { animation: slideUp 0.6s ease-out both; }
+.slide.active .anim-up-d1 { animation: slideUp 0.6s ease-out 0.15s both; }
+.slide.active .anim-up-d2 { animation: slideUp 0.6s ease-out 0.3s both; }
+.slide.active .anim-up-d3 { animation: slideUp 0.6s ease-out 0.45s both; }
+.slide.active .anim-up-d4 { animation: slideUp 0.6s ease-out 0.6s both; }
+.slide.active .anim-scale { animation: fadeInScale 0.5s ease-out 0.2s both; }
+
+/* ORBIT ANIMATION */
+.orbit-container { position: relative; width: 160px; height: 160px; margin: 0 auto; }
+.orbit-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 48px; z-index: 2; }
+.orbit-ring { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 2px dashed var(--white-20); border-radius: 50%; }
+.orbit-item { position: absolute; top: 50%; left: 50%; margin: -16px 0 0 -16px; font-size: 24px; animation: orbit linear infinite; }
+.orbit-item:nth-child(3) { animation-duration: 6s; }
+.orbit-item:nth-child(4) { animation-duration: 6s; animation-delay: -2s; }
+.orbit-item:nth-child(5) { animation-duration: 6s; animation-delay: -4s; }
+
+/* TYPING INDICATOR */
+.typing-dots { display: inline-flex; gap: 4px; }
+.typing-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: typingBounce 1.4s ease-in-out infinite; }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-8px); } }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="slide-counter" id="slideCounter"></div>
+<button class="fullscreen-btn" id="fsBtn" title="Полный экран">&#x26F6;</button>
+
+<div class="deck">
+
+<!-- ============ СЛАЙД 1: ТИТУЛ ============ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;" class="anim-up">neovida.ai / ИИ. Новая реальность</div>
+  <div class="title-big anim-up-d1 pulse-glow" style="border-radius:20px; padding:12px 32px; display:inline-block;">Данные</div>
+  <div class="title-sub anim-up-d2">Исследования &middot; Аналитика &middot; Прогнозирование</div>
+  <div class="title-meta anim-up-d3">Занятие 5 &middot; 3 апреля 2026</div>
+</div>
+
+<!-- ============ СЛАЙД 2: ПЛАН ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Сегодня вы <span class="accent">научитесь</span></div>
+  <div class="step anim-up-d1"><div class="step-num">1</div><div>Проводить <strong>глубокие исследования</strong> — конкуренты, ниша, отрасль, люди</div></div>
+  <div class="step anim-up-d2"><div class="step-num" style="background:var(--coral);">2</div><div><strong>Анализировать данные</strong> — таблицы, отзывы, документы → графики и выводы</div></div>
+  <div class="step anim-up-d3"><div class="step-num" style="background:var(--blue);">3</div><div><strong>Прогнозировать</strong> — продажи, спрос, загрузку (форкастинг)</div></div>
+  <div class="step anim-up-d4"><div class="step-num" style="background:var(--purple);">4</div><div>Узнать <strong>AI-инструменты</strong> для глубокой аналитики</div></div>
+  <div class="quote anim-up-d4">Формат: тема → демо → практика. Каждый блок — вы пробуете сами.</div>
+</div>
+
+<!-- ============ БЛОК 1: ИССЛЕДОВАНИЕ ============ -->
+<!-- СЛАЙД 3: АНАЛОГИЯ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;">Блок 1</div>
+  <div class="title-big">Исследование</div>
+  <div class="title-sub">Справочная vs Детектив</div>
+</div>
+
+<!-- СЛАЙД 4: СПРАВОЧНАЯ vs ДЕТЕКТИВ -->
+<div class="slide">
+  <div class="slide-title anim-up">Как мы ищем информацию <span class="accent">сегодня?</span></div>
+  <div class="vs-grid">
+    <div class="vs-card bad anim-up-d1">
+      <div style="font-size:48px; text-align:center; margin-bottom:12px;">📞</div>
+      <div style="font-weight:700; color:var(--red); margin-bottom:10px; font-size:20px; text-align:center;">Справочная = Google</div>
+      <div class="point" style="font-size:18px;">«Какой телефон у стоматологии на Ленина?»</div>
+      <div class="point" style="font-size:18px;">Вам дают <strong>10 синих ссылок</strong>. Дальше сами.</div>
+    </div>
+    <div class="vs-card good anim-up-d2">
+      <div style="font-size:48px; text-align:center; margin-bottom:12px;">🕵️</div>
+      <div style="font-weight:700; color:var(--green); margin-bottom:10px; font-size:20px; text-align:center;">Детектив = Deep Research</div>
+      <div class="point" style="font-size:18px;">«Найди лучшую стоматологию в Уфе»</div>
+      <div class="point" style="font-size:18px;">Сам ищет, сравнивает, приносит <strong>готовое досье</strong> с выводами.</div>
+    </div>
+  </div>
+  <div class="quote">Раньше за такой отчёт платили агентству 50–200 тыс. руб. Теперь — бесплатно за 5 минут.</div>
+</div>
+
+<!-- СЛАЙД 5: 3 ИНСТРУМЕНТА -->
+<div class="slide">
+  <div class="slide-title anim-up">Три инструмента = <span class="accent">три сотрудника</span></div>
+  <div class="cards-grid-3">
+    <div class="tool-card anim-up-d1" style="border-color:rgba(94,196,122,0.4);">
+      <div style="font-size:40px; margin-bottom:8px;">🔍</div>
+      <div class="tool-name" style="color:var(--green);">Perplexity</div>
+      <div class="tool-desc">Библиотекарь со ссылками</div>
+      <div style="font-size:16px; color:var(--white-80); line-height:1.4; text-align:left; margin:8px 0;">Каждый факт — <strong>со ссылкой</strong>. Никогда не фантазирует.</div>
+      <div><span class="badge badge-free">Бесплатно</span></div>
+      <div style="margin-top:6px;"><a href="https://perplexity.ai" target="_blank" style="font-size:14px;">perplexity.ai</a></div>
+    </div>
+    <div class="tool-card anim-up-d2" style="border-color:rgba(139,110,181,0.4);">
+      <div style="font-size:40px; margin-bottom:8px;">🧠</div>
+      <div class="tool-name" style="color:var(--purple);">ChatGPT</div>
+      <div class="tool-desc">Креативный аналитик</div>
+      <div style="font-size:16px; color:var(--white-80); line-height:1.4; text-align:left; margin:8px 0;">Глубокий анализ, <strong>работа с таблицами</strong>, прогнозы.</div>
+      <div><span class="badge badge-free">5 Deep Research бесплатно</span></div>
+      <div style="margin-top:6px;"><a href="https://chatgpt.com" target="_blank" style="font-size:14px;">chatgpt.com</a></div>
+    </div>
+    <div class="tool-card anim-up-d3" style="border-color:rgba(66,133,244,0.4);">
+      <div style="font-size:40px; margin-bottom:8px;">🗂️</div>
+      <div class="tool-name" style="color:var(--blue);">Gemini</div>
+      <div class="tool-desc">Секретарь Google</div>
+      <div style="font-size:16px; color:var(--white-80); line-height:1.4; text-align:left; margin:8px 0;">Ищет в вебе + <strong>Gmail + Диск + Чат</strong>. Бесплатно!</div>
+      <div><span class="badge badge-free">Бесплатно</span></div>
+      <div style="margin-top:6px;"><a href="https://gemini.google.com" target="_blank" style="font-size:14px;">gemini.google.com</a></div>
+    </div>
+  </div>
+  </div>
+  <div style="margin-top:12px;">
+    <div class="tool-card anim-up-d4" style="border-color:rgba(124,58,237,0.4); display:flex; gap:16px; align-items:center; text-align:left;">
+      <div style="font-size:40px;">🟣</div>
+      <div style="flex:1;">
+        <div class="tool-name" style="color:#a78bfa;">Qwen 3 <span style="font-size:12px; background:rgba(245,158,11,0.2); color:var(--accent); padding:2px 8px; border-radius:6px; font-weight:700;">НОВЫЙ</span></div>
+        <div style="font-size:16px; color:var(--white-80);">Полнофункциональный ИИ от Alibaba. Deep Research, файлы, картинки. <strong>Бесплатно + без VPN!</strong></div>
+        <div style="margin-top:4px;"><span class="badge badge-free">Бесплатно</span> <a href="https://chat.qwen.ai" target="_blank" style="font-size:14px; margin-left:8px;">chat.qwen.ai</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="quote">Правило трёх врачей: спросите у трёх ИИ. Совпали — верим. Разошлись — проверяем.</div>
+</div>
+
+<!-- СЛАЙД 6: GEMINI — ФИШКИ -->
+<div class="slide">
+  <div class="slide-title anim-up" style="color:var(--blue);">Gemini Deep Research <span style="color:var(--white);">— бесплатная суперсила</span></div>
+  <div class="cards-grid">
+    <div class="anim-up-d1">
+      <div class="point"><strong>Deep Research — бесплатно!</strong> Без подписки.</div>
+      <div class="point">Режим <strong>«Думающая»</strong> — глубокий анализ. «Быстрая» — простые вопросы.</div>
+      <div class="point"><strong>4 источника</strong> для исследования:</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:8px 0 0 8px;">
+        <div style="background:var(--white-10); border-radius:10px; padding:12px; text-align:center;"><div style="font-size:24px;">🌐</div><div style="font-size:15px; font-weight:700;">Поиск</div><div style="font-size:13px; color:var(--white-60);">Весь интернет</div></div>
+        <div style="background:var(--white-10); border-radius:10px; padding:12px; text-align:center;"><div style="font-size:24px;">📧</div><div style="font-size:15px; font-weight:700;">Gmail</div><div style="font-size:13px; color:var(--white-60);">Ваша почта</div></div>
+        <div style="background:var(--white-10); border-radius:10px; padding:12px; text-align:center;"><div style="font-size:24px;">📁</div><div style="font-size:15px; font-weight:700;">Google Диск</div><div style="font-size:13px; color:var(--white-60);">Ваши файлы</div></div>
+        <div style="background:var(--white-10); border-radius:10px; padding:12px; text-align:center;"><div style="font-size:24px;">💬</div><div style="font-size:15px; font-weight:700;">Google Чат</div><div style="font-size:13px; color:var(--white-60);">Переписки</div></div>
+      </div>
+    </div>
+    <div class="anim-up-d2">
+      <div style="background:var(--white-10); border-radius:16px; padding:20px;">
+        <div style="font-size:17px; font-weight:700; color:var(--blue); margin-bottom:12px;">Как включить:</div>
+        <div class="step" style="font-size:16px;"><div class="step-num" style="background:var(--blue); width:26px; height:26px; font-size:13px;">1</div><div><a href="https://gemini.google.com" target="_blank">gemini.google.com</a></div></div>
+        <div class="step" style="font-size:16px;"><div class="step-num" style="background:var(--blue); width:26px; height:26px; font-size:13px;">2</div><div>Нажмите <strong>Deep Research</strong></div></div>
+        <div class="step" style="font-size:16px;"><div class="step-num" style="background:var(--blue); width:26px; height:26px; font-size:13px;">3</div><div>Режим <strong>«Думающая»</strong></div></div>
+        <div class="step" style="font-size:16px;"><div class="step-num" style="background:var(--blue); width:26px; height:26px; font-size:13px;">4</div><div>Источники: Поиск + Gmail + Диск</div></div>
+      </div>
+      <div style="margin-top:12px; padding:12px; background:rgba(66,133,244,0.1); border-radius:10px; text-align:center; font-size:14px; color:var(--blue); font-weight:600;">Фишка: «Найди все письма от поставщиков за 2025 год и сравни их условия»</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== ТЕМА 1: КОНКУРЕНТЫ И НИША ====== -->
+<!-- ПРОМПТ + АНАЛОГИЯ -->
+<div class="slide">
+  <div class="slide-title anim-up">Промпт: <span class="accent">исследовать свою нишу</span></div>
+  <div class="analogy-card anim-up" style="padding:20px; margin-bottom:16px; text-align:left; display:flex; gap:16px; align-items:center;">
+    <div style="font-size:48px; flex-shrink:0;">👷</div>
+    <div><div class="analogy-title" style="font-size:20px; text-align:left;">Бригадир на стройке</div><div class="analogy-body" style="font-size:17px; text-align:left;">Даёшь бригаде <strong>чертёж с размерами</strong> — получаешь дом. Даёшь «построй красиво» — получаешь сарай. С ИИ так же: <strong>чем точнее ТЗ — тем точнее результат.</strong></div></div>
+  </div>
+  <div class="prompt-explained anim-up-d1">
+    <div class="pe-line"><strong style="color:var(--accent);">Ты — бизнес-аналитик</strong> с опытом в сфере [ваша отрасль] в России. <span class="pe-why">&larr; Роль задаёт экспертизу. Без неё — поверхностный ответ.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--green);">Проведи глубокий анализ рынка [ваша ниша] в [город].</strong> <span class="pe-why">&larr; Конкретная задача + география = точный результат.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--blue);">Найди: топ-10 конкурентов с сайтами, ценовые стратегии (конкретные цифры!), сильные/слабые стороны по отзывам, маркетинговые каналы.</strong> <span class="pe-why">&larr; Чем детальнее список — тем глубже копает. «Конкретные цифры» заставляет искать реальные данные.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--purple);">Определи мою позицию на рынке: где я отстаю, где опережаю, в чём могу отстроиться.</strong> <span class="pe-why">&larr; Без этого — просто список. С этим — стратегия.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--coral);">Формат: таблица сравнения + 5 рекомендаций. Источники: ссылки на каждый факт.</strong> <span class="pe-why">&larr; Ссылки — для проверки (правило трёх врачей).</span></div>
+  </div>
+</div>
+
+<!-- ДЕМО — Я ПОКАЗЫВАЮ -->
+<div class="slide">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="background:var(--coral); color:var(--white); padding:6px 16px; border-radius:8px; font-size:14px; font-weight:700; letter-spacing:1px;">ДЕМО</div>
+    <div style="font-size:16px; color:var(--white-40);">Ведущий показывает на экране</div>
+  </div>
+  <div class="slide-title anim-up">Исследуем нишу <span class="accent">в реальном времени</span></div>
+  <div class="cards-grid anim-up-d1">
+    <div class="card" style="border-left:4px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">1. <a href="https://perplexity.ai" target="_blank">Perplexity</a> — быстрый результат</div>
+      <div class="card-body" style="font-size:16px;">Вставляю промпт → через 30 секунд готовый ответ <strong>со ссылками на каждый факт</strong>. Обратите внимание: можно нажать на ссылку и проверить.</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--purple);">
+      <div class="card-title" style="color:var(--purple);">2. <a href="https://chatgpt.com" target="_blank">ChatGPT</a> — глубокий анализ</div>
+      <div class="card-body" style="font-size:16px;">Запускаю Deep Research → ИИ работает 5-30 минут. Пока он работает — мы продолжаем урок. Результат посмотрим позже.</div>
+    </div>
+  </div>
+  <div class="quote anim-up-d2">Смотрите на экран: один и тот же запрос — разные результаты. Правило трёх врачей в действии.</div>
+</div>
+
+<!-- ПРАКТИКА — ИХ ОЧЕРЕДЬ -->
+<div class="slide practice-slide">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="background:var(--green); color:var(--bg); padding:6px 16px; border-radius:8px; font-size:14px; font-weight:700; letter-spacing:1px;">ВАША ОЧЕРЕДЬ</div>
+    <div style="font-size:16px; color:var(--white-40);">15 минут — исследуйте свою тему</div>
+  </div>
+  <div class="slide-title"><span class="accent">Практика</span> — исследование</div>
+  <div style="font-size:18px; color:var(--white-60); margin-bottom:12px;">Откройте <a href="https://perplexity.ai" target="_blank">perplexity.ai</a> и подставьте свою нишу. Полные промпты — в шпаргалке.</div>
+  <table class="tbl">
+    <thead><tr><th>Что исследовать</th><th>Начало промпта</th><th>Где</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Конкуренты + моя позиция</strong></td><td>«Ты бизнес-аналитик. Найди топ-10 [ниша] в [город]...»</td><td><a href="https://perplexity.ai" target="_blank">Perplexity</a></td></tr>
+      <tr><td><strong>Тренды в моей отрасли</strong></td><td>«Топ-10 трендов в [сфера] на 2026 с примерами...»</td><td><a href="https://perplexity.ai" target="_blank">Perplexity</a></td></tr>
+      <tr><td><strong>Найти поставщика</strong></td><td>«Ты закупщик-эксперт. Найди [продукт] с ТХ...»</td><td><a href="https://gemini.google.com" target="_blank">Gemini</a></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====== ТЕМА 2: РЕПУТАЦИЯ ====== -->
+<!-- ПРОМПТ + АНАЛОГИЯ -->
+<div class="slide">
+  <div class="slide-title anim-up">Промпт: <span class="accent">всё, что знает интернет о вас</span></div>
+  <div class="analogy-card anim-up" style="padding:20px; margin-bottom:16px; text-align:left; display:flex; gap:16px; align-items:center;">
+    <div style="font-size:48px; flex-shrink:0;">🪞</div>
+    <div><div class="analogy-title" style="font-size:20px; text-align:left;">Зеркало 360°</div><div class="analogy-body" style="font-size:17px; text-align:left;">Обычное зеркало — видишь себя спереди. <strong>Зеркало 360°</strong> — видишь себя со всех сторон, как тебя видят другие. Этот промпт покажет, <strong>как вас видит весь интернет.</strong></div></div>
+  </div>
+  <div class="prompt-explained anim-up-d1">
+    <div class="pe-line"><strong style="color:var(--accent);">Проведи глубокое исследование всех упоминаний [название компании] в интернете.</strong> <span class="pe-why">&larr; Широкий охват — ИИ ищет везде.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--green);">Ищи: отзывы на Яндекс.Картах, 2ГИС, Google Maps, упоминания в соцсетях (VK, Instagram, Telegram), статьи в СМИ, форумы.</strong> <span class="pe-why">&larr; Перечисляем площадки — иначе ИИ проверит только 2-3.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--blue);">Для каждого: источник (ссылка), тональность, ключевая цитата, дата.</strong> <span class="pe-why">&larr; Структура превращает хаос в таблицу.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--purple);">Итог: репутация 1-10, плюсы (топ-3), минусы (топ-3), что исправить первым.</strong> <span class="pe-why">&larr; Конкретный вывод + приоритет действий.</span></div>
+  </div>
+</div>
+
+<!-- ДЕМО — Я ПОКАЗЫВАЮ -->
+<div class="slide">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="background:var(--coral); color:var(--white); padding:6px 16px; border-radius:8px; font-size:14px; font-weight:700; letter-spacing:1px;">ДЕМО</div>
+    <div style="font-size:16px; color:var(--white-40);">Ведущий показывает на экране</div>
+  </div>
+  <div class="slide-title anim-up">Что пишут о нас <span class="accent">в интернете?</span></div>
+  <div class="card anim-up-d1" style="border-left:4px solid var(--accent);">
+    <div class="card-title">Вставляю промпт в <a href="https://perplexity.ai" target="_blank">Perplexity</a>:</div>
+    <div class="prompt-block" style="font-size:16px; margin-top:8px;">Проведи глубокое исследование всех упоминаний «[компания участника]» в интернете. Ищи: отзывы на Яндекс.Картах, 2ГИС, соцсети, форумы. Для каждого: ссылка, тональность, цитата. Итог: репутация 1-10.</div>
+  </div>
+  <div class="quote anim-up-d2">Смотрите: ИИ нашёл упоминания, о которых вы даже не знали. Вот почему это называется «зеркало 360°».</div>
+</div>
+
+<!-- ПРАКТИКА — ИХ ОЧЕРЕДЬ -->
+<div class="slide practice-slide">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="background:var(--green); color:var(--bg); padding:6px 16px; border-radius:8px; font-size:14px; font-weight:700; letter-spacing:1px;">ВАША ОЧЕРЕДЬ</div>
+    <div style="font-size:16px; color:var(--white-40);">5 минут — проверьте свою репутацию</div>
+  </div>
+  <div class="slide-title"><span class="accent">Практика</span> — ваша репутация</div>
+  <div class="step"><div class="step-num">1</div><div>Откройте <a href="https://perplexity.ai" target="_blank">perplexity.ai</a></div></div>
+  <div class="step"><div class="step-num">2</div><div>Вставьте промпт, замените [название компании] на своё</div></div>
+  <div class="step"><div class="step-num">3</div><div>Посмотрите результат — что нашёл ИИ? Есть сюрпризы?</div></div>
+  <div class="quote">Нет компании? Введите своё имя или имя конкурента. Результат удивит!</div>
+</div>
+
+<!-- ====== ТЕМА 3: ПОИСК ПРОДУКЦИИ ====== -->
+<div class="slide">
+  <div class="slide-title anim-up">Промпт: <span class="accent">найти специфический продукт</span></div>
+  <div class="analogy-card anim-up" style="padding:20px; margin-bottom:16px; text-align:left; display:flex; gap:16px; align-items:center;">
+    <div style="font-size:48px; flex-shrink:0;">🧓</div>
+    <div><div class="analogy-title" style="font-size:20px; text-align:left;">Опытный снабженец</div><div class="analogy-body" style="font-size:17px; text-align:left;">Новичок идёт на ближайший рынок и берёт что есть. <strong>Опытный снабженец</strong> знает 50 поставщиков, сравнивает оптом, знает где дешевле. Этот промпт превращает ИИ в такого снабженца.</div></div>
+  </div>
+  <div class="prompt-explained anim-up-d1">
+    <div class="pe-line"><strong style="color:var(--accent);">Ты — закупщик-эксперт в сфере [ваша сфера].</strong> <span class="pe-why">&larr; Роль закупщика — ИИ ищет с ценами, сертификатами, условиями.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--green);">Найди поставщиков [продукт] с характеристиками: [размер/материал].</strong> <span class="pe-why">&larr; «Поликарбонат 6мм цветной» vs «поликарбонат» — точность решает.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--blue);">Не ограничивайся первой страницей — копай каталоги, оптовые площадки, отраслевые порталы.</strong> <span class="pe-why">&larr; Ключевая фраза! Заставляет ИИ идти глубже обычного поиска.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--purple);">Для каждого: цена (опт/розница), минимальный заказ, доставка, сертификаты. Таблица по цене.</strong> <span class="pe-why">&larr; Таблица + сортировка = сравнивать за секунды.</span></div>
+  </div>
+  </div>
+</div>
+
+<!-- ДЕМО — Я ПОКАЗЫВАЮ -->
+<div class="slide">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="background:var(--coral); color:var(--white); padding:6px 16px; border-radius:8px; font-size:14px; font-weight:700; letter-spacing:1px;">ДЕМО</div>
+    <div style="font-size:16px; color:var(--white-40);">Ведущий показывает на экране</div>
+  </div>
+  <div class="slide-title anim-up">Ищем <span class="accent">конкретный продукт</span></div>
+  <div class="card anim-up-d1" style="border-left:4px solid var(--accent);">
+    <div class="card-title">Вставляю промпт в <a href="https://gemini.google.com" target="_blank">Gemini Deep Research</a>:</div>
+    <div class="prompt-block" style="font-size:16px; margin-top:8px;">Ты — закупщик-эксперт в сфере строительных материалов. Найди поставщиков поликарбоната сотового 6мм цветного. География: Россия, Китай (Alibaba). Не ограничивайся первой страницей — копай каталоги, оптовые площадки. Для каждого: цена опт/розница, минимальный заказ, доставка, сертификаты. Таблица по цене.</div>
+  </div>
+  <div class="quote anim-up-d2">Обратите внимание: «не ограничивайся первой страницей» — ключевая фраза. Без неё ИИ даст первые 3 результата из Google. С ней — копает глубоко.</div>
+</div>
+
+<!-- ПРАКТИКА — ИХ ОЧЕРЕДЬ -->
+<div class="slide practice-slide">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="background:var(--green); color:var(--bg); padding:6px 16px; border-radius:8px; font-size:14px; font-weight:700; letter-spacing:1px;">ВАША ОЧЕРЕДЬ</div>
+    <div style="font-size:16px; color:#64748b;">5 минут — найдите свой продукт</div>
+  </div>
+  <div class="slide-title"><span class="accent">Практика</span> — поиск продукта</div>
+  <div class="step"><div class="step-num">1</div><div>Откройте <a href="https://gemini.google.com" target="_blank">Gemini</a> или <a href="https://perplexity.ai" target="_blank">Perplexity</a></div></div>
+  <div class="step"><div class="step-num">2</div><div>Подставьте свой продукт/услугу вместо «поликарбонат»</div></div>
+  <div class="step"><div class="step-num">3</div><div>Обязательно добавьте: <strong>«Не ограничивайся первой страницей»</strong></div></div>
+  <div class="quote">Нет конкретного продукта? Попробуйте: «Найди поставщиков [оборудование для вашей сферы] с доставкой в Уфу»</div>
+</div>
+
+<!-- ============ БЛОК 2: АНАЛИТИКА ============ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;">Блок 2</div>
+  <div class="title-big">Аналитика</div>
+  <div class="title-sub">Рентген для вашей работы</div>
+</div>
+
+<!-- СЛАЙД 13: АНАЛОГИЯ — РЕНТГЕН -->
+<div class="slide">
+  <div class="analogy-card anim-scale">
+    <div class="analogy-emoji">🔬</div>
+    <div class="analogy-title">Аналитика = рентген</div>
+    <div class="analogy-body">У вас болит спина. Можно гадать: продуло? нерв? грыжа?<br>А можно сделать <strong style="color:var(--accent);">рентген</strong> — и сразу видишь.<br><br>Загружаете данные в ИИ — и он показывает:<br>«<strong>Вот тут проблема, вот это убыточно, вот здесь возможность.</strong>»</div>
+  </div>
+  <div class="quote">Не гадаешь — видишь. Не предполагаешь — знаешь.</div>
+</div>
+
+<!-- СЛАЙД 14: ЧТО МОЖНО АНАЛИЗИРОВАТЬ -->
+<div class="slide">
+  <div class="slide-title anim-up">Что можно <span class="accent">загрузить</span> в ИИ</div>
+  <div class="cards-grid-3">
+    <div class="card anim-up-d1" style="text-align:center; border-top:3px solid var(--accent);"><div style="font-size:32px;">📊</div><div class="card-title" style="font-size:17px;">Таблицы</div><div class="card-body" style="font-size:15px;">Продажи, расходы, прайсы, заявки</div></div>
+    <div class="card anim-up-d1" style="text-align:center; border-top:3px solid var(--green);"><div style="font-size:32px;">💬</div><div class="card-title" style="font-size:17px;">Отзывы</div><div class="card-body" style="font-size:15px;">Яндекс.Карты, 2ГИС — тональность</div></div>
+    <div class="card anim-up-d2" style="text-align:center; border-top:3px solid var(--purple);"><div style="font-size:32px;">📋</div><div class="card-title" style="font-size:17px;">Документы</div><div class="card-body" style="font-size:15px;">Договоры, отчёты — извлечь главное</div></div>
+    <div class="card anim-up-d2" style="text-align:center; border-top:3px solid var(--blue);"><div style="font-size:32px;">📈</div><div class="card-title" style="font-size:17px;">Статистика</div><div class="card-body" style="font-size:15px;">Посещаемость, метрики — закономерности</div></div>
+    <div class="card anim-up-d3" style="text-align:center; border-top:3px solid var(--coral);"><div style="font-size:32px;">💰</div><div class="card-title" style="font-size:17px;">Финансы</div><div class="card-body" style="font-size:15px;">Куда уходят деньги, что прибыльно</div></div>
+    <div class="card anim-up-d3" style="text-align:center; border-top:3px solid var(--cyan);"><div style="font-size:32px;">📱</div><div class="card-title" style="font-size:17px;">Переписки</div><div class="card-body" style="font-size:15px;">Частые вопросы клиентов</div></div>
+  </div>
+</div>
+
+<!-- ====== ТЕМА 4: АНАЛИЗ ОТЗЫВОВ ====== -->
+<!-- ПРОМПТ + АНАЛОГИЯ -->
+<div class="slide">
+  <div class="slide-title anim-up">Промпт: <span class="accent">анализ отзывов</span></div>
+  <div class="analogy-card anim-up" style="padding:20px; margin-bottom:12px; text-align:left; display:flex; gap:16px; align-items:center;">
+    <div style="font-size:48px; flex-shrink:0;">👨‍⚕️</div>
+    <div><div class="analogy-title" style="font-size:20px; text-align:left;">Терапевт, который слушает всех пациентов сразу</div><div class="analogy-body" style="font-size:17px; text-align:left;">Один отзыв — один пациент. 30 отзывов — <strong>целая поликлиника</strong>. ИИ слушает всех разом и находит <strong>общий диагноз</strong>: что болит у большинства.</div></div>
+  </div>
+  <div class="prompt-explained anim-up-d1">
+    <div class="pe-line"><strong style="color:var(--accent);">Ты — аналитик клиентского опыта.</strong> <span class="pe-why">&larr; Специализация = глубокий анализ.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--green);">Проанализируй отзывы ниже. Не пропускай ни один — каждый важен.</strong> <span class="pe-why">&larr; Без этого ИИ может разобрать только часть.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--blue);">Определи: 1) тональность каждого, 2) топ-5 жалоб С ЦИТАТАМИ, 3) топ-5 похвал С ЦИТАТАМИ, 4) неожиданные инсайты.</strong> <span class="pe-why">&larr; Цитаты = доказательства. Инсайты = что вы бы сами не заметили.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--purple);">Диаграмма тональности. 3 действия — что исправить прямо сейчас.</strong> <span class="pe-why">&larr; «Прямо сейчас» = конкретный план, а не общие слова.</span></div>
+  </div>
+</div>
+
+<!-- ДЕМО — Я ПОКАЗЫВАЮ -->
+<div class="slide">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="background:var(--coral); color:var(--white); padding:6px 16px; border-radius:8px; font-size:14px; font-weight:700; letter-spacing:1px;">ДЕМО</div>
+    <div style="font-size:16px; color:var(--white-40);">Ведущий показывает на экране</div>
+  </div>
+  <div class="slide-title anim-up">Анализируем <span class="accent">отзывы с 2ГИС</span></div>
+  <div class="step anim-up-d1"><div class="step-num">1</div><div>Открываю <a href="https://2gis.ru" target="_blank">2ГИС</a>, нахожу компанию, копирую 30 отзывов</div></div>
+  <div class="step anim-up-d1"><div class="step-num">2</div><div>Вставляю промпт + отзывы в <a href="https://chatgpt.com" target="_blank">ChatGPT</a></div></div>
+  <div class="step anim-up-d2"><div class="step-num">3</div><div>Через 1 минуту: диаграмма тональности, топ жалоб, топ похвал, план действий</div></div>
+  <div class="quote anim-up-d3">Смотрите: вместо чтения 30 отзывов вручную — мгновенный срез с конкретными рекомендациями.</div>
+</div>
+
+<!-- ПРАКТИКА — ИХ ОЧЕРЕДЬ -->
+<div class="slide practice-slide">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="background:var(--green); color:var(--bg); padding:6px 16px; border-radius:8px; font-size:14px; font-weight:700; letter-spacing:1px;">ВАША ОЧЕРЕДЬ</div>
+    <div style="font-size:16px; color:#64748b;">10 минут — проанализируйте свои отзывы</div>
+  </div>
+  <div class="slide-title"><span class="accent">Практика</span> — анализ отзывов</div>
+  <div class="step"><div class="step-num">1</div><div>Откройте <a href="https://2gis.ru" target="_blank">2ГИС</a> или <a href="https://yandex.ru/maps" target="_blank">Яндекс.Карты</a></div></div>
+  <div class="step"><div class="step-num">2</div><div>Найдите свою компанию (или конкурента), скопируйте 20-30 отзывов</div></div>
+  <div class="step"><div class="step-num">3</div><div>Вставьте промпт + отзывы в <a href="https://chatgpt.com" target="_blank">ChatGPT</a></div></div>
+  <div class="step"><div class="step-num">4</div><div>Что нашёл ИИ? Есть сюрпризы? Поделитесь с группой!</div></div>
+  <div class="quote">Нет отзывов о себе? Проанализируйте отзывы конкурента — узнаете его слабые места.</div>
+</div>
+
+<!-- ====== ТЕМА 5: АНАЛИЗ ТАБЛИЦЫ ====== -->
+<!-- ПРОМПТ + АНАЛОГИЯ -->
+<div class="slide">
+  <div class="slide-title anim-up">Промпт: <span class="accent">анализ таблицы</span></div>
+  <div class="analogy-card anim-up" style="padding:20px; margin-bottom:12px; text-align:left; display:flex; gap:16px; align-items:center;">
+    <div style="font-size:48px; flex-shrink:0;">🩺</div>
+    <div><div class="analogy-title" style="font-size:20px; text-align:left;">Рентген + диагноз + рецепт</div><div class="analogy-body" style="font-size:17px; text-align:left;">Врач с анализами не просто скажет «всё нормально» — он <strong>найдёт отклонения, объяснит причины и даст план лечения</strong>.</div></div>
+  </div>
+  <div style="font-size:16px; color:var(--white-60); margin-bottom:8px;">Загрузите Excel или CSV в <a href="https://chatgpt.com" target="_blank">ChatGPT</a>:</div>
+  <div class="prompt-explained anim-up-d1">
+    <div class="pe-line"><strong style="color:var(--accent);">Проанализируй загруженную таблицу как опытный бизнес-аналитик.</strong> <span class="pe-why">&larr; «Опытный» — глубже копает.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--green);">Сначала опиши, что ты видишь: какие столбцы, сколько строк, какой период.</strong> <span class="pe-why">&larr; Проверка: правильно ли ИИ понял данные.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--blue);">Затем: статистики, корреляции, аномалии, 4 графика.</strong> <span class="pe-why">&larr; Корреляции = скрытые связи. Аномалии = проблемы или возможности.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--purple);">5 выводов + 3 рекомендации, что изменить для роста.</strong> <span class="pe-why">&larr; «Для роста» — направляет на позитивные действия.</span></div>
+  </div>
+</div>
+
+<!-- ДЕМО — Я ПОКАЗЫВАЮ -->
+<div class="slide">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="background:var(--coral); color:var(--white); padding:6px 16px; border-radius:8px; font-size:14px; font-weight:700; letter-spacing:1px;">ДЕМО</div>
+    <div style="font-size:16px; color:var(--white-40);">Ведущий показывает на экране</div>
+  </div>
+  <div class="slide-title anim-up">Анализируем <span class="accent">таблицу продаж</span></div>
+  <div class="step anim-up-d1"><div class="step-num">1</div><div>Загружаю Excel-файл с продажами в <a href="https://chatgpt.com" target="_blank">ChatGPT</a></div></div>
+  <div class="step anim-up-d1"><div class="step-num">2</div><div>Вставляю промпт: «Проанализируй как опытный бизнес-аналитик...»</div></div>
+  <div class="step anim-up-d2"><div class="step-num">3</div><div>Через 2 минуты: графики, выводы, рекомендации для роста</div></div>
+  <div class="quote anim-up-d3">То, что аналитик делает полдня в Excel — ИИ делает за 2 минуты. И часто находит то, что человек бы пропустил.</div>
+</div>
+
+<!-- ПРАКТИКА — ИХ ОЧЕРЕДЬ -->
+<div class="slide practice-slide">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="background:var(--green); color:var(--bg); padding:6px 16px; border-radius:8px; font-size:14px; font-weight:700; letter-spacing:1px;">ВАША ОЧЕРЕДЬ</div>
+    <div style="font-size:16px; color:#64748b;">10 минут — проанализируйте свои данные</div>
+  </div>
+  <div class="slide-title"><span class="accent">Практика</span> — анализ таблицы</div>
+  <table class="tbl">
+    <thead><tr><th>Что загрузить</th><th>Что спросить</th><th>Где</th></tr></thead>
+    <tbody>
+      <tr><td>Прайс / таблица продаж</td><td>«Что прибыльно, что убыточно, какие закономерности?»</td><td><a href="https://chatgpt.com" target="_blank">ChatGPT</a></td></tr>
+      <tr><td>Таблица расходов</td><td>«Где растут затраты? Найди аномалии»</td><td><a href="https://chatgpt.com" target="_blank">ChatGPT</a></td></tr>
+      <tr><td>Нет таблицы с собой?</td><td>«Создай пример таблицы продаж бара за 12 месяцев и проанализируй»</td><td><a href="https://chatgpt.com" target="_blank">ChatGPT</a></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============ БОНУС: СОЦСЕТИ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Исследование в <span class="accent">соцсетях</span></div>
+  <div class="analogy-card anim-up" style="padding:20px; margin-bottom:16px; text-align:left; display:flex; gap:16px; align-items:center;">
+    <div style="font-size:48px; flex-shrink:0;">📡</div>
+    <div><div class="analogy-title" style="font-size:20px; text-align:left;">Радар vs подзорная труба</div><div class="analogy-body" style="font-size:17px; text-align:left;">Google и Deep Research — <strong>подзорная труба</strong>: видите далеко, но только в одну сторону. Анализ соцсетей — <strong>радар</strong>: видите всё вокруг, что происходит прямо сейчас.</div></div>
+  </div>
+  <div class="cards-grid">
+    <div>
+      <div style="font-size:17px; font-weight:700; color:var(--accent); margin-bottom:10px;">Что можно узнать через ИИ:</div>
+      <div class="point" style="font-size:17px;">Что постят конкуренты в Instagram/VK</div>
+      <div class="point" style="font-size:17px;">Какие посты набирают больше лайков</div>
+      <div class="point" style="font-size:17px;">О чём пишут клиенты в Telegram-каналах</div>
+      <div class="point" style="font-size:17px;">Что говорят о вас в соцсетях</div>
+    </div>
+    <div>
+      <div style="font-size:17px; font-weight:700; color:var(--green); margin-bottom:10px;">AI-инструменты для соцсетей:</div>
+      <div class="point" style="font-size:16px;"><strong><a href="https://tgstat.ru" target="_blank">TGStat</a></strong> — аналитика Telegram-каналов <span class="badge badge-free" style="font-size:11px;">Бесплатно</span></div>
+      <div class="point" style="font-size:16px;"><strong><a href="https://inflact.com/tools/profile-analyzer/" target="_blank">Inflact</a></strong> — анализ Instagram-аккаунтов <span class="badge badge-free" style="font-size:11px;">Бесплатно</span></div>
+      <div class="point" style="font-size:16px;"><strong><a href="https://popsters.com" target="_blank">Popsters</a></strong> — анализ контента VK, Instagram, Telegram <span class="badge badge-free" style="font-size:11px;">7 дней бесплатно</span></div>
+      <div class="point" style="font-size:16px;"><strong><a href="https://brand24.com" target="_blank">Brand24</a></strong> — мониторинг упоминаний везде <span class="badge badge-free" style="font-size:11px;">14 дней бесплатно</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ПРОМПТ — СОЦСЕТИ -->
+<div class="slide">
+  <div class="slide-title anim-up">Промпт: <span class="accent">анализ конкурентов в соцсетях</span></div>
+  <div class="analogy-card anim-up" style="padding:20px; margin-bottom:12px; text-align:left; display:flex; gap:16px; align-items:center;">
+    <div style="font-size:48px; flex-shrink:0;">🔭</div>
+    <div><div class="analogy-title" style="font-size:20px; text-align:left;">Тайный покупатель в соцсетях</div><div class="analogy-body" style="font-size:17px; text-align:left;">Как если бы вы наняли человека, который подписался на всех конкурентов, <strong>месяц следил за их постами</strong> и принёс отчёт: что работает, что нет, что украсть.</div></div>
+  </div>
+  <div class="warning-card anim-up" style="margin-bottom:12px;">
+    <div style="font-size:16px;"><strong style="color:var(--yellow);">⚠️ Важно:</strong> ChatGPT и Perplexity <strong>не могут зайти</strong> в Instagram/VK напрямую. Поэтому используем <strong>два инструмента</strong>:</div>
+  </div>
+  <div class="cards-grid anim-up-d1">
+    <div class="card" style="border-left:4px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Шаг 1: <a href="https://inflact.com/tools/profile-analyzer/" target="_blank">Inflact</a> — цифры</div>
+      <div class="card-body" style="font-size:16px;">Бесплатно, без регистрации. Вводите username конкурента → получаете: подписчики, engagement, топ-посты, хештеги, время постинга.</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--purple);">
+      <div class="card-title" style="color:var(--purple);">Шаг 2: <a href="https://perplexity.ai" target="_blank">Perplexity</a> — стратегия</div>
+      <div class="card-body" style="font-size:16px;">Промпт: «Ты SMM-аналитик. Проанализируй Instagram-стратегию [название бизнеса] в [город]. Какой контент заходит, какие акции, чем отстраиваются. Дай 5 идей для моего аккаунта.»</div>
+    </div>
+  </div>
+  <div class="prompt-explained anim-up-d2" style="margin-top:12px;">
+    <div class="pe-line"><strong style="color:var(--accent);">Для Telegram:</strong> <a href="https://tgstat.ru" target="_blank">TGStat</a> — бесплатно: охваты, динамика, лучшие посты любого канала. <span class="pe-why">&larr; Работает без доступа к каналу — просто вставляете ссылку.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--green);">Для VK:</strong> <a href="https://popsters.com" target="_blank">Popsters</a> — 7 дней бесплатно: анализ контента, лучшие посты, оптимальное время. <span class="pe-why">&larr; Вставляете ссылку на группу VK.</span></div>
+  </div>
+</div>
+
+<!-- ДЕМО — Я ПОКАЗЫВАЮ -->
+<div class="slide">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="background:var(--coral); color:var(--white); padding:6px 16px; border-radius:8px; font-size:14px; font-weight:700; letter-spacing:1px;">ДЕМО</div>
+    <div style="font-size:16px; color:var(--white-40);">Ведущий показывает на экране</div>
+  </div>
+  <div class="slide-title anim-up">Анализируем <span class="accent">конкурента в Instagram</span></div>
+  <div class="step anim-up-d1"><div class="step-num">1</div><div>Открываю <a href="https://inflact.com/tools/profile-analyzer/" target="_blank">Inflact</a> → ввожу username конкурента → через 30 сек: цифры, графики, топ-посты</div></div>
+  <div class="step anim-up-d1"><div class="step-num">2</div><div>Открываю <a href="https://perplexity.ai" target="_blank">Perplexity</a> → «Проанализируй Instagram-стратегию [бизнес] в Уфе» → получаю анализ стратегии со ссылками</div></div>
+  <div class="step anim-up-d2"><div class="step-num">3</div><div>Inflact = цифры (что работает). Perplexity = стратегия (почему работает). Вместе = полная картина.</div></div>
+</div>
+
+<!-- ПРАКТИКА — ИХ ОЧЕРЕДЬ -->
+<div class="slide practice-slide">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="background:var(--green); color:var(--bg); padding:6px 16px; border-radius:8px; font-size:14px; font-weight:700; letter-spacing:1px;">ВАША ОЧЕРЕДЬ</div>
+    <div style="font-size:16px; color:#64748b;">5 минут — проверьте конкурентов</div>
+  </div>
+  <div class="slide-title"><span class="accent">Практика</span> — соцсети</div>
+  <div class="step"><div class="step-num">1</div><div>Откройте <a href="https://inflact.com/tools/profile-analyzer/" target="_blank">inflact.com/tools/profile-analyzer</a></div></div>
+  <div class="step"><div class="step-num">2</div><div>Введите username конкурента в Instagram (без @, просто имя)</div></div>
+  <div class="step"><div class="step-num">3</div><div>Посмотрите: engagement, топ-посты, когда постят, какие хештеги</div></div>
+  <div class="step"><div class="step-num">4</div><div>Бонус: откройте <a href="https://tgstat.ru" target="_blank">TGStat</a> — вставьте ссылку на Telegram-канал конкурента</div></div>
+  <div class="quote">Не знаете username конкурента? Спросите Perplexity: «Найди Instagram-аккаунты [тип бизнеса] в Уфе»</div>
+</div>
+
+<!-- ============ БЛОК 3: ФОРКАСТИНГ ============ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;">Блок 3</div>
+  <div class="title-big">Форкастинг</div>
+  <div class="title-sub">Прогноз погоды для вашей работы</div>
+</div>
+
+<!-- СЛАЙД 20: АНАЛОГИЯ — ПРОГНОЗ ПОГОДЫ -->
+<div class="slide">
+  <div class="analogy-card anim-scale">
+    <div class="analogy-emoji">🌤️</div>
+    <div class="analogy-title">Форкастинг = прогноз погоды</div>
+    <div class="analogy-body">Метеоролог смотрит данные за прошлые годы:<br>«В марте обычно тает — бери зонт.»<br><br>ИИ делает то же с вашими данными:<br>«<strong style="color:var(--accent);">В мае у вас пик — готовьте запасы.<br>В январе провал — запускайте акцию заранее.</strong>»</div>
+  </div>
+  <div class="quote">Загружаете историю → ИИ находит закономерности → предсказывает будущее.</div>
+</div>
+
+<!-- СЛАЙД 21: ПРОМПТ — ФОРКАСТИНГ (РАСШИФРОВАННЫЙ) -->
+<div class="slide">
+  <div class="slide-title anim-up">Промпт: <span class="accent">прогноз на 3 месяца</span></div>
+  <div class="slide-subtitle">Загрузите таблицу с данными за 6-12 месяцев в <a href="https://chatgpt.com" target="_blank">ChatGPT</a>:</div>
+  <div class="prompt-explained anim-up-d1">
+    <div class="pe-line"><strong style="color:var(--accent);">Ты — аналитик данных. Проанализируй загруженную таблицу и построй прогноз.</strong> <span class="pe-why">&larr; «Аналитик данных» включает статистические методы, не просто угадывание.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--green);">Шаг 1: Выяви сезонные паттерны — есть ли повторяющиеся циклы? Шаг 2: Определи тренд — растём, падаем, стоим?</strong> <span class="pe-why">&larr; Пошаговость заставляет ИИ сначала ПОНЯТЬ данные, потом прогнозировать.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--blue);">Шаг 3: Построй прогноз на 3 месяца вперёд. Используй подходящий метод (ARIMA, экспоненциальное сглаживание или линейную регрессию — выбери сам).</strong> <span class="pe-why">&larr; Даём свободу выбора метода — ИИ подберёт лучший под ваши данные.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--purple);">Покажи на одном графике: историю + прогноз + доверительный интервал. Объясни, насколько ты уверен в прогнозе и какие ограничения.</strong> <span class="pe-why">&larr; Доверительный интервал = честность. «Ограничения» не дают слепо верить прогнозу.</span></div>
+  </div>
+</div>
+
+<!-- ПРИМЕР: ПРОГНОЗ ОСТАТКОВ -->
+<div class="slide">
+  <div class="slide-title anim-up">Пример: <span class="accent">когда закончится товар?</span></div>
+  <div class="analogy-card anim-up" style="padding:20px; margin-bottom:16px; text-align:left; display:flex; gap:16px; align-items:center;">
+    <div style="font-size:48px; flex-shrink:0;">📦</div>
+    <div><div class="analogy-title" style="font-size:20px; text-align:left;">Завхоз, который считает на три шага вперёд</div><div class="analogy-body" style="font-size:17px; text-align:left;">Плохой завхоз: «Закончилось — побежал закупать». Хороший: знает, что <strong>к маю расходники заканчиваются</strong>, заказывает в марте по оптовой цене. ИИ — тот самый хороший завхоз.</div></div>
+  </div>
+  <div class="prompt-explained anim-up-d1">
+    <div class="pe-line"><strong style="color:var(--accent);">Ты — аналитик запасов и закупок.</strong> <span class="pe-why">&larr; Роль = ИИ думает про остатки, сроки, оптовые цены.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--green);">Проанализируй таблицу с продажами по товарам за 12 месяцев. Для каждого товара определи: средний расход в месяц, сезонные пики расхода, текущий остаток.</strong> <span class="pe-why">&larr; Конкретные метрики = конкретный прогноз, а не «скоро закончится».</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--blue);">Спрогнозируй: когда каждый товар закончится при текущем темпе? Когда нужно сделать заказ, чтобы не было простоя (учти срок доставки 14 дней)?</strong> <span class="pe-why">&larr; «Учти срок доставки» — ключевой лайфхак! Без этого прогноз бесполезен.</span></div>
+    <div class="pe-line" style="margin-top:8px;"><strong style="color:var(--purple);">Формат: таблица — товар, остаток, дата окончания, дата заказа, рекомендуемый объём закупки. Отсортируй по срочности.</strong> <span class="pe-why">&larr; «По срочности» = сразу видишь, что горит.</span></div>
+  </div>
+</div>
+
+<!-- ЧТО МОЖНО ПРОГНОЗИРОВАТЬ -->
+<div class="slide">
+  <div class="slide-title anim-up">Что можно <span class="accent">прогнозировать</span></div>
+  <div class="cards-grid">
+    <div class="card anim-up-d1" style="border-left:4px solid var(--accent);"><div class="card-title">📈 Продажи</div><div class="card-body" style="font-size:17px;">«Когда пик?», «Какой товар растёт?», «Сколько заработаем в мае?»</div></div>
+    <div class="card anim-up-d1" style="border-left:4px solid var(--green);"><div class="card-title">📦 Запасы и закупки</div><div class="card-body" style="font-size:17px;">«Когда закончится товар?», «Что заказать наперёд?», «Оптимальный объём закупки?»</div></div>
+    <div class="card anim-up-d2" style="border-left:4px solid var(--coral);"><div class="card-title">👥 Спрос и загрузка</div><div class="card-body" style="font-size:17px;">«В какие дни больше клиентов?», «Когда нужно больше персонала?»</div></div>
+    <div class="card anim-up-d2" style="border-left:4px solid var(--blue);"><div class="card-title">💰 Бюджет и цены</div><div class="card-body" style="font-size:17px;">«Где растут затраты?», «Когда выгоднее закупать материалы?»</div></div>
+  </div>
+  <div class="warning-card anim-up-d3">
+    <div style="font-size:18px;"><strong style="color:var(--yellow);">⚠️ Навигатор + водитель:</strong> ИИ прогнозирует по истории. Он не знает, что ваш менеджер ушёл в отпуск или что на Проспекте Октября ремонт. <strong>Его скорость + ваш контекст = точные решения.</strong></div>
+  </div>
+</div>
+
+<!-- ДЕМО — Я ПОКАЗЫВАЮ -->
+<div class="slide">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="background:var(--coral); color:var(--white); padding:6px 16px; border-radius:8px; font-size:14px; font-weight:700; letter-spacing:1px;">ДЕМО</div>
+    <div style="font-size:16px; color:var(--white-40);">Ведущий показывает на экране</div>
+  </div>
+  <div class="slide-title anim-up">Прогнозируем <span class="accent">продажи</span></div>
+  <div class="step anim-up-d1"><div class="step-num">1</div><div>Загружаю таблицу с продажами за 12 месяцев в <a href="https://chatgpt.com" target="_blank">ChatGPT</a></div></div>
+  <div class="step anim-up-d1"><div class="step-num">2</div><div>Промпт: «Найди сезонность, тренд. Построй прогноз на 3 месяца. Покажи на графике.»</div></div>
+  <div class="step anim-up-d2"><div class="step-num">3</div><div>Через 2 минуты: график с историей + прогнозом + доверительный интервал</div></div>
+  <div class="quote anim-up-d3">Смотрите на график: ИИ нашёл пик в мае и провал в январе. Теперь вы знаете, когда запускать рекламу, а когда экономить.</div>
+</div>
+
+<!-- ПРАКТИКА — ИХ ОЧЕРЕДЬ -->
+<div class="slide practice-slide">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="background:var(--green); color:var(--bg); padding:6px 16px; border-radius:8px; font-size:14px; font-weight:700; letter-spacing:1px;">ВАША ОЧЕРЕДЬ</div>
+    <div style="font-size:16px; color:#64748b;">10 минут — спрогнозируйте свои данные</div>
+  </div>
+  <div class="slide-title"><span class="accent">Практика</span> — форкастинг</div>
+  <div class="step"><div class="step-num">1</div><div>Если есть таблица с данными — загрузите в <a href="https://chatgpt.com" target="_blank">ChatGPT</a></div></div>
+  <div class="step"><div class="step-num">2</div><div>Вставьте промпт: «Найди сезонность, построй прогноз на 3 месяца»</div></div>
+  <div class="step"><div class="step-num">3</div><div>Нет таблицы? Напишите: <strong>«Создай пример таблицы продаж [бара/центра/магазина] за 12 месяцев и сделай прогноз»</strong></div></div>
+  <div class="quote">Даже на примерных данных вы увидите, как работает форкастинг. А дома попробуете со своими реальными.</div>
+</div>
+
+<!-- ============ БЛОК 4: AI-ИНСТРУМЕНТЫ ============ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;">Блок 4</div>
+  <div class="title-big">AI-инструменты</div>
+  <div class="title-sub">Специализированные нейросети для аналитики</div>
+</div>
+
+<!-- СЛАЙД 25: ПРОФИЛЬНЫЕ AI-ИНСТРУМЕНТЫ -->
+<div class="slide">
+  <div class="slide-title anim-up">AI-инструменты <span class="accent">для глубокой аналитики</span></div>
+  <div class="slide-subtitle" style="margin-bottom:8px;">Каждый — на базе ИИ. Каждый решает конкретную задачу.</div>
+  <table class="tbl" style="font-size:16px;">
+    <thead><tr><th>Инструмент</th><th>AI-суперсила</th><th>Пример задачи</th><th>Цена</th></tr></thead>
+    <tbody>
+      <tr><td><strong><a href="https://perplexity.ai" target="_blank">Perplexity</a></strong></td><td>ИИ-поисковик — ответы со ссылками, не ссылки</td><td>«Все бары в Уфе с крафтовым пивом — рейтинги, цены»</td><td><span class="badge badge-free">Бесплатно</span></td></tr>
+      <tr><td><strong><a href="https://julius.ai" target="_blank">Julius AI</a></strong></td><td>ИИ строит графики и дашборды по вашим данным</td><td>Загрузили Excel → спросили «что прибыльно?» → получили дашборд</td><td><span class="badge badge-free">Бесплатно</span></td></tr>
+      <tr><td><strong><a href="https://rows.com" target="_blank">Rows.com</a></strong></td><td>ИИ-таблицы с предсказаниями и обнаружением аномалий</td><td>Таблица расходов → ИИ: «вот аномалия, вот тренд роста»</td><td><span class="badge badge-free">20 задач бесплатно</span></td></tr>
+      <tr><td><strong><a href="https://similarweb.com" target="_blank">SimilarWeb</a></strong></td><td>ИИ анализирует трафик любого сайта — откуда люди</td><td>«Откуда приходят клиенты к конкурентам?»</td><td><span class="badge badge-free">Бесплатно (базово)</span></td></tr>
+      <tr><td><strong><a href="https://brand24.com" target="_blank">Brand24</a></strong></td><td>ИИ мониторит упоминания в 25M+ источниках + тональность</td><td>«Что пишут о моей компании в интернете прямо сейчас?»</td><td><span class="badge badge-free">14 дней бесплатно</span></td></tr>
+      <tr><td><strong><a href="https://apollo.io" target="_blank">Apollo.io</a></strong></td><td>ИИ-скоринг лидов — оценивает, кто скорее купит</td><td>«Найди email директоров всех детских центров в Уфе»</td><td><span class="badge badge-free">100 контактов бесплатно</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============ ИТОГИ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Что мы сегодня <span class="accent">узнали</span></div>
+  <div class="cards-grid" style="margin-top:8px;">
+    <div class="card anim-up-d1" style="border-left:4px solid var(--accent);"><div class="card-title">🕵️ Исследование</div><div class="card-body" style="font-size:17px;">Deep Research = стажёр-аналитик. Perplexity (ссылки), ChatGPT (глубина), Gemini (Gmail + Диск). Правило 3 врачей.</div></div>
+    <div class="card anim-up-d2" style="border-left:4px solid var(--green);"><div class="card-title">🔬 Аналитика</div><div class="card-body" style="font-size:17px;">Рентген для работы. Таблицы, отзывы, документы → графики, выводы, рекомендации. Расшифрованные промпты.</div></div>
+    <div class="card anim-up-d3" style="border-left:4px solid var(--blue);"><div class="card-title">🌤️ Форкастинг</div><div class="card-body" style="font-size:17px;">Прогноз погоды для работы. Загрузил историю → ИИ предсказал будущее. Навигатор + водитель.</div></div>
+    <div class="card anim-up-d4" style="border-left:4px solid var(--purple);"><div class="card-title">🛠️ AI-инструменты</div><div class="card-body" style="font-size:17px;">Julius AI, Rows.com, SimilarWeb, Brand24, Apollo — специализированные нейросети. Всё с бесплатным стартом.</div></div>
+  </div>
+</div>
+
+<!-- ДОМАШКА -->
+<div class="slide">
+  <div class="slide-title anim-up">Домашнее <span class="accent">задание</span></div>
+  <div class="step anim-up-d1"><div class="step-num">1</div><div><strong>Исследование через 2 инструмента</strong><br><span style="color:var(--white-60); font-size:18px;">Возьмите тему с урока → исследуйте в <a href="https://perplexity.ai" target="_blank">Perplexity</a> И в <a href="https://chatgpt.com" target="_blank">ChatGPT</a>/<a href="https://gemini.google.com" target="_blank">Gemini</a> → сравните. Скриншот в чат.</span></div></div>
+  <div class="step anim-up-d2"><div class="step-num">2</div><div><strong>Загрузите свои данные — получите анализ</strong><br><span style="color:var(--white-60); font-size:18px;">Таблица, прайс или отзывы. Используйте расшифрованные промпты с урока. Скриншот графика в чат.</span></div></div>
+  <div class="step anim-up-d3"><div class="step-num">3</div><div><strong>Попробуйте AI-инструмент</strong><br><span style="color:var(--white-60); font-size:18px;">Зайдите на <a href="https://julius.ai" target="_blank">Julius AI</a> или <a href="https://similarweb.com" target="_blank">SimilarWeb</a> — проверьте трафик конкурента. Скриншот в чат.</span></div></div>
+  <div class="warning-card anim-up-d4">
+    <div style="font-size:18px;"><strong style="color:var(--yellow);">💡 Самое ценное:</strong> задание №2. Когда загрузите <em>свои реальные данные</em> — увидите инсайты, о которых не подозревали.</div>
+  </div>
+</div>
+
+<!-- ФИНАЛ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;" class="anim-up">neovida.ai / ИИ. Новая реальность</div>
+  <div class="title-big anim-up-d1" style="font-size:52px;">Спасибо!</div>
+  <div class="title-sub anim-up-d2">Шпаргалка с промптами — в чате</div>
+  <div class="title-meta anim-up-d3">Следующее занятие — Визуал: изображения и презентации</div>
+  <div style="margin-top:32px;" class="anim-up-d4">
+    <div class="typing-dots"><span></span><span></span><span></span></div>
+    <div style="font-size:16px; color:var(--white-40); margin-top:8px;">ИИ уже работает над вашими исследованиями...</div>
+  </div>
+</div>
+
+</div> <!-- /deck -->
+
+<script>
+(function(){
+  var slides = document.querySelectorAll('.slide');
+  var counter = document.getElementById('slideCounter');
+  var progress = document.getElementById('progressBar');
+  var fsBtn = document.getElementById('fsBtn');
+  var total = slides.length;
+  var current = 0;
+
+  function show(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[current].classList.remove('active');
+    slides[current].classList.add('prev');
+    current = idx;
+    slides.forEach(function(s, i) {
+      s.classList.remove('active', 'prev');
+      if (i < current) s.classList.add('prev');
+    });
+    slides[current].classList.add('active');
+    counter.textContent = (current + 1) + ' / ' + total;
+    progress.style.width = ((current + 1) / total * 100) + '%';
+    slides[current].scrollTop = 0;
+  }
+
+  function next() { show(current + 1); }
+  function prev() { show(current - 1); }
+
+  slides[0].classList.add('active');
+  counter.textContent = '1 / ' + total;
+  progress.style.width = (1 / total * 100) + '%';
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+    if (e.key === 'Home') { e.preventDefault(); show(0); }
+    if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+  });
+
+  var touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].screenX - touchStartX;
+    var dy = e.changedTouches[0].screenY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) { if (dx < 0) next(); else prev(); }
+  }, { passive: true });
+
+  fsBtn.addEventListener('click', function() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){});
+    else document.exitFullscreen();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Boost — Шпаргалка. Занятие 5</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #1a1a2e;
+    --bg-light: #2a2218;
+    --bg-card: rgba(255,255,255,0.06);
+    --bg-card-hover: rgba(255,255,255,0.1);
+    --accent: #f59e0b;
+    --accent-dark: #d97706;
+    --accent-glow: rgba(245,158,11,0.15);
+    --coral: #E07461;
+    --white: #ffffff;
+    --white-90: rgba(255,255,255,0.9);
+    --white-70: rgba(255,255,255,0.7);
+    --white-50: rgba(255,255,255,0.5);
+    --white-30: rgba(255,255,255,0.3);
+    --white-15: rgba(255,255,255,0.15);
+    --white-08: rgba(255,255,255,0.08);
+    --green: #5ec47a;
+    --red: #e05555;
+    --yellow: #f0c040;
+    --blue: #4285f4;
+    --purple: #8B6EB5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--white-90);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: white;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .header-logo { font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; opacity: 0.85; margin-bottom: 12px; }
+  .header h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; line-height: 1.2; }
+  .header p { font-size: 14px; opacity: 0.9; }
+
+  .container { max-width: 720px; margin: 0 auto; padding: 0 20px 40px; }
+
+  .section { margin: 28px 0; }
+  .section-title {
+    font-size: 18px; font-weight: 800; color: var(--white);
+    margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .num {
+    background: var(--accent); color: var(--bg);
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; flex-shrink: 0;
+  }
+  .section-subtitle { font-size: 13px; color: var(--white-50); margin-bottom: 12px; margin-left: 36px; }
+
+  /* PROMPT BOXES */
+  .prompt-box {
+    background: var(--bg-light);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 16px 18px; margin: 12px 0;
+    font-size: 14px; line-height: 1.6;
+    position: relative; cursor: pointer;
+    transition: background 0.2s; white-space: pre-line;
+    color: var(--white-90);
+  }
+  .prompt-box:hover { background: var(--accent-glow); }
+  .prompt-box::after {
+    content: 'нажмите, чтобы скопировать';
+    position: absolute; top: 8px; right: 12px;
+    font-size: 11px; color: var(--white-50); opacity: 0.7;
+  }
+  .prompt-box.copied { border-left-color: var(--green); }
+  .prompt-box.copied::after { content: '✅ скопировано!'; color: var(--green); opacity: 1; }
+
+  .prompt-label {
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 6px; margin-top: 16px;
+  }
+
+  /* LINK CARDS */
+  .link-card {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg-card); border: 1px solid var(--white-08);
+    border-radius: 12px; padding: 14px 18px; margin: 8px 0;
+    text-decoration: none; color: var(--white-90); transition: background 0.2s;
+  }
+  .link-card:hover { background: var(--bg-card-hover); }
+  .link-card .link-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .link-card .link-text { flex: 1; }
+  .link-card .link-name { font-weight: 700; font-size: 15px; }
+  .link-card .link-url { font-size: 12px; color: var(--accent); }
+  .link-card .link-note { font-size: 11px; color: var(--white-50); }
+
+  /* TIPS / WARNINGS */
+  .tip {
+    background: rgba(94,196,122,0.1); border: 1px solid rgba(94,196,122,0.2);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+  .tip-icon { flex-shrink: 0; font-size: 16px; }
+
+  .warning {
+    background: rgba(224,85,85,0.1); border: 1px solid rgba(224,85,85,0.2);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+
+  .info {
+    background: var(--accent-glow); border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--bg-card); border: 1px solid var(--white-08);
+    border-radius: 12px; padding: 16px 18px; margin: 8px 0;
+  }
+  .card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--white); }
+  .card-body { font-size: 13px; color: var(--white-70); line-height: 1.6; }
+
+  .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+  @media (max-width: 560px) { .cards-grid { grid-template-columns: 1fr; } }
+
+  /* STEP LIST */
+  .step-list { margin: 12px 0; }
+  .step-item {
+    display: flex; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid var(--white-08);
+    font-size: 14px; line-height: 1.5;
+  }
+  .step-item:last-child { border-bottom: none; }
+  .step-num {
+    width: 24px; height: 24px; background: var(--accent); color: var(--bg);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+  }
+
+  /* ANALOGY */
+  .analogy {
+    background: var(--accent-glow); border: 2px solid rgba(245,158,11,0.3);
+    border-radius: 12px; padding: 14px 18px; margin: 12px 0;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .analogy-emoji { font-size: 28px; flex-shrink: 0; }
+  .analogy-title { font-size: 14px; font-weight: 800; color: var(--accent); }
+  .analogy-body { font-size: 13px; color: var(--white-70); line-height: 1.5; }
+
+  /* BADGES */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+  .badge-free { background: rgba(94,196,122,0.15); color: var(--green); }
+  .badge-paid { background: rgba(224,85,85,0.15); color: var(--red); }
+  .badge-new { background: rgba(245,158,11,0.2); color: var(--accent); }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--white-15); margin: 28px 0; }
+
+  /* FOOTER */
+  .footer {
+    text-align: center; padding: 24px; font-size: 12px;
+    color: var(--white-50); border-top: 1px solid var(--white-08); margin-top: 32px;
+  }
+  .footer strong { color: var(--accent); }
+
+  /* PDF BUTTON */
+  .pdf-btn {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--accent); color: var(--bg); border: none;
+    padding: 14px 24px; border-radius: 12px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(245,158,11,0.4);
+    z-index: 1000; transition: transform 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .pdf-btn:hover { transform: translateY(-2px); }
+
+  @media print {
+    .prompt-box::after { display: none; }
+    .header { padding: 20px; }
+    body { font-size: 12px; background: #fff; color: #1a1a2e; }
+    .prompt-box { font-size: 12px; padding: 10px 14px; color: #1a1a2e; background: #f8f4e8; }
+    .pdf-btn { display: none; }
+    .card, .link-card { border: 1px solid #ddd; }
+    .section-title, .card-title { color: #1a1a2e; }
+    .card-body, .section-subtitle, .step-item { color: #333; }
+  }
+</style>
+</head>
+<body>
+
+<button class="pdf-btn" onclick="window.print()">Скачать PDF</button>
+
+<div class="header">
+  <div class="header-logo">neovida.ai / ИИ. Новая реальность</div>
+  <h1>Шпаргалка. Занятие 5</h1>
+  <p>Данные &mdash; анализ, исследования, прогнозирование</p>
+</div>
+
+<div class="container">
+
+  <!-- ==================== НОВЫЕ ИНСТРУМЕНТЫ ==================== -->
+  <div class="section">
+    <div class="section-title">🆕 Два новых инструмента</div>
+    <div class="section-subtitle">Сегодня добавляем в арсенал</div>
+
+    <a class="link-card" href="https://perplexity.ai" target="_blank">
+      <div class="link-icon" style="background: #20808d; color: white;">P</div>
+      <div class="link-text">
+        <div class="link-name">Perplexity <span class="badge badge-new">НОВЫЙ</span></div>
+        <div class="link-url">perplexity.ai</div>
+        <div class="link-note">AI-поисковик. Не LLM-модель, а исследователь: ищет в интернете и даёт ответ со ссылками. <span class="badge badge-free">Бесплатно</span></div>
+      </div>
+    </a>
+    <div class="info"><div class="tip-icon">💡</div><div>Perplexity — не как ChatGPT. Он <strong>не придумывает</strong> — каждый факт подкреплён ссылкой. Под капотом — поисковый движок + LLM. Есть Deep Research (5 запросов/день бесплатно).</div></div>
+
+    <a class="link-card" href="https://chat.qwen.ai" target="_blank">
+      <div class="link-icon" style="background: #7c3aed; color: white;">Q</div>
+      <div class="link-text">
+        <div class="link-name">Qwen 3 <span class="badge badge-new">НОВЫЙ</span></div>
+        <div class="link-url">chat.qwen.ai</div>
+        <div class="link-note">Полнофункциональный ИИ от Alibaba. Deep Research, файлы, картинки, поиск. <span class="badge badge-free">Бесплатно</span> <strong style="color:var(--green);">Без VPN!</strong></div>
+      </div>
+    </a>
+    <div class="info"><div class="tip-icon">💡</div><div>Qwen 3 — альтернатива ChatGPT для тех, у кого нет VPN. Всё бесплатно: Deep Research, загрузка Excel, генерация картинок, поиск в интернете. Работает на русском.</div></div>
+  </div>
+
+  <!-- ==================== ВСЕ ИНСТРУМЕНТЫ ==================== -->
+  <div class="section">
+    <div class="section-title">🛠️ Все инструменты урока</div>
+
+    <a class="link-card" href="https://gemini.google.com" target="_blank">
+      <div class="link-icon" style="background: #4285f4; color: white;">G</div>
+      <div class="link-text">
+        <div class="link-name">Gemini Deep Research</div>
+        <div class="link-url">gemini.google.com</div>
+        <div class="link-note">Ищет в вебе + Gmail + Google Диск + Чат. Режим «Думающая». <span class="badge badge-free">Бесплатно (5/мес)</span></div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://chatgpt.com" target="_blank">
+      <div class="link-icon" style="background: #10a37f; color: white;">C</div>
+      <div class="link-text">
+        <div class="link-name">ChatGPT</div>
+        <div class="link-url">chatgpt.com</div>
+        <div class="link-note">Загрузка Excel, графики, прогнозы, Deep Research. <span class="badge badge-free">Бесплатно (3 файла/день)</span></div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://inflact.com/tools/profile-analyzer/" target="_blank">
+      <div class="link-icon" style="background: #e1306c; color: white;">I</div>
+      <div class="link-text">
+        <div class="link-name">Inflact — анализ Instagram</div>
+        <div class="link-url">inflact.com/tools/profile-analyzer</div>
+        <div class="link-note">Вводишь username → engagement, топ-посты, хештеги. <span class="badge badge-free">Бесплатно, без регистрации</span></div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://tgstat.ru" target="_blank">
+      <div class="link-icon" style="background: #0088cc; color: white;">T</div>
+      <div class="link-text">
+        <div class="link-name">TGStat — аналитика Telegram</div>
+        <div class="link-url">tgstat.ru</div>
+        <div class="link-note">Охваты, подписчики, лучшие посты любого канала. <span class="badge badge-free">Бесплатно</span></div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://julius.ai" target="_blank">
+      <div class="link-icon" style="background: #f59e0b; color: white;">J</div>
+      <div class="link-text">
+        <div class="link-name">Julius AI — графики и дашборды</div>
+        <div class="link-url">julius.ai</div>
+        <div class="link-note">Загрузил Excel → спросил на русском → получил дашборд. <span class="badge badge-free">Бесплатно</span></div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://similarweb.com" target="_blank">
+      <div class="link-icon" style="background: #ff6633; color: white;">S</div>
+      <div class="link-text">
+        <div class="link-name">SimilarWeb — трафик сайтов</div>
+        <div class="link-url">similarweb.com</div>
+        <div class="link-note">Откуда приходят клиенты к конкурентам. <span class="badge badge-free">Бесплатно (базово)</span></div>
+      </div>
+    </a>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 1: ИССЛЕДОВАНИЕ ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">1</span> Исследование конкурентов и ниши</div>
+    <div class="section-subtitle">Практика 1 &middot; Бригадир на стройке: чертёж с размерами = дом. «Построй красиво» = сарай.</div>
+
+    <div class="prompt-label">Промпт — анализ конкурентов + моя позиция</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты — бизнес-аналитик с опытом в сфере [ваша отрасль] в России.
+
+Проведи глубокий анализ рынка [ваша ниша] в [город].
+
+Найди:
+1. Топ-10 конкурентов с сайтами и контактами
+2. Их ценовые стратегии (конкретные цифры!)
+3. Сильные и слабые стороны каждого (на основе отзывов)
+4. Их маркетинговые каналы (соцсети, реклама)
+
+Определи мою позицию на рынке: где я отстаю, где опережаю, в чём могу отстроиться.
+
+Формат: таблица сравнения + текстовый анализ + 5 рекомендаций.
+Источники: указывай ссылки на каждый факт.</div>
+    <div class="tip"><div class="tip-icon">💡</div><div>Используйте в <strong>Perplexity</strong> — получите ответ со ссылками. Или в <strong>Qwen 3</strong> (chat.qwen.ai) — без VPN!</div></div>
+  </div>
+
+  <!-- СЕКЦИЯ 2: РЕПУТАЦИЯ -->
+  <div class="section">
+    <div class="section-title"><span class="num">2</span> Репутация — зеркало 360°</div>
+    <div class="section-subtitle">Практика 2 &middot; Узнайте, как вас видит весь интернет</div>
+
+    <div class="prompt-label">Промпт — все упоминания в интернете</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Проведи глубокое исследование всех упоминаний [название компании] в интернете.
+
+Ищи: отзывы на Яндекс.Картах, 2ГИС, Google Maps, упоминания в соцсетях (VK, Instagram, Telegram), статьи в СМИ, форумы, жалобы, рекомендации.
+
+Для каждого упоминания: источник (ссылка), тональность (позитив/негатив/нейтральная), ключевая цитата, дата.
+
+Итог: общая репутация 1-10, главные плюсы (топ-3), главные минусы (топ-3), что исправить в первую очередь.</div>
+    <div class="tip"><div class="tip-icon">💡</div><div>Нет компании? Введите своё имя или имя конкурента — результат удивит!</div></div>
+  </div>
+
+  <!-- СЕКЦИЯ 3: ПОИСК ПРОДУКЦИИ -->
+  <div class="section">
+    <div class="section-title"><span class="num">3</span> Поиск специфического продукта</div>
+    <div class="section-subtitle">Практика 3 &middot; Опытный снабженец: знает 50 поставщиков, сравнивает оптом</div>
+
+    <div class="prompt-label">Промпт — найти поставщиков</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты — закупщик-эксперт в сфере [ваша сфера].
+
+Найди поставщиков [конкретный продукт] с характеристиками: [размер/материал/параметры].
+
+География: Россия, Китай (Alibaba), Турция. Не ограничивайся первой страницей — копай каталоги, оптовые площадки, отраслевые порталы.
+
+Для каждого: цена (опт/розница), минимальный заказ, доставка, сертификаты, контакт.
+Формат: таблица, отсортированная по цене.</div>
+    <div class="info"><div class="tip-icon">🔑</div><div>Лайфхак: фраза <strong>«не ограничивайся первой страницей»</strong> заставляет ИИ идти глубже обычного поиска Google.</div></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 4: АНАЛИЗ ОТЗЫВОВ -->
+  <div class="section">
+    <div class="section-title"><span class="num">4</span> Анализ отзывов</div>
+    <div class="section-subtitle">Практика 4 &middot; Терапевт: слушает 30 пациентов разом, находит общий диагноз</div>
+
+    <div class="prompt-label">Промпт — анализ тональности отзывов</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты — аналитик клиентского опыта.
+
+Проанализируй отзывы ниже. Не пропускай ни один — каждый важен.
+
+Определи:
+1. Тональность каждого (позитив/негатив/нейтрально) — покажи в процентах
+2. Топ-5 жалоб С ЦИТАТАМИ из отзывов
+3. Топ-5 похвал С ЦИТАТАМИ из отзывов
+4. Неожиданные инсайты — что упоминают, но мы не ожидали
+
+Покажи диаграмму тональности.
+В конце: 3 конкретных действия — что исправить прямо сейчас, в порядке приоритета.
+
+---
+[ВСТАВИТЬ ОТЗЫВЫ СЮДА]</div>
+    <div class="step-list">
+      <div class="step-item"><div class="step-num">1</div><div>Откройте <a href="https://2gis.ru" target="_blank" style="color:var(--accent);">2ГИС</a> или <a href="https://yandex.ru/maps" target="_blank" style="color:var(--accent);">Яндекс.Карты</a></div></div>
+      <div class="step-item"><div class="step-num">2</div><div>Найдите себя или конкурента, скопируйте 20-30 отзывов</div></div>
+      <div class="step-item"><div class="step-num">3</div><div>Вставьте промпт + отзывы в <a href="https://chatgpt.com" target="_blank" style="color:var(--accent);">ChatGPT</a> или <a href="https://chat.qwen.ai" target="_blank" style="color:var(--accent);">Qwen 3</a></div></div>
+    </div>
+  </div>
+
+  <!-- СЕКЦИЯ 5: АНАЛИЗ ТАБЛИЦЫ -->
+  <div class="section">
+    <div class="section-title"><span class="num">5</span> Анализ таблицы</div>
+    <div class="section-subtitle">Практика 5 &middot; Рентген + диагноз + рецепт: не просто показывает, а лечит</div>
+
+    <div class="prompt-label">Промпт — загрузить Excel и получить выводы</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Проанализируй загруженную таблицу как опытный бизнес-аналитик.
+
+Сначала опиши, что ты видишь: какие столбцы, сколько строк, какой период данных.
+
+Затем:
+1. Основные статистики (среднее, мин, макс)
+2. Найди корреляции — что от чего зависит
+3. Найди аномалии и объясни их
+4. Построй 4 самых полезных графика
+
+В конце: 5 ключевых выводов + 3 конкретных рекомендации, что изменить для роста.</div>
+    <div class="tip"><div class="tip-icon">💡</div><div>Нет таблицы? Напишите: <strong>«Создай пример таблицы продаж [бара / центра / магазина] за 12 месяцев и проанализируй»</strong> — ИИ сам создаст и сам проанализирует!</div></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 6: СОЦСЕТИ -->
+  <div class="section">
+    <div class="section-title"><span class="num">6</span> Соцсети — анализ конкурентов</div>
+    <div class="section-subtitle">Практика 6 &middot; Радар: видишь всё вокруг, что происходит прямо сейчас</div>
+
+    <div class="warning"><div class="tip-icon">⚠️</div><div>ChatGPT и Perplexity <strong>не могут зайти</strong> в Instagram/VK напрямую. Поэтому — два инструмента:</div></div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-title" style="color:var(--green);">Шаг 1: Inflact — цифры</div>
+        <div class="card-body">Открыть <a href="https://inflact.com/tools/profile-analyzer/" target="_blank" style="color:var(--accent);">inflact.com</a> → ввести username → engagement, топ-посты, хештеги</div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--purple);">Шаг 2: Perplexity — стратегия</div>
+        <div class="card-body">Промпт ниже → анализ стратегии со ссылками</div>
+      </div>
+    </div>
+
+    <div class="prompt-label">Промпт — стратегия конкурентов в соцсетях</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты — SMM-аналитик с 5-летним опытом.
+
+Проанализируй Instagram-стратегию [тип бизнеса] в [город]. Какой контент заходит лучше всего в этой нише, какие форматы (Reels, карусели, Stories), какие акции запускают, как общаются с аудиторией.
+
+Дай 5 конкретных идей для нового аккаунта + чем можно отстроиться от конкурентов.
+
+Укажи источники.</div>
+
+    <div class="tip"><div class="tip-icon">💡</div><div><strong>Telegram:</strong> <a href="https://tgstat.ru" target="_blank" style="color:var(--accent);">TGStat</a> — вставьте ссылку на канал → охваты, лучшие посты. <strong>VK:</strong> <a href="https://popsters.com" target="_blank" style="color:var(--accent);">Popsters</a> — 7 дней бесплатно.</div></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 7: ФОРКАСТИНГ -->
+  <div class="section">
+    <div class="section-title"><span class="num">7</span> Форкастинг — прогнозирование</div>
+    <div class="section-subtitle">Практика 7 &middot; Прогноз погоды: ИИ смотрит историю и предсказывает будущее</div>
+
+    <div class="prompt-label">Промпт — прогноз на 3 месяца</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты — аналитик данных. Проанализируй загруженную таблицу и построй прогноз.
+
+Шаг 1: Выяви сезонные паттерны — есть ли повторяющиеся циклы?
+Шаг 2: Определи тренд — растём, падаем, стоим?
+Шаг 3: Построй прогноз на 3 месяца вперёд.
+
+Покажи на одном графике: историю + прогноз.
+Объясни, насколько ты уверен в прогнозе.
+Дай 3 рекомендации на основе прогноза.</div>
+
+    <div class="prompt-label">Промпт — когда закончится товар?</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты — аналитик запасов и закупок.
+
+Проанализируй таблицу с продажами по товарам за 12 месяцев. Для каждого товара определи: средний расход в месяц, сезонные пики расхода, текущий остаток.
+
+Спрогнозируй: когда каждый товар закончится при текущем темпе? Когда нужно сделать заказ, чтобы не было простоя (учти срок доставки 14 дней)?
+
+Формат: таблица — товар, остаток, дата окончания, дата заказа, рекомендуемый объём. Отсортируй по срочности.</div>
+
+    <div class="tip"><div class="tip-icon">💡</div><div>Нет таблицы? Напишите: <strong>«Создай пример таблицы продаж бара за 12 месяцев и сделай прогноз на 3 месяца»</strong> — ИИ покажет как это работает.</div></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- АНАЛОГИИ -->
+  <div class="section">
+    <div class="section-title">🧠 Аналогии урока — запомнить</div>
+
+    <div class="analogy"><div class="analogy-emoji">🕵️</div><div><div class="analogy-title">Справочная vs Детектив</div><div class="analogy-body">Google = справочная (ссылки). Deep Research = детектив (готовое досье).</div></div></div>
+    <div class="analogy"><div class="analogy-emoji">👷</div><div><div class="analogy-title">Бригадир на стройке</div><div class="analogy-body">Чертёж с размерами = дом. «Построй красиво» = сарай.</div></div></div>
+    <div class="analogy"><div class="analogy-emoji">👨‍⚕️</div><div><div class="analogy-title">Три врача</div><div class="analogy-body">Спросил трёх ИИ. Совпали — верим. Разошлись — проверяем.</div></div></div>
+    <div class="analogy"><div class="analogy-emoji">🪞</div><div><div class="analogy-title">Зеркало 360°</div><div class="analogy-body">Как вас видит весь интернет: отзывы, соцсети, форумы.</div></div></div>
+    <div class="analogy"><div class="analogy-emoji">🔬</div><div><div class="analogy-title">Рентген</div><div class="analogy-body">Не гадаешь — видишь, где проблема и где возможность.</div></div></div>
+    <div class="analogy"><div class="analogy-emoji">🌤️</div><div><div class="analogy-title">Прогноз погоды</div><div class="analogy-body">ИИ смотрит историю и предсказывает будущее.</div></div></div>
+    <div class="analogy"><div class="analogy-emoji">🧭</div><div><div class="analogy-title">Навигатор + водитель</div><div class="analogy-body">Его скорость + ваше знание местных дворов = идеальная команда.</div></div></div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <strong>neovida.ai</strong> | ИИ. Новая реальность | Занятие 5<br>
+  Вопросы? Пишите в чат группы!
+</div>
+
+<script>
+function copyPrompt(el) {
+  navigator.clipboard.writeText(el.textContent.trim()).then(function() {
+    el.classList.add('copied');
+    setTimeout(function() { el.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>
