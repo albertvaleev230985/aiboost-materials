@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность — Шпаргалка. Занятие 3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #1a1a2e;
+    --bg-light: #222244;
+    --bg-card: rgba(255,255,255,0.06);
+    --bg-card-hover: rgba(255,255,255,0.1);
+    --accent: #8B6EB5;
+    --accent-dark: #6B4E95;
+    --accent-glow: rgba(139,110,181,0.15);
+    --coral: #E07461;
+    --white: #ffffff;
+    --white-90: rgba(255,255,255,0.9);
+    --white-70: rgba(255,255,255,0.7);
+    --white-50: rgba(255,255,255,0.5);
+    --white-30: rgba(255,255,255,0.3);
+    --white-15: rgba(255,255,255,0.15);
+    --white-08: rgba(255,255,255,0.08);
+    --green: #5ec47a;
+    --red: #e05555;
+    --yellow: #f0c040;
+    --blue: #4285f4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--white-90);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: white;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .header-logo {
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    opacity: 0.85; margin-bottom: 12px;
+  }
+  .header h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; line-height: 1.2; }
+  .header p { font-size: 14px; opacity: 0.9; }
+
+  .container { max-width: 720px; margin: 0 auto; padding: 0 20px 40px; }
+
+  .section { margin: 28px 0; }
+  .section-title {
+    font-size: 18px; font-weight: 800; color: var(--white);
+    margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .num {
+    background: var(--accent); color: white;
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; flex-shrink: 0;
+  }
+  .section-subtitle {
+    font-size: 13px; color: var(--white-50);
+    margin-bottom: 12px; margin-left: 36px;
+  }
+
+  /* PROMPT BOXES */
+  .prompt-box {
+    background: var(--bg-light);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 16px 18px; margin: 12px 0;
+    font-size: 14px; line-height: 1.6;
+    position: relative; cursor: pointer;
+    transition: background 0.2s; white-space: pre-line;
+    color: var(--white-90);
+  }
+  .prompt-box:hover { background: rgba(139,110,181,0.15); }
+  .prompt-box::after {
+    content: 'нажмите, чтобы скопировать';
+    position: absolute; top: 8px; right: 12px;
+    font-size: 11px; color: var(--white-50); opacity: 0.7;
+  }
+  .prompt-box.copied { border-left-color: var(--green); }
+  .prompt-box.copied::after { content: '✅ скопировано!'; color: var(--green); opacity: 1; }
+
+  .prompt-label {
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 6px; margin-top: 16px;
+  }
+
+  /* LINK CARDS */
+  .link-card {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg-card); border: 1px solid var(--white-08);
+    border-radius: 12px; padding: 14px 18px; margin: 8px 0;
+    text-decoration: none; color: var(--white-90); transition: background 0.2s;
+  }
+  .link-card:hover { background: var(--bg-card-hover); }
+  .link-card .link-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .link-card .link-text { flex: 1; }
+  .link-card .link-name { font-weight: 700; font-size: 15px; }
+  .link-card .link-url { font-size: 12px; color: var(--accent); }
+  .link-card .link-note { font-size: 11px; color: var(--white-50); }
+
+  /* TIPS / WARNINGS */
+  .tip {
+    background: rgba(94,196,122,0.1); border: 1px solid rgba(94,196,122,0.2);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+  .tip-icon { flex-shrink: 0; font-size: 16px; }
+
+  .warning {
+    background: rgba(224,85,85,0.1); border: 1px solid rgba(224,85,85,0.2);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+
+  .success {
+    background: var(--accent-glow); border: 1px solid rgba(139,110,181,0.25);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+
+  .info {
+    background: rgba(240,192,64,0.1); border: 1px solid rgba(240,192,64,0.2);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--bg-card); border: 1px solid var(--white-08);
+    border-radius: 12px; padding: 16px 18px; margin: 8px 0;
+  }
+  .card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--white); }
+  .card-body { font-size: 13px; color: var(--white-70); line-height: 1.6; }
+
+  .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+  @media (max-width: 560px) { .cards-grid { grid-template-columns: 1fr; } }
+
+  /* STEP LIST */
+  .step-list { margin: 12px 0; }
+  .step-item {
+    display: flex; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid var(--white-08);
+    font-size: 14px; line-height: 1.5;
+  }
+  .step-item:last-child { border-bottom: none; }
+  .step-num {
+    width: 24px; height: 24px; background: var(--accent); color: white;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+  }
+
+  /* VS GRID */
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+  @media (max-width: 560px) { .vs-grid { grid-template-columns: 1fr; } }
+  .vs-card { border-radius: 12px; padding: 14px 16px; font-size: 13px; line-height: 1.6; }
+  .vs-card.bad { background: rgba(224,85,85,0.08); border: 1px solid rgba(224,85,85,0.2); }
+  .vs-card.good { background: var(--accent-glow); border: 1px solid rgba(139,110,181,0.25); }
+
+  /* CHECKLIST */
+  .checklist { margin: 12px 0; }
+  .checklist-item {
+    display: flex; gap: 10px; padding: 8px 0;
+    font-size: 14px; line-height: 1.5;
+    border-bottom: 1px solid var(--white-08);
+  }
+  .checklist-item:last-child { border-bottom: none; }
+  .check-icon { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--white-15); margin: 28px 0; }
+
+  /* BADGES */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+  .badge-free { background: rgba(94,196,122,0.15); color: var(--green); }
+  .badge-paid { background: rgba(224,85,85,0.15); color: var(--red); }
+  .badge-vpn { background: rgba(240,192,64,0.15); color: var(--yellow); }
+
+  /* FOOTER */
+  .footer {
+    text-align: center; padding: 24px; font-size: 12px;
+    color: var(--white-50); border-top: 1px solid var(--white-08); margin-top: 32px;
+  }
+  .footer strong { color: var(--accent); }
+
+  /* PDF BUTTON */
+  .pdf-btn {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--accent); color: white; border: none;
+    padding: 14px 24px; border-radius: 12px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(139,110,181,0.4);
+    z-index: 1000; transition: transform 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .pdf-btn:hover { transform: translateY(-2px); }
+
+  @media print {
+    .prompt-box::after { display: none; }
+    .header { padding: 20px; }
+    body { font-size: 12px; background: #fff; color: #1a1a2e; }
+    .prompt-box { font-size: 12px; padding: 10px 14px; color: #1a1a2e; background: #f1f5f9; }
+    .pdf-btn { display: none; }
+    .card, .link-card { border: 1px solid #ddd; }
+    .section-title, .card-title { color: #1a1a2e; }
+    .card-body, .section-subtitle, .step-item { color: #333; }
+  }
+</style>
+</head>
+<body>
+
+<button class="pdf-btn" onclick="window.print()">Скачать PDF</button>
+
+<div class="header">
+  <div class="header-logo">neovida.ai / ИИ. Новая реальность</div>
+  <h1>Шпаргалка участника</h1>
+  <p>Занятие 3. Ассистентный подход &middot; 05.04.2026</p>
+</div>
+
+<div class="container">
+
+  <!-- СЕКЦИЯ 1: ССЫЛКИ -->
+  <div class="section">
+    <div class="section-title"><span class="num">1</span> Ссылки и сервисы</div>
+    <div class="section-subtitle">Всё, что нужно для занятия 3 — открывайте прямо сейчас</div>
+
+    <a class="link-card" href="https://gemini.google.com" target="_blank">
+      <div class="link-icon" style="background: #4285f4; color: white;">G</div>
+      <div class="link-text">
+        <div class="link-name">Google Gemini</div>
+        <div class="link-url">gemini.google.com</div>
+        <div class="link-note">Нужен VPN (США/Канада) + Google-аккаунт. <span class="badge badge-free">Бесплатно</span></div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://notebooklm.google.com" target="_blank">
+      <div class="link-icon" style="background: #34a853; color: white;">N</div>
+      <div class="link-text">
+        <div class="link-name">NotebookLM</div>
+        <div class="link-url">notebooklm.google.com</div>
+        <div class="link-note">Персональный исследователь на основе ваших документов. <span class="badge badge-free">Бесплатно</span></div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://chatgpt.com" target="_blank">
+      <div class="link-icon" style="background: #10a37f; color: white;">G</div>
+      <div class="link-text">
+        <div class="link-name">ChatGPT</div>
+        <div class="link-url">chatgpt.com</div>
+        <div class="link-note">GPTs (кастомные боты) — только в Plus ($20/мес). <span class="badge badge-vpn">VPN</span></div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://www.perplexity.ai" target="_blank">
+      <div class="link-icon" style="background: #6366f1; color: white;">P</div>
+      <div class="link-text">
+        <div class="link-name">Perplexity — Spaces</div>
+        <div class="link-url">perplexity.ai</div>
+        <div class="link-note">Коллекции источников с контекстом. Частично бесплатно.</div>
+      </div>
+    </a>
+
+    <div class="warning">
+      <span class="tip-icon">⚠️</span>
+      <span><strong>VPN обязателен</strong> для Gemini и ChatGPT. Gemini работает не с каждым VPN — выбирайте серверы США или Канады. Если один VPN не подходит, попробуйте другой.</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 2: ЧТО ТАКОЕ ПРОЦЕСС + АССИСТЕНТНЫЙ ПОДХОД -->
+  <div class="section">
+    <div class="section-title"><span class="num">2</span> Что такое рабочий процесс</div>
+    <div class="section-subtitle">Прежде чем автоматизировать — нужно понять, из чего состоит ваша работа</div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-title">📌 Задача</div>
+        <div class="card-body">То, что нужно сделать: «Ответить клиенту», «Написать КП», «Подготовить отчёт»</div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔄 Процесс</div>
+        <div class="card-body">Шаги, из которых задача состоит. Любую задачу можно разбить на 3–5 конкретных шагов.</div>
+      </div>
+    </div>
+
+    <div class="info">
+      <span class="tip-icon">💡</span>
+      <span><strong>Пример:</strong> задача «Ответить клиенту в WhatsApp» = Шаг 1: Понять запрос → Шаг 2: Найти информацию (цена, сроки) → Шаг 3: Написать ответ → Шаг 4: Предложить следующий шаг. Когда вы видите шаги — каждый из них можно поручить ИИ.</span>
+    </div>
+
+    <div style="margin-top:20px; margin-bottom:8px; font-size:16px; font-weight:700; color:var(--white);">Ассистентный подход</div>
+    <div style="font-size:13px; color:var(--white-50); margin-bottom:12px;">От разовых запросов — к системе</div>
+
+    <div class="vs-grid">
+      <div class="vs-card bad">
+        <div style="font-weight:700; color:var(--red); margin-bottom:8px;">❌ Без системы</div>
+        <div>Каждый раз придумываете промпт заново. Результат — как повезёт. Тратите время на формулировки.</div>
+      </div>
+      <div class="vs-card good">
+        <div style="font-weight:700; color:var(--accent); margin-bottom:8px;">✅ Ассистентный подход</div>
+        <div>Готовые промпты в файлах. Результат одинаковый. Вставил промпт → получил → готово.</div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span><strong>Суть:</strong> разбейте свою работу на процессы. Для каждого процесса напишите готовый промпт и сохраните в файл. Вставили промпт → получили качественный результат. Каждый раз одинаково.</span>
+    </div>
+
+    <div class="prompt-label">Промпт: разбить работу на процессы</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Я работаю [ваша должность] в [компания/сфера].
+
+Помоги мне разбить мою работу на повторяющиеся процессы.
+
+Для каждого процесса:
+1. Название процесса
+2. Как часто я это делаю
+3. Сколько времени занимает
+4. Какие шаги включает
+5. Какую информацию нужно собрать
+
+Потом для каждого процесса напиши готовый промпт, который я смогу сохранить в файл и использовать каждый раз.
+
+Формат промпта: роль + контекст + задача + шаги + формат результата.</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 3: GEMS -->
+  <div class="section">
+    <div class="section-title"><span class="num">3</span> Gems — создание ассистента</div>
+    <div class="section-subtitle">Пошаговая инструкция по созданию персонального Gem в Gemini</div>
+
+    <div class="step-list">
+      <div class="step-item"><div class="step-num">1</div><div>Откройте <strong>gemini.google.com</strong> (с VPN)</div></div>
+      <div class="step-item"><div class="step-num">2</div><div>В левом меню нажмите <strong>«Gem Manager»</strong></div></div>
+      <div class="step-item"><div class="step-num">3</div><div>Нажмите <strong>«Create Gem»</strong></div></div>
+      <div class="step-item"><div class="step-num">4</div><div>Заполните <strong>название</strong> (например: «Менеджер по продажам»)</div></div>
+      <div class="step-item"><div class="step-num">5</div><div>Вставьте <strong>инструкцию</strong> (см. промпт ниже — ИИ сам её напишет!)</div></div>
+      <div class="step-item"><div class="step-num">6</div><div><strong>Загрузите файлы</strong> — прайсы, примеры КП, шаблоны (до 10 файлов, 100 МБ каждый)</div></div>
+      <div class="step-item"><div class="step-num">7</div><div>Справа — <strong>предпросмотр</strong>: протестируйте перед сохранением</div></div>
+      <div class="step-item"><div class="step-num">8</div><div>Нажмите <strong>«Сохранить»</strong> — Gem появится в левом меню</div></div>
+    </div>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span><strong>Лайфхак:</strong> не пишите инструкцию сами! Наговорите голосом свой процесс прямо в обычный чат Gemini, потом попросите: «Сделай из этого инструкцию для Gem». ИИ сам применит все правила промпт-инженерии.</span>
+    </div>
+
+    <div class="prompt-label">Промпт: создать инструкцию для Gem</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Я хочу создать персонального ИИ-ассистента (Gem) для своей работы.
+
+Вот мой рабочий процесс: [наговорите или напишите свой процесс]
+
+Составь профессиональную инструкцию для Gem по всем правилам промпт-инженерии:
+1. Чётко определи роль, экспертизу и опыт
+2. Опиши контекст: сфера, компания, клиенты, регион
+3. Перечисли задачи с пошаговыми алгоритмами
+4. Задай стиль и формат ответов
+5. Добавь ограничения (чего НЕ делать)
+6. ОБЯЗАТЕЛЬНО: если для ответа не хватает информации — ассистент должен СНАЧАЛА задать уточняющие вопросы
+7. Если есть загруженные файлы — ссылаться на них
+
+Дополнительно порекомендуй:
+8. Какие документы загрузить в Gem (прайсы, примеры, шаблоны, FAQ — конкретно для моей сферы)
+9. Какие режимы включить при создании Gem:
+   — Canvas (создание приложений, калькуляторов)
+   — Генерация изображений
+   — Deep Research (исследования из интернета)
+   — Подключение к NotebookLM (база знаний)
+   Объясни, зачем каждый режим нужен именно для моего процесса.
+
+Если тебе не хватает информации для хорошей инструкции — задай мне уточняющие вопросы.</div>
+
+    <div class="prompt-label">Промпт: улучшить существующую инструкцию</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Вот инструкция для моего Gem-ассистента:
+
+[вставьте текущую инструкцию]
+
+Проверь и улучши её:
+1. Есть ли чёткая роль с экспертизой?
+2. Описан ли контекст (компания, клиенты, регион)?
+3. Есть ли пошаговые алгоритмы для каждой задачи?
+4. Есть ли правило «спрашивать, если не хватает данных»?
+5. Есть ли ограничения (не выдумывать, не врать)?
+6. Есть ли инструкция работать с загруженными файлами?
+7. Указан ли формат текста (тире, «ё», без воды)?
+8. Есть ли стиль и тон (ты/вы, формальный/дружелюбный)?
+
+Перепиши инструкцию с исправлениями. Покажи что изменил и почему.</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 4: ЧЕК-ЛИСТ ИНСТРУКЦИИ -->
+  <div class="section">
+    <div class="section-title"><span class="num">4</span> Чек-лист: проверь свою инструкцию</div>
+    <div class="section-subtitle">Вы — оператор. Если чего-то нет в промпте — ИИ этого не сделает</div>
+
+    <div class="info">
+      <span class="tip-icon">🎯</span>
+      <span><strong>Главное правило:</strong> ИИ следует инструкции буквально. Прочитайте сгенерированную инструкцию — если пункта нет, попросите ИИ добавить. Формулировка «нельзя» сильнее «не делай».</span>
+    </div>
+
+    <div class="checklist">
+      <div class="checklist-item"><span class="check-icon">❓</span><div><strong>Уточняющие вопросы</strong> — «Если не хватает информации — сначала спроси, не додумывай»</div></div>
+      <div class="checklist-item"><span class="check-icon">🚫</span><div><strong>Достоверность</strong> — «Не выдумывай факты и цифры. Если не знаешь — скажи честно»</div></div>
+      <div class="checklist-item"><span class="check-icon">🔄</span><div><strong>Перепроверка</strong> — «Перепроверь информацию перед ответом. Используй только достоверные данные»</div></div>
+      <div class="checklist-item"><span class="check-icon">✂️</span><div><strong>Без воды</strong> — «Пиши по делу. Без вступлений, общих фраз, воды и повторов»</div></div>
+      <div class="checklist-item"><span class="check-icon">✍️</span><div><strong>Формат текста</strong> — длинные тире (—), буква «ё», абзацы, списки, длина ответов</div></div>
+      <div class="checklist-item"><span class="check-icon">🎯</span><div><strong>Пошаговый алгоритм</strong> — не «отвечай клиентам», а конкретные шаги: 1→2→3→4</div></div>
+      <div class="checklist-item"><span class="check-icon">🎭</span><div><strong>Стиль и тон</strong> — ты/вы, формальный/дружелюбный, эксперт/простой язык</div></div>
+      <div class="checklist-item"><span class="check-icon">⛔</span><div><strong>Ограничения</strong> — чётко пропишите, что запрещено. «Нельзя» сильнее «не делай»</div></div>
+      <div class="checklist-item"><span class="check-icon">📎</span><div><strong>Ссылки на файлы</strong> — «Ссылайся на загруженные документы при ответе»</div></div>
+      <div class="checklist-item"><span class="check-icon">👤</span><div><strong>Целевая аудитория</strong> — кому пишем, уровень знаний читателя, возраст, регион</div></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 5: ПАМЯТЬ GEM — ФАЙЛЫ -->
+  <div class="section">
+    <div class="section-title"><span class="num">5</span> Память Gem — файлы</div>
+    <div class="section-subtitle">При создании Gem можно загрузить до 10 файлов (до 100 МБ каждый)</div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-title">📄 Форматы</div>
+        <div class="card-body">PDF, DOCX, TXT, RTF, XLSX, CSV, JPG, PNG, Google Docs, Google Sheets</div>
+      </div>
+      <div class="card">
+        <div class="card-title">☁️ Фишка</div>
+        <div class="card-body">Google Docs/Sheets обновляются автоматически! Изменили документ — Gem сразу видит новую версию.</div>
+      </div>
+    </div>
+
+    <div class="prompt-label">Что загрузить</div>
+    <div class="checklist">
+      <div class="checklist-item"><span class="check-icon">📋</span><div>Прайс-листы (цены, размеры, характеристики)</div></div>
+      <div class="checklist-item"><span class="check-icon">📝</span><div>Примеры КП, договоров, писем</div></div>
+      <div class="checklist-item"><span class="check-icon">❓</span><div>FAQ — частые вопросы и ответы</div></div>
+      <div class="checklist-item"><span class="check-icon">📖</span><div>Регламенты, инструкции, скрипты</div></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 6: ИДЕИ GEMS -->
+  <div class="section">
+    <div class="section-title"><span class="num">6</span> Идеи Gems: для себя, бизнеса, команды</div>
+    <div class="section-subtitle">Gem — это внутренний помощник, НЕ чат-бот для клиентов</div>
+
+    <div class="prompt-label">Для себя</div>
+    <div class="cards-grid">
+      <div class="card" style="border-left:3px solid var(--green);">
+        <div class="card-title">🏋️ Фитнес-тренер</div>
+        <div class="card-body">Тренировки, питание, режим</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--yellow);">
+        <div class="card-title">🎯 Личный коуч</div>
+        <div class="card-body">Цели, решения, мотивация</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--blue);">
+        <div class="card-title">🌍 Языковой партнёр</div>
+        <div class="card-body">Разговорная практика</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent);">
+        <div class="card-title">💰 Финансовый советник</div>
+        <div class="card-body">Бюджет, экономия, инвестиции</div>
+      </div>
+    </div>
+
+    <div class="prompt-label">Для бизнеса (внутренний помощник)</div>
+    <div class="cards-grid">
+      <div class="card" style="border-left:3px solid var(--coral);">
+        <div class="card-title">💬 Ответы клиентам</div>
+        <div class="card-body">WhatsApp, звонки — готовит ответы ВАМ, не клиенту напрямую</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--blue);">
+        <div class="card-title">📝 Генератор КП</div>
+        <div class="card-body">Вводите данные клиента → получаете готовое КП</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--green);">
+        <div class="card-title">📧 Деловые письма</div>
+        <div class="card-body">Клиентам, партнёрам, поставщикам — в вашем стиле</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent);">
+        <div class="card-title">📱 Контент</div>
+        <div class="card-body">Посты, рассылки, описания — знает ваш бренд</div>
+      </div>
+    </div>
+
+    <div class="prompt-label">Для команды</div>
+    <div class="cards-grid">
+      <div class="card" style="border-left:3px solid #4285f4;">
+        <div class="card-title">⚖️ Юрист</div>
+        <div class="card-body">Проверяет договоры, отвечает на вопросы</div>
+      </div>
+      <div class="card" style="border-left:3px solid #34a853;">
+        <div class="card-title">📊 Бухгалтер</div>
+        <div class="card-body">Проводки, налоги, отчётность</div>
+      </div>
+      <div class="card" style="border-left:3px solid #fbbc05;">
+        <div class="card-title">👥 HR</div>
+        <div class="card-body">Вакансии, резюме, адаптация</div>
+      </div>
+      <div class="card" style="border-left:3px solid #ec4899;">
+        <div class="card-title">🎓 Обучатель</div>
+        <div class="card-body">Отвечает на вопросы новичков</div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span><strong>Как поделиться Gem:</strong> в настройках Gem нажмите «Share» → скопируйте ссылку → отправьте коллегам.</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 7: ГОТОВЫЕ ПРОМПТЫ -->
+  <div class="section">
+    <div class="section-title"><span class="num">7</span> Готовые промпты для Gem-ассистентов</div>
+    <div class="section-subtitle">Скопируйте и используйте как основу для своих Gems</div>
+
+    <div class="prompt-label">Gem: Менеджер по продажам</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты — старший менеджер по продажам с 10-летним опытом в сфере [ваша сфера].
+Компания: [название]. Регион: [город, область]. Клиенты: [B2B/B2C, кто именно].
+
+Твои задачи:
+1. Отвечать на вопросы клиентов
+2. Готовить коммерческие предложения
+3. Обрабатывать возражения
+4. Консультировать по ассортименту и ценам
+
+Алгоритм ответа клиенту:
+1. Поприветствуй по имени
+2. Если не хватает данных для ответа — задай уточняющие вопросы
+3. Предложи 2-3 варианта с ценами (из загруженного прайса)
+4. Объясни преимущества каждого варианта
+5. Предложи следующий шаг (замер, встречу, образцы)
+
+Стиль: дружелюбный, профессиональный, на «вы». Без воды и канцелярита.
+Формат: длинные тире (—), буква «ё», абзацы, списки.
+
+ВАЖНО:
+- НЕ выдумывай цены и характеристики — бери ТОЛЬКО из загруженных файлов
+- Если информации нет в файлах — честно скажи: «Мне нужно уточнить эту информацию»
+- Всегда ссылайся на конкретный документ при ответе</div>
+
+    <div class="prompt-label">Gem: Копирайтер / SMM</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты — опытный копирайтер и SMM-специалист.
+Компания: [название]. Сфера: [ваша сфера]. Аудитория: [возраст, интересы, боли].
+
+Твои задачи:
+1. Писать посты для соцсетей (ВК, Telegram, Instagram)
+2. Составлять тексты для рекламы
+3. Писать описания товаров/услуг
+4. Создавать email-рассылки
+
+Правила:
+- Стиль: [дружелюбный / экспертный / провокационный]
+- Длина постов: [короткие до 300 символов / средние / лонгриды]
+- Всегда добавлять призыв к действию
+- Использовать реальные примеры из загруженных файлов
+- НЕ использовать шаблонные фразы: «в современном мире», «в наше время»
+- Формат: длинные тире (—), буква «ё»
+
+Формат ответа:
+1. Заголовок (3 варианта)
+2. Текст поста
+3. Хештеги (5-7 штук)
+4. Идея для визуала
+
+Если не хватает информации — спроси: тему, цель поста, площадку, дату публикации.</div>
+
+    <div class="prompt-label">Gem: HR-помощник</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты — HR-менеджер с опытом подбора и адаптации персонала.
+Компания: [название]. Сфера: [ваша сфера]. Регион: [город].
+
+Твои задачи:
+1. Писать тексты вакансий
+2. Составлять вопросы для собеседований
+3. Оценивать резюме кандидатов
+4. Готовить планы адаптации новых сотрудников
+
+Алгоритм написания вакансии:
+1. Спроси: должность, отдел, обязанности, требования, зарплатная вилка
+2. Напиши вакансию: название → компания → обязанности → требования → условия → контакты
+3. Предложи 3 варианта заголовка
+4. Адаптируй под площадку (HH, Авито, Telegram)
+
+Стиль: профессиональный, привлекательный. Без канцелярита.
+
+ВАЖНО:
+- Ссылайся на загруженные шаблоны и регламенты
+- Если не хватает данных — задай уточняющие вопросы
+- Не выдумывай условия труда и зарплаты</div>
+
+    <div class="prompt-label">Gem: Помощник по документам</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Ты — помощник по деловой переписке и документации.
+Компания: [название]. Сфера: [ваша сфера].
+
+Твои задачи:
+1. Писать деловые письма (клиентам, партнёрам, поставщикам)
+2. Составлять коммерческие предложения
+3. Готовить протоколы совещаний
+4. Редактировать и улучшать тексты
+
+Алгоритм для КП:
+1. Спроси: кому, что предлагаем, бюджет, сроки, особые условия
+2. Напиши КП: шапка → описание → преимущества → цены → условия → контакты
+3. Проверь: нет ли ошибок, всё ли указано, понятен ли текст
+
+Стиль: деловой, но не сухой. Конкретный, без воды.
+Формат: длинные тире (—), буква «ё», абзацы.
+
+ВАЖНО:
+- Используй шаблоны из загруженных файлов
+- Цены и условия — ТОЛЬКО из документов, не выдумывай
+- Спрашивай всё, что нужно для качественного результата</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 8: CANVAS -->
+  <div class="section">
+    <div class="section-title"><span class="num">8</span> Canvas — создание приложений</div>
+    <div class="section-subtitle">Gemini создаёт работающие инструменты прямо в чате</div>
+
+    <div class="info">
+      <span class="tip-icon">💡</span>
+      <span><strong>Canvas</strong> — это НЕ про текст. Это про создание интерактивных приложений: калькуляторов, квизов, чек-листов, визуализаций.</span>
+    </div>
+
+    <div class="prompt-label">Промпт: калькулятор для клиентов</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Создай интерактивный калькулятор стоимости [ваша услуга/товар].
+
+Поля ввода:
+- [параметр 1, например: площадь в м²]
+- [параметр 2, например: материал (выпадающий список)]
+- [параметр 3, например: срочность]
+
+Логика расчёта:
+- Базовая цена: [формула]
+- Наценка за срочность: +20%
+- Скидка от объёма: от 100 м² — минус 10%
+
+Дизайн: современный, минималистичный, с кнопкой «Рассчитать» и итоговой суммой.
+Добавь кнопку «Отправить заявку» с полями: имя, телефон.</div>
+
+    <div class="prompt-label">Промпт: интерактивный квиз</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Создай интерактивный квиз для подбора [товара/услуги].
+
+Вопросы (по одному на экране):
+1. Какой у вас бюджет? (варианты: до 50к / 50-100к / 100к+)
+2. Для чего вам нужен [товар]? (варианты: ...)
+3. Какой размер/объём? (варианты: ...)
+4. Когда нужно? (варианты: ...)
+
+В конце: рекомендация с ценой + форма «Оставить заявку» (имя, телефон).
+Дизайн: современный, с анимациями переходов между вопросами.</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 9: DEEP RESEARCH -->
+  <div class="section">
+    <div class="section-title"><span class="num">9</span> Deep Research — глубокое исследование</div>
+    <div class="section-subtitle">Gemini изучит десятки источников и соберёт отчёт</div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-title">🔍 Что делает</div>
+        <div class="card-body">Ищет по десяткам источников, анализирует, собирает структурированный отчёт со ссылками.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 Когда использовать</div>
+        <div class="card-body">Анализ конкурентов, исследование рынка, подготовка к переговорам, изучение новой темы.</div>
+      </div>
+    </div>
+
+    <div class="prompt-label">Промпт: анализ конкурентов</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Проведи глубокое исследование конкурентов в сфере [ваша сфера] в регионе [город/область].
+
+Для каждого конкурента:
+1. Название, сайт, соцсети
+2. Ассортимент / услуги
+3. Ценовая политика (если доступна)
+4. Сильные стороны
+5. Слабые стороны
+6. Как привлекают клиентов (реклама, SEO, соцсети)
+
+Итого: сводная таблица + рекомендации: что мы можем делать лучше.
+Источники: приложи ссылки на каждый факт.</div>
+
+    <div class="prompt-label">Промпт: исследование рынка</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Проведи исследование рынка [ваша ниша] в России на 2025-2026 год.
+
+Включи:
+1. Объём рынка и динамика (рост/падение)
+2. Ключевые тренды
+3. Целевая аудитория: кто покупает, почему, какие боли
+4. Ценовые сегменты (эконом / средний / премиум)
+5. Каналы продаж: где покупают, как ищут
+6. Прогноз на 1-2 года
+
+Формат: структурированный отчёт с цифрами и ссылками на источники.</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 10: GOOGLE WORKSPACE -->
+  <div class="section">
+    <div class="section-title"><span class="num">10</span> Google Workspace + Gemini</div>
+    <div class="section-subtitle">Бесплатный Gemini работает с вашими Google-документами</div>
+
+    <div class="vs-grid">
+      <div class="vs-card good">
+        <div style="font-weight:700; color:var(--green); margin-bottom:8px;">✅ Бесплатно можно</div>
+        <div>Читать Google Docs через @Docs<br>Искать на Google Drive через @Drive<br>Читать Gmail через @Gmail<br>Анализировать содержимое</div>
+      </div>
+      <div class="vs-card bad">
+        <div style="font-weight:700; color:var(--red); margin-bottom:8px;">❌ Нельзя бесплатно</div>
+        <div>Создавать новые документы<br>Редактировать Google Sheets<br>Генерировать слайды<br>Генерировать изображения</div>
+      </div>
+    </div>
+
+    <div class="info">
+      <span class="tip-icon">💡</span>
+      <span><strong>Как использовать:</strong> в чате Gemini напишите <strong>@Docs</strong> или <strong>@Drive</strong> — и Gemini найдёт и прочитает ваши документы. Очень удобно для анализа!</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 11: NOTEBOOKLM -->
+  <div class="section">
+    <div class="section-title"><span class="num">11</span> NotebookLM — персональный исследователь</div>
+    <div class="section-subtitle">ИИ, который работает ТОЛЬКО с вашими документами и не выдумывает</div>
+
+    <div class="step-list">
+      <div class="step-item"><div class="step-num">1</div><div>Откройте <strong>notebooklm.google.com</strong></div></div>
+      <div class="step-item"><div class="step-num">2</div><div>Нажмите <strong>«New Notebook»</strong></div></div>
+      <div class="step-item"><div class="step-num">3</div><div>Загрузите источники: <strong>PDF, Google Docs, сайты, YouTube-видео, аудио</strong></div></div>
+      <div class="step-item"><div class="step-num">4</div><div>Подождите анализа → <strong>задайте любой вопрос</strong></div></div>
+      <div class="step-item"><div class="step-num">5</div><div>Ответ будет <strong>со ссылками на конкретные источники</strong></div></div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-title">🔒 Не галлюцинирует</div>
+        <div class="card-body">Отвечает ТОЛЬКО на основе ваших документов. Нет информации — честно скажет.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">🎙️ Audio Overview</div>
+        <div class="card-body">Превращает документы в подкаст! Два ведущих обсуждают ваш материал.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Бесплатные лимиты</div>
+        <div class="card-body">100 блокнотов, 50 источников на блокнот, 500 000 слов на источник.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">🎧 Форматы Audio</div>
+        <div class="card-body">Разговор (глубокий разбор), Брифинг (2 мин), Критика, Дебаты.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 12: NOTEBOOKLM + GEM -->
+  <div class="section">
+    <div class="section-title"><span class="num">12</span> Суперсила: NotebookLM + Gem</div>
+    <div class="section-subtitle">Подключите базу знаний к ассистенту — получите ИИ-сотрудника</div>
+
+    <div class="step-list">
+      <div class="step-item"><div class="step-num">1</div><div>Создайте блокнот в NotebookLM с нужными документами</div></div>
+      <div class="step-item"><div class="step-num">2</div><div>Откройте <strong>Gem Manager</strong> → ваш Gem → <strong>Редактировать</strong></div></div>
+      <div class="step-item"><div class="step-num">3</div><div>В разделе источников выберите <strong>«NotebookLM»</strong></div></div>
+      <div class="step-item"><div class="step-num">4</div><div>Выберите нужный <strong>блокнот</strong> — Gem увидит все документы</div></div>
+    </div>
+
+    <div class="success">
+      <span class="tip-icon">🚀</span>
+      <span><strong>Результат:</strong> добавили файл в NotebookLM → Gem автоматически его увидит. Не нужно перезагружать! Это полноценный ИИ-сотрудник с неограниченной базой знаний.</span>
+    </div>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span><strong>Нет документов?</strong> Используйте Deep Research! Проведите исследование → скачайте результат → загрузите в NotebookLM → подключите к Gem.</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 13: БОНУСНЫЕ ПРОМПТЫ -->
+  <div class="section">
+    <div class="section-title"><span class="num">13</span> Бонусные промпты</div>
+    <div class="section-subtitle">Полезные запросы для Gemini и ChatGPT на каждый день</div>
+
+    <div class="prompt-label">Анализ договора</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Проанализируй этот договор:
+
+[вставьте текст договора или загрузите файл]
+
+1. Основные условия: предмет, сроки, стоимость
+2. Обязательства сторон
+3. Риски для нашей стороны
+4. Штрафы и неустойки
+5. Условия расторжения
+6. На что обратить внимание перед подписанием
+7. Рекомендации: что стоит изменить или дополнить</div>
+
+    <div class="prompt-label">Подготовка к встрече</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Помоги подготовиться к встрече с [кем].
+
+Контекст:
+- Тема: [о чём будем говорить]
+- Наша цель: [чего хотим добиться]
+- Их возможные интересы: [что важно второй стороне]
+- Бюджет/ограничения: [если есть]
+
+Подготовь:
+1. Список вопросов, которые нужно задать
+2. Аргументы в нашу пользу (3-5 штук)
+3. Возможные возражения и ответы на них
+4. Сценарий «если скажут нет» — план Б
+5. Чек-лист: что взять с собой / подготовить</div>
+
+    <div class="prompt-label">Обработка возражения клиента</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Клиент написал: «[вставьте возражение клиента]»
+
+Контекст: мы продаём [что]. Клиент: [кто, откуда].
+
+Помоги ответить:
+1. Признай его точку зрения (не спорь)
+2. Объясни, почему наше предложение выгодно
+3. Приведи конкретный пример / кейс
+4. Предложи компромисс или следующий шаг
+
+Тон: уважительный, без давления, на «вы».
+Длина: 3-5 предложений.</div>
+
+    <div class="prompt-label">Audio Overview — попробуйте!</div>
+    <div class="prompt-box" onclick="copyPrompt(this)">Загрузите в NotebookLM любой документ (прайс, статью, книгу).
+
+Затем:
+1. Справа найдите раздел «Studio»
+2. Выберите «Audio Overview»
+3. Нажмите «Generate»
+4. Через 1-3 минуты — готовый подкаст!
+
+Попробуйте разные форматы:
+— Разговор (глубокий разбор, по умолчанию)
+— Брифинг (краткий обзор за 2 минуты)
+— Критика (критическая оценка материала)
+— Дебаты (два мнения)</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- СЕКЦИЯ 14: ДОМАШКА -->
+  <div class="section">
+    <div class="section-title"><span class="num">✦</span> Домашнее задание</div>
+    <div class="section-subtitle">Дедлайн: до следующей субботы</div>
+
+    <div class="card" style="border: 2px solid var(--accent); background: var(--accent-glow);">
+      <div class="card-title" style="color: var(--accent);">⭐ Главное задание</div>
+      <div class="card-body" style="color: var(--white-90);">
+        <div class="checklist">
+          <div class="checklist-item"><span class="check-icon">1️⃣</span><div><strong>Доработайте свой Gem</strong> — добавьте все рабочие процессы, уточните инструкции, проверьте по чек-листу (секция 4)</div></div>
+          <div class="checklist-item"><span class="check-icon">2️⃣</span><div><strong>Загрузите в NotebookLM</strong> рабочие документы: прайс, каталог, FAQ, инструкции</div></div>
+          <div class="checklist-item"><span class="check-icon">3️⃣</span><div><strong>Подключите NotebookLM к Gem</strong>, протестируйте на 5 реальных рабочих задачах</div></div>
+          <div class="checklist-item"><span class="check-icon">4️⃣</span><div><strong>Скриншоты в чат</strong> — покажите, как отвечает ваш ассистент!</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="warning">
+      <span class="tip-icon">📋</span>
+      <span><strong>К следующему занятию:</strong> подготовьте данные для анализа — таблицу, отчёт, или любой документ с цифрами. Будем работать с данными!</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <strong>neovida.ai</strong> / ИИ. Новая реальность &middot; Очный курс &middot; Занятие 3<br>
+  ИИ. Самая простая технология. Главное — разговаривать.
+</div>
+
+<script>
+function copyPrompt(el) {
+  const text = el.innerText.replace(/нажмите, чтобы скопировать|✅ скопировано!/g, '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    el.classList.add('copied');
+    setTimeout(() => el.classList.remove('copied'), 2000);
+  });
+}
+</script>
+
+</body>
+</html>
