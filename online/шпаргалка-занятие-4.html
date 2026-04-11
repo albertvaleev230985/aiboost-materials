@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность — Шпаргалка. Занятие 4</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #1a1a2e;
+    --bg-light: #222244;
+    --bg-card: rgba(255,255,255,0.06);
+    --bg-card-hover: rgba(255,255,255,0.1);
+    --accent: #0891b2;
+    --accent-dark: #065f72;
+    --accent-glow: rgba(8,145,178,0.15);
+    --coral: #E07461;
+    --white: #ffffff;
+    --white-90: rgba(255,255,255,0.9);
+    --white-70: rgba(255,255,255,0.7);
+    --white-50: rgba(255,255,255,0.5);
+    --white-30: rgba(255,255,255,0.3);
+    --white-15: rgba(255,255,255,0.15);
+    --white-08: rgba(255,255,255,0.08);
+    --green: #5ec47a;
+    --red: #e05555;
+    --yellow: #f0c040;
+    --blue: #4285f4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--white-90);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: white;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .header-logo {
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    opacity: 0.85; margin-bottom: 12px;
+  }
+  .header h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; line-height: 1.2; }
+  .header p { font-size: 14px; opacity: 0.9; }
+
+  .container { max-width: 720px; margin: 0 auto; padding: 0 20px 40px; }
+
+  .section { margin: 28px 0; }
+  .section-title {
+    font-size: 18px; font-weight: 800; color: var(--white);
+    margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .num {
+    background: var(--accent); color: white;
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; flex-shrink: 0;
+  }
+  .section-subtitle {
+    font-size: 13px; color: var(--white-50);
+    margin-bottom: 12px; margin-left: 36px;
+  }
+
+  /* PROMPT BOXES */
+  .prompt-box {
+    background: var(--bg-light);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 16px 18px; margin: 12px 0;
+    font-size: 14px; line-height: 1.6;
+    position: relative; cursor: pointer;
+    transition: background 0.2s; white-space: pre-line;
+    color: var(--white-90);
+  }
+  .prompt-box:hover { background: rgba(8,145,178,0.15); }
+  .prompt-box::after {
+    content: 'нажмите, чтобы скопировать';
+    position: absolute; top: 8px; right: 12px;
+    font-size: 11px; color: var(--white-50); opacity: 0.7;
+  }
+  .prompt-box.copied { border-left-color: var(--green); }
+  .prompt-box.copied::after { content: '✅ скопировано!'; color: var(--green); opacity: 1; }
+
+  .prompt-label {
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 6px; margin-top: 16px;
+  }
+
+  /* LINK CARDS */
+  .link-card {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg-card); border: 1px solid var(--white-08);
+    border-radius: 12px; padding: 14px 18px; margin: 8px 0;
+    text-decoration: none; color: var(--white-90); transition: background 0.2s;
+  }
+  .link-card:hover { background: var(--bg-card-hover); }
+  .link-card .link-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .link-card .link-text { flex: 1; }
+  .link-card .link-name { font-weight: 700; font-size: 15px; }
+  .link-card .link-url { font-size: 12px; color: var(--accent); }
+  .link-card .link-note { font-size: 11px; color: var(--white-50); }
+
+  /* TIPS / WARNINGS */
+  .tip {
+    background: rgba(94,196,122,0.1); border: 1px solid rgba(94,196,122,0.2);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+  .tip-icon { flex-shrink: 0; font-size: 16px; }
+
+  .warning {
+    background: rgba(224,85,85,0.1); border: 1px solid rgba(224,85,85,0.2);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+
+  .success {
+    background: var(--accent-glow); border: 1px solid rgba(8,145,178,0.25);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+
+  .info {
+    background: rgba(240,192,64,0.1); border: 1px solid rgba(240,192,64,0.2);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--bg-card); border: 1px solid var(--white-08);
+    border-radius: 12px; padding: 16px 18px; margin: 8px 0;
+  }
+  .card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--white); }
+  .card-body { font-size: 13px; color: var(--white-70); line-height: 1.6; }
+
+  .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+  @media (max-width: 560px) { .cards-grid { grid-template-columns: 1fr; } }
+
+  /* STEP LIST */
+  .step-list { margin: 12px 0; }
+  .step-item {
+    display: flex; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid var(--white-08);
+    font-size: 14px; line-height: 1.5;
+  }
+  .step-item:last-child { border-bottom: none; }
+  .step-num {
+    width: 24px; height: 24px; background: var(--accent); color: white;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+  }
+
+  /* VS GRID */
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+  @media (max-width: 560px) { .vs-grid { grid-template-columns: 1fr; } }
+  .vs-card { border-radius: 12px; padding: 14px 16px; font-size: 13px; line-height: 1.6; }
+  .vs-card.bad { background: rgba(224,85,85,0.08); border: 1px solid rgba(224,85,85,0.2); }
+  .vs-card.good { background: var(--accent-glow); border: 1px solid rgba(8,145,178,0.25); }
+
+  /* CHECKLIST */
+  .checklist { margin: 12px 0; }
+  .checklist-item {
+    display: flex; gap: 10px; padding: 8px 0;
+    font-size: 14px; line-height: 1.5;
+    border-bottom: 1px solid var(--white-08);
+  }
+  .checklist-item:last-child { border-bottom: none; }
+  .check-icon { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+
+  /* TABLE */
+  .info-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  .info-table th {
+    text-align: left; padding: 10px 12px; background: var(--accent-glow);
+    border-bottom: 2px solid var(--accent); color: var(--accent); font-weight: 700;
+  }
+  .info-table td {
+    padding: 10px 12px; border-bottom: 1px solid var(--white-08);
+    color: var(--white-70); vertical-align: top;
+  }
+  .info-table tr:hover td { background: var(--bg-card); }
+
+  /* IDEAS LIST */
+  .ideas-list { margin: 10px 0; }
+  .idea-item {
+    display: flex; gap: 10px; padding: 8px 0; font-size: 13px;
+    color: var(--white-70); line-height: 1.5;
+    border-bottom: 1px solid var(--white-08);
+  }
+  .idea-item:last-child { border-bottom: none; }
+  .idea-icon { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+  .idea-name { font-weight: 700; color: var(--accent); min-width: 70px; flex-shrink: 0; }
+
+  /* CATEGORY LABEL */
+  .category-label {
+    font-size: 13px; font-weight: 700; color: var(--coral);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-top: 18px; margin-bottom: 8px; padding-bottom: 4px;
+    border-bottom: 1px solid rgba(224,116,97,0.3);
+  }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--white-15); margin: 28px 0; }
+
+  /* BADGES */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+  .badge-free { background: rgba(94,196,122,0.15); color: var(--green); }
+  .badge-paid { background: rgba(224,85,85,0.15); color: var(--red); }
+  .badge-vpn { background: rgba(240,192,64,0.15); color: var(--yellow); }
+
+  /* FOOTER */
+  .footer {
+    text-align: center; padding: 24px; font-size: 12px;
+    color: var(--white-50); border-top: 1px solid var(--white-08); margin-top: 32px;
+  }
+  .footer strong { color: var(--accent); }
+
+  /* PDF BUTTON */
+  .pdf-btn {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--accent); color: white; border: none;
+    padding: 14px 24px; border-radius: 12px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(8,145,178,0.4);
+    z-index: 1000; transition: transform 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .pdf-btn:hover { transform: translateY(-2px); }
+
+  @media print {
+    .prompt-box::after { display: none; }
+    .header { padding: 20px; }
+    body { font-size: 12px; background: #fff; color: #1a1a2e; }
+    .prompt-box { font-size: 12px; padding: 10px 14px; color: #1a1a2e; background: #f1f5f9; }
+    .pdf-btn { display: none; }
+    .card, .link-card { border: 1px solid #ddd; }
+    .section-title, .card-title { color: #1a1a2e; }
+    .card-body, .section-subtitle, .step-item { color: #333; }
+    .info-table th { background: #e0f7fa; color: #065f72; }
+    .info-table td { color: #333; }
+  }
+</style>
+</head>
+<body>
+
+<button class="pdf-btn" onclick="window.print()">Скачать PDF</button>
+
+<div class="header">
+  <div class="header-logo">neovida.ai / AI Boost</div>
+  <h1>Шпаргалка. Занятие 4</h1>
+  <p>Google Workspace &mdash; экосистема Google</p>
+</div>
+
+<div class="container">
+
+  <!-- ==================== СЕКЦИЯ 1: CANVAS ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">1</span> Canvas &mdash; создание приложений</div>
+    <div class="section-subtitle">Gemini создаёт рабочие веб-приложения прямо в браузере за 5 минут &mdash; без навыков программирования</div>
+
+    <a class="link-card" href="https://gemini.google.com" target="_blank">
+      <div class="link-icon" style="background: #4285f4; color: white;">G</div>
+      <div class="link-text">
+        <div class="link-name">Gemini Canvas</div>
+        <div class="link-url">gemini.google.com</div>
+        <div class="link-note">Откройте чат &rarr; попросите создать приложение. <span class="badge badge-free">Бесплатно</span> <span class="badge badge-vpn">VPN</span></div>
+      </div>
+    </a>
+
+    <div class="card" style="margin-top: 16px;">
+      <div class="card-title">Как создать приложение</div>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div><strong>Наговорите голосом</strong> что вам нужно &mdash; прямо в заметки телефона. Не думайте о формулировках, просто расскажите идею своими словами.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div><strong>Попросите ИИ сделать промпт:</strong> вставьте голосовую заметку и скажите &laquo;Сделай промпт по РКЗФО для senior-разработчика, чтобы он создал приложение&raquo;</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div><strong>Скопируйте готовый промпт</strong> и вставьте в Gemini Canvas. ИИ создаст работающее приложение.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div><strong>Дорабатывайте в диалоге:</strong> &laquo;Измени цвета&raquo;, &laquo;Добавь кнопку WhatsApp&raquo;, &laquo;Сделай адаптивным для телефона&raquo;</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span><strong>РКЗФО</strong> &mdash; Роль, Контекст, Задача, Формат, Ограничения. Ваш фреймворк промптов с занятия 2. Используйте для любых запросов!</span>
+    </div>
+
+    <!-- ===== ДЛЯ ЖИЗНИ ===== -->
+    <div class="category-label">🏠 Для жизни</div>
+
+    <div class="prompt-label">1. Калькулятор ипотеки</div>
+    <div class="prompt-box">Ты — senior фронтенд-разработчик. Создай интерактивный калькулятор ипотеки.
+
+Функции:
+— Ввод: стоимость квартиры, первоначальный взнос, процентная ставка, срок (от 1 до 30 лет — ползунок)
+— Расчёт: ежемесячный платёж (аннуитетный), общая переплата, итоговая сумма
+— Сравнение двух банков рядом: заполняешь условия для банка А и банка Б → видишь разницу
+— График платежей по месяцам (столбчатая диаграмма: тело кредита vs проценты)
+
+Дизайн: современный, тёмная тема, скруглённые углы, ползунки с подсветкой. Адаптивный для мобильных. Все расчёты на JavaScript, без серверной части.</div>
+
+    <div class="prompt-label">2. Планировщик семейного бюджета</div>
+    <div class="prompt-box">Ты — senior фронтенд-разработчик. Создай приложение для планирования семейного бюджета на месяц.
+
+Функции:
+— Ввод доходов (зарплата, подработка, другое)
+— Ввод расходов по категориям: продукты, транспорт, ЖКХ, одежда, развлечения, здоровье, образование, прочее
+— Круговая диаграмма «Куда уходят деньги» (Canvas API или SVG)
+— Прогресс-бар: сколько потрачено / сколько осталось
+— Подсказка: сколько можно откладывать при текущих расходах
+— Данные сохраняются в localStorage (не пропадают при закрытии)
+
+Дизайн: чистый, современный, тёмная тема с акцентными цветами для категорий. Адаптивный.</div>
+
+    <div class="prompt-label">3. Калькулятор ремонта квартиры</div>
+    <div class="prompt-box">Ты — senior фронтенд-разработчик. Создай калькулятор стоимости ремонта квартиры.
+
+Функции:
+— Ввод: количество комнат, площадь каждой комнаты
+— Выбор типа ремонта: эконом / стандарт / премиум (с описанием что входит)
+— Расчёт по позициям: стены (обои/покраска/декоративная штукатурка), пол (ламинат/плитка/паркет), потолок (натяжной/покраска), электрика, сантехника
+— Итоговая смета в виде таблицы: позиция, объём, цена за единицу, итого
+— Общая сумма + «запас 15% на непредвиденные расходы»
+
+Цены: средние по рынку (Россия, 2026). Дизайн: современный, тёмная тема, удобные переключатели. Адаптивный.</div>
+
+    <div class="prompt-label">4. Планировщик питания на неделю</div>
+    <div class="prompt-box">Ты — senior фронтенд-разработчик. Создай планировщик питания на 7 дней.
+
+Функции:
+— Выбор цели: похудение / поддержание / набор массы
+— Ввод: пол, возраст, вес, рост → автоматический расчёт дневной нормы калорий и БЖУ
+— Меню на каждый день: завтрак, обед, ужин, перекусы — с калориями и БЖУ по каждому приёму
+— Прогресс-бар по дням: набрал норму или нет
+— Кнопка «Список продуктов на неделю» — собирает все ингредиенты в один список для магазина
+
+Меню: простые блюда из доступных продуктов (российская кухня). Дизайн: современный, цветовая кодировка приёмов пищи. Адаптивный.</div>
+
+    <div class="prompt-label">5. Калькулятор стоимости автомобиля</div>
+    <div class="prompt-box">Ты — senior фронтенд-разработчик. Создай калькулятор реальной стоимости владения автомобилем.
+
+Функции:
+— Ввод: марка, год выпуска, мощность (л.с.), пробег в месяц (км), расход топлива (л/100км), цена бензина
+— Расчёт ежемесячных расходов: бензин, ОСАГО, транспортный налог, ТО (раз в год / делим на 12), мойка, парковка
+— Дополнительно: КАСКО (опционально), замена шин (2 раза в год)
+— Итого: стоимость владения в месяц и в год
+— Сравнение двух автомобилей рядом: заполняешь данные для авто А и авто Б → видишь разницу
+
+Дизайн: современный с карточками, тёмная тема, ползунки. Адаптивный.</div>
+
+    <!-- ===== ДЛЯ РАБОТЫ / БИЗНЕСА ===== -->
+    <div class="category-label">💼 Для работы и бизнеса</div>
+
+    <div class="prompt-label">6. Калькулятор стоимости услуг</div>
+    <div class="prompt-box">Ты — senior фронтенд-разработчик. Создай универсальный калькулятор стоимости услуг для бизнеса.
+
+Функции:
+— Выбор типа услуги (3-5 вариантов — выпадающий список)
+— Параметры: площадь / количество / объём (ползунки)
+— Дополнительные опции (чекбоксы): срочность, доставка, гарантия, монтаж
+— Автоматический расчёт итоговой стоимости с анимацией
+— Кнопка «Оставить заявку» — открывает WhatsApp с предзаполненным сообщением (номер телефона подставить)
+
+Пример: сервис по установке кондиционеров (площадь помещения → мощность → цена + монтаж + доставка). Дизайн: светлая тема, профессиональный, с логотипом. Адаптивный для мобильных.</div>
+
+    <div class="prompt-label">7. Квиз-подбор продукта или услуги</div>
+    <div class="prompt-box">Ты — senior фронтенд-разработчик. Создай интерактивный квиз для подбора услуги.
+
+Функции:
+— 5 вопросов (по одному на экране, с прогресс-баром сверху)
+— Вопросы: 1) Что вас интересует? 2) Какой бюджет? 3) Когда нужно? 4) Есть ли особые пожелания? 5) Как с вами связаться?
+— Каждый вопрос — красивые карточки-варианты (не скучные radio-кнопки)
+— В конце: персональная рекомендация с описанием и ценой
+— Кнопка «Получить предложение» → WhatsApp с данными квиза
+
+Пример: подбор фитнес-программы (цель, уровень, расписание → персональная рекомендация). Дизайн: яркий, с анимацией переходов между вопросами. Адаптивный.</div>
+
+    <div class="prompt-label">8. Генератор коммерческого предложения</div>
+    <div class="prompt-box">Ты — senior фронтенд-разработчик. Создай генератор коммерческих предложений.
+
+Функции:
+— Форма ввода: название компании, логотип (URL), имя клиента, список услуг (добавлять строки динамически), цена за каждую, сроки, условия оплаты
+— Кнопка «Сгенерировать КП» → красивый документ с:
+  • Шапкой компании
+  • Обращением к клиенту по имени
+  • Таблицей услуг с ценами
+  • Итоговой суммой
+  • Блоком «Почему мы» (3-4 пункта)
+  • Контактами и датой
+— Кнопка «Распечатать / сохранить PDF» (window.print)
+
+Дизайн: деловой, строгий, с акцентным цветом. Формат А4 при печати.</div>
+
+    <div class="prompt-label">9. Интерактивная визитка-лендинг</div>
+    <div class="prompt-box">Ты — senior фронтенд-разработчик. Создай персональную визитку-лендинг — одностраничный мини-сайт.
+
+Что должно быть:
+— Фото (заглушка или URL)
+— Имя, должность, компания
+— Блок «Услуги» (3-4 карточки с иконками)
+— Блок «Отзывы» (2-3 карточки с цитатами)
+— Контакты: телефон (кликабельный), email, адрес
+— Кнопки соцсетей: WhatsApp, Telegram, Instagram, VK
+— Кнопка «Позвонить» (tel:) — крупная, заметная
+— Внизу: «Сохранить контакт» — скачивает vCard (.vcf файл)
+
+Дизайн: современный, с градиентом в шапке, тёмная тема. Анимации при прокрутке. Полностью адаптивный — в первую очередь для телефона.</div>
+
+    <div class="prompt-label">10. Таблица сравнения с автоподсчётом</div>
+    <div class="prompt-box">Ты — senior фронтенд-разработчик. Создай инструмент для сравнения вариантов с автоматическим подсчётом лучшего.
+
+Функции:
+— Ввод: 2-4 варианта (поставщики, товары, квартиры, тарифы — что угодно)
+— Добавление критериев сравнения (цена, качество, сроки, удобство и т.д.)
+— Вес каждого критерия: ползунок от 1 до 10 (насколько важен)
+— Оценка каждого варианта по каждому критерию: от 1 до 5 звёзд
+— Автоматический расчёт итогового балла (взвешенная сумма)
+— Визуализация: столбчатая диаграмма + подсветка лучшего варианта
+
+Дизайн: аналитический дашборд, тёмная тема, таблица с подсветкой лидера. Адаптивный.</div>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span><strong>Совет:</strong> скопируйте любой промпт выше, вставьте в Gemini Canvas и замените пример на свою сферу. ИИ сам адаптирует приложение под вас!</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 2: ГДЕ ЕЩЁ CANVAS ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">2</span> Где ещё можно создавать приложения</div>
+    <div class="section-subtitle">Canvas есть не только в Gemini &mdash; вот полный список</div>
+
+    <a class="link-card" href="https://gemini.google.com" target="_blank">
+      <div class="link-icon" style="background: #4285f4; color: white;">G</div>
+      <div class="link-text">
+        <div class="link-name">Gemini Canvas</div>
+        <div class="link-url">gemini.google.com</div>
+        <div class="link-note"><span class="badge badge-free">Бесплатно</span> <span class="badge badge-vpn">VPN</span></div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://chatgpt.com" target="_blank">
+      <div class="link-icon" style="background: #10a37f; color: white;">C</div>
+      <div class="link-text">
+        <div class="link-name">ChatGPT Canvas</div>
+        <div class="link-url">chatgpt.com</div>
+        <div class="link-note"><span class="badge badge-free">Бесплатно</span> <span class="badge badge-vpn">VPN</span></div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://claude.ai" target="_blank">
+      <div class="link-icon" style="background: #d4a574; color: white;">A</div>
+      <div class="link-text">
+        <div class="link-name">Claude Artifacts</div>
+        <div class="link-url">claude.ai</div>
+        <div class="link-note"><span class="badge badge-free">Бесплатно</span> <span class="badge badge-vpn">VPN</span></div>
+      </div>
+    </a>
+
+    <div class="cards-grid">
+      <a class="link-card" href="https://bolt.new" target="_blank" style="margin:0;">
+        <div class="link-text">
+          <div class="link-name">Bolt</div>
+          <div class="link-url">bolt.new</div>
+          <div class="link-note">Полноценные проекты</div>
+        </div>
+      </a>
+      <a class="link-card" href="https://lovable.dev" target="_blank" style="margin:0;">
+        <div class="link-text">
+          <div class="link-name">Lovable</div>
+          <div class="link-url">lovable.dev</div>
+          <div class="link-note">Красивые приложения</div>
+        </div>
+      </a>
+      <a class="link-card" href="https://v0.dev" target="_blank" style="margin:0;">
+        <div class="link-text">
+          <div class="link-name">v0</div>
+          <div class="link-url">v0.dev</div>
+          <div class="link-note">UI-компоненты</div>
+        </div>
+      </a>
+      <a class="link-card" href="https://replit.com" target="_blank" style="margin:0;">
+        <div class="link-text">
+          <div class="link-name">Replit</div>
+          <div class="link-url">replit.com</div>
+          <div class="link-note">Код + хостинг</div>
+        </div>
+      </a>
+    </div>
+
+    <a class="link-card" href="https://labs.google" target="_blank">
+      <div class="link-icon" style="background: #ea4335; color: white;">O</div>
+      <div class="link-text">
+        <div class="link-name">Google Opal</div>
+        <div class="link-url">labs.google</div>
+        <div class="link-note">Экспериментальный Canvas от Google. <span class="badge badge-free">Бесплатно</span></div>
+      </div>
+    </a>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span><strong>Совет:</strong> начните с Gemini Canvas или ChatGPT Canvas &mdash; они самые простые. Bolt и Lovable &mdash; для более сложных проектов с хостингом.</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 3: DEEP RESEARCH ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">3</span> Deep Research &mdash; глубокие исследования</div>
+    <div class="section-subtitle">ИИ-аналитик, который изучает десятки источников и делает отчёт за 5-10 минут</div>
+
+    <div class="card">
+      <div class="card-title">Что это</div>
+      <div class="card-body">
+        Deep Research &mdash; это режим ИИ, который автоматически ищет информацию по десяткам сайтов, анализирует данные и собирает структурированный отчёт. Как нанять аналитика на 1 день &mdash; только бесплатно.
+      </div>
+    </div>
+
+    <div class="success">
+      <span class="tip-icon">🆓</span>
+      <span><strong>Бесплатно ~5 отчётов в месяц</strong> в Gemini. Также доступно в ChatGPT и Perplexity. Gemini лучше &mdash; использует поисковую систему Google.</span>
+    </div>
+
+    <div class="card" style="margin-top: 12px;">
+      <div class="card-title">Как сделать исследование</div>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div><strong>Наговорите голосом</strong> что хотите исследовать &mdash; своими словами, без формулировок</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div><strong>Попросите ИИ сделать промпт:</strong> &laquo;Сделай промпт по РКЗФО для бизнес-аналитика, чтобы провести исследование&raquo;</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div><strong>Добавьте контекст:</strong> ваш город, бюджет, специфика, конкуренты</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div><strong>Попросите задать вопросы:</strong> &laquo;Прежде чем начать &mdash; задай мне уточняющие вопросы, чтобы исследование было точнее&raquo;</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">5</div>
+          <div><strong>Укажите формат:</strong> таблица сравнения, SWOT-анализ, список с ценами, отчёт с рекомендациями</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <span class="tip-icon">🔑</span>
+      <span><strong>Трюк &laquo;задай мне вопросы&raquo;</strong> &mdash; ИИ спросит то, о чём вы не подумали. Это делает результат в 3-5 раз точнее. Работает везде, не только в Deep Research!</span>
+    </div>
+
+    <div class="category-label">🏠 Для жизни</div>
+
+    <div class="prompt-label">Исследование: лучшие районы для покупки квартиры</div>
+    <div class="prompt-box">Ты — аналитик рынка недвижимости с 10-летним опытом.
+
+Контекст: я планирую купить квартиру в Уфе. Бюджет 5-7 млн рублей, семья с ребёнком, важна инфраструктура (школы, поликлиники, парки).
+
+Задача: проведи исследование районов Уфы для покупки квартиры.
+
+Мне нужно:
+1. Сравнение 5-7 районов: средняя цена за м², инфраструктура, транспорт, экология
+2. Таблица: район / цена / плюсы / минусы
+3. Прогноз роста цен на 2-3 года
+4. Топ-3 рекомендации для семьи с ребёнком
+
+Формат: таблица сравнения + итоговая рекомендация.
+
+Прежде чем начать — задай мне уточняющие вопросы.</div>
+
+    <div class="category-label">💼 Для работы и бизнеса</div>
+
+    <div class="prompt-label">Исследование: анализ конкурентов в вашей нише</div>
+    <div class="prompt-box">Ты — бизнес-аналитик с 10-летним опытом.
+
+Контекст: я работаю в сфере [ВАША СФЕРА] в городе [ВАШ ГОРОД]. Хочу понять, как обстоят дела с конкурентами и что они предлагают.
+
+Задача: проведи анализ конкурентов.
+
+Мне нужно:
+1. Топ-10 конкурентов в моём городе: название, сайт, ключевые услуги, ценовой сегмент
+2. Их сильные и слабые стороны
+3. Какие каналы привлечения клиентов используют (соцсети, реклама, SEO)
+4. Средние цены на рынке
+5. Что я могу сделать лучше — конкретные рекомендации
+
+Формат: таблица сравнения + SWOT-анализ + 5 рекомендаций.
+
+Прежде чем начать — задай мне уточняющие вопросы.</div>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span><strong>Замените [ВАША СФЕРА] и [ВАШ ГОРОД]</strong> на свои данные. Deep Research проведёт исследование именно по вашей теме!</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 4: NOTEBOOKLM ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">4</span> NotebookLM &mdash; база знаний</div>
+    <div class="section-subtitle">Загрузите свои документы &mdash; и задавайте вопросы по ним. Как личный ассистент, который всё прочитал</div>
+
+    <a class="link-card" href="https://notebooklm.google.com" target="_blank">
+      <div class="link-icon" style="background: #34a853; color: white;">N</div>
+      <div class="link-text">
+        <div class="link-name">NotebookLM</div>
+        <div class="link-url">notebooklm.google.com</div>
+        <div class="link-note">Полностью бесплатный. До 50 источников в блокноте. <span class="badge badge-free">Бесплатно</span> <span class="badge badge-vpn">VPN</span></div>
+      </div>
+    </a>
+
+    <div class="card" style="margin-top: 12px;">
+      <div class="card-title">Что можно загрузить</div>
+      <div class="card-body">
+        <strong>PDF</strong> &mdash; договоры, инструкции, прайсы, ГОСТы, учебники<br>
+        <strong>Google Docs</strong> &mdash; ваши документы с Google Drive<br>
+        <strong>Сайты</strong> &mdash; вставьте URL любой страницы<br>
+        <strong>YouTube</strong> &mdash; вставьте ссылку на видео (транскрибирует автоматически)<br>
+        <strong>Текст</strong> &mdash; скопируйте и вставьте любой текст
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Audio Overview &mdash; подкаст из документов</div>
+      <div class="card-body">
+        NotebookLM превращает ваши документы в аудио-обзор. Два &laquo;ведущих&raquo; обсуждают материал как подкаст. Четыре формата:
+        <div style="margin-top: 8px;">
+          <strong>Deep Dive</strong> &mdash; глубокий разбор темы (15-20 мин)<br>
+          <strong>Briefing</strong> &mdash; краткая сводка (5-7 мин)<br>
+          <strong>Study Guide</strong> &mdash; формат &laquo;вопрос-ответ&raquo; для обучения<br>
+          <strong>Debate</strong> &mdash; дебаты с разных точек зрения
+        </div>
+      </div>
+    </div>
+
+    <div class="success">
+      <span class="tip-icon">🔗</span>
+      <span><strong>Связка:</strong> Deep Research (отчёт) &rarr; скачайте как PDF &rarr; загрузите в NotebookLM &rarr; задавайте вопросы и сделайте Audio Overview. Идеально для изучения рынка!</span>
+    </div>
+
+    <div class="prompt-label">Промпт для вопросов по загруженным документам</div>
+    <div class="prompt-box">На основе загруженных документов ответь:
+
+1. Какие ключевые выводы можно сделать?
+2. Есть ли противоречия между источниками?
+3. Что самое важное для принятия решения?
+4. Какие риски я мог упустить?
+
+Отвечай конкретно, со ссылками на конкретные места в документах.</div>
+
+    <div class="prompt-label">Идеи: что загрузить в NotebookLM</div>
+    <div class="ideas-list">
+      <div class="idea-item">
+        <span class="idea-icon">📄</span>
+        <span><strong>Договор</strong> &mdash; загрузите договор аренды, трудовой или с подрядчиком &rarr; спросите &laquo;Какие риски для меня? Что можно улучшить?&raquo;</span>
+      </div>
+      <div class="idea-item">
+        <span class="idea-icon">📊</span>
+        <span><strong>Отчёт Deep Research</strong> &mdash; скачайте результат исследования &rarr; задавайте уточняющие вопросы, делайте Audio Overview</span>
+      </div>
+      <div class="idea-item">
+        <span class="idea-icon">📚</span>
+        <span><strong>Книга или учебник</strong> &mdash; загрузите PDF &rarr; &laquo;Сделай краткое содержание каждой главы&raquo;, &laquo;Какие ключевые идеи?&raquo;</span>
+      </div>
+      <div class="idea-item">
+        <span class="idea-icon">🎥</span>
+        <span><strong>YouTube-видео</strong> &mdash; вставьте ссылку на лекцию или вебинар &rarr; получите конспект с тайм-кодами</span>
+      </div>
+      <div class="idea-item">
+        <span class="idea-icon">📋</span>
+        <span><strong>Прайс-лист или каталог</strong> &mdash; загрузите прайс &rarr; &laquo;Сравни цены на позиции X и Y&raquo;, &laquo;Что самое маржинальное?&raquo;</span>
+      </div>
+      <div class="idea-item">
+        <span class="idea-icon">⚖️</span>
+        <span><strong>Закон или регламент</strong> &mdash; загрузите текст закона &rarr; &laquo;Объясни простыми словами, что я обязан делать по этому закону&raquo;</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 5: @-РАСШИРЕНИЯ ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">5</span> @-расширения в Gemini</div>
+    <div class="section-subtitle">Набирайте @ в чате Gemini &mdash; и подключайте свои Google-сервисы</div>
+
+    <table class="info-table">
+      <thead>
+        <tr>
+          <th>Расширение</th>
+          <th>Что делает</th>
+          <th>Пример</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>@Docs</strong></td>
+          <td>Ищет и анализирует ваши Google Docs</td>
+          <td>&laquo;@Docs найди мой прайс-лист и сделай сводку&raquo;</td>
+        </tr>
+        <tr>
+          <td><strong>@Drive</strong></td>
+          <td>Поиск файлов на Google Drive</td>
+          <td>&laquo;@Drive найди все договоры за 2025 год&raquo;</td>
+        </tr>
+        <tr>
+          <td><strong>@Gmail</strong></td>
+          <td>Поиск и анализ писем</td>
+          <td>&laquo;@Gmail найди письма от Иванова за март&raquo;</td>
+        </tr>
+        <tr>
+          <td><strong>@YouTube</strong></td>
+          <td>Поиск и анализ видео</td>
+          <td>&laquo;@YouTube найди видео как настроить CRM&raquo;</td>
+        </tr>
+        <tr>
+          <td><strong>@Maps</strong></td>
+          <td>Информация о местах, маршруты</td>
+          <td>&laquo;@Maps покажи фитнес-клубы рядом с моим офисом&raquo;</td>
+        </tr>
+        <tr>
+          <td><strong>@Calendar</strong></td>
+          <td>Работа с Google Календарём</td>
+          <td>&laquo;@Calendar какие у меня встречи на этой неделе?&raquo;, &laquo;@Calendar создай встречу с командой на пятницу в 15:00&raquo;</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span><strong>Всё бесплатно!</strong> @-расширения работают в бесплатной версии Gemini. Просто включите их в настройках (Settings &rarr; Extensions).</span>
+    </div>
+
+    <div class="card" style="margin-top: 12px;">
+      <div class="card-title">🔍 SynthID &mdash; проверка AI-контента</div>
+      <div class="card-body">
+        <strong>Что это:</strong> технология Google, которая встраивает невидимый цифровой водяной знак в контент, сгенерированный ИИ &mdash; изображения, видео, аудио и даже текст. Водяной знак не видно глазом, но его можно обнаружить специальным инструментом.<br><br>
+        <strong>Зачем нужен:</strong><br>
+        &bull; Проверить, создано ли изображение нейросетью или это реальное фото<br>
+        &bull; Защитить свой контент &mdash; доказать, что он создан ИИ (или наоборот)<br>
+        &bull; Бороться с фейками и дезинформацией<br><br>
+        <strong>Где работает:</strong> автоматически добавляется ко всем изображениям Gemini и Imagen 3, видео Veo, аудио и тексту. Вы не замечаете его, но он есть.<br><br>
+        <strong>Как проверить:</strong> загрузите изображение на <a href="https://labs.google/fx/tools/detector" target="_blank" style="color:var(--accent); text-decoration:underline;">labs.google/fx/tools/detector</a> &mdash; сервис покажет, содержит ли картинка AI-метку.
+      </div>
+    </div>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span><strong>Практический пример:</strong> вам прислали фото товара или отзыв клиента &mdash; загрузите в SynthID Detector и проверьте, не сгенерировано ли оно нейросетью. Полезно для проверки фейковых отзывов конкурентов!</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 6: GOOGLE LABS ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">6</span> Google Labs &mdash; Flow, AI Studio, MusicFX</div>
+    <div class="section-subtitle">Экспериментальные инструменты Google &mdash; бесплатные и мощные</div>
+
+    <a class="link-card" href="https://labs.google/flow" target="_blank">
+      <div class="link-icon" style="background: #ea4335; color: white;">F</div>
+      <div class="link-text">
+        <div class="link-name">Flow</div>
+        <div class="link-url">labs.google/flow</div>
+        <div class="link-note">Генерация изображений и видео. <span class="badge badge-free">Бесплатно (с лимитами)</span></div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://aistudio.google.com" target="_blank">
+      <div class="link-icon" style="background: #4285f4; color: white;">S</div>
+      <div class="link-text">
+        <div class="link-name">AI Studio</div>
+        <div class="link-url">aistudio.google.com</div>
+        <div class="link-note">Gemini Pro без ограничений, большой контекст, загрузка файлов. <span class="badge badge-free">Бесплатно</span></div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://labs.google/fx/tools/music-fx" target="_blank">
+      <div class="link-icon" style="background: #fbbc04; color: white;">M</div>
+      <div class="link-text">
+        <div class="link-name">MusicFX</div>
+        <div class="link-url">labs.google/fx/tools/music-fx</div>
+        <div class="link-note">Генерация музыки по текстовому описанию. <span class="badge badge-free">Бесплатно</span></div>
+      </div>
+    </a>
+
+    <div class="card">
+      <div class="card-title">Когда что использовать</div>
+      <div class="card-body">
+        <strong>Flow</strong> &mdash; нужна картинка для поста, баннер, короткое видео для соцсетей<br>
+        <strong>AI Studio</strong> &mdash; нужно загрузить большой документ (до 1 млн токенов), работать без лимитов<br>
+        <strong>MusicFX</strong> &mdash; фоновая музыка для видео, рилсов, презентаций
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 7: БЕСПЛАТНО VS ПЛАТНО ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">7</span> Бесплатно vs Платно</div>
+    <div class="section-subtitle">Что доступно бесплатно, а за что стоит платить $20/мес</div>
+
+    <div class="vs-grid">
+      <div class="vs-card good">
+        <div style="font-weight:700; color:var(--accent); margin-bottom:8px;">🆓 Бесплатно</div>
+        <div style="font-size:13px; line-height:1.8;">
+          ✅ Gemini чат<br>
+          ✅ Canvas (приложения)<br>
+          ✅ @-расширения (Docs, Drive, Gmail...)<br>
+          ✅ NotebookLM<br>
+          ✅ AI Studio (без лимитов)<br>
+          ✅ Flow (изображения, видео)<br>
+          ✅ MusicFX (музыка)<br>
+          ✅ Deep Research (~5/мес)<br>
+          ✅ Gems (кастомные чаты)
+        </div>
+      </div>
+      <div class="vs-card" style="background: rgba(224,85,85,0.08); border: 1px solid rgba(224,85,85,0.2);">
+        <div style="font-weight:700; color:var(--red); margin-bottom:8px;">💎 Gemini Advanced ($20/мес)</div>
+        <div style="font-size:13px; line-height:1.8;">
+          🔓 Deep Research без лимитов<br>
+          🔓 &laquo;Help me write&raquo; в Docs и Gmail<br>
+          🔓 ИИ в Google Sheets<br>
+          🔓 Gemini в Google Meet<br>
+          🔓 Gems без ограничений<br>
+          🔓 Модели Pro и Ultra<br>
+          🔓 2 ТБ на Google Drive
+        </div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span><strong>Рекомендация:</strong> начните с бесплатной версии &mdash; в ней уже 90% возможностей. Переходите на Advanced, когда упрётесь в лимиты Deep Research или понадобится ИИ прямо в документах.</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ==================== СЕКЦИЯ 8: ДОМАШНЕЕ ЗАДАНИЕ ==================== -->
+  <div class="section">
+    <div class="section-title"><span class="num">8</span> Домашнее задание</div>
+    <div class="section-subtitle">Три задачи &mdash; выберите примеры из шпаргалки или придумайте свои</div>
+
+    <div class="card">
+      <div class="card-title">Задание 1: Создайте приложение в Canvas</div>
+      <div class="card-body">
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div>Выберите любой промпт из секции 1 этой шпаргалки (или придумайте своё приложение)</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div>Скопируйте промпт и вставьте в Gemini Canvas</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div>Доработайте в диалоге: цвета, тексты, свои данные</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <div>Скриншот результата &mdash; в чат курса!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Задание 2: Проведите исследование в Deep Research</div>
+      <div class="card-body">
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div>Наговорите голосом тему исследования (для работы или для жизни)</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div>Попросите ИИ сделать промпт по РКЗФО + добавьте &laquo;задай мне вопросы&raquo;</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div>Ответьте на вопросы ИИ и получите отчёт</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <div>Поделитесь самым интересным выводом в чате</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Задание 3: Загрузите результат в NotebookLM</div>
+      <div class="card-body">
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div>Скачайте отчёт Deep Research как PDF (или скопируйте текст)</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div>Загрузите в NotebookLM как источник</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div>Задайте 3-5 вопросов по отчёту</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <div>Сгенерируйте Audio Overview &mdash; послушайте &laquo;подкаст&raquo; по вашему исследованию</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info">
+      <span class="tip-icon">📌</span>
+      <span><strong>Результат на следующее занятие:</strong> покажите своё приложение из Canvas и расскажите, что узнали из Deep Research. Мы обсудим, что у кого получилось!</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <strong>neovida.ai</strong> / AI Boost<br>
+  Занятие 4 &mdash; Google Workspace
+</div>
+
+<script>
+document.querySelectorAll('.prompt-box').forEach(box => {
+  box.addEventListener('click', () => {
+    const text = box.innerText.replace('нажмите, чтобы скопировать', '').replace('✅ скопировано!', '').trim();
+    navigator.clipboard.writeText(text).then(() => {
+      box.classList.add('copied');
+      setTimeout(() => box.classList.remove('copied'), 2000);
+    });
+  });
+});
+</script>
+
+</body>
+</html>
