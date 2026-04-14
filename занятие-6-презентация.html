@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность | Занятие 6 — Визуал: нейрокреатор</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #1a1a2e;
+  --accent: #d946ef;
+  --accent-dark: #a21caf;
+  --coral: #E07461;
+  --white: #ffffff;
+  --white-80: rgba(255,255,255,0.8);
+  --white-60: rgba(255,255,255,0.6);
+  --white-40: rgba(255,255,255,0.4);
+  --white-20: rgba(255,255,255,0.2);
+  --white-10: rgba(255,255,255,0.1);
+  --yellow: #f0c040;
+  --orange: #e8944a;
+  --red: #e05555;
+  --green: #5ec47a;
+  --purple: #8B6EB5;
+  --blue: #4285f4;
+  --cyan: #0891b2;
+}
+
+html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--white); -webkit-font-smoothing: antialiased; }
+a { color: var(--accent); text-decoration: underline; cursor: pointer; }
+a:hover { color: var(--yellow); }
+
+.deck { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+.slide {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 60px 80px; opacity: 0; visibility: hidden;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translateX(40px); overflow-y: auto;
+}
+.slide.active { opacity: 1; visibility: visible; transform: translateX(0); }
+.slide.prev { transform: translateX(-40px); }
+
+.slide-title { font-size: 44px; font-weight: 800; line-height: 1.15; margin-bottom: 28px; }
+.slide-title .accent { color: var(--accent); }
+.slide-subtitle { font-size: 24px; font-weight: 400; color: var(--white-80); margin-bottom: 32px; line-height: 1.4; }
+
+.point { margin-bottom: 14px; padding-left: 8px; font-size: 22px; line-height: 1.5; color: var(--white-80); }
+.point strong { color: var(--white); font-weight: 600; }
+
+.quote { margin-top: 20px; padding: 20px 28px; border-left: 4px solid var(--accent); background: var(--white-10); border-radius: 0 12px 12px 0; font-size: 21px; font-weight: 500; line-height: 1.5; font-style: italic; }
+
+.card { background: var(--white-10); border-radius: 16px; padding: 24px; margin-bottom: 16px; }
+.card-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.card-body { font-size: 18px; color: var(--white-80); line-height: 1.5; }
+.cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+.cards-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 12px; }
+
+.tbl { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 12px; font-size: 18px; }
+.tbl th { text-align: left; padding: 12px 16px; background: var(--white-10); color: var(--accent); font-weight: 700; border-bottom: 2px solid var(--white-20); }
+.tbl td { padding: 10px 16px; border-bottom: 1px solid var(--white-10); color: var(--white-80); }
+.tbl th:first-child { border-radius: 10px 0 0 0; } .tbl th:last-child { border-radius: 0 10px 0 0; }
+
+.vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 12px; }
+.vs-card { border-radius: 16px; padding: 24px; }
+.vs-card.bad { background: rgba(224,85,85,0.15); border: 1px solid rgba(224,85,85,0.3); }
+.vs-card.good { background: rgba(94,196,122,0.15); border: 1px solid rgba(94,196,122,0.3); }
+
+.step { display: flex; align-items: flex-start; margin-bottom: 14px; font-size: 20px; line-height: 1.5; color: var(--white-80); }
+.step-num { flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; margin-right: 14px; margin-top: 2px; }
+
+.prompt-block { background: rgba(217,70,239,0.1); border: 1px solid rgba(217,70,239,0.3); border-radius: 12px; padding: 20px 24px; margin-top: 12px; font-size: 18px; line-height: 1.7; color: var(--white-80); white-space: pre-wrap; }
+
+.analogy-card { background: linear-gradient(135deg, rgba(217,70,239,0.15) 0%, rgba(217,70,239,0.05) 100%); border: 2px solid rgba(217,70,239,0.3); border-radius: 20px; padding: 32px; margin-top: 12px; text-align: center; }
+.analogy-emoji { font-size: 56px; margin-bottom: 12px; }
+.analogy-title { font-size: 26px; font-weight: 800; color: var(--accent); margin-bottom: 10px; }
+.analogy-body { font-size: 21px; line-height: 1.6; color: var(--white-80); max-width: 800px; margin: 0 auto; }
+
+.warning-card { background: rgba(240,192,64,0.1); border: 2px solid rgba(240,192,64,0.4); border-radius: 16px; padding: 24px; margin-top: 12px; }
+
+.badge { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 13px; font-weight: 700; }
+.badge-free { background: rgba(94,196,122,0.2); color: var(--green); }
+.badge-paid { background: rgba(224,85,85,0.2); color: var(--red); }
+
+.tool-card { background: var(--white-10); border-radius: 16px; padding: 20px; border: 1px solid var(--white-20); text-align: center; }
+.tool-card .tool-name { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+.tool-card .tool-desc { font-size: 15px; color: var(--white-60); line-height: 1.4; margin-bottom: 10px; }
+
+/* CONTROLS */
+.slide-counter { position: fixed; bottom: 24px; right: 32px; font-size: 16px; font-weight: 600; color: var(--white-40); z-index: 100; pointer-events: none; }
+.fullscreen-btn { position: fixed; top: 20px; right: 24px; z-index: 100; background: var(--white-10); border: 1px solid var(--white-20); color: var(--white-60); width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.fullscreen-btn:hover { background: var(--white-20); color: var(--white); }
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 100; transition: width 0.4s ease; }
+
+.slide.title-slide { text-align: center; justify-content: center; align-items: center; background: radial-gradient(ellipse at 50% 40%, rgba(217,70,239,0.15) 0%, transparent 60%); }
+.title-big { font-size: 68px; font-weight: 900; letter-spacing: -2px; color: var(--accent); margin-bottom: 24px; }
+.title-sub { font-size: 30px; font-weight: 500; color: var(--white-80); margin-bottom: 48px; line-height: 1.3; }
+.title-meta { font-size: 20px; color: var(--white-40); }
+
+.slide.practice-slide { background: #fdf4ff !important; }
+.slide.practice-slide .slide-title { color: #1e293b; }
+.slide.practice-slide .slide-title .accent { color: var(--accent-dark); }
+.slide.practice-slide .slide-subtitle { color: #475569; }
+.slide.practice-slide .point { color: #334155; }
+.slide.practice-slide .point strong { color: #1e293b; }
+.slide.practice-slide .step { color: #334155; }
+.slide.practice-slide .step strong { color: #1e293b; }
+.slide.practice-slide .prompt-block { background: rgba(217,70,239,0.06); border-color: rgba(217,70,239,0.2); color: #334155; }
+.slide.practice-slide .tbl th { background: rgba(0,0,0,0.05); color: var(--accent-dark); border-bottom-color: rgba(0,0,0,0.1); }
+.slide.practice-slide .tbl td { color: #334155; border-bottom-color: rgba(0,0,0,0.06); }
+.slide.practice-slide a { color: #86198f; }
+.slide.practice-slide .quote { color: #334155; border-left-color: var(--accent-dark); background: rgba(0,0,0,0.04); }
+.slide.practice-slide .card { background: rgba(0,0,0,0.04); }
+.slide.practice-slide .card-title { color: #1e293b; }
+.slide.practice-slide .card-body { color: #475569; }
+.slide.practice-slide .step-num { color: #fff; }
+
+.small-text { font-size: 16px; color: var(--white-40); margin-top: 20px; }
+
+.flow { display: flex; align-items: stretch; gap: 0; margin-top: 12px; }
+.flow-step { flex: 1; background: var(--white-10); border-radius: 12px; padding: 16px; text-align: center; }
+.flow-step .flow-label { font-size: 13px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.flow-step .flow-body { font-size: 16px; color: var(--white-80); line-height: 1.4; }
+.flow-arrow { display: flex; align-items: center; font-size: 24px; color: var(--accent); padding: 0 6px; }
+
+.slide.break-slide { text-align: center; justify-content: center; align-items: center; }
+
+/* ANIMATIONS */
+@keyframes pulseGlow { 0%,100% { box-shadow: 0 0 20px rgba(217,70,239,0.2); } 50% { box-shadow: 0 0 40px rgba(217,70,239,0.5); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+.pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+.slide.active .anim-up { animation: slideUp 0.6s ease-out both; }
+.slide.active .anim-up-d1 { animation: slideUp 0.6s ease-out 0.15s both; }
+.slide.active .anim-up-d2 { animation: slideUp 0.6s ease-out 0.3s both; }
+.slide.active .anim-up-d3 { animation: slideUp 0.6s ease-out 0.45s both; }
+.slide.active .anim-up-d4 { animation: slideUp 0.6s ease-out 0.6s both; }
+.slide.active .anim-scale { animation: fadeInScale 0.5s ease-out 0.2s both; }
+
+/* TYPING INDICATOR */
+.typing-dots { display: inline-flex; gap: 4px; }
+.typing-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: typingBounce 1.4s ease-in-out infinite; }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-8px); } }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="slide-counter" id="slideCounter"></div>
+<button class="fullscreen-btn" id="fsBtn" title="Полный экран">&#x26F6;</button>
+
+<div class="deck">
+
+<!-- ============ СЛАЙД 1: ТИТУЛ ============ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;" class="anim-up">neovida.ai / ИИ. Новая реальность</div>
+  <div class="title-big anim-up-d1 pulse-glow" style="border-radius:20px; padding:12px 32px; display:inline-block;">Визуал</div>
+  <div class="title-sub anim-up-d2">Презентации &middot; Изображения &middot; Лендинги &middot; Видео</div>
+  <div class="title-meta anim-up-d3">Занятие 6 &middot; 8 апреля 2026</div>
+</div>
+
+<!-- ============ СЛАЙД 2: ЧТО УЖЕ УМЕЕМ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Что мы уже <span class="accent">умеем</span></div>
+  <div class="cards-grid">
+    <div class="card anim-up-d1" style="border-left:4px solid var(--coral);">
+      <div class="card-title" style="color:var(--coral);">1. Погружение</div>
+      <div class="card-body">Навигатор по миру ИИ</div>
+    </div>
+    <div class="card anim-up-d1" style="border-left:4px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">2. Промпт-инженерия</div>
+      <div class="card-body">Формула РКЗФО, техники</div>
+    </div>
+    <div class="card anim-up-d2" style="border-left:4px solid var(--purple);">
+      <div class="card-title" style="color:var(--purple);">3. Ассистенты</div>
+      <div class="card-body">Gems, NotebookLM</div>
+    </div>
+    <div class="card anim-up-d2" style="border-left:4px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">4. Google Workspace</div>
+      <div class="card-body">Canvas, Deep Research</div>
+    </div>
+    <div class="card anim-up-d3" style="border-left:4px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">5. Данные</div>
+      <div class="card-body">Аналитика, прогнозы</div>
+    </div>
+    <div class="card anim-up-d3" style="border-left:4px solid var(--accent); background:rgba(217,70,239,0.15);">
+      <div class="card-title" style="color:var(--accent);">6. Визуал &larr; сегодня</div>
+      <div class="card-body">Презентации, картинки, лендинги, видео</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 3: ПЛАН ЗАНЯТИЯ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Сегодня вы <span class="accent">научитесь</span></div>
+  <div class="step anim-up-d1"><div class="step-num">1</div><div>Создавать <strong>презентации</strong> за минуту — три подхода: Kimi, NotebookLM, Gamma</div></div>
+  <div class="step anim-up-d2"><div class="step-num" style="background:var(--coral);">2</div><div>Генерировать <strong>изображения</strong> для бизнеса — фото, баннеры, логотипы</div></div>
+  <div class="step anim-up-d3"><div class="step-num" style="background:var(--blue);">3</div><div>Собирать <strong>лендинги</strong> за 5 минут — Tilda + AI, v0.dev, bolt.new</div></div>
+  <div class="step anim-up-d4"><div class="step-num" style="background:var(--green);">4</div><div>Создавать <strong>видео и AI-аватары</strong> — Kling, HeyGen, VEO 3</div></div>
+  <div class="quote anim-up-d4">Формат: тема &rarr; демо &rarr; практика. Каждый блок — вы пробуете сами.</div>
+</div>
+
+<!-- ============ БЛОК 1: ПРЕЗЕНТАЦИИ ============ -->
+
+<!-- СЛАЙД 4: РАЗДЕЛИТЕЛЬ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-60); margin-bottom:32px;" class="anim-up">Блок 1</div>
+  <div class="title-big anim-up-d1" style="text-shadow:0 4px 24px rgba(0,0,0,0.8);">Презентации</div>
+  <div class="title-sub anim-up-d2">Три подхода &mdash; три инструмента</div>
+</div>
+
+<!-- СЛАЙД 5: АНАЛОГИЯ -->
+<div class="slide">
+  <div class="analogy-card anim-scale">
+    <div class="analogy-emoji">🏗️</div>
+    <div class="analogy-title">Три способа построить дом</div>
+    <div class="analogy-body">
+      <strong>Kimi</strong> — типовой проект: быстро, надёжно, редактируемый<br>
+      <strong>NotebookLM</strong> — из ваших чертежей: точно по вашим документам<br>
+      <strong>Gamma</strong> — архитектор: красиво, с полным контролем дизайна
+    </div>
+  </div>
+  <div class="quote anim-up-d2">Нет «лучшего» инструмента. Есть правильный инструмент для задачи.</div>
+</div>
+
+<!-- СЛАЙД 6: KIMI SLIDES -->
+<div class="slide">
+  <div class="slide-title anim-up"><span style="background:var(--accent);color:var(--white);padding:4px 14px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;margin-right:12px;">ПОДХОД 1</span> Kimi Slides</div>
+  <div class="slide-subtitle anim-up-d1">Пишешь тему &rarr; получаешь готовый .pptx за 60 секунд</div>
+  <div class="cards-grid anim-up-d2">
+    <div class="card">
+      <div class="card-title" style="color:var(--green);">Плюсы</div>
+      <div class="card-body">
+        &bull; 37 шаблонов, русский язык<br>
+        &bull; Бесплатно, без водяных знаков<br>
+        &bull; .pptx — текст и элементы редактируемые<br>
+        &bull; Outline перед генерацией
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--orange);">Как использовать</div>
+      <div class="card-body">
+        1. Открыть <a href="https://kimi.ai" target="_blank">kimi.ai</a> &rarr; Slides<br>
+        2. Ввести тему на русском<br>
+        3. Выбрать шаблон<br>
+        4. Скачать .pptx
+      </div>
+    </div>
+  </div>
+  <div class="small-text anim-up-d3">Также: <a href="https://chat.qwen.ai" target="_blank">Qwen</a> — рендерит слайды как картинки 2048&times;2048 (красиво, но не редактируемо)</div>
+</div>
+
+<!-- СЛАЙД 7: ДЕМО KIMI -->
+<div class="slide">
+  <div class="slide-title anim-up"><span style="background:var(--coral);color:var(--white);padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;margin-right:12px;">ДЕМО</span> Kimi Slides в деле</div>
+  <div class="prompt-block anim-up-d1">Презентация компании по установке навесов в Уфе.
+Аудитория: застройщики и ТСЖ.
+Содержание: о компании, виды навесов, материалы, портфолио, цены, контакты.
+10 слайдов. Стиль: профессиональный, минималистичный.</div>
+  <div class="quote anim-up-d2">Ведущий показывает на экране: ввод темы &rarr; Outline &rarr; генерация &rarr; скачивание .pptx &rarr; открытие в PowerPoint</div>
+</div>
+
+<!-- СЛАЙД 8: NOTEBOOKLM -->
+<div class="slide">
+  <div class="slide-title anim-up"><span style="background:var(--accent);color:var(--white);padding:4px 14px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;margin-right:12px;">ПОДХОД 2</span> NotebookLM &mdash; Slide Deck</div>
+  <div class="slide-subtitle anim-up-d1">Загрузили документы &rarr; получили презентацию на основе ваших данных</div>
+  <div class="cards-grid anim-up-d2">
+    <div class="card">
+      <div class="card-title" style="color:var(--green);">Суперсила</div>
+      <div class="card-body">
+        &bull; Точность: контент из ваших документов<br>
+        &bull; Нет галлюцинаций — только ваши данные<br>
+        &bull; Настройки: Detailed / Presenter<br>
+        &bull; Per-slide revision через промпт
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--orange);">Как использовать</div>
+      <div class="card-body">
+        1. <a href="https://notebooklm.google.com" target="_blank">notebooklm.google.com</a><br>
+        2. Загрузить PDF / Google Doc / сайт<br>
+        3. Studio &rarr; Slide Deck<br>
+        4. Настроить стиль через промпт<br>
+        5. Экспорт в PDF или .pptx
+      </div>
+    </div>
+  </div>
+  <div class="small-text anim-up-d3">Вы уже работали с NotebookLM на занятии 3 — теперь используем для визуала!</div>
+</div>
+
+<!-- СЛАЙД 9: ДЕМО NOTEBOOKLM -->
+<div class="slide">
+  <div class="slide-title anim-up"><span style="background:var(--coral);color:var(--white);padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;margin-right:12px;">ДЕМО</span> NotebookLM Slide Deck</div>
+  <div class="step anim-up-d1"><div class="step-num">1</div><div>Загружаем КП участника (PDF)</div></div>
+  <div class="step anim-up-d2"><div class="step-num">2</div><div>Studio &rarr; Slide Deck &rarr; Detailed Deck</div></div>
+  <div class="step anim-up-d3"><div class="step-num">3</div><div>Промпт стиля: <em>«Минимализм, тёмный фон, 3-5 пунктов на слайд»</em></div></div>
+  <div class="step anim-up-d4"><div class="step-num">4</div><div>Редактируем слайд: нажимаем карандаш &rarr; <em>«Добавь конкретные цифры из прайса»</em></div></div>
+  <div class="quote anim-up-d4">Загрузили КП — получили презентацию по вашему КП. Без выдумок.</div>
+</div>
+
+<!-- СЛАЙД 10: GAMMA -->
+<div class="slide">
+  <div class="slide-title anim-up"><span style="background:var(--accent);color:var(--white);padding:4px 14px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;margin-right:12px;">ПОДХОД 3</span> Gamma</div>
+  <div class="slide-subtitle anim-up-d1">Профильный AI-конструктор с полным визуальным редактором</div>
+  <div class="cards-grid anim-up-d2">
+    <div class="card">
+      <div class="card-title" style="color:var(--green);">Плюсы</div>
+      <div class="card-body">
+        &bull; Лучший дизайн (5/5)<br>
+        &bull; Полный редактор: двигай, меняй, стилизуй<br>
+        &bull; Шаблоны, анимации, темы<br>
+        &bull; Без VPN, бесплатно (400 кредитов)
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--orange);">Как использовать</div>
+      <div class="card-body">
+        1. Открыть <a href="https://gamma.app" target="_blank">gamma.app</a><br>
+        2. Ввести тему &rarr; выбрать стиль<br>
+        3. Редактировать каждый слайд<br>
+        4. Менять тему одним кликом
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 11: СРАВНЕНИЕ 3 ПОДХОДОВ -->
+<div class="slide">
+  <div class="slide-title anim-up">Три подхода — <span class="accent">сравнение</span></div>
+  <table class="tbl anim-up-d1">
+    <tr><th>Критерий</th><th>Kimi Slides</th><th>NotebookLM</th><th>Gamma</th></tr>
+    <tr><td><strong>Источник</strong></td><td>Промпт / тема</td><td>Ваши документы</td><td>Промпт / тема</td></tr>
+    <tr><td><strong>Формат</strong></td><td>.pptx (редактируемый)</td><td>Картинки (ревизия)</td><td>Онлайн-редактор</td></tr>
+    <tr><td><strong>Точность</strong></td><td>Средняя</td><td style="color:var(--green);">Высокая</td><td>Средняя</td></tr>
+    <tr><td><strong>Дизайн</strong></td><td>4/5</td><td>3.5/5</td><td style="color:var(--accent);">5/5</td></tr>
+    <tr><td><strong>Цена</strong></td><td style="color:var(--green);">Бесплатно</td><td style="color:var(--green);">Бесплатно</td><td>Бесплатно (400 кр.)</td></tr>
+    <tr><td><strong>Лучше для</strong></td><td>Быстрый PowerPoint</td><td>Из ваших материалов</td><td>Красивый визуал</td></tr>
+  </table>
+</div>
+
+<!-- СЛАЙД 12: SLIDESGO — ПРОСТОЙ ПУТЬ -->
+<div class="slide">
+  <div class="slide-title anim-up">Простой путь: <span class="accent">Slidesgo AI</span></div>
+  <div class="slide-subtitle anim-up-d1">Генерирует презентацию сам &mdash; 24 стиля, .pptx на выходе</div>
+  <div class="cards-grid anim-up-d2">
+    <div class="card" style="border-top:4px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Плюсы</div>
+      <div class="card-body" style="font-size:15px;">
+        &bull; 24 готовых стиля (минимализм, яркий, геометрия, проф.)<br>
+        &bull; Загрузка файла (PDF, DOCX) &mdash; извлечёт тезисы<br>
+        &bull; Скачать .pptx &mdash; редактировать в PowerPoint<br>
+        &bull; 3 презентации/мес бесплатно
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--red);">
+      <div class="card-title" style="color:var(--red);">Минусы</div>
+      <div class="card-body" style="font-size:15px;">
+        &bull; Нельзя задать свой кастомный стиль<br>
+        &bull; Только 24 встроенных варианта<br>
+        &bull; Нет обратного промптинга<br>
+        &bull; Если хотите уникальный стиль &mdash; идём дальше &darr;
+      </div>
+    </div>
+  </div>
+  <div class="small-text anim-up-d3"><a href="https://slidesgo.com/ai/presentation-maker" target="_blank" style="color:var(--accent);">slidesgo.com/ai/presentation-maker</a> &mdash; быстро, но без гибкости по стилю</div>
+</div>
+
+<!-- СЛАЙД 12b: ОБРАТНЫЙ ПРОМПТИНГ — WORKFLOW -->
+<div class="slide">
+  <div class="slide-title anim-up">Продвинутый путь: <span class="accent">обратный промптинг</span></div>
+  <div class="slide-subtitle anim-up-d1">Хотите презентацию в ЛЮБОМ стиле? Вот как:</div>
+  <div class="flow anim-up-d2">
+    <div class="flow-step"><div class="flow-label">Шаг 1</div><div class="flow-body">Найти стиль<br><a href="https://slidesgo.com" target="_blank" style="color:var(--accent);">Slidesgo</a>, Pinterest, Dribbble</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step"><div class="flow-label">Шаг 2</div><div class="flow-body">Скриншоты 3-5 слайдов<br>&rarr; ChatGPT</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step"><div class="flow-label">Шаг 3</div><div class="flow-body">Получить промпт<br>стиля (до 500 симв.)</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step"><div class="flow-label">Шаг 4</div><div class="flow-body">Вставить в<br>NotebookLM / Gamma</div></div>
+  </div>
+  <div class="prompt-block anim-up-d3" style="font-size:16px;">Промпт для ChatGPT (вставить вместе со скриншотами 3-5 слайдов):
+
+&laquo;Проанализируй стиль этих слайдов. Опиши КРАТКО (до 500 символов): цвета (HEX), шрифты, layout, настроение. Напиши готовый промпт для AI-генератора презентаций &mdash; он должен уместиться в 500 символов.&raquo;</div>
+</div>
+
+<!-- СЛАЙД 12b: КАК ИМЕННО — NotebookLM -->
+<div class="slide">
+  <div class="slide-title anim-up">NotebookLM: <span class="accent">пошагово</span></div>
+  <div class="cards-grid anim-up-d1">
+    <div class="card">
+      <div class="card-title" style="color:var(--accent);">Создание презентации</div>
+      <div class="card-body" style="font-size:15px; line-height:1.8;">
+        1. Открыть <a href="https://notebooklm.google.com" target="_blank" style="color:var(--accent);">notebooklm.google.com</a><br>
+        2. Создать блокнот &rarr; загрузить документ (КП, текст, PDF)<br>
+        3. Слева: панель <strong>Studio</strong><br>
+        4. Нажать <strong>&laquo;Slide Deck&raquo;</strong><br>
+        5. Настройки: Format, Length, Language<br>
+        6. Поле <strong>&laquo;Custom Prompt&raquo;</strong> &mdash; взять промпт с <a href="https://materials.neovida.ai/notebooklm-styles.html" target="_blank" style="color:var(--accent);">neovida.ai/notebooklm-styles</a><br>
+        7. Нажать &laquo;Generate&raquo;
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--green);">Пример промпта стиля</div>
+      <div class="card-body" style="font-size:14px; line-height:1.7; font-style:italic;">
+        Стиль: минимализм, белый фон.<br>
+        Цвета: акцент #E07461, текст #1A1A2E.<br>
+        Шрифт: жирный sans-serif для заголовков.<br>
+        Каждый слайд &mdash; одна мысль, макс. 5 пунктов.<br>
+        Визуализируй цифры как инфографику.<br><br>
+        <strong>Редактирование:</strong> карандаш у слайда &rarr; текстовая инструкция<br>
+        <strong>Экспорт:</strong> &#8942; &rarr; Download PDF / PowerPoint
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 12c: КАК ИМЕННО — Gamma -->
+<div class="slide">
+  <div class="slide-title anim-up">Gamma: <span class="accent">пошагово</span></div>
+  <div class="cards-grid anim-up-d1">
+    <div class="card">
+      <div class="card-title" style="color:var(--accent);">Создание со своим стилем</div>
+      <div class="card-body" style="font-size:15px; line-height:1.8;">
+        1. Открыть <a href="https://gamma.app" target="_blank" style="color:var(--accent);">gamma.app</a><br>
+        2. Нажать <strong>&laquo;Create&raquo;</strong> &rarr; Presentation<br>
+        3. Ввести тему или вставить текст<br>
+        4. Выбрать тему из галереи (17+ тем)<br>
+        5. Готово! Редактировать каждый элемент прямо на слайде
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--green);">Свой стиль (Custom Theme)</div>
+      <div class="card-body" style="font-size:15px; line-height:1.8;">
+        <strong>Вариант 1:</strong> Themes &rarr; <strong>New Theme</strong><br>
+        &bull; Colors &mdash; фон, акценты (HEX-коды)<br>
+        &bull; Fonts &mdash; заголовки, текст, размеры<br>
+        &bull; Logo &mdash; загрузить свой логотип<br><br>
+        <strong>Вариант 2:</strong> Themes &rarr; <strong>Import Theme</strong><br>
+        &bull; Загрузить .pptx файл &mdash; Gamma сама извлечёт цвета, шрифты и стиль!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 12d: ПРАКТИКА ПРЕЗЕНТАЦИИ -->
+<div class="slide practice-slide">
+  <div class="slide-title anim-up"><span style="background:var(--green);color:var(--bg);padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;margin-right:12px;">ВАША ОЧЕРЕДЬ</span> Создайте презентацию <span class="accent">(10 мин)</span></div>
+  <div class="step anim-up-d1"><div class="step-num">1</div><div>Выберите подход: <strong>Kimi</strong> (быстрый .pptx), <strong>NotebookLM</strong> (из документов) или <strong>Gamma</strong> (красивый)</div></div>
+  <div class="step anim-up-d2"><div class="step-num">2</div><div>Введите тему своего бизнеса</div></div>
+  <div class="step anim-up-d3"><div class="step-num">3</div><div>Получите результат &rarr; покажите соседу</div></div>
+  <div class="quote anim-up-d3">Готовые стили для NotebookLM: <a href="https://materials.neovida.ai/notebooklm-styles.html" target="_blank" style="color:var(--accent-dark);">materials.neovida.ai/notebooklm-styles</a> &mdash; выбрали &rarr; скопировали промпт &rarr; вставили в Custom Prompt</div>
+</div>
+
+<!-- ============ БЛОК 2: ИЗОБРАЖЕНИЯ ============ -->
+
+<!-- СЛАЙД 13: РАЗДЕЛИТЕЛЬ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-60); margin-bottom:32px;" class="anim-up">Блок 2</div>
+  <div class="title-big anim-up-d1">Изображения</div>
+  <div class="title-sub anim-up-d2">Фотосессия без фотографа</div>
+</div>
+
+<!-- СЛАЙД 14: АНАЛОГИЯ -->
+<div class="slide">
+  <div class="analogy-card anim-scale">
+    <div class="analogy-emoji">📸</div>
+    <div class="analogy-title">Было &rarr; Стало</div>
+    <div class="analogy-body">
+      <span style="color:var(--red);">Раньше:</span> фотограф 50 000 руб. + студия + неделя ожидания<br>
+      <span style="color:var(--green);">Теперь:</span> описали словами &mdash; получили за 30 секунд. Бесплатно.
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 15: КАРТА ПОДХОДОВ К ИЗОБРАЖЕНИЯМ -->
+<div class="slide">
+  <div class="slide-title anim-up">Четыре подхода к <span class="accent">генерации изображений</span></div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:8px;">
+    <div class="card anim-up-d1" style="border-top:4px solid var(--blue);">
+      <div class="card-title" style="color:var(--blue);">В LLM-чате</div>
+      <div class="card-body">
+        Просто пишешь &laquo;нарисуй&raquo;<br>
+        &bull; <strong>ChatGPT</strong>, <strong>Gemini</strong>, <strong>Grok</strong><br>
+        &bull; <strong>GigaChat</strong>, <strong>Алиса</strong>, <strong>Qwen</strong>
+      </div>
+    </div>
+    <div class="card anim-up-d1" style="border-top:4px solid var(--accent);">
+      <div class="card-title" style="color:var(--accent);">Профильные сервисы</div>
+      <div class="card-body">
+        Тонкая настройка и контроль<br>
+        &bull; <strong>Midjourney V8</strong> &mdash; арт<br>
+        &bull; <strong>Ideogram 3.0</strong> &mdash; текст на картинке<br>
+        &bull; <strong>Recraft V4</strong> &mdash; SVG, логотипы
+      </div>
+    </div>
+    <div class="card anim-up-d2" style="border-top:4px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Российские (без VPN)</div>
+      <div class="card-body">
+        Бесплатно, рубли, кириллица<br>
+        &bull; <strong>Шедеврум</strong> &mdash; безлимит!<br>
+        &bull; <strong>Kandinsky</strong> &mdash; Telegram-бот<br>
+        &bull; <strong>Алиса</strong>, <strong>GigaChat</strong>
+      </div>
+    </div>
+    <div class="card anim-up-d2" style="border-top:4px solid var(--yellow);">
+      <div class="card-title" style="color:var(--yellow);">Агрегаторы (всё в одном)</div>
+      <div class="card-body">
+        Много моделей + видео + апскейл<br>
+        &bull; <strong><a href="https://krea.ai" target="_blank" style="color:var(--yellow);">Krea AI</a></strong> &mdash; реалтайм! <span style="font-size:11px; background:rgba(240,192,64,0.3); padding:1px 6px; border-radius:4px;">РЕКОМЕНДУЕМ</span><br>
+        &bull; <strong><a href="https://freepik.com" target="_blank" style="color:var(--yellow);">Freepik AI</a></strong> &mdash; 39+ моделей<br>
+        &bull; <strong><a href="https://flux2pro.org" target="_blank" style="color:var(--yellow);">Flux 2 Pro</a></strong> &mdash; 10+ моделей<br>
+        &bull; <strong><a href="https://seaart.ai" target="_blank" style="color:var(--yellow);">SeaArt AI</a></strong> &mdash; рус. интерфейс
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 15b: LLM ПАРАЛЛЕЛИ -->
+<div class="slide">
+  <div class="slide-title anim-up">LLM-модели: кто <span class="accent">лучше рисует?</span></div>
+  <div class="slide-subtitle anim-up-d1">Все умеют генерировать картинки прямо в чате &mdash; но с разным качеством</div>
+  <table class="tbl anim-up-d2">
+    <tr><th>Модель</th><th>Фотореализм</th><th>Текст на фото</th><th>Русский</th><th>Цена</th></tr>
+    <tr><td><strong><a href="https://chatgpt.com" target="_blank">ChatGPT</a></strong> (GPT Image)</td><td style="color:var(--green);">5/5 &mdash; лидер</td><td style="color:var(--green);">5/5</td><td>Понимает</td><td>VPN, 2-3/день бесп.</td></tr>
+    <tr><td><strong><a href="https://gemini.google.com" target="_blank">Gemini</a></strong> (Google)</td><td style="color:var(--green);">4.5/5</td><td style="color:var(--green);">5/5</td><td>Понимает</td><td>VPN, 20/день бесп.</td></tr>
+    <tr><td><strong><a href="https://grok.com" target="_blank">Grok</a></strong> (xAI)</td><td>4/5</td><td>4/5</td><td>Средне</td><td>VPN, 10 карт./2ч бесп.</td></tr>
+    <tr><td><strong><a href="https://gigachat.sber.ru" target="_blank">GigaChat</a></strong> (Сбер)</td><td>3.5/5</td><td>3/5</td><td style="color:var(--green);">Родной</td><td>Без VPN, бесп.</td></tr>
+    <tr><td><strong><a href="https://alice.yandex.ru" target="_blank">Алиса</a></strong> (Яндекс)</td><td>3.5/5</td><td>3/5</td><td style="color:var(--green);">Родной</td><td>Без VPN, бесп.</td></tr>
+    <tr><td><strong><a href="https://chat.qwen.ai" target="_blank">Qwen</a></strong> (Alibaba)</td><td>4/5</td><td>4/5</td><td>Понимает</td><td>Без VPN, бесп.</td></tr>
+  </table>
+  <div class="quote anim-up-d3">ChatGPT и Gemini &mdash; лучшие по качеству (VPN). GigaChat, Алиса, Qwen &mdash; без VPN и бесплатно.</div>
+</div>
+
+<!-- СЛАЙД 15c: ДЕТАЛИ ПО СЕРВИСАМ -->
+<div class="slide">
+  <div class="slide-title anim-up">Сервисы <span class="accent">в деталях</span></div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:8px;">
+    <div class="anim-up-d1" style="background:rgba(94,196,122,0.08); border:2px solid rgba(94,196,122,0.3); border-radius:16px; padding:20px;">
+      <div style="font-size:18px; font-weight:800; color:var(--green); margin-bottom:14px; text-align:center;">Без VPN</div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; align-items:center; gap:10px; background:rgba(217,70,239,0.12); border:1px solid rgba(217,70,239,0.3); border-radius:10px; padding:10px 12px;">
+          <div style="font-size:22px;">🎨</div>
+          <div style="flex:1;"><div style="font-weight:700; font-size:15px; color:var(--accent);">Шедеврум (Яндекс) <span style="font-size:10px; background:rgba(217,70,239,0.3); padding:1px 6px; border-radius:4px;">ТОП РФ</span></div><div style="font-size:12px; color:var(--white-60);">Бесплатно, безлимит, <a href="https://shedevrum.ai" target="_blank" style="color:var(--accent);">shedevrum.ai</a></div></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; background:var(--white-10); border-radius:10px; padding:10px 12px;">
+          <div style="font-size:22px;">🔵</div>
+          <div style="flex:1;"><div style="font-weight:700; font-size:15px;">Kandinsky (Сбер)</div><div style="font-size:12px; color:var(--white-60);">Telegram-бот бесплатно, <a href="https://fusionbrain.ai" target="_blank" style="color:var(--accent);">fusionbrain.ai</a> — 20 карт.</div></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; background:var(--white-10); border-radius:10px; padding:10px 12px;">
+          <div style="font-size:22px;">✏️</div>
+          <div style="flex:1;"><div style="font-weight:700; font-size:15px;">Recraft V4</div><div style="font-size:12px; color:var(--white-60);">SVG, логотипы, иконки</div></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; background:var(--white-10); border-radius:10px; padding:10px 12px;">
+          <div style="font-size:22px;">🖌️</div>
+          <div style="flex:1;"><div style="font-weight:700; font-size:15px;">Leonardo AI</div><div style="font-size:12px; color:var(--white-60);">Стилизация, 150/день</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="anim-up-d2" style="background:rgba(224,85,85,0.08); border:2px solid rgba(224,85,85,0.3); border-radius:16px; padding:20px;">
+      <div style="font-size:18px; font-weight:800; color:var(--red); margin-bottom:14px; text-align:center;">С VPN</div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; align-items:center; gap:10px; background:rgba(217,70,239,0.12); border:1px solid rgba(217,70,239,0.3); border-radius:10px; padding:10px 12px;">
+          <div style="font-size:22px;">🤖</div>
+          <div style="flex:1;"><div style="font-weight:700; font-size:15px; color:var(--accent);">ChatGPT (GPT Image) <span style="font-size:10px; background:rgba(217,70,239,0.3); padding:1px 6px; border-radius:4px;">ТОП</span></div><div style="font-size:12px; color:var(--white-60);">Лидер по фотореализму</div></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; background:var(--white-10); border-radius:10px; padding:10px 12px;">
+          <div style="font-size:22px;">🔷</div>
+          <div style="flex:1;"><div style="font-weight:700; font-size:15px;">Gemini (Google)</div><div style="font-size:12px; color:var(--white-60);">Лучший бесплатный</div></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; background:var(--white-10); border-radius:10px; padding:10px 12px;">
+          <div style="font-size:22px;">💎</div>
+          <div style="flex:1;"><div style="font-weight:700; font-size:15px;">Ideogram 3.0</div><div style="font-size:12px; color:var(--white-60);">Лучший текст на картинках</div></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; background:var(--white-10); border-radius:10px; padding:10px 12px;">
+          <div style="font-size:22px;">🌌</div>
+          <div style="flex:1;"><div style="font-weight:700; font-size:15px;">Midjourney V8</div><div style="font-size:12px; color:var(--white-60);">Высшее арт-качество</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 16: 10 ПРАВИЛ ПРОМПТИНГА -->
+<div class="slide">
+  <div class="slide-title anim-up">10 правил <span class="accent">промптинга для визуала</span></div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px;">
+    <div class="step anim-up-d1" style="margin-bottom:6px;"><div class="step-num">1</div><div style="font-size:17px;"><strong>Пиши на английском</strong> &mdash; кириллицу в кавычках</div></div>
+    <div class="step anim-up-d1" style="margin-bottom:6px;"><div class="step-num" style="background:var(--coral);">2</div><div style="font-size:17px;"><strong>Формула:</strong> субъект + стиль + свет + ракурс</div></div>
+    <div class="step anim-up-d2" style="margin-bottom:6px;"><div class="step-num" style="background:var(--blue);">3</div><div style="font-size:17px;"><strong>Описывай что хочешь</strong>, а не чего не хочешь</div></div>
+    <div class="step anim-up-d2" style="margin-bottom:6px;"><div class="step-num" style="background:var(--green);">4</div><div style="font-size:17px;"><strong>Указывай стиль:</strong> editorial, product, lifestyle, 3D</div></div>
+    <div class="step anim-up-d3" style="margin-bottom:6px;"><div class="step-num" style="background:var(--orange);">5</div><div style="font-size:17px;"><strong>Управляй светом:</strong> golden hour, soft light, dramatic</div></div>
+    <div class="step anim-up-d3" style="margin-bottom:6px;"><div class="step-num" style="background:var(--purple);">6</div><div style="font-size:17px;"><strong>Указывай ракурс:</strong> close-up, wide shot, low-angle</div></div>
+    <div class="step anim-up-d3" style="margin-bottom:6px;"><div class="step-num" style="background:var(--cyan);">7</div><div style="font-size:17px;"><strong>Будь конкретным</strong> &mdash; &laquo;freckles, auburn hair&raquo; вместо &laquo;beautiful&raquo;</div></div>
+    <div class="step anim-up-d4" style="margin-bottom:6px;"><div class="step-num" style="background:var(--yellow);">8</div><div style="font-size:17px;"><strong>Главное &mdash; в начало</strong> промпта</div></div>
+    <div class="step anim-up-d4" style="margin-bottom:6px;"><div class="step-num" style="background:var(--red);">9</div><div style="font-size:17px;"><strong>Заземляй абстракции</strong> &mdash; не &laquo;инновация&raquo;, а конкретная сцена</div></div>
+    <div class="step anim-up-d4" style="margin-bottom:6px;"><div class="step-num" style="background:var(--accent);">10</div><div style="font-size:17px;"><strong>Итерируй</strong> &mdash; первый результат не финал, уточняй</div></div>
+  </div>
+</div>
+
+<!-- СЛАЙД 17: ФОРМУЛА ПРОМПТА -->
+<div class="slide">
+  <div class="slide-title anim-up"><span style="background:var(--coral);color:var(--white);padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;margin-right:12px;">ДЕМО</span> Формула промпта для изображений</div>
+  <div class="flow anim-up-d1">
+    <div class="flow-step"><div class="flow-label">Объект</div><div class="flow-body">Что на фото</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step"><div class="flow-label">Сцена</div><div class="flow-body">Где и когда</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step"><div class="flow-label">Стиль</div><div class="flow-body">Фото? Арт? 3D?</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step"><div class="flow-label">Свет</div><div class="flow-body">Мягкий, жёсткий</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step"><div class="flow-label">Пропорции</div><div class="flow-body">16:9, 1:1</div></div>
+  </div>
+  <div class="prompt-block anim-up-d2">Создай фотореалистичное изображение для сайта компании по установке навесов.
+
+На фото: современный навес из поликарбоната над террасой загородного дома.
+Солнечный день, семья пьёт чай под навесом. Вид сбоку, видна конструкция.
+Стиль: профессиональная архитектурная фотография, мягкий естественный свет.
+Пропорции: 16:9.</div>
+  <div class="quote anim-up-d3">Не хотите писать промпт? Возьмите готовый: <a href="https://www.bananaprompts.xyz/explore" target="_blank" style="color:var(--accent);">bananaprompts.xyz</a> &mdash; библиотека промптов с превью. Скопировали &rarr; вставили &rarr; получили.</div>
+</div>
+
+<!-- СЛАЙД 17: IDEOGRAM -->
+<div class="slide">
+  <div class="slide-title anim-up"><span style="background:var(--coral);color:var(--white);padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;margin-right:12px;">ДЕМО</span> Ideogram &mdash; текст на картинке</div>
+  <div class="slide-subtitle anim-up-d1">Единственный сервис, который нормально пишет текст &mdash; для баннеров, вывесок, визиток</div>
+  <div class="prompt-block anim-up-d2">A professional banner for a children's robotics center.
+Text on banner: "РОБОКИДС" in bold modern font.
+Below: "Робототехника для детей 5-14 лет".
+Style: bright, tech, gradient blue-purple background, robot illustrations.</div>
+  <div class="warning-card anim-up-d3">
+    <div style="font-weight:700; color:var(--yellow); margin-bottom:8px;">Нюанс</div>
+    <div style="color:var(--white-80); font-size:18px;">Кириллицу пока пишет криво — используйте латиницу и дорабатывайте в Canva при необходимости.</div>
+  </div>
+</div>
+
+<!-- СЛАЙД 18: ЛАЙФХАКИ ДЛЯ ИЗОБРАЖЕНИЙ -->
+<div class="slide">
+  <div class="slide-title anim-up">Лайфхаки <span class="accent">для изображений</span></div>
+  <div class="cards-grid-3">
+    <div class="card anim-up-d1" style="border-top:4px solid var(--yellow);">
+      <div class="card-title" style="color:var(--yellow);">Кириллица на фото</div>
+      <div class="card-body" style="font-size:14px;">
+        Промпт пишите <strong>на английском</strong>, а русские слова &mdash; в кавычках:<br><br>
+        <em style="color:var(--accent);">A banner with text "НАВЕСЫ" in bold font. Below: "под ключ в Уфе"</em><br><br>
+        Работает в ChatGPT, Gemini, Ideogram
+      </div>
+    </div>
+    <div class="card anim-up-d2" style="border-top:4px solid var(--accent);">
+      <div class="card-title" style="color:var(--accent);">Редактирование</div>
+      <div class="card-body" style="font-size:14px;">
+        В ChatGPT/Gemini можно <strong>точечно менять</strong> уже созданное фото:<br><br>
+        <em style="color:var(--accent);">&laquo;Убери человека справа&raquo;</em><br>
+        <em style="color:var(--accent);">&laquo;Замени фон на закат&raquo;</em><br>
+        <em style="color:var(--accent);">&laquo;Добавь логотип в угол&raquo;</em>
+      </div>
+    </div>
+    <div class="card anim-up-d3" style="border-top:4px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Обратный промптинг</div>
+      <div class="card-body" style="font-size:14px;">
+        Нашли крутую фотку? Вставьте в ChatGPT:<br><br>
+        <em style="color:var(--accent);">&laquo;Опиши стиль этого фото как промпт для генерации похожего&raquo;</em><br><br>
+        Получите промпт &rarr; создайте своё в том же стиле
+      </div>
+    </div>
+  </div>
+  <div class="quote anim-up-d4">Бонус: загрузите несколько референсов + свои фото &rarr; ChatGPT объединит всё в одно изображение в едином стиле</div>
+</div>
+
+<!-- СЛАЙД 19: ВИЗУАЛЬНОЕ ПРОМПТИРОВАНИЕ -->
+<div class="slide">
+  <div class="slide-title anim-up">Продвинутый подход: <span class="accent">без промпта вообще</span></div>
+  <div class="slide-subtitle anim-up-d1">Google ImageFX / Whisk &mdash; загружаете картинки вместо текста</div>
+  <div class="cards-grid-3 anim-up-d2">
+    <div class="card" style="text-align:center; border-top:4px solid var(--coral);">
+      <div style="font-size:36px; margin-bottom:8px;">🏗️</div>
+      <div class="card-title">Subject</div>
+      <div class="card-body">Загрузите фото <strong>вашего продукта</strong><br>(навес, блюдо, деталь)</div>
+    </div>
+    <div class="card" style="text-align:center; border-top:4px solid var(--blue);">
+      <div style="font-size:36px; margin-bottom:8px;">🏡</div>
+      <div class="card-title">Scene</div>
+      <div class="card-body">Загрузите фото <strong>обстановки</strong><br>(двор, ресторан, склад)</div>
+    </div>
+    <div class="card" style="text-align:center; border-top:4px solid var(--accent);">
+      <div style="font-size:36px; margin-bottom:8px;">🎨</div>
+      <div class="card-title">Style</div>
+      <div class="card-body">Загрузите фото <strong>стиля</strong><br>(референс с Pinterest)</div>
+    </div>
+  </div>
+  <div class="quote anim-up-d3"><a href="https://labs.google/fx" target="_blank" style="color:var(--accent);">labs.google/fx</a> &mdash; Imagen 4 + Gemini. До 10 референсов. Бесплатно (VPN). Не надо писать промпт &mdash; AI всё поймёт из картинок.</div>
+</div>
+
+<!-- СЛАЙД 20: ПРАКТИКА ИЗОБРАЖЕНИЯ -->
+<div class="slide practice-slide">
+  <div class="slide-title anim-up"><span style="background:var(--green);color:var(--bg);padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;margin-right:12px;">ВАША ОЧЕРЕДЬ</span> Создайте изображение <span class="accent">(12 мин)</span></div>
+  <div class="step anim-up-d1"><div class="step-num">1</div><div><strong>Фото продукции/услуги</strong> для сайта или каталога</div></div>
+  <div class="step anim-up-d2"><div class="step-num">2</div><div><strong>Баннер</strong> для соцсетей или рекламы</div></div>
+  <div class="step anim-up-d3"><div class="step-num">3</div><div><strong>Логотип-концепт</strong> для нового проекта</div></div>
+  <div class="quote anim-up-d3">Рекомендуем: <strong><a href="https://krea.ai" target="_blank" style="color:var(--accent-dark);">Krea AI</a></strong> — все модели в одном месте, 50 генераций/день бесплатно, реалтайм!</div>
+  <div class="small-text" style="color:#94a3b8;">Также: <a href="https://chatgpt.com" target="_blank">ChatGPT</a> &middot; <a href="https://shedevrum.ai" target="_blank">Шедеврум</a> &middot; <a href="https://freepik.com" target="_blank">Freepik AI</a> &middot; <a href="https://ideogram.ai" target="_blank">Ideogram</a></div>
+</div>
+
+<!-- ============ ПЕРЕРЫВ ============ -->
+<div class="slide break-slide">
+  <div style="font-size:72px; margin-bottom:24px;">☕</div>
+  <div style="font-size:48px; font-weight:900; color:var(--accent); margin-bottom:16px;">Перерыв</div>
+  <div style="font-size:28px; color:var(--white-60);">5 минут</div>
+</div>
+
+<!-- ============ БЛОК 3: ЛЕНДИНГИ ============ -->
+
+<!-- СЛАЙД 20: РАЗДЕЛИТЕЛЬ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-60); margin-bottom:32px;" class="anim-up">Блок 3</div>
+  <div class="title-big anim-up-d1">Лендинги</div>
+  <div class="title-sub anim-up-d2">Витрина вашего бизнеса за 5 минут</div>
+</div>
+
+<!-- СЛАЙД 21: АНАЛОГИЯ -->
+<div class="slide">
+  <div class="analogy-card anim-scale">
+    <div class="analogy-emoji">🏪</div>
+    <div class="analogy-title">Было &rarr; Стало</div>
+    <div class="analogy-body">
+      <span style="color:var(--red);">Раньше:</span> веб-студия, 100-300 тыс. руб., месяц ожидания<br>
+      <span style="color:var(--green);">Теперь:</span> AI + конструктор &mdash; 5 минут, от 0 руб.
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 22: ОБЗОР ПОДХОДОВ -->
+<div class="slide">
+  <div class="slide-title anim-up">Три подхода к <span class="accent">лендингам</span></div>
+  <div class="cards-grid-3 anim-up-d1">
+    <div class="card" style="border-top:4px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Конструктор + AI</div>
+      <div class="card-body">
+        Tilda + ChatGPT + нейрокартинки<br><br>
+        <span style="color:var(--accent);">Дизайн: 4.5/5</span><br>
+        От 1000 руб/мес<br>
+        <span style="color:var(--green);">Без VPN</span>
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--accent);">
+      <div class="card-title" style="color:var(--accent);">Код-генератор</div>
+      <div class="card-body">
+        v0.dev, bolt.new, Lovable<br><br>
+        <span style="color:var(--accent);">Дизайн: 5/5</span><br>
+        Бесплатно (лимит)<br>
+        <span style="color:var(--red);">Нужен VPN</span>
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Бюджетный</div>
+      <div class="card-body">
+        Craftum, Mottor<br><br>
+        <span style="color:var(--accent);">Дизайн: 3/5</span><br>
+        От 149 руб/мес<br>
+        <span style="color:var(--green);">Без VPN</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 23: СВЯЗКА 1 TILDA -->
+<div class="slide">
+  <div class="slide-title anim-up"><span style="background:var(--coral);color:var(--white);padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;margin-right:12px;">ДЕМО</span> Связка: Tilda + ChatGPT + нейрокартинки</div>
+  <div class="flow anim-up-d1">
+    <div class="flow-step"><div class="flow-label">Шаг 1</div><div class="flow-body">ChatGPT<br>Тексты, УТП, CTA</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step"><div class="flow-label">Шаг 2</div><div class="flow-body">Kandinsky<br>Фото для сайта</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step"><div class="flow-label">Шаг 3</div><div class="flow-body">Tilda<br>Сборка</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step"><div class="flow-label">Готово</div><div class="flow-body">Лендинг<br>Без VPN, рубли</div></div>
+  </div>
+  <div class="prompt-block anim-up-d2">Ты — маркетолог-копирайтер. Напиши тексты для лендинга компании по установке навесов в Уфе.
+
+Секции: 1) Герой-блок: заголовок + подзаголовок + кнопка CTA
+2) 4 преимущества (с эмодзи)  3) 3 отзыва клиентов
+4) «Как мы работаем» (4 шага)  5) Контакты + форма заявки
+
+Тон: профессиональный, дружелюбный. Город: Уфа.</div>
+</div>
+
+<!-- СЛАЙД 24: СВЯЗКА 2 V0 -->
+<div class="slide">
+  <div class="slide-title anim-up"><span style="background:var(--coral);color:var(--white);padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;margin-right:12px;">ДЕМО</span> v0.dev &mdash; уникальный лендинг за 2 минуты</div>
+  <div class="slide-subtitle anim-up-d1">Промпт &rarr; React + Tailwind &rarr; деплой одним кликом &rarr; live URL</div>
+  <div class="cards-grid anim-up-d2">
+    <div class="card">
+      <div class="card-title" style="color:var(--green);">Что умеет</div>
+      <div class="card-body">
+        &bull; Дизайн уровня агентства (5/5)<br>
+        &bull; Калькуляторы, квизы, анимации<br>
+        &bull; Деплой на Vercel за секунды<br>
+        &bull; Бесплатный тариф
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--orange);">Также</div>
+      <div class="card-body">
+        &bull; <a href="https://bolt.new" target="_blank">bolt.new</a> — полный стек (фронт+бэк)<br>
+        &bull; <a href="https://lovable.dev" target="_blank">Lovable</a> — самый быстрый MVP<br>
+        &bull; <strong>Craftum</strong> — 149 руб/мес, без VPN<br>
+        &bull; <strong>Mottor</strong> — сайт+CRM+квизы, 490 руб/мес
+      </div>
+    </div>
+  </div>
+  <div class="small-text anim-up-d3">v0.dev, bolt.new, Lovable — нужен VPN. Craftum, Mottor — без VPN, российские карты.</div>
+</div>
+
+<!-- СЛАЙД 25: ОБРАТНЫЙ ПРОМПТИНГ ДЛЯ ЛЕНДИНГОВ -->
+<div class="slide">
+  <div class="slide-title anim-up">Лайфхак: <span class="accent">лендинг по референсу</span></div>
+  <div class="cards-grid anim-up-d1">
+    <div class="card" style="border-top:4px solid var(--yellow);">
+      <div class="card-title" style="color:var(--yellow);">Способ 1: Готовый промпт</div>
+      <div class="card-body" style="font-size:15px; line-height:1.8;">
+        1. Зайти на <a href="https://websiteprompts.com" target="_blank" style="color:var(--accent);">websiteprompts.com</a> (138+ бесплатных промптов)<br>
+        2. Выбрать промпт для лендинга<br>
+        3. Скопировать<br>
+        4. Вставить в <a href="https://bolt.new" target="_blank" style="color:var(--accent);">bolt.new</a> или <a href="https://lovable.dev" target="_blank" style="color:var(--accent);">Lovable</a><br>
+        5. Заменить текст на свой бизнес<br>
+        6. Deploy &rarr; лендинг онлайн
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--accent);">
+      <div class="card-title" style="color:var(--accent);">Способ 2: По скриншоту</div>
+      <div class="card-body" style="font-size:15px; line-height:1.8;">
+        1. Найти красивый лендинг на <a href="https://lapa.ninja" target="_blank" style="color:var(--accent);">Lapa.ninja</a> или <a href="https://godly.website" target="_blank" style="color:var(--accent);">Godly</a><br>
+        2. Скриншот всего лендинга: расширение <strong>GoFullPage</strong> (один клик 📷)<br>
+        3. Вставить скриншот в <a href="https://lovable.dev" target="_blank" style="color:var(--accent);">Lovable</a><br>
+        4. Написать: &laquo;Такой же для [мой бизнес]&raquo;<br>
+        5. Итерировать в чате<br>
+        6. Deploy &rarr; лендинг онлайн
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 25b: ПРАКТИКА ЛЕНДИНГИ -->
+<div class="slide practice-slide">
+  <div class="slide-title anim-up"><span style="background:var(--green);color:var(--bg);padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;margin-right:12px;">ВАША ОЧЕРЕДЬ</span> Создайте лендинг <span class="accent">(10 мин)</span></div>
+  <div class="step anim-up-d1"><div class="step-num">1</div><div><strong>Простой путь:</strong> скопируйте промпт с <a href="https://websiteprompts.com" target="_blank" style="color:var(--accent-dark);">websiteprompts.com</a> &rarr; вставьте в <a href="https://bolt.new" target="_blank" style="color:var(--accent-dark);">bolt.new</a></div></div>
+  <div class="step anim-up-d2"><div class="step-num">2</div><div><strong>По референсу:</strong> скриншот с <a href="https://lapa.ninja" target="_blank" style="color:var(--accent-dark);">Lapa.ninja</a> &rarr; вставьте в <a href="https://lovable.dev" target="_blank" style="color:var(--accent-dark);">Lovable</a></div></div>
+  <div class="step anim-up-d3"><div class="step-num">3</div><div><strong>Россия:</strong> тексты из ChatGPT &rarr; картинки из Шедеврума &rarr; собрать в <a href="https://tilda.cc" target="_blank" style="color:var(--accent-dark);">Tilda</a></div></div>
+  <div class="quote anim-up-d3">Вспомните занятие 4: вы уже делали приложения в Canvas. Лендинг — это проще!</div>
+</div>
+
+<!-- ============ БЛОК 4: ВИДЕО + АВАТАРЫ ============ -->
+
+<!-- СЛАЙД 26: РАЗДЕЛИТЕЛЬ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-60); margin-bottom:32px;" class="anim-up">Блок 4</div>
+  <div class="title-big anim-up-d1">Видео + Аватары</div>
+  <div class="title-sub anim-up-d2">Голливуд в ноутбуке</div>
+</div>
+
+<!-- СЛАЙД 27: КАРТА ПОДХОДОВ К ВИДЕО -->
+<div class="slide">
+  <div class="slide-title anim-up">Три подхода к <span class="accent">видеогенерации</span></div>
+  <div class="cards-grid-3 anim-up-d1">
+    <div class="card" style="border-top:4px solid var(--blue);">
+      <div class="card-title" style="color:var(--blue);">В LLM-чате</div>
+      <div class="card-body">
+        Видео прямо из чата<br><br>
+        &bull; <strong>Google Vids</strong> (<a href="https://vids.new" target="_blank" style="color:var(--accent);">vids.new</a>) &mdash; VEO 3.1, 10 видео/мес бесп.<br>
+        &bull; <strong>Grok</strong> (<a href="https://grok.com" target="_blank" style="color:var(--accent);">grok.com</a>) &mdash; картинки бесп., видео платно<br>
+        &bull; <strong>GigaChat</strong> &mdash; Kandinsky Video
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--accent);">
+      <div class="card-title" style="color:var(--accent);">Профильные сервисы</div>
+      <div class="card-body">
+        Контроль камеры и стиля<br><br>
+        &bull; <strong><a href="https://klingai.com" target="_blank" style="color:var(--accent);">Kling 3.0</a></strong> &mdash; multi-shot, 4K<br>
+        &bull; <strong><a href="https://runwayml.com" target="_blank" style="color:var(--accent);">Runway Gen-4.5</a></strong> &mdash; режиссура<br>
+        &bull; <strong><a href="https://pika.art" target="_blank" style="color:var(--accent);">Pika 2.5</a></strong> &mdash; эффекты<br>
+        &bull; <strong><a href="https://lumalabs.ai" target="_blank" style="color:var(--accent);">Luma Ray 3.14</a></strong> &mdash; HDR
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Без VPN</div>
+      <div class="card-body">
+        Китайские + российские<br><br>
+        &bull; <strong><a href="https://klingai.com" target="_blank" style="color:var(--accent);">Kling 3.0</a></strong> &mdash; лидер, 66 кред./день<br>
+        &bull; <strong><a href="https://dreamina.capcut.com" target="_blank" style="color:var(--accent);">Seedance 2.0</a></strong> &mdash; аудио+видео<br>
+        &bull; <strong>Kandinsky Video</strong> &mdash; Сбер<br>
+        &bull; <strong>CapCut</strong> (Seedance)
+      </div>
+    </div>
+  </div>
+  <div class="small-text anim-up-d2">Sora (OpenAI) закрывается 26 апреля 2026 &mdash; уже не актуален</div>
+</div>
+
+<!-- СЛАЙД 28: ВИДЕО WORKFLOW -->
+<div class="slide">
+  <div class="slide-title anim-up"><span style="background:var(--coral);color:var(--white);padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;margin-right:12px;">ДЕМО</span> Видео &mdash; три способа создания</div>
+  <div class="cards-grid-3 anim-up-d1">
+    <div class="card" style="text-align:center; border-top:4px solid var(--accent);">
+      <div style="font-size:36px; margin-bottom:8px;">📸 &rarr; 🎬</div>
+      <div class="card-title">Фото &rarr; видео</div>
+      <div class="card-body"><strong>Kling 3.0:</strong> загрузили фото &rarr; камера облетает объект</div>
+    </div>
+    <div class="card" style="text-align:center; border-top:4px solid var(--blue);">
+      <div style="font-size:36px; margin-bottom:8px;">💬 &rarr; 🎬</div>
+      <div class="card-title">Промпт &rarr; видео</div>
+      <div class="card-body"><strong>VEO 3.1 / Grok:</strong> описали сцену &rarr; видео со звуком</div>
+    </div>
+    <div class="card" style="text-align:center; border-top:4px solid var(--green);">
+      <div style="font-size:36px; margin-bottom:8px;">🖼️🖼️ &rarr; 🎥</div>
+      <div class="card-title">Референсы &rarr; ролик</div>
+      <div class="card-body"><strong>Workflow:</strong> картинки &rarr; Kling/Higgsfield &rarr; монтаж в CapCut</div>
+    </div>
+  </div>
+  <div class="quote anim-up-d2">Все примеры подготовлены заранее — рендер 2-10 мин. В домашке попробуете сами.</div>
+</div>
+
+<!-- СЛАЙД 29: AI АВАТАРЫ И MOTION -->
+<div class="slide">
+  <div class="slide-title anim-up"><span class="accent">AI-аватары</span> &mdash; два подхода</div>
+  <div class="cards-grid anim-up-d1">
+    <div class="card" style="border-top:4px solid var(--accent);">
+      <div class="card-title" style="color:var(--accent);">Говорящий аватар</div>
+      <div class="card-body">
+        Загружаете фото + текст/голос &rarr; персонаж говорит<br><br>
+        &bull; <strong><a href="https://heygen.com" target="_blank" style="color:var(--accent);">HeyGen</a></strong> &mdash; лидер, 175 языков, lip sync ($29/мес, 3 видео бесп.)<br>
+        &bull; <strong><a href="https://hedra.com" target="_blank" style="color:var(--accent);">Hedra</a></strong> &mdash; дёшево, $0.05/мин, free tier<br>
+        &bull; <strong><a href="https://d-id.com" target="_blank" style="color:var(--accent);">D-ID</a></strong> &mdash; бюджетный, $5.9/мес<br>
+        &bull; <strong><a href="https://synthesia.io" target="_blank" style="color:var(--accent);">Synthesia</a></strong> &mdash; корпоративный, $22/мес
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Motion Transfer</div>
+      <div class="card-body">
+        Загружаете красивое фото + записываете себя на камеру &rarr; аватар повторяет ваши движения<br><br>
+        &bull; <strong><a href="https://viggle.ai" target="_blank" style="color:var(--accent);">Viggle</a></strong> &mdash; реалтайм body swap через вебку (5 видео/день бесп.)<br>
+        &bull; <strong><a href="https://higgsfield.ai" target="_blank" style="color:var(--accent);">Higgsfield</a></strong> &mdash; motion control из видео-референса<br>
+        &bull; <strong>LivePortrait</strong> &mdash; бесплатный open-source
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 30: WORKFLOW АВАТАРОВ -->
+<div class="slide">
+  <div class="slide-title anim-up"><span style="background:var(--coral);color:var(--white);padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;margin-right:12px;">ДЕМО</span> Как это работает</div>
+  <div class="cards-grid anim-up-d1">
+    <div class="card" style="text-align:center; border-top:4px solid var(--accent);">
+      <div style="font-size:20px; margin-bottom:8px;">📸 + 🎤 + 💬 = 🎬</div>
+      <div class="card-title">Картинка + голос + промпт</div>
+      <div class="card-body">
+        1. Берёте красивое фото<br>
+        2. Записываете голос (15 сек)<br>
+        3. Пишете промпт с эмоциями<br>
+        4. <strong>HeyGen / Hedra</strong> оживляет &mdash; фото говорит вашим голосом
+      </div>
+    </div>
+    <div class="card" style="text-align:center; border-top:4px solid var(--green);">
+      <div style="font-size:20px; margin-bottom:8px;">📸 + 📹 = 🎬</div>
+      <div class="card-title">Фото + вебка = живой аватар</div>
+      <div class="card-body">
+        1. Загружаете красивое фото себя<br>
+        2. Включаете камеру, кривляетесь<br>
+        3. <strong>Viggle / Higgsfield</strong> переносит движения на фото<br>
+        4. На выходе &mdash; вы «красивый» двигаетесь и говорите
+      </div>
+    </div>
+  </div>
+  <div class="quote anim-up-d2">Для бара: аватар-бармен рекомендует новинки. Для детского центра: аватар-робот приглашает на занятие.</div>
+</div>
+
+<!-- ============ ИТОГИ ============ -->
+
+<!-- СЛАЙД 31: ИТОГИ -->
+<div class="slide">
+  <div class="slide-title anim-up">Сегодня вы освоили <span class="accent">4 суперсилы</span></div>
+  <div class="step anim-up-d1"><div class="step-num" style="background:var(--accent);">✓</div><div><strong>Презентации</strong> — Kimi, NotebookLM, Gamma + Qwen, GLM и другие</div></div>
+  <div class="step anim-up-d2"><div class="step-num" style="background:var(--coral);">✓</div><div><strong>Изображения</strong> — ChatGPT, Gemini, Kandinsky, Шедеврум, Алиса + Ideogram, Recraft</div></div>
+  <div class="step anim-up-d3"><div class="step-num" style="background:var(--blue);">✓</div><div><strong>Лендинги</strong> — Tilda + ChatGPT, v0.dev, bolt.new, Lovable, Replit</div></div>
+  <div class="step anim-up-d4"><div class="step-num" style="background:var(--green);">✓</div><div><strong>Видео + аватары</strong> — Kling, VEO 3, Grok, HeyGen, Viggle, Higgsfield</div></div>
+</div>
+
+<!-- СЛАЙД 32: ДОМАШКА -->
+<div class="slide">
+  <div class="slide-title anim-up">Домашка <span class="accent">&mdash; 4 задания</span></div>
+  <div class="step anim-up-d1"><div class="step-num">1</div><div><strong>Среда:</strong> Презентация для бизнеса (Kimi или Gamma, 8-12 слайдов)</div></div>
+  <div class="step anim-up-d2"><div class="step-num" style="background:var(--coral);">2</div><div><strong>Четверг:</strong> Пакет из 5 изображений (минимум 2 сервиса, сравнить)</div></div>
+  <div class="step anim-up-d3"><div class="step-num" style="background:var(--blue);">3</div><div><strong>Пятница:</strong> Лендинг (Tilda + ChatGPT или v0.dev, 5+ секций)</div></div>
+  <div class="step anim-up-d4"><div class="step-num" style="background:var(--green);">4</div><div><strong>Суббота:</strong> Видео-визитка (Kling или HeyGen, 5-15 сек)</div></div>
+  <div class="warning-card anim-up-d4">
+    <div style="font-weight:700; color:var(--yellow); margin-bottom:8px;">Все промпты и ссылки — в шпаргалке!</div>
+    <div style="color:var(--white-80); font-size:18px;">Шпаргалку отправлю в чат сразу после занятия.</div>
+  </div>
+</div>
+
+<!-- СЛАЙД 33: АНОНС -->
+<div class="slide" style="text-align:center; justify-content:center; align-items:center;">
+  <div style="font-size:24px; color:var(--white-60); margin-bottom:24px;" class="anim-up">Следующее занятие</div>
+  <div style="font-size:56px; font-weight:900; color:var(--white); margin-bottom:16px;" class="anim-up-d1">Агентный подход</div>
+  <div style="font-size:28px; color:var(--white-80); margin-bottom:48px;" class="anim-up-d2">Автоматизация на максималках</div>
+  <div style="font-size:20px; color:var(--white-40);" class="anim-up-d3">Занятие 7 &middot; 10 апреля 2026</div>
+</div>
+
+<!-- СЛАЙД 34: СПАСИБО -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;" class="anim-up">neovida.ai</div>
+  <div class="title-big anim-up-d1">Спасибо!</div>
+  <div class="title-sub anim-up-d2">До встречи на занятии 7 <span class="typing-dots"><span></span><span></span><span></span></span></div>
+</div>
+
+</div><!-- /deck -->
+
+<script>
+(function() {
+  var slides = document.querySelectorAll('.slide');
+  var total = slides.length;
+  var current = 0;
+  var counter = document.getElementById('slideCounter');
+  var progress = document.getElementById('progressBar');
+  var fsBtn = document.getElementById('fsBtn');
+
+  function show(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[current].classList.remove('active');
+    slides[current].classList.add('prev');
+    current = idx;
+    slides.forEach(function(s, i) {
+      s.classList.remove('active', 'prev');
+      if (i < current) s.classList.add('prev');
+    });
+    slides[current].classList.add('active');
+    counter.textContent = (current + 1) + ' / ' + total;
+    progress.style.width = ((current + 1) / total * 100) + '%';
+    slides[current].scrollTop = 0;
+  }
+
+  function next() { show(current + 1); }
+  function prev() { show(current - 1); }
+
+  slides[0].classList.add('active');
+  counter.textContent = '1 / ' + total;
+  progress.style.width = (1 / total * 100) + '%';
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+    if (e.key === 'Home') { e.preventDefault(); show(0); }
+    if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+  });
+
+  var touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].screenX - touchStartX;
+    var dy = e.changedTouches[0].screenY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) { if (dx < 0) next(); else prev(); }
+  }, { passive: true });
+
+  fsBtn.addEventListener('click', function() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){});
+    else document.exitFullscreen();
+  });
+})();
+</script>
+</body>
+</html>

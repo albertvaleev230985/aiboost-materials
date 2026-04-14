@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Boost — Шпаргалка. Занятие 6</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #1a1a2e;
+    --bg-light: #2a1a2e;
+    --bg-card: rgba(255,255,255,0.06);
+    --bg-card-hover: rgba(255,255,255,0.1);
+    --accent: #d946ef;
+    --accent-dark: #a21caf;
+    --accent-glow: rgba(217,70,239,0.15);
+    --coral: #E07461;
+    --white: #ffffff;
+    --white-90: rgba(255,255,255,0.9);
+    --white-70: rgba(255,255,255,0.7);
+    --white-50: rgba(255,255,255,0.5);
+    --white-30: rgba(255,255,255,0.3);
+    --white-15: rgba(255,255,255,0.15);
+    --white-08: rgba(255,255,255,0.08);
+    --green: #5ec47a;
+    --red: #e05555;
+    --yellow: #f0c040;
+    --blue: #4285f4;
+    --purple: #8B6EB5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--white-90);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: white;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .header-logo { font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; opacity: 0.85; margin-bottom: 12px; }
+  .header h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; line-height: 1.2; }
+  .header p { font-size: 14px; opacity: 0.9; }
+
+  .container { max-width: 720px; margin: 0 auto; padding: 0 20px 40px; }
+
+  .section { margin: 28px 0; }
+  .section-title {
+    font-size: 18px; font-weight: 800; color: var(--white);
+    margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .num {
+    background: var(--accent); color: var(--bg);
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; flex-shrink: 0;
+  }
+  .section-subtitle { font-size: 13px; color: var(--white-50); margin-bottom: 12px; margin-left: 36px; }
+
+  .prompt-box {
+    background: var(--bg-light);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 16px 18px; margin: 12px 0;
+    font-size: 14px; line-height: 1.6;
+    position: relative; cursor: pointer;
+    transition: background 0.2s; white-space: pre-line;
+    color: var(--white-90);
+  }
+  .prompt-box:hover { background: var(--accent-glow); }
+  .prompt-box::after {
+    content: 'нажмите, чтобы скопировать';
+    position: absolute; top: 8px; right: 12px;
+    font-size: 11px; color: var(--white-50); opacity: 0.7;
+  }
+  .prompt-box.copied { border-left-color: var(--green); }
+  .prompt-box.copied::after { content: 'скопировано!'; color: var(--green); opacity: 1; }
+
+  .prompt-label {
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 6px; margin-top: 16px;
+  }
+
+  .link-card {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg-card); border: 1px solid var(--white-08);
+    border-radius: 12px; padding: 14px 18px; margin: 8px 0;
+    text-decoration: none; color: var(--white-90); transition: background 0.2s;
+  }
+  .link-card:hover { background: var(--bg-card-hover); }
+  .link-card .link-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .link-card .link-text { flex: 1; }
+  .link-card .link-name { font-weight: 700; font-size: 15px; }
+  .link-card .link-url { font-size: 12px; color: var(--accent); }
+  .link-card .link-note { font-size: 11px; color: var(--white-50); }
+
+  .tip {
+    background: rgba(94,196,122,0.1); border: 1px solid rgba(94,196,122,0.2);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+  .tip-icon { flex-shrink: 0; font-size: 16px; }
+
+  .warning {
+    background: rgba(224,85,85,0.1); border: 1px solid rgba(224,85,85,0.2);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+
+  .info {
+    background: var(--accent-glow); border: 1px solid rgba(217,70,239,0.25);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; margin: 10px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+  }
+
+  .card {
+    background: var(--bg-card); border: 1px solid var(--white-08);
+    border-radius: 12px; padding: 16px 18px; margin: 8px 0;
+  }
+  .card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--white); }
+  .card-body { font-size: 13px; color: var(--white-70); line-height: 1.6; }
+
+  .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+  @media (max-width: 560px) { .cards-grid { grid-template-columns: 1fr; } }
+  .cards-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 8px 0; }
+  @media (max-width: 560px) { .cards-grid-3 { grid-template-columns: 1fr; } }
+
+  .step-list { margin: 12px 0; }
+  .step-item {
+    display: flex; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid var(--white-08);
+    font-size: 14px; line-height: 1.5;
+  }
+  .step-item:last-child { border-bottom: none; }
+  .step-num {
+    width: 24px; height: 24px; background: var(--accent); color: var(--bg);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+  }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+  .badge-free { background: rgba(94,196,122,0.15); color: var(--green); }
+  .badge-paid { background: rgba(224,85,85,0.15); color: var(--red); }
+  .badge-vpn { background: rgba(224,85,85,0.15); color: var(--red); }
+  .badge-novpn { background: rgba(94,196,122,0.15); color: var(--green); }
+
+  .map-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; margin: 8px 0; }
+  .map-table th { text-align: left; padding: 8px 10px; background: rgba(217,70,239,0.1); color: var(--accent); font-weight: 700; font-size: 12px; }
+  .map-table td { padding: 8px 10px; border-bottom: 1px solid var(--white-08); color: var(--white-70); }
+  .map-table th:first-child { border-radius: 8px 0 0 0; } .map-table th:last-child { border-radius: 0 8px 0 0; }
+
+  .divider { height: 1px; background: var(--white-15); margin: 28px 0; }
+
+  .footer {
+    text-align: center; padding: 24px; font-size: 12px;
+    color: var(--white-50); border-top: 1px solid var(--white-08); margin-top: 32px;
+  }
+  .footer strong { color: var(--accent); }
+
+  .pdf-btn {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--accent); color: var(--bg); border: none;
+    padding: 14px 24px; border-radius: 12px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(217,70,239,0.4);
+    z-index: 1000; transition: transform 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .pdf-btn:hover { transform: translateY(-2px); }
+
+  @media print {
+    .prompt-box::after { display: none; }
+    .header { padding: 20px; }
+    body { font-size: 12px; background: #fff; color: #1a1a2e; }
+    .prompt-box { font-size: 12px; padding: 10px 14px; color: #1a1a2e; background: #f8f4e8; }
+    .pdf-btn { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">neovida.ai / AI Boost</div>
+  <h1>Визуал: нейрокреатор</h1>
+  <p>Шпаргалка к занятию 6 — все ссылки, промпты и карта инструментов</p>
+</div>
+
+<div class="container">
+
+<!-- ====== РАЗДЕЛ 1: ПРЕЗЕНТАЦИИ ====== -->
+<div class="section">
+  <div class="section-title"><div class="num">1</div> Презентации</div>
+  <div class="section-subtitle">Карта подходов: LLM-модели, профильные сервисы, из ваших документов</div>
+
+  <div class="info"><div class="tip-icon">💡</div><div>Три подхода: <strong>LLM-модели</strong> (китайские нейронки) — быстрый .pptx, <strong>из ваших документов</strong> (NotebookLM) — точность, <strong>профильные сервисы</strong> (Gamma) — красивый дизайн</div></div>
+
+  <!-- Подход 1: LLM -->
+  <div class="prompt-label">Подход 1: Китайские LLM (Kimi, Qwen, GLM)</div>
+
+  <div class="cards-grid">
+    <a class="link-card" href="https://kimi.ai" target="_blank">
+      <div class="link-icon" style="background:rgba(217,70,239,0.15);">🌙</div>
+      <div class="link-text">
+        <div class="link-name">Kimi Slides <span class="badge badge-free">Free</span> <span class="badge badge-novpn">Без VPN</span></div>
+        <div class="link-url">kimi.ai</div>
+        <div class="link-note">37 шаблонов, русский, .pptx без водяных знаков</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://chat.qwen.ai" target="_blank">
+      <div class="link-icon" style="background:rgba(139,110,181,0.15);">🟣</div>
+      <div class="link-text">
+        <div class="link-name">Qwen <span class="badge badge-free">Free</span></div>
+        <div class="link-url">chat.qwen.ai</div>
+        <div class="link-note">Агентный режим, рендерит слайды как картинки 2048x2048</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="prompt-box">Создай презентацию на тему: [ваша тема].
+Аудитория: [кто будет смотреть].
+Содержание: [перечислите ключевые пункты].
+Количество слайдов: 8-10.
+Стиль: профессиональный, минималистичный.</div>
+
+  <!-- Подход 2: NotebookLM -->
+  <div class="prompt-label">Подход 2: NotebookLM — из ваших документов</div>
+
+  <a class="link-card" href="https://notebooklm.google.com" target="_blank">
+    <div class="link-icon" style="background:rgba(66,133,244,0.15);">📓</div>
+    <div class="link-text">
+      <div class="link-name">NotebookLM <span class="badge badge-free">Free</span></div>
+      <div class="link-url">notebooklm.google.com</div>
+      <div class="link-note">Slide Deck из загруженных PDF, Google Docs, сайтов, YouTube</div>
+    </div>
+  </a>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--blue);">NotebookLM: пошагово</div>
+    <div class="card-body">
+      1. Открыть <a href="https://notebooklm.google.com" target="_blank">notebooklm.google.com</a> → войти через Google<br>
+      2. Нажать <strong>«+ New Notebook»</strong> → дать название<br>
+      3. Нажать <strong>«+ Add source»</strong> → загрузить PDF, Google Doc, ссылку на сайт или YouTube<br>
+      4. Слева найти панель <strong>«Studio»</strong> (внизу)<br>
+      5. Нажать <strong>«Slide Deck»</strong><br>
+      6. Нажать <strong>иконку карандаша ✏️</strong> рядом → откроются настройки:<br>
+      &nbsp;&nbsp;&bull; <strong>Format:</strong> Detailed Deck (подробная) или Presenter Slides (тезисы)<br>
+      &nbsp;&nbsp;&bull; <strong>Length:</strong> Short / Standard / Long<br>
+      &nbsp;&nbsp;&bull; <strong>Language:</strong> русский<br>
+      &nbsp;&nbsp;&bull; <strong>Custom Prompt:</strong> вставить промпт стиля — возьмите готовый с <a href="https://materials.neovida.ai/notebooklm-styles.html" target="_blank" style="color:var(--accent);">neovida.ai/notebooklm-styles</a><br>
+      7. Нажать <strong>«Generate»</strong> → подождать 30-60 сек<br>
+      8. <strong>Редактирование слайда:</strong> карандаш ✏️ у конкретного слайда → текстовая инструкция<br>
+      9. <strong>Экспорт:</strong> нажать ⋮ (три точки) → Download PDF или Download PowerPoint
+    </div>
+  </div>
+
+  <a class="link-card" href="https://materials.neovida.ai/notebooklm-styles.html" target="_blank">
+    <div class="link-icon" style="background:rgba(224,116,97,0.15);">🎨</div>
+    <div class="link-text">
+      <div class="link-name">Готовые стили для NotebookLM <span class="badge badge-free">Free</span> <span class="badge badge-new">НАШИ</span></div>
+      <div class="link-url">materials.neovida.ai/notebooklm-styles.html</div>
+      <div class="link-note">Выберите стиль → посмотрите превью → скопируйте промпт → вставьте в Custom Prompt</div>
+    </div>
+  </a>
+
+  <div class="prompt-box">Или напишите свой промпт стиля:
+
+Минимализм, тёмный фон, акцентный цвет — [цвет вашего бренда].
+Каждый слайд — одна мысль, максимум 3-5 пунктов.
+Используй числа и конкретику из загруженных документов.</div>
+
+  <!-- Подход 3: Gamma -->
+  <div class="prompt-label">Подход 3: Gamma — профильный AI-конструктор</div>
+
+  <a class="link-card" href="https://gamma.app" target="_blank">
+    <div class="link-icon" style="background:rgba(217,70,239,0.15);">✨</div>
+    <div class="link-text">
+      <div class="link-name">Gamma <span class="badge badge-free">400 кредитов</span> <span class="badge badge-novpn">Без VPN</span></div>
+      <div class="link-url">gamma.app</div>
+      <div class="link-note">Лучший дизайн (5/5), полный визуальный редактор, шаблоны, анимации</div>
+    </div>
+  </a>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--accent);">Gamma: пошагово</div>
+    <div class="card-body">
+      1. Открыть <a href="https://gamma.app" target="_blank">gamma.app</a> → войти через Google<br>
+      2. Нажать <strong>«Create»</strong> (синяя кнопка) → выбрать <strong>«Presentation»</strong><br>
+      3. Ввести тему или вставить текст → нажать <strong>«Generate»</strong><br>
+      4. Выбрать тему из галереи (17+ тем: bold, minimalist, playful и др.)<br>
+      5. Нажать <strong>«Continue»</strong> → Gamma сгенерирует слайды<br>
+      6. <strong>Редактирование:</strong> клик на любой элемент → менять текст, двигать, удалять<br>
+      7. <strong>Свой стиль:</strong> нажать <strong>«Theme»</strong> (панель справа) → <strong>«New Theme»</strong>:<br>
+      &nbsp;&nbsp;&bull; <strong>Colors:</strong> фон и акценты (вставить HEX-коды)<br>
+      &nbsp;&nbsp;&bull; <strong>Fonts:</strong> шрифты заголовков и текста<br>
+      &nbsp;&nbsp;&bull; <strong>Logo:</strong> загрузить логотип<br>
+      8. <strong>Импорт стиля:</strong> «Theme» → <strong>«Import Theme»</strong> → загрузить .pptx → Gamma сама извлечёт стиль!<br>
+      9. <strong>Экспорт:</strong> «Share» → Download PDF / PowerPoint / PNG
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--coral);">Kimi Slides: пошагово</div>
+    <div class="card-body">
+      1. Открыть <a href="https://www.kimi.com/en/slides" target="_blank">kimi.com/en/slides</a><br>
+      2. Ввести тему презентации на русском<br>
+      3. Kimi покажет <strong>Outline</strong> (структуру) → можно отредактировать<br>
+      4. Выбрать <strong>шаблон</strong> из 37 вариантов<br>
+      5. Нажать <strong>«Generate»</strong> → подождать 30-60 сек<br>
+      6. Скачать <strong>.pptx</strong> → открыть в PowerPoint или Google Slides → редактировать
+    </div>
+  </div>
+
+  <div class="prompt-label">Простой путь: Slidesgo AI</div>
+
+  <a class="link-card" href="https://slidesgo.com/ai/presentation-maker" target="_blank">
+    <div class="link-icon" style="background:rgba(94,196,122,0.15);">📊</div>
+    <div class="link-text">
+      <div class="link-name">Slidesgo AI Presentation Maker <span class="badge badge-free">3/мес</span></div>
+      <div class="link-url">slidesgo.com/ai/presentation-maker</div>
+      <div class="link-note">24 готовых стиля, загрузка файлов, .pptx на выходе. Быстро, но без кастомного стиля</div>
+    </div>
+  </a>
+
+  <div class="prompt-label">Продвинутый путь: обратный промптинг (свой стиль)</div>
+
+  <div class="step-list">
+    <div class="step-item"><div class="step-num">1</div><div>Найдите красивую презентацию: <a href="https://slidesgo.com" target="_blank">Slidesgo</a>, <a href="https://dribbble.com" target="_blank">Dribbble</a>, <a href="https://pinterest.com" target="_blank">Pinterest</a></div></div>
+    <div class="step-item"><div class="step-num">2</div><div>Сделайте скриншоты <strong>3-5 слайдов</strong> (не одного, а нескольких — чтобы ChatGPT увидел стиль целиком)</div></div>
+    <div class="step-item"><div class="step-num">3</div><div>Вставьте все скриншоты в ChatGPT с промптом ниже</div></div>
+    <div class="step-item"><div class="step-num">4</div><div>Получите промпт стиля (<strong>до 500 символов</strong> — иначе не влезет в NotebookLM/Gamma)</div></div>
+    <div class="step-item"><div class="step-num">5</div><div>Вставьте в поле <strong>Custom Prompt</strong> в NotebookLM или в настройки <strong>Theme</strong> в Gamma</div></div>
+  </div>
+
+  <div class="prompt-box">Проанализируй стиль этих слайдов презентации (приложены скриншоты 3-5 слайдов).
+
+Опиши визуальный стиль и напиши ГОТОВЫЙ промпт для AI-генератора презентаций.
+
+ВАЖНО: промпт должен уместиться в 500 символов! Включи только самое важное:
+— Цвета фона и акцентов (HEX-коды)
+— Тип шрифтов (serif/sans-serif, вес)
+— Композиция (выравнивание, пустое пространство)
+— Настроение (1-2 слова)</div>
+
+  <div class="warning"><div class="tip-icon">⚠️</div><div><strong>Лимиты:</strong> NotebookLM Custom Prompt — до ~2000 символов. Gamma tone/imageStyle — до 500 символов. Поэтому просим ChatGPT уложить промпт стиля в 500 символов — тогда влезет везде.</div></div>
+
+  <div class="tip"><div class="tip-icon">💡</div><div><strong>Когда что использовать:</strong> Нужен быстрый .pptx → Kimi. Есть КП/текст → NotebookLM. Нужна красота → Gamma.</div></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ====== РАЗДЕЛ 2: ИЗОБРАЖЕНИЯ ====== -->
+<div class="section">
+  <div class="section-title"><div class="num">2</div> Изображения</div>
+  <div class="section-subtitle">Карта подходов: LLM-модели, профильные сервисы для деталей</div>
+
+  <div class="info"><div class="tip-icon">💡</div><div><strong>LLM-модели</strong> (ChatGPT, Gemini, Qwen) — быстро из чата. <strong>Профильные</strong> (Ideogram, Recraft, Midjourney) — для точной проработки деталей.</div></div>
+
+  <div class="prompt-label">LLM-модели (базовый уровень)</div>
+
+  <div class="cards-grid">
+    <a class="link-card" href="https://chatgpt.com" target="_blank">
+      <div class="link-icon" style="background:rgba(94,196,122,0.15);">🤖</div>
+      <div class="link-text">
+        <div class="link-name">ChatGPT (GPT Image) <span class="badge badge-vpn">VPN</span></div>
+        <div class="link-url">chatgpt.com</div>
+        <div class="link-note">Фотореализм 87%, понимает русский, 2 карт./день бесплатно</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://gemini.google.com" target="_blank">
+      <div class="link-icon" style="background:rgba(66,133,244,0.15);">🔷</div>
+      <div class="link-text">
+        <div class="link-name">Gemini (Google) <span class="badge badge-vpn">VPN</span></div>
+        <div class="link-url">gemini.google.com</div>
+        <div class="link-note">Генерация изображений, интеграция с Google</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://chat.qwen.ai" target="_blank">
+      <div class="link-icon" style="background:rgba(139,110,181,0.15);">🟣</div>
+      <div class="link-text">
+        <div class="link-name">Qwen <span class="badge badge-free">Free</span> <span class="badge badge-novpn">Без VPN</span></div>
+        <div class="link-url">chat.qwen.ai</div>
+        <div class="link-note">Генерация изображений в чате, бесплатно</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://x.com/i/grok" target="_blank">
+      <div class="link-icon" style="background:rgba(139,110,181,0.15);">🔮</div>
+      <div class="link-text">
+        <div class="link-name">Grok (xAI) <span class="badge badge-free">Free</span> <span class="badge badge-vpn">VPN</span></div>
+        <div class="link-url">x.com/grok</div>
+        <div class="link-note">Aurora engine, портреты, логотипы, скоро 1080p</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://giga.chat" target="_blank">
+      <div class="link-icon" style="background:rgba(94,196,122,0.15);">💬</div>
+      <div class="link-text">
+        <div class="link-name">GigaChat (Сбер) <span class="badge badge-free">Free</span> <span class="badge badge-novpn">Без VPN</span></div>
+        <div class="link-url">giga.chat</div>
+        <div class="link-note">Kandinsky внутри, просто пишешь «нарисуй»</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://ya.ru/alisa" target="_blank">
+      <div class="link-icon" style="background:rgba(94,196,122,0.15);">🔵</div>
+      <div class="link-text">
+        <div class="link-name">Алиса (Яндекс) <span class="badge badge-free">Free</span> <span class="badge badge-novpn">Без VPN</span></div>
+        <div class="link-url">ya.ru/alisa</div>
+        <div class="link-note">YandexART внутри, генерация в приложении</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="tip"><div class="tip-icon">💡</div><div><strong>Кто лучше рисует?</strong> ChatGPT и Gemini — лучшие по качеству (нужен VPN). GigaChat, Алиса, Qwen — без VPN и бесплатно. Grok — быстро растёт.</div></div>
+
+  <div class="prompt-label">Профильные сервисы (детальная проработка)</div>
+
+  <div class="cards-grid">
+    <a class="link-card" href="https://shedevrum.ai" target="_blank">
+      <div class="link-icon" style="background:rgba(94,196,122,0.15);">🔵</div>
+      <div class="link-text">
+        <div class="link-name">Шедеврум (Яндекс) <span class="badge badge-free">Free безлимит</span> <span class="badge badge-novpn">Без VPN</span></div>
+        <div class="link-url">shedevrum.ai</div>
+        <div class="link-note">Без лимитов и водяных знаков! Приложение + веб</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://fusionbrain.ai" target="_blank">
+      <div class="link-icon" style="background:rgba(94,196,122,0.15);">🎨</div>
+      <div class="link-text">
+        <div class="link-name">Kandinsky (Сбер) <span class="badge badge-novpn">Без VPN</span></div>
+        <div class="link-url">fusionbrain.ai (20 бесп.) или Telegram-бот (безлимит)</div>
+        <div class="link-note">Сайт ограничен до 20 картинок. Через Telegram-бот и GigaChat — бесплатно</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://recraft.ai" target="_blank">
+      <div class="link-icon" style="background:rgba(94,196,122,0.15);">✏️</div>
+      <div class="link-text">
+        <div class="link-name">Recraft v4 <span class="badge badge-free">Free</span> <span class="badge badge-novpn">Без VPN</span></div>
+        <div class="link-url">recraft.ai</div>
+        <div class="link-note">SVG, логотипы, иконки — единственный с нативным вектором</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://ideogram.ai" target="_blank">
+      <div class="link-icon" style="background:rgba(217,70,239,0.15);">💎</div>
+      <div class="link-text">
+        <div class="link-name">Ideogram 3.0 <span class="badge badge-free">10 промптов/день</span> <span class="badge badge-vpn">VPN</span></div>
+        <div class="link-url">ideogram.ai</div>
+        <div class="link-note">Лучший текст на картинках — для баннеров и вывесок</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://leonardo.ai" target="_blank">
+      <div class="link-icon" style="background:rgba(94,196,122,0.15);">🖌️</div>
+      <div class="link-text">
+        <div class="link-name">Leonardo AI <span class="badge badge-free">150/день</span> <span class="badge badge-novpn">Без VPN</span></div>
+        <div class="link-url">leonardo.ai</div>
+        <div class="link-note">Стилизация, concept art, бренд-контент</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://shedevrum.ai" target="_blank">
+      <div class="link-icon" style="background:rgba(94,196,122,0.15);">🔵</div>
+      <div class="link-text">
+        <div class="link-name">Шедеврум (Яндекс) <span class="badge badge-free">Free</span> <span class="badge badge-novpn">Без VPN</span></div>
+        <div class="link-url">shedevrum.ai</div>
+        <div class="link-note">Бесплатно, приложение iOS/Android, YandexART + Janus Pro</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="prompt-label">10 правил промптинга для визуала</div>
+
+  <div class="card">
+    <div class="card-body" style="font-size:13px; line-height:1.8;">
+      <strong style="color:var(--accent);">1.</strong> <strong>Пиши на английском</strong> — кириллицу в кавычках<br>
+      <strong style="color:var(--coral);">2.</strong> <strong>Формула:</strong> субъект + стиль + свет + ракурс + настроение + цвет<br>
+      <strong style="color:var(--blue);">3.</strong> <strong>Описывай что хочешь</strong>, а не чего не хочешь (не "no people", а "empty beach")<br>
+      <strong style="color:var(--green);">4.</strong> <strong>Указывай стиль:</strong> editorial photography, product photo, watercolor, 3D render<br>
+      <strong style="color:var(--orange);">5.</strong> <strong>Управляй светом:</strong> golden hour, soft natural light, dramatic side lighting<br>
+      <strong style="color:var(--purple);">6.</strong> <strong>Указывай ракурс:</strong> close-up, wide shot, low-angle, bird's-eye view<br>
+      <strong style="color:var(--cyan);">7.</strong> <strong>Будь конкретным</strong> — "freckles, auburn hair" вместо "beautiful"<br>
+      <strong style="color:var(--yellow);">8.</strong> <strong>Главное — в начало</strong> промпта (модель уделяет больше внимания)<br>
+      <strong style="color:var(--red);">9.</strong> <strong>Заземляй абстракции</strong> — не "инновация", а "команда у голографического дисплея"<br>
+      <strong style="color:var(--accent);">10.</strong> <strong>Итерируй</strong> — первый результат не финал: сгенерировал → уточнил → повторил
+    </div>
+  </div>
+
+  <div class="prompt-label">Формула промпта для изображений</div>
+  <div class="prompt-box">[Объект] + [Сцена] + [Стиль] + [Свет] + [Пропорции]
+
+Пример:
+Создай фотореалистичное изображение для сайта компании по [ваш бизнес].
+На фото: [что должно быть на картинке, подробно].
+Стиль: профессиональная фотография, мягкий естественный свет.
+Пропорции: 16:9.</div>
+
+  <a class="link-card" href="https://www.bananaprompts.xyz/explore" target="_blank">
+    <div class="link-icon" style="background:rgba(240,192,64,0.15);">🍌</div>
+    <div class="link-text">
+      <div class="link-name">BananaPrompts <span class="badge badge-free">Free</span> <span class="badge badge-new">Готовые промпты</span></div>
+      <div class="link-url">bananaprompts.xyz/explore</div>
+      <div class="link-note">Библиотека промптов с превью: увидели результат → скопировали промпт → вставили в ChatGPT/Gemini</div>
+    </div>
+  </a>
+
+  <div class="prompt-label">Промпт для баннера с текстом (Ideogram)</div>
+  <div class="prompt-box">A professional banner for [your business type].
+Text on banner: "[ТЕКСТ ЛАТИНИЦЕЙ]" in bold modern font.
+Below: "[подзаголовок латиницей]".
+Style: [описание стиля на английском].
+Clean and professional.</div>
+
+  <div class="prompt-label">Готовые промпты — скопируйте и вставьте</div>
+
+  <div class="info"><div class="tip-icon">💡</div><div>Для каждого примера даём <strong>2 варианта</strong>: на английском (лучшее качество) и на русском (проще). Замените [слова в скобках] на своё.</div></div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--accent);">📸 Фото продукции для сайта</div>
+    <div class="card-body">Английский вариант (лучшее качество):</div>
+  </div>
+  <div class="prompt-box">A professional photo for a website of [ваш бизнес на англ.] company.
+In the photo: [подробно опишите что должно быть на фото, на англ.].
+Style: professional commercial photography, soft natural light.
+Aspect ratio: 16:9.</div>
+  <div class="card"><div class="card-body">Русский вариант (для ChatGPT, Gemini, GigaChat):</div></div>
+  <div class="prompt-box">Создай фотореалистичное изображение для сайта компании по [ваш бизнес].
+На фото: [подробно опишите, что должно быть на фото].
+Стиль: профессиональная коммерческая фотография, мягкий естественный свет.
+Пропорции: 16:9.</div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--green);">📱 Пост для Instagram / соцсетей</div>
+    <div class="card-body">Английский:</div>
+  </div>
+  <div class="prompt-box">A vibrant social media post for [ваш бизнес на англ.].
+[Describe the scene: your product, happy clients, work process].
+Style: bright, modern, Instagram-ready. Warm inviting mood.
+Aspect ratio: 1:1.</div>
+  <div class="card"><div class="card-body">Русский:</div></div>
+  <div class="prompt-box">Создай яркое изображение для поста в Instagram.
+Тема: [ваш бизнес]. На фото: [опишите сцену — продукт, клиенты, процесс].
+Стиль: яркий, современный, тёплый. Квадратный формат.</div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--coral);">🏷️ Баннер с текстом (для Ideogram)</div>
+    <div class="card-body">Промпт на английском, русские слова в кавычках:</div>
+  </div>
+  <div class="prompt-box">A professional banner for [your business type in English].
+Text on banner: "[ВАШЕ НАЗВАНИЕ НА РУССКОМ]" in bold modern font.
+Below: "[подзаголовок на русском]".
+Style: [dark/light] background, [цвет] accent, clean typography.</div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--blue);">🎯 Коммерческое предложение / обложка</div>
+    <div class="card-body">Русский:</div>
+  </div>
+  <div class="prompt-box">Создай обложку для коммерческого предложения компании [название].
+Стиль: строгий, корпоративный. Тёмный фон, акцентный цвет [ваш цвет].
+Текст на обложке: [название компании] и [слоган или описание].
+На фоне: абстрактная геометрия или фото вашего продукта. Формат A4.</div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--yellow);">✨ WOW-промпты — попробуйте!</div>
+    <div class="card-body">Готовые промпты для вау-эффекта. Просто замените [ваш продукт]:</div>
+  </div>
+
+  <div class="prompt-box">Flat lay photo of [ваш продукт] on a marble surface, surrounded by tools of the trade. Top-down view, studio lighting, clean composition. Magazine-style product photography. 1:1.</div>
+
+  <div class="prompt-box">Miniature tilt-shift photography of [ваш бизнес — здание, мастерская, бар]. Everything looks like a tiny toy model. Bright daylight, vivid colors, extremely shallow depth of field. 16:9.</div>
+
+  <div class="prompt-box">Split image: left side shows the old way of doing [процесс в вашем бизнесе] — messy, slow, manual. Right side shows the modern way — clean, fast, professional. Before/after style, same composition. 16:9.</div>
+
+  <div class="prompt-box">Создай изометрическую 3D-иллюстрацию рабочего процесса [ваш бизнес].
+Покажи все этапы: от заявки клиента до готового результата.
+Стиль: яркий, современный, как в мобильном приложении.
+Цвета: [основной цвет] и белый. Без текста.</div>
+
+  <div class="prompt-box">Cinematic wide shot: [ваш продукт] in an unexpected luxury setting. For example: a simple metal canopy installed on a rooftop terrace overlooking a city skyline at sunset. Dramatic lighting, lens flare, movie poster quality. 16:9.</div>
+
+  <div class="prompt-box">Создай серию из 4 иконок для сайта [ваш бизнес].
+Иконки: [перечислите 4 услуги/преимущества].
+Стиль: плоский, минималистичный, одноцветный ([ваш цвет] на белом фоне).
+Формат: квадратный, все 4 иконки на одном изображении в ряд.</div>
+
+  <div class="prompt-label">Агрегаторы (все модели в одном месте)</div>
+
+  <div class="cards-grid">
+    <a class="link-card" href="https://krea.ai" target="_blank">
+      <div class="link-icon" style="background:rgba(240,192,64,0.15);">✨</div>
+      <div class="link-text">
+        <div class="link-name">Krea AI <span class="badge badge-free">50/день</span> <span class="badge badge-novpn">Без VPN</span> <span class="badge badge-new">РЕКОМЕНДУЕМ</span></div>
+        <div class="link-url">krea.ai</div>
+        <div class="link-note">Реалтайм-генерация! Flux, Ideogram, Imagen, видео (Kling), апскейл 4K. 50 бесп./день</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://freepik.com" target="_blank">
+      <div class="link-icon" style="background:rgba(217,70,239,0.15);">🎨</div>
+      <div class="link-text">
+        <div class="link-name">Freepik AI <span class="badge badge-free">20/день</span></div>
+        <div class="link-url">freepik.com</div>
+        <div class="link-note">39+ моделей (Mystic, Flux, Imagen, GPT Image), видео + звук + сток</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://flux2pro.org" target="_blank">
+      <div class="link-icon" style="background:rgba(139,110,181,0.15);">⚡</div>
+      <div class="link-text">
+        <div class="link-name">Flux 2 Pro <span class="badge badge-free">Триал</span></div>
+        <div class="link-url">flux2pro.org</div>
+        <div class="link-note">10+ моделей (Flux 2, Imagen 4, Seedream), от $8.33/мес</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://seaart.ai/ru" target="_blank">
+      <div class="link-icon" style="background:rgba(66,133,244,0.15);">🌊</div>
+      <div class="link-text">
+        <div class="link-name">SeaArt AI <span class="badge badge-free">Free кредиты</span></div>
+        <div class="link-url">seaart.ai</div>
+        <div class="link-note">Русский интерфейс! Изображения + видео + аудио, ComfyUI, обучение своих моделей</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://holstai.ru" target="_blank">
+      <div class="link-icon" style="background:rgba(94,196,122,0.15);">🖼️</div>
+      <div class="link-text">
+        <div class="link-name">Холст.ИИ <span class="badge badge-novpn">Без VPN</span></div>
+        <div class="link-url">holstai.ru</div>
+        <div class="link-note">Российский агрегатор: 20+ нейросетей, от 2 руб/картинка, рубли</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="tip"><div class="tip-icon">💡</div><div><strong>Лайфхак:</strong> Спросите ChatGPT: «Какие 5 изображений нужны для сайта [мой бизнес]? Для каждого напиши промпт» — он сам всё напишет!</div></div>
+
+  <div class="prompt-label">Лайфхаки для изображений</div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--yellow);">Кириллица на фото — как сделать правильно</div>
+    <div class="card-body">
+      Промпт пишите <strong>на английском</strong>, а русские слова вставляйте <strong>в кавычках</strong>. Это работает в ChatGPT, Gemini и Ideogram.
+    </div>
+  </div>
+
+  <div class="prompt-box">A professional banner for a construction company.
+Text on banner: "НАВЕСЫ" in bold modern font.
+Below: "под ключ в Уфе".
+Style: dark background, orange accent, clean typography.</div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--accent);">Редактирование фото прямо в чате</div>
+    <div class="card-body">
+      В ChatGPT и Gemini можно точечно менять уже созданное изображение. Просто напишите:<br>
+      &bull; <em>«Убери человека справа»</em><br>
+      &bull; <em>«Замени фон на закат»</em><br>
+      &bull; <em>«Добавь логотип в правый нижний угол»</em><br>
+      &bull; <em>«Сделай навес из металла вместо дерева»</em><br>
+      AI сохранит всё остальное и изменит только то, что вы попросили.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--green);">Обратный промптинг: фото в чужом стиле</div>
+    <div class="card-body">
+      1. Найдите крутую фотку (фотосессия конкурента, Pinterest, Instagram)<br>
+      2. Вставьте в ChatGPT с промптом ниже<br>
+      3. Получите описание стиля → создайте своё фото в этом стиле<br>
+      4. <strong>Бонус:</strong> загрузите несколько референсов + свои фото → ChatGPT объединит в одно изображение в едином стиле
+    </div>
+  </div>
+
+  <div class="prompt-box">Проанализируй стиль этого фото. Опиши:
+— Освещение (мягкое/жёсткое, направление, время суток)
+— Цветовая гамма (тёплая/холодная, основные тона)
+— Композиция (ракурс, расположение объектов)
+— Настроение и атмосфера
+
+Напиши промпт для генерации похожего фото, но с моим объектом: [опишите что нужно].</div>
+
+  <div class="prompt-label">Продвинутый подход: визуальное промптирование (без текста!)</div>
+
+  <a class="link-card" href="https://labs.google/fx" target="_blank">
+    <div class="link-icon" style="background:rgba(66,133,244,0.15);">🎯</div>
+    <div class="link-text">
+      <div class="link-name">Google ImageFX / Whisk <span class="badge badge-free">Free</span> <span class="badge badge-vpn">VPN</span></div>
+      <div class="link-url">labs.google/fx</div>
+      <div class="link-note">Imagen 4 + Gemini. Загружаете картинки вместо текста — AI всё поймёт</div>
+    </div>
+  </a>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--blue);">Как работает: Subject + Scene + Style</div>
+    <div class="card-body">
+      Не надо писать промпт — загружаете до 10 картинок в 3 слота:<br><br>
+      1. <strong>Subject</strong> — фото вашего продукта (навес, блюдо, деталь)<br>
+      2. <strong>Scene</strong> — фото обстановки (двор, ресторан, склад)<br>
+      3. <strong>Style</strong> — фото стиля (референс с Pinterest, Instagram)<br><br>
+      AI объединит всё в одно изображение. Также внутри: <strong>Flow</strong> — превращает картинку в видео (VEO 3, 10 видео/мес бесплатно).
+    </div>
+  </div>
+
+</div>
+
+<div class="divider"></div>
+
+<!-- ====== РАЗДЕЛ 3: ЛЕНДИНГИ ====== -->
+<div class="section">
+  <div class="section-title"><div class="num">3</div> Лендинги</div>
+  <div class="section-subtitle">Карта подходов: конструктор + AI, код-генераторы, LLM-модели, бюджетные</div>
+
+  <div class="info"><div class="tip-icon">💡</div><div>Лендинг = витрина бизнеса. Подходов много: от <strong>Tilda + ChatGPT</strong> (Россия, рубли) до <strong>v0.dev</strong> (уникальный дизайн) и <strong>китайских LLM</strong> (агентный режим).</div></div>
+
+  <div class="prompt-label">Связка 1: Tilda + ChatGPT + нейрокартинки (Россия)</div>
+
+  <div class="step-list">
+    <div class="step-item"><div class="step-num">1</div><div><strong>ChatGPT</strong> — генерирует тексты (промпт ниже)</div></div>
+    <div class="step-item"><div class="step-num">2</div><div><strong>Kandinsky / ChatGPT</strong> — генерирует фото для сайта</div></div>
+    <div class="step-item"><div class="step-num">3</div><div><strong>Tilda</strong> (<a href="https://tilda.cc" target="_blank">tilda.cc</a>) — собирает всё в красивый сайт (550+ блоков, от 1000 руб/мес)</div></div>
+  </div>
+
+  <div class="prompt-box">Ты — маркетолог-копирайтер. Напиши тексты для лендинга компании по [ваш бизнес] в [ваш город].
+
+Секции:
+1. Герой-блок: заголовок + подзаголовок + текст кнопки CTA
+2. 4 преимущества (с эмодзи-иконками)
+3. 3 отзыва клиентов (реалистичные, с именами)
+4. Блок «Как мы работаем» (4 шага)
+5. Контакты + текст формы заявки
+
+Тон: профессиональный, дружелюбный.</div>
+
+  <div class="prompt-label">Связка 2: Код-генераторы (уникальный дизайн)</div>
+
+  <div class="cards-grid">
+    <a class="link-card" href="https://v0.dev" target="_blank">
+      <div class="link-icon" style="background:rgba(217,70,239,0.15);">▲</div>
+      <div class="link-text">
+        <div class="link-name">v0.dev <span class="badge badge-free">Free лимит</span> <span class="badge badge-vpn">VPN</span></div>
+        <div class="link-url">v0.dev</div>
+        <div class="link-note">Дизайн 5/5, деплой одним кликом, калькуляторы</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://bolt.new" target="_blank">
+      <div class="link-icon" style="background:rgba(245,158,11,0.15);">⚡</div>
+      <div class="link-text">
+        <div class="link-name">bolt.new <span class="badge badge-free">Free лимит</span> <span class="badge badge-vpn">VPN</span></div>
+        <div class="link-url">bolt.new</div>
+        <div class="link-note">Full-stack в браузере, любой фреймворк</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://lovable.dev" target="_blank">
+      <div class="link-icon" style="background:rgba(224,85,85,0.15);">❤️</div>
+      <div class="link-text">
+        <div class="link-name">Lovable <span class="badge badge-free">Free лимит</span> <span class="badge badge-vpn">VPN</span></div>
+        <div class="link-url">lovable.dev</div>
+        <div class="link-note">Самый быстрый MVP, полный стек</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://replit.com" target="_blank">
+      <div class="link-icon" style="background:rgba(66,133,244,0.15);">💻</div>
+      <div class="link-text">
+        <div class="link-name">Replit <span class="badge badge-free">Free лимит</span> <span class="badge badge-vpn">VPN</span></div>
+        <div class="link-url">replit.com</div>
+        <div class="link-note">IDE в браузере, AI Agent строит приложения</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="prompt-label">Как начать работать (пошагово)</div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--accent);">Lovable — лендинг по скриншоту (полный путь)</div>
+    <div class="card-body">
+      <strong>Шаг 1. Найти референс:</strong><br>
+      Зайти на <a href="https://godly.website" target="_blank">godly.website</a> или <a href="https://lapa.ninja" target="_blank">lapa.ninja</a> → найти лендинг, который нравится<br><br>
+      <strong>Шаг 2. Сделать скриншот всего лендинга:</strong><br>
+      Нажать иконку 📷 <strong>GoFullPage</strong> в панели расширений Chrome → скачать PNG<br>
+      <em>(Или: Ctrl+Shift+P → «Capture full size screenshot»)</em><br><br>
+      <strong>Шаг 3. Создать проект в Lovable:</strong><br>
+      Открыть <a href="https://lovable.dev" target="_blank">lovable.dev</a> → войти через Google → <strong>«New Project»</strong> → название<br><br>
+      <strong>Шаг 4. Вставить скриншот + описание:</strong><br>
+      В поле чата прикрепить скриншот (📎) и написать промпт ниже<br><br>
+      <strong>Шаг 5. Править в чате:</strong><br>
+      Lovable понимает обычный русский язык — просто пишите что изменить (примеры правок ниже)<br><br>
+      <strong>Шаг 6. Опубликовать:</strong><br>
+      Нажать <strong>«Publish»</strong> → получить live-ссылку → отправить клиентам<br>
+      <em style="color:var(--white-50);">Free: 5 кредитов/день, публичные проекты</em>
+    </div>
+  </div>
+
+  <div class="prompt-box">Сделай лендинг в стиле этого скриншота для компании [название] в городе [город].
+
+Мой бизнес: [кратко опишите чем занимаетесь].
+Заголовок: [ваш заголовок]
+Подзаголовок: [ваш подзаголовок]
+Кнопка: [текст кнопки, например «Оставить заявку»]
+Телефон: [ваш телефон]
+
+Сохрани общий стиль и структуру с референса, но замени весь контент на мой.</div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--green);">Примеры правок (просто напишите в чат Lovable)</div>
+    <div class="card-body" style="font-size:13px;">
+      &bull; <em>«Поменяй основной цвет на оранжевый #E07461»</em><br>
+      &bull; <em>«Сделай тёмную тему вместо светлой»</em><br>
+      &bull; <em>«Добавь секцию с отзывами — 3 отзыва»</em><br>
+      &bull; <em>«Добавь калькулятор стоимости: ширина × длина × материал»</em><br>
+      &bull; <em>«Замени все картинки на плейсхолдеры серого цвета»</em><br>
+      &bull; <em>«Сделай мобильную версию красивее»</em><br>
+      &bull; <em>«Добавь кнопку WhatsApp в правый нижний угол»</em><br>
+      &bull; <em>«Поменяй шрифт заголовков на более жирный»</em>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--yellow);">bolt.new — лендинг из промпта</div>
+    <div class="card-body">
+      1. Открыть <a href="https://bolt.new" target="_blank">bolt.new</a> → войти через Google<br>
+      2. Сразу откроется <strong>поле для промпта</strong> — вставить промпт с <a href="https://websiteprompts.com" target="_blank">websiteprompts.com</a><br>
+      3. Или написать: <em>«Создай лендинг для [бизнес]. Секции: герой, преимущества, отзывы, контакты»</em><br>
+      4. bolt.new сгенерирует полный проект → превью справа<br>
+      5. Редактировать в чате: <em>«Добавь калькулятор стоимости»</em><br>
+      6. Нажать <strong>«Deploy»</strong> → получить live-ссылку на Netlify<br>
+      <em style="color:var(--white-50);">Free: 1M токенов/мес, безлимитные проекты</em>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--blue);">v0.dev — лендинг уровня агентства</div>
+    <div class="card-body">
+      1. Открыть <a href="https://v0.dev" target="_blank">v0.dev</a> → войти через GitHub/Google<br>
+      2. В поле <strong>«Describe your UI»</strong> — вставить промпт или скриншот<br>
+      3. v0 сгенерирует React + Tailwind код → превью сразу видно<br>
+      4. Итерировать: <em>«Сделай тёмную тему»</em>, <em>«Добавь анимацию при скролле»</em><br>
+      5. Или: <a href="https://v0.app/templates" target="_blank" style="color:var(--accent);">v0.app/templates</a> → выбрать готовый шаблон → адаптировать<br>
+      6. Нажать <strong>«Deploy to Vercel»</strong> → live URL за секунды<br>
+      <em style="color:var(--white-50);">Free: $5 кредитов/мес</em>
+    </div>
+  </div>
+
+  <div class="prompt-label">Где взять готовые промпты для лендингов</div>
+
+  <div class="cards-grid">
+    <a class="link-card" href="https://websiteprompts.com" target="_blank">
+      <div class="link-icon" style="background:rgba(240,192,64,0.15);">📋</div>
+      <div class="link-text">
+        <div class="link-name">WebsitePrompts <span class="badge badge-free">Free</span> <span class="badge badge-new">138+ промптов</span></div>
+        <div class="link-url">websiteprompts.com</div>
+        <div class="link-note">Скопировал промпт → вставил в bolt.new/Lovable → готовый лендинг</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://lapa.ninja" target="_blank">
+      <div class="link-icon" style="background:rgba(217,70,239,0.15);">🎨</div>
+      <div class="link-text">
+        <div class="link-name">Lapa.ninja <span class="badge badge-free">Free</span></div>
+        <div class="link-url">lapa.ninja</div>
+        <div class="link-note">5000+ лендингов-референсов, фильтры по индустрии и цвету</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://godly.website" target="_blank">
+      <div class="link-icon" style="background:rgba(139,110,181,0.15);">✨</div>
+      <div class="link-text">
+        <div class="link-name">Godly <span class="badge badge-free">Free</span></div>
+        <div class="link-url">godly.website</div>
+        <div class="link-note">Современный web-дизайн высочайшего качества</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="prompt-label">Бюджетные варианты (Россия, без VPN)</div>
+
+  <div class="cards-grid">
+    <a class="link-card" href="https://craftum.com" target="_blank">
+      <div class="link-icon" style="background:rgba(94,196,122,0.15);">🏗️</div>
+      <div class="link-text">
+        <div class="link-name">Craftum <span class="badge badge-novpn">Без VPN</span></div>
+        <div class="link-url">craftum.com</div>
+        <div class="link-note">149 руб/мес — самый дешёвый, AI на ChatGPT-4o</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://lpmotor.ru" target="_blank">
+      <div class="link-icon" style="background:rgba(94,196,122,0.15);">🔧</div>
+      <div class="link-text">
+        <div class="link-name">Mottor (LPmotor) <span class="badge badge-novpn">Без VPN</span></div>
+        <div class="link-url">lpmotor.ru</div>
+        <div class="link-note">490 руб/мес — сайт + CRM + чат-боты + квизы</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="tip"><div class="tip-icon">💡</div><div><strong>Китайские LLM тоже делают лендинги!</strong> В агентном режиме Kimi, Qwen и GLM генерируют полный HTML-код лендинга. Попробуйте: откройте Qwen → «Создай лендинг для [бизнес]» → скопируйте HTML → откройте в браузере.</div></div>
+
+  <div class="prompt-label">Полезные расширения Chrome</div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--yellow);">GoFullPage — скриншот всего лендинга в один клик</div>
+    <div class="card-body">
+      1. Установить: Chrome Web Store → поиск <strong>«GoFullPage»</strong> → нажать «Добавить»<br>
+      2. Зайти на любой лендинг (например, на <a href="https://godly.website" target="_blank">Godly</a> или <a href="https://lapa.ninja" target="_blank">Lapa.ninja</a>)<br>
+      3. Нажать <strong>иконку камеры 📷</strong> в панели расширений (правый верхний угол Chrome)<br>
+      4. GoFullPage прокрутит всю страницу и сделает <strong>один длинный скриншот</strong><br>
+      5. Скачать как <strong>PNG</strong> или <strong>PDF</strong><br>
+      6. Этот скриншот → вставить в <strong>Lovable</strong> как референс для своего лендинга
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--white-50);">Без расширения (встроенный способ)</div>
+    <div class="card-body">
+      В Chrome: нажать <strong>Ctrl+Shift+P</strong> (или Cmd+Shift+P на Mac) → написать <strong>«Capture full size screenshot»</strong> → Enter.<br>
+      Скриншот всей страницы сохранится в папку «Загрузки».
+    </div>
+  </div>
+
+  <div class="info"><div class="tip-icon">🔧</div><div><strong>Для продвинутых:</strong> <a href="https://www.view-page-source.com" target="_blank">view-page-source.com</a> — просмотр HTML любого сайта. <strong>SingleFile</strong> (расширение Chrome) — сохраняет страницу в один HTML-файл для анализа.</div></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ====== РАЗДЕЛ 4: ВИДЕО ====== -->
+<div class="section">
+  <div class="section-title"><div class="num">4</div> Видео</div>
+  <div class="section-subtitle">Карта подходов: китайские (без VPN), западные (VPN), LLM (из чата)</div>
+
+  <div class="cards-grid">
+    <a class="link-card" href="https://klingai.com" target="_blank">
+      <div class="link-icon" style="background:rgba(217,70,239,0.15);">🎬</div>
+      <div class="link-text">
+        <div class="link-name">Kling 3.0 <span class="badge badge-novpn">Без VPN</span></div>
+        <div class="link-url">klingai.com</div>
+        <div class="link-note">Лидер: фото→видео, multi-shot, сохраняет персонажа</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://seedance.ai" target="_blank">
+      <div class="link-icon" style="background:rgba(94,196,122,0.15);">🎵</div>
+      <div class="link-text">
+        <div class="link-name">Seedance 2.0 <span class="badge badge-novpn">Без VPN</span></div>
+        <div class="link-url">seedance.ai</div>
+        <div class="link-note">Аудио + видео в одном проходе (ByteDance)</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://pika.art" target="_blank">
+      <div class="link-icon" style="background:rgba(245,158,11,0.15);">✨</div>
+      <div class="link-text">
+        <div class="link-name">Pika 2.5 <span class="badge badge-free">Free лимит</span> <span class="badge badge-vpn">VPN</span></div>
+        <div class="link-url">pika.art</div>
+        <div class="link-note">Самый простой старт, эффекты, трансформации</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://x.com/i/grok" target="_blank">
+      <div class="link-icon" style="background:rgba(139,110,181,0.15);">🔮</div>
+      <div class="link-text">
+        <div class="link-name">Grok Imagine (xAI) <span class="badge badge-free">Free</span> <span class="badge badge-vpn">VPN</span></div>
+        <div class="link-url">x.com/grok</div>
+        <div class="link-note">10 сек видео со звуком, почти мгновенно</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://runwayml.com" target="_blank">
+      <div class="link-icon" style="background:rgba(139,110,181,0.15);">🎥</div>
+      <div class="link-text">
+        <div class="link-name">Runway Gen-4.5 <span class="badge badge-paid">$15/мес</span> <span class="badge badge-vpn">VPN</span></div>
+        <div class="link-url">runwayml.com</div>
+        <div class="link-note">Лучший контроль камеры и стиля, для профи</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="info"><div class="tip-icon">💡</div><div><strong>VEO 3.1</strong> (Google) — 10 видео/мес бесплатно через Google Vids (vids.new)! 4K, lip sync, нативный звук. <strong>Sora</strong> (OpenAI) закрывается 26 апреля — не актуален.</div></div>
+
+  <div class="prompt-label">Промпт для видео (Kling / Pika)</div>
+  <div class="prompt-box">Фотореалистичное видео: камера медленно облетает [ваш объект].
+Солнечный день, мягкий свет, лёгкий ветерок шевелит листья.
+Длительность: 5 секунд. Стиль: кинематографичный.</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ====== РАЗДЕЛ 5: AI-АВАТАРЫ ====== -->
+<div class="section">
+  <div class="section-title"><div class="num">5</div> AI-аватары и Motion Transfer</div>
+  <div class="section-subtitle">Два подхода: говорящий аватар (фото+текст) и motion transfer (фото+вебка)</div>
+
+  <div class="prompt-label">Говорящий аватар: фото + текст/голос → персонаж говорит</div>
+
+  <div class="cards-grid">
+    <a class="link-card" href="https://heygen.com" target="_blank">
+      <div class="link-icon" style="background:rgba(217,70,239,0.15);">👤</div>
+      <div class="link-text">
+        <div class="link-name">HeyGen <span class="badge badge-paid">$29/мес</span></div>
+        <div class="link-url">heygen.com</div>
+        <div class="link-note">Лидер: 175+ языков, перевод видео с lip sync, клон голоса</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://www.hedra.com" target="_blank">
+      <div class="link-icon" style="background:rgba(94,196,122,0.15);">🗣️</div>
+      <div class="link-text">
+        <div class="link-name">Hedra <span class="badge badge-free">Free tier</span></div>
+        <div class="link-url">hedra.com</div>
+        <div class="link-note">$0.05/мин — в 15 раз дешевле конкурентов! 140+ языков</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://www.d-id.com" target="_blank">
+      <div class="link-icon" style="background:rgba(94,196,122,0.15);">💬</div>
+      <div class="link-text">
+        <div class="link-name">D-ID <span class="badge badge-paid">$5.9/мес</span></div>
+        <div class="link-url">d-id.com</div>
+        <div class="link-note">Самый дешёвый, фото→говорящий аватар</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://www.synthesia.io" target="_blank">
+      <div class="link-icon" style="background:rgba(66,133,244,0.15);">🎓</div>
+      <div class="link-text">
+        <div class="link-name">Synthesia <span class="badge badge-paid">$22/мес</span></div>
+        <div class="link-url">synthesia.io</div>
+        <div class="link-note">Enterprise-уровень, обучающие видео</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="prompt-label">Motion Transfer: фото + вебка → аватар повторяет ваши движения</div>
+
+  <div class="cards-grid">
+    <a class="link-card" href="https://viggle.ai" target="_blank">
+      <div class="link-icon" style="background:rgba(217,70,239,0.15);">🕺</div>
+      <div class="link-text">
+        <div class="link-name">Viggle <span class="badge badge-free">Free tier</span></div>
+        <div class="link-url">viggle.ai</div>
+        <div class="link-note">Реалтайм body swap через вебку! Загрузил фото — стал этим персонажем</div>
+      </div>
+    </a>
+    <a class="link-card" href="https://higgsfield.ai" target="_blank">
+      <div class="link-icon" style="background:rgba(245,158,11,0.15);">🎭</div>
+      <div class="link-text">
+        <div class="link-name">Higgsfield <span class="badge badge-free">Free tier</span></div>
+        <div class="link-url">higgsfield.ai</div>
+        <div class="link-note">Motion control из видео-референса, сохраняет идентичность персонажа</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="tip"><div class="tip-icon">💡</div><div><strong>Workflow:</strong> 1) Берёте красивое фото 2) Записываете голос (15 сек) 3) HeyGen/Hedra оживляет — фото говорит вашим голосом. Или: 1) Загружаете фото 2) Включаете вебку 3) Viggle переносит движения — вы «красивый» двигаетесь!</div></div>
+
+  <div class="prompt-label">Сценарий для аватара (HeyGen / Hedra)</div>
+  <div class="prompt-box">Привет! Я [Имя], и я помогу вам выбрать идеальный [продукт] для вашего [дома/бизнеса].
+За 2 минуты рассчитаем стоимость. Нажмите кнопку ниже!
+
+Тон: дружелюбный, энергичный. 15 секунд.
+Фон: размытый офис или ваш продукт.</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ====== ПОЛНАЯ КАРТА ====== -->
+<div class="section">
+  <div class="section-title"><div class="num" style="background:var(--coral);">★</div> Полная карта инструментов</div>
+  <div class="section-subtitle">Все подходы в одной таблице — сохраните себе</div>
+
+  <table class="map-table">
+    <tr><th>Задача</th><th>LLM-модели</th><th>Профильные</th><th>Без VPN (РФ)</th></tr>
+    <tr><td><strong>Презентации</strong></td><td>Kimi, Qwen, GLM</td><td>Gamma, Beautiful.ai, Canva AI</td><td>Kimi, Qwen, NotebookLM</td></tr>
+    <tr><td><strong>Изображения</strong></td><td>ChatGPT, Gemini, Grok, Qwen</td><td>Ideogram, Midjourney V8, Recraft</td><td>Шедеврум (безлимит!), Алиса, GigaChat, Kandinsky</td></tr>
+    <tr><td><strong>Лендинги</strong></td><td>Kimi, Qwen, GLM (агентный)</td><td>v0.dev, bolt.new, Lovable, Replit</td><td>Tilda, Craftum, Mottor</td></tr>
+    <tr><td><strong>Видео</strong></td><td>Gemini (VEO 3), Grok (Aurora)</td><td>Kling 3.0, Runway, Pika, Luma</td><td>Kling, Seedance, Kandinsky Video</td></tr>
+    <tr><td><strong>Аватары</strong></td><td>—</td><td>HeyGen, Hedra, D-ID, Synthesia</td><td>Elai.io</td></tr>
+    <tr><td><strong>Motion</strong></td><td>—</td><td>Viggle, Higgsfield, LivePortrait</td><td>Viggle (free tier)</td></tr>
+    <tr><td><strong>КП / документы</strong></td><td>ChatGPT, Gemini, Kimi</td><td>NotebookLM, Gamma</td><td>Kimi, Qwen, NotebookLM</td></tr>
+  </table>
+</div>
+
+</div><!-- /container -->
+
+<div class="footer">
+  <strong>neovida.ai</strong> / AI Boost &middot; Занятие 6 &middot; Визуал: нейрокреатор
+</div>
+
+<button class="pdf-btn" onclick="window.print()">Сохранить PDF</button>
+
+<script>
+document.querySelectorAll('.prompt-box').forEach(function(box) {
+  box.addEventListener('click', function() {
+    var text = this.textContent.replace('нажмите, чтобы скопировать', '').replace('скопировано!', '').trim();
+    navigator.clipboard.writeText(text).then(function() {
+      box.classList.add('copied');
+      setTimeout(function() { box.classList.remove('copied'); }, 2000);
+    });
+  });
+});
+</script>
+</body>
+</html>
