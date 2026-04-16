@@ -1,0 +1,2117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность | Занятие 7 — Агентный подход</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0f0f1e;
+  --bg-2: #1a1a2e;
+  --accent: #A78BFA;            /* фиолетовый — тема агентов */
+  --accent-dark: #7C3AED;
+  --accent-glow: rgba(167,139,250,0.35);
+  --coral: #E07461;             /* акцент бренда neovida */
+  --white: #ffffff;
+  --white-80: rgba(255,255,255,0.8);
+  --white-60: rgba(255,255,255,0.6);
+  --white-40: rgba(255,255,255,0.4);
+  --white-20: rgba(255,255,255,0.2);
+  --white-10: rgba(255,255,255,0.1);
+  --yellow: #f0c040;
+  --orange: #e8944a;
+  --red: #e05555;
+  --green: #5ec47a;
+  --blue: #4285f4;
+  --cyan: #0891b2;
+  --teal: #14b8a6;
+}
+
+html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--white); -webkit-font-smoothing: antialiased; }
+a { color: var(--accent); text-decoration: underline; cursor: pointer; }
+a:hover { color: var(--coral); }
+
+.deck { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+.slide {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 60px 80px; opacity: 0; visibility: hidden;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translateX(40px); overflow-y: auto;
+}
+.slide.active { opacity: 1; visibility: visible; transform: translateX(0); }
+.slide.prev { transform: translateX(-40px); }
+
+.slide-title { font-size: 46px; font-weight: 800; line-height: 1.15; margin-bottom: 28px; }
+.slide-title .accent { color: var(--accent); }
+.slide-title .coral { color: var(--coral); }
+.slide-subtitle { font-size: 24px; font-weight: 400; color: var(--white-80); margin-bottom: 32px; line-height: 1.4; }
+
+.point { margin-bottom: 14px; padding-left: 8px; font-size: 22px; line-height: 1.5; color: var(--white-80); }
+.point strong { color: var(--white); font-weight: 600; }
+
+.quote { margin-top: 20px; padding: 22px 30px; border-left: 4px solid var(--accent); background: var(--white-10); border-radius: 0 12px 12px 0; font-size: 22px; font-weight: 500; line-height: 1.5; font-style: italic; }
+.quote.coral { border-left-color: var(--coral); }
+
+.card { background: var(--white-10); border-radius: 16px; padding: 24px; margin-bottom: 16px; }
+.card-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+.card-body { font-size: 18px; color: var(--white-80); line-height: 1.5; }
+.cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+.cards-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-top: 12px; }
+
+.slide-counter { position: fixed; bottom: 24px; right: 32px; font-size: 16px; font-weight: 600; color: var(--white-40); z-index: 100; pointer-events: none; }
+.fullscreen-btn { position: fixed; top: 20px; right: 24px; z-index: 100; background: var(--white-10); border: 1px solid var(--white-20); color: var(--white-60); width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.fullscreen-btn:hover { background: var(--white-20); color: var(--white); }
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 100; transition: width 0.4s ease; box-shadow: 0 0 10px var(--accent-glow); }
+
+.slide.title-slide { text-align: center; justify-content: center; align-items: center; background: radial-gradient(ellipse at 50% 40%, rgba(167,139,250,0.2) 0%, transparent 60%); }
+.title-big { font-size: 78px; font-weight: 900; letter-spacing: -2.5px; color: var(--accent); margin-bottom: 20px; line-height: 1.05; }
+.title-sub { font-size: 32px; font-weight: 500; color: var(--white-80); margin-bottom: 48px; line-height: 1.3; }
+.title-meta { font-size: 20px; color: var(--white-40); }
+
+.analogy-card { background: linear-gradient(135deg, rgba(167,139,250,0.18) 0%, rgba(167,139,250,0.04) 100%); border: 2px solid rgba(167,139,250,0.35); border-radius: 24px; padding: 44px; margin-top: 12px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.analogy-emoji { font-size: 68px; margin-bottom: 16px; }
+.analogy-title { font-size: 30px; font-weight: 800; color: var(--accent); margin-bottom: 14px; }
+.analogy-body { font-size: 23px; line-height: 1.6; color: var(--white-80); max-width: 860px; margin: 0 auto; }
+
+/* EVOLUTION COLUMNS — for Bot vs Assistant vs Agent */
+.evo-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 22px; margin-top: 14px; }
+.evo-card { background: var(--white-10); border-radius: 20px; padding: 28px; border: 2px solid var(--white-10); position: relative; transition: transform 0.3s; }
+.evo-card:hover { transform: translateY(-4px); }
+.evo-card.bot { border-color: rgba(96,165,250,0.4); }
+.evo-card.assistant { border-color: rgba(224,116,97,0.4); }
+.evo-card.agent { border-color: rgba(167,139,250,0.5); background: linear-gradient(145deg, rgba(167,139,250,0.15) 0%, rgba(167,139,250,0.04) 100%); box-shadow: 0 8px 40px rgba(167,139,250,0.15); }
+.evo-num { position: absolute; top: -18px; left: 24px; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: var(--bg); }
+.evo-card.bot .evo-num { background: #60A5FA; }
+.evo-card.assistant .evo-num { background: var(--coral); }
+.evo-card.agent .evo-num { background: var(--accent); }
+.evo-emoji { font-size: 48px; margin-bottom: 10px; margin-top: 6px; }
+.evo-name { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+.evo-card.bot .evo-name { color: #60A5FA; }
+.evo-card.assistant .evo-name { color: var(--coral); }
+.evo-card.agent .evo-name { color: var(--accent); }
+.evo-tagline { font-size: 15px; color: var(--white-60); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+.evo-body { font-size: 16px; color: var(--white-80); line-height: 1.55; }
+.evo-body strong { color: var(--white); font-weight: 600; }
+
+/* INFOGRAPHIC — agent under the hood */
+.infographic { margin-top: 8px; padding: 0; }
+.info-layer { border-radius: 18px; padding: 26px 30px; margin-bottom: 14px; position: relative; }
+.info-layer.shell {
+  background: linear-gradient(135deg, rgba(167,139,250,0.22) 0%, rgba(124,58,237,0.08) 100%);
+  border: 2px solid rgba(167,139,250,0.5);
+  box-shadow: 0 10px 40px rgba(167,139,250,0.12);
+}
+.info-layer.llm {
+  background: linear-gradient(135deg, rgba(224,116,97,0.22) 0%, rgba(224,116,97,0.08) 100%);
+  border: 2px solid rgba(224,116,97,0.5);
+  box-shadow: 0 10px 40px rgba(224,116,97,0.12);
+}
+.info-label { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; margin-bottom: 14px; }
+.info-layer.shell .info-label { color: var(--accent); }
+.info-layer.llm .info-label { color: var(--coral); }
+.info-blocks { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+.info-block { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 16px; text-align: center; }
+.info-block-icon { font-size: 28px; margin-bottom: 6px; }
+.info-block-name { font-size: 16px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+.info-block-desc { font-size: 13px; color: var(--white-60); line-height: 1.35; }
+.info-arrow { text-align: center; font-size: 28px; color: var(--white-40); margin: -2px 0 8px; }
+
+/* PATH TO LESSON — cards highlighting lesson 7 */
+.lesson-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 12px; }
+.lesson-card { background: var(--white-10); border-radius: 14px; padding: 18px 16px; border-left: 4px solid var(--white-20); }
+.lesson-card.done { opacity: 0.55; }
+.lesson-card.today { background: linear-gradient(135deg, rgba(167,139,250,0.22) 0%, rgba(167,139,250,0.06) 100%); border-left-color: var(--accent); border: 2px solid rgba(167,139,250,0.4); box-shadow: 0 8px 30px rgba(167,139,250,0.18); }
+.lesson-card .l-num { font-size: 13px; font-weight: 700; color: var(--white-40); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.lesson-card.today .l-num { color: var(--accent); }
+.lesson-card .l-name { font-size: 17px; font-weight: 700; color: var(--white); margin-bottom: 3px; }
+.lesson-card .l-desc { font-size: 13px; color: var(--white-60); line-height: 1.35; }
+.lesson-card.today .l-name { color: var(--accent); }
+
+/* DEFINITION SLIDE */
+.definition-box {
+  background: linear-gradient(135deg, rgba(167,139,250,0.15) 0%, rgba(124,58,237,0.04) 100%);
+  border: 2px solid rgba(167,139,250,0.4);
+  border-radius: 24px;
+  padding: 44px 52px;
+  margin: 20px auto;
+  max-width: 900px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.def-label { font-size: 14px; text-transform: uppercase; letter-spacing: 3px; color: var(--accent); font-weight: 700; margin-bottom: 18px; }
+.def-text { font-size: 28px; line-height: 1.5; color: var(--white); font-weight: 500; }
+.def-text strong { color: var(--accent); font-weight: 800; }
+.def-text em { color: var(--coral); font-style: normal; font-weight: 600; }
+
+.small-text { font-size: 16px; color: var(--white-40); margin-top: 20px; }
+
+/* ANIMATIONS */
+@keyframes pulseGlow { 0%,100% { box-shadow: 0 0 30px rgba(167,139,250,0.3); } 50% { box-shadow: 0 0 60px rgba(167,139,250,0.65); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInScale { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+@keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+.pulse-glow { animation: pulseGlow 2.4s ease-in-out infinite; }
+.slide.active .anim-up { animation: slideUp 0.6s ease-out both; }
+.slide.active .anim-up-d1 { animation: slideUp 0.6s ease-out 0.15s both; }
+.slide.active .anim-up-d2 { animation: slideUp 0.6s ease-out 0.3s both; }
+.slide.active .anim-up-d3 { animation: slideUp 0.6s ease-out 0.45s both; }
+.slide.active .anim-up-d4 { animation: slideUp 0.6s ease-out 0.6s both; }
+.slide.active .anim-scale { animation: fadeInScale 0.5s ease-out 0.2s both; }
+.slide.active .anim-float { animation: floaty 3s ease-in-out infinite; }
+
+.typing-dots { display: inline-flex; gap: 4px; vertical-align: middle; margin-left: 6px; }
+.typing-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: typingBounce 1.4s ease-in-out infinite; }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-8px); } }
+
+/* ===== TIMELINE ===== */
+.timeline { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; margin-top: 20px; position: relative; }
+.timeline::before { content: ''; position: absolute; top: 34px; left: 5%; right: 5%; height: 2px; background: linear-gradient(to right, rgba(148,163,184,0.4) 0%, var(--accent) 100%); z-index: 0; }
+.tl-step { position: relative; z-index: 1; text-align: center; padding: 0 6px; }
+.tl-dot { width: 68px; height: 68px; border-radius: 50%; background: var(--bg-2); border: 3px solid; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; }
+.tl-step.s1 .tl-dot { border-color: #64748b; color: #94a3b8; }
+.tl-step.s2 .tl-dot { border-color: var(--teal); color: var(--teal); }
+.tl-step.s3 .tl-dot { border-color: #c084fc; color: #c084fc; }
+.tl-step.s4 .tl-dot { border-color: var(--green); color: var(--green); }
+.tl-step.s5 .tl-dot { border-color: var(--blue); color: var(--blue); }
+.tl-step.s6 .tl-dot { border-color: var(--orange); color: var(--orange); }
+.tl-step.s7 .tl-dot { border-color: var(--coral); color: var(--coral); box-shadow: 0 0 30px rgba(224,116,97,0.6); background: linear-gradient(135deg, rgba(224,116,97,0.25) 0%, rgba(224,116,97,0.05) 100%); }
+.tl-year { font-size: 12px; font-weight: 700; color: var(--white-40); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.tl-name { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 4px; line-height: 1.25; }
+.tl-tool { font-size: 12px; color: var(--white-60); line-height: 1.3; }
+.tl-step.s7 .tl-name { color: var(--coral); }
+
+/* ===== STAGE COVER ===== */
+.slide.stage-cover { text-align: center; justify-content: center; align-items: center; }
+.stage-num { display: inline-block; padding: 8px 24px; border-radius: 100px; font-size: 13px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 30px; }
+.stage-cover.s1 { background: radial-gradient(ellipse at 50% 40%, rgba(148,163,184,0.18) 0%, transparent 60%); }
+/* Background images for stage covers */
+.slide-bg-img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  opacity: 0.18; z-index: 0; pointer-events: none;
+}
+.slide.stage-cover.has-bg { z-index: auto; }
+.slide.stage-cover.has-bg .stage-num,
+.slide.stage-cover.has-bg .stage-title-big,
+.slide.stage-cover.has-bg .stage-tagline,
+.slide.stage-cover.has-bg .stage-diff { position: relative; z-index: 1; }
+.stage-cover.s3 { background: radial-gradient(ellipse at 50% 40%, rgba(192,132,252,0.22) 0%, transparent 60%); }
+.stage-cover.s1 .stage-num { background: rgba(148,163,184,0.2); color: #94a3b8; border: 1px solid rgba(148,163,184,0.4); }
+.stage-cover.s2 { background: radial-gradient(ellipse at 50% 40%, rgba(20,184,166,0.2) 0%, transparent 60%); }
+.stage-cover.s2 .stage-num { background: rgba(20,184,166,0.2); color: var(--teal); border: 1px solid rgba(20,184,166,0.5); }
+.stage-title-big { font-size: 80px; font-weight: 900; letter-spacing: -2.5px; line-height: 1.0; margin-bottom: 20px; }
+.stage-cover.s1 .stage-title-big { color: #cbd5e1; }
+.stage-cover.s2 .stage-title-big { color: var(--teal); }
+.stage-tagline { font-size: 28px; font-weight: 500; color: var(--white-80); margin-bottom: 24px; line-height: 1.3; }
+.stage-diff { font-size: 19px; color: var(--white-60); font-style: italic; max-width: 800px; margin: 0 auto; line-height: 1.5; }
+
+/* ===== TOOL CARDS (players) ===== */
+.players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 18px; }
+.players-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 18px; }
+.player-card { background: var(--white-10); border: 1px solid var(--white-20); border-radius: 18px; padding: 24px 22px; transition: transform 0.3s; }
+.player-card:hover { transform: translateY(-4px); }
+.player-card.accent-s1 { border-left: 4px solid #94a3b8; }
+.player-card.accent-s2 { border-left: 4px solid var(--teal); }
+.player-card.accent-s3 { border-left: 4px solid #c084fc; }
+.player-card.accent-s4 { border-left: 4px solid var(--green); }
+.player-card.accent-s5 { border-left: 4px solid var(--blue); }
+.player-card.accent-s6 { border-left: 4px solid var(--orange); }
+.player-card.accent-s7 { border-left: 4px solid var(--coral); }
+.player-logo { font-size: 38px; margin-bottom: 10px; }
+.player-name { font-size: 22px; font-weight: 800; color: var(--white); margin-bottom: 6px; }
+.player-desc { font-size: 15px; color: var(--white-70); line-height: 1.5; margin-bottom: 10px; color: var(--white-80); }
+.player-url { font-size: 13px; color: var(--white-40); font-family: monospace; }
+.player-badge { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.1); color: var(--white-60); margin-top: 6px; }
+
+/* ===== OPEN LINK BUTTON ===== */
+.open-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 6px; padding: 4px 12px;
+  background: rgba(167,139,250,0.15); border: 1px solid rgba(167,139,250,0.35);
+  border-radius: 8px; font-size: 13px; font-weight: 600;
+  color: var(--accent); text-decoration: none;
+  transition: background 0.2s, transform 0.15s;
+  cursor: pointer;
+}
+.open-link:hover { background: rgba(167,139,250,0.3); transform: translateY(-1px); color: var(--white); }
+.open-link .arrow { font-size: 15px; transition: transform 0.2s; }
+.open-link:hover .arrow { transform: translate(2px, -2px); }
+.slide.practice-slide .open-link { background: rgba(124,58,237,0.1); border-color: rgba(124,58,237,0.3); color: var(--accent-dark); }
+.slide.practice-slide .open-link:hover { background: rgba(124,58,237,0.2); color: #1e1b4b; }
+.player-card.accent-s2 .player-name { color: var(--teal); }
+.player-card.accent-s1 .player-name { color: #cbd5e1; }
+
+/* ===== PRACTICE SLIDE (light theme) ===== */
+.slide.practice-slide { background: #fefbff !important; }
+.slide.practice-slide .slide-title { color: #1e1b4b; }
+.slide.practice-slide .slide-title .accent { color: var(--accent-dark); }
+.slide.practice-slide .slide-subtitle { color: #475569; }
+.slide.practice-slide .card { background: rgba(124,58,237,0.05); border: 1px solid rgba(124,58,237,0.15); }
+.slide.practice-slide .card-title { color: #4c1d95; }
+.slide.practice-slide .card-body { color: #475569; }
+.slide.practice-slide a { color: var(--accent-dark); }
+.slide.practice-slide .quote { color: #334155; border-left-color: var(--accent-dark); background: rgba(124,58,237,0.06); }
+.slide.practice-slide .small-text { color: #64748b; }
+
+.step-list { margin-top: 14px; }
+.step-row { display: flex; align-items: flex-start; margin-bottom: 14px; font-size: 19px; line-height: 1.55; }
+.step-row .step-num-big { flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%; background: var(--accent-dark); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; margin-right: 16px; margin-top: 1px; box-shadow: 0 4px 16px rgba(124,58,237,0.3); }
+.step-row .step-content { flex: 1; color: #334155; }
+.step-row .step-content strong { color: #1e1b4b; }
+.step-row .step-content em { color: var(--accent-dark); font-style: normal; font-weight: 600; }
+
+.practice-banner {
+  display: inline-block;
+  background: var(--accent-dark);
+  color: #fff;
+  padding: 6px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-right: 14px;
+  box-shadow: 0 4px 16px rgba(124,58,237,0.35);
+}
+
+/* ===== DIFF CARD (чем отличается от предыдущего) ===== */
+.diff-card { background: linear-gradient(135deg, rgba(167,139,250,0.14) 0%, rgba(167,139,250,0.03) 100%); border: 1px solid rgba(167,139,250,0.3); border-radius: 16px; padding: 22px 28px; margin-top: 20px; }
+.diff-label { font-size: 12px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+.diff-text { font-size: 19px; color: var(--white-80); line-height: 1.5; }
+.diff-text strong { color: var(--white); }
+
+.tbl { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 12px; font-size: 17px; }
+.tbl th { text-align: left; padding: 12px 16px; background: var(--white-10); color: var(--accent); font-weight: 700; border-bottom: 2px solid var(--white-20); }
+.tbl td { padding: 10px 16px; border-bottom: 1px solid var(--white-10); color: var(--white-80); }
+.tbl th:first-child { border-radius: 10px 0 0 0; } .tbl th:last-child { border-radius: 0 10px 0 0; }
+
+/* ===== GLOSSARY / TERMS ===== */
+/* inline термин — пунктирное подчёркивание + маленькая расшифровка в скобках */
+.term { border-bottom: 1px dashed rgba(167,139,250,0.55); padding-bottom: 1px; font-weight: 600; color: var(--white); }
+.slide.practice-slide .term { border-bottom-color: rgba(124,58,237,0.55); color: #1e1b4b; }
+.gloss { font-size: 14px; color: var(--white-40); font-style: italic; font-weight: 400; }
+.slide.practice-slide .gloss { color: #64748b; }
+.inline-gloss { font-size: 0.75em; color: var(--white-40); font-weight: 400; font-style: italic; }
+.slide.practice-slide .inline-gloss { color: #64748b; }
+
+/* glossary bar внизу слайда */
+.glossary-bar {
+  margin-top: 30px;
+  padding: 18px 24px;
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 14px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.glossary-bar-label {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: -4px;
+}
+.gloss-item { }
+.gloss-term { font-size: 14px; font-weight: 800; color: var(--white); margin-bottom: 3px; }
+.gloss-desc { font-size: 13px; color: var(--white-60); line-height: 1.4; }
+
+/* ===== STAGE COVERS — REMAINING COLORS ===== */
+.stage-cover.s3 { background: radial-gradient(ellipse at 50% 40%, rgba(192,132,252,0.22) 0%, transparent 60%); }
+.stage-cover.s3 .stage-num { background: rgba(192,132,252,0.2); color: #c084fc; border: 1px solid rgba(192,132,252,0.5); }
+.stage-cover.s3 .stage-title-big { color: #c084fc; }
+.stage-cover.s4 { background: radial-gradient(ellipse at 50% 40%, rgba(94,196,122,0.2) 0%, transparent 60%); }
+.stage-cover.s4 .stage-num { background: rgba(94,196,122,0.2); color: var(--green); border: 1px solid rgba(94,196,122,0.5); }
+.stage-cover.s4 .stage-title-big { color: var(--green); }
+
+/* ===== SPLIT SCREEN (before / after, ты / агент) ===== */
+.split-screen { display: grid; grid-template-columns: 1fr 80px 1fr; gap: 0; margin-top: 18px; align-items: stretch; }
+.split-side { background: var(--white-10); border-radius: 20px; padding: 32px 30px; border: 2px solid transparent; }
+.split-side.left { border-color: rgba(148,163,184,0.3); }
+.split-side.right { border-color: rgba(192,132,252,0.45); background: linear-gradient(145deg, rgba(192,132,252,0.15) 0%, rgba(192,132,252,0.04) 100%); box-shadow: 0 10px 40px rgba(192,132,252,0.12); }
+.split-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; }
+.split-side.left .split-label { color: #94a3b8; }
+.split-side.right .split-label { color: #c084fc; }
+.split-icon { font-size: 44px; margin-bottom: 14px; }
+.split-title { font-size: 26px; font-weight: 800; color: var(--white); margin-bottom: 14px; }
+.split-body { font-size: 17px; color: var(--white-80); line-height: 1.55; }
+.split-body ul { list-style: none; margin-top: 8px; }
+.split-body li { padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+.split-body li:last-child { border-bottom: none; }
+.split-arrow { display: flex; align-items: center; justify-content: center; font-size: 48px; color: #c084fc; animation: floaty 3s ease-in-out infinite; }
+
+/* ===== FEATURED GRID (1 big + 3 small) ===== */
+.feat-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 10px; margin-top: 4px; }
+.feat-main { background: linear-gradient(145deg, rgba(192,132,252,0.18) 0%, rgba(192,132,252,0.03) 100%); border: 2px solid rgba(192,132,252,0.45); border-radius: 22px; padding: 20px 24px; box-shadow: 0 12px 50px rgba(192,132,252,0.15); }
+.feat-main-tag { display: inline-block; padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; background: rgba(192,132,252,0.25); color: #c084fc; margin-bottom: 12px; }
+.feat-main-name { font-size: 48px; font-weight: 900; color: #c084fc; margin-bottom: 8px; letter-spacing: -1px; }
+.feat-main-tagline { font-size: 19px; color: var(--white-80); line-height: 1.5; margin-bottom: 14px; }
+.feat-main-facts { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 14px 18px; font-size: 14px; color: var(--white-60); line-height: 1.7; }
+.feat-main-facts strong { color: var(--white); }
+.feat-side { display: flex; flex-direction: column; gap: 4px; }
+.feat-mini { background: var(--white-10); border: 1px solid rgba(192,132,252,0.3); border-radius: 14px; padding: 0 0 10px; flex: 1; overflow: hidden; }
+.feat-mini-name { font-size: 20px; font-weight: 800; color: #c084fc; margin-bottom: 4px; }
+.feat-mini-desc { font-size: 14px; color: var(--white-70); line-height: 1.45; color: var(--white-80); }
+.feat-mini-url { font-size: 11px; color: var(--white-40); font-family: monospace; margin-top: 6px; }
+
+/* ===== RECURSION / MATRYOSHKA ===== */
+.matryoshka { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 24px; }
+.matry-box { padding: 24px 32px; border-radius: 18px; text-align: center; font-weight: 700; position: relative; }
+.matry-box.l1 { background: rgba(192,132,252,0.2); border: 2px solid rgba(192,132,252,0.5); font-size: 22px; color: #c084fc; }
+.matry-box.l2 { background: rgba(224,116,97,0.2); border: 2px solid rgba(224,116,97,0.5); font-size: 18px; color: var(--coral); }
+.matry-box.l3 { background: rgba(20,184,166,0.2); border: 2px solid rgba(20,184,166,0.5); font-size: 16px; color: var(--teal); }
+.matry-arrow { font-size: 32px; color: var(--white-40); }
+.matry-box small { display: block; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin-top: 4px; }
+
+/* ===== HORIZONTAL FLOW STEPS ===== */
+.hflow { display: grid; grid-template-columns: repeat(4, 1fr) ; gap: 14px; margin-top: 18px; }
+.hflow-step { background: var(--white-10); border-radius: 16px; padding: 22px 20px; position: relative; border: 1px solid var(--white-20); }
+.hflow-step::after { content: '→'; position: absolute; right: -12px; top: 50%; transform: translateY(-50%); font-size: 26px; color: var(--accent); z-index: 2; }
+.hflow-step:last-child::after { display: none; }
+.hflow-label { font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+.hflow-title { font-size: 18px; font-weight: 800; color: var(--white); margin-bottom: 8px; line-height: 1.3; }
+.hflow-body { font-size: 14px; color: var(--white-70); line-height: 1.5; color: var(--white-80); }
+
+/* ===== COMPARE TABLE (highlight column) ===== */
+.compare-tbl { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 14px; }
+.compare-tbl th, .compare-tbl td { padding: 14px 18px; text-align: left; border-bottom: 1px solid var(--white-10); font-size: 15px; }
+.compare-tbl th { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--white-60); font-weight: 700; background: var(--white-10); }
+.compare-tbl td { color: var(--white-80); }
+.compare-tbl td:first-child { color: var(--white); font-weight: 600; font-size: 15px; }
+.compare-tbl .highlight-col { background: rgba(94,196,122,0.08); }
+.compare-tbl th.highlight-col { background: rgba(94,196,122,0.15); color: var(--green); }
+.compare-tbl .highlight-col.strong { color: var(--green); font-weight: 700; }
+
+/* ===== BROWSER VISUAL METAPHOR ===== */
+.browser-vis { background: var(--white-10); border-radius: 14px; padding: 0; overflow: hidden; border: 1px solid var(--white-20); margin-top: 14px; }
+.browser-chrome { background: rgba(0,0,0,0.35); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--white-10); }
+.browser-dots { display: flex; gap: 6px; }
+.browser-dots span { width: 10px; height: 10px; border-radius: 50%; }
+.browser-dots span:nth-child(1) { background: #e05555; }
+.browser-dots span:nth-child(2) { background: #f0c040; }
+.browser-dots span:nth-child(3) { background: #5ec47a; }
+.browser-url { flex: 1; background: rgba(255,255,255,0.08); border-radius: 6px; padding: 4px 12px; font-size: 12px; color: var(--white-60); font-family: monospace; }
+.browser-content { padding: 22px 28px; }
+.cursor-ai { display: inline-block; margin-left: 6px; animation: cursorBlink 1.2s ease-in-out infinite; }
+@keyframes cursorBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* ===== PROMPT DEMO BOX ===== */
+.demo-box { background: linear-gradient(135deg, rgba(94,196,122,0.1) 0%, rgba(94,196,122,0.02) 100%); border: 2px solid rgba(94,196,122,0.35); border-radius: 18px; padding: 26px 32px; margin-top: 16px; }
+.demo-label { font-size: 11px; font-weight: 800; color: var(--green); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+.demo-text { font-size: 19px; color: var(--white); line-height: 1.55; font-style: italic; }
+.demo-result { background: rgba(94,196,122,0.06); border-left: 4px solid var(--green); padding: 18px 24px; margin-top: 16px; border-radius: 0 12px 12px 0; }
+.demo-result-label { font-size: 12px; font-weight: 800; color: var(--green); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+.demo-result-body { font-size: 16px; color: var(--white-80); line-height: 1.6; }
+.demo-result-body strong { color: var(--white); }
+
+/* ===== MULTI-AGENT TOPOLOGIES ===== */
+.topo-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 16px; }
+.topo-card { background: var(--white-10); border-radius: 20px; padding: 22px; border: 2px solid var(--white-10); }
+.topo-title { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+.topo-subtitle { font-size: 13px; color: var(--white-60); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+.topo-visual { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 16px; min-height: 140px; justify-content: center; }
+.topo-desc { font-size: 14px; color: var(--white-80); line-height: 1.5; }
+.topo-example { font-size: 13px; color: var(--white-60); margin-top: 8px; font-style: italic; }
+
+/* Topology visual blocks */
+.topo-node { padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; text-align: center; }
+.topo-node.boss { background: rgba(167,139,250,0.3); border: 2px solid var(--accent); color: var(--accent); font-size: 15px; }
+.topo-node.worker { background: rgba(255,255,255,0.08); border: 1px solid var(--white-20); color: var(--white-80); font-size: 12px; }
+.topo-node.gen { background: rgba(94,196,122,0.2); border: 2px solid var(--green); color: var(--green); }
+.topo-node.critic { background: rgba(224,85,85,0.2); border: 2px solid var(--red); color: var(--red); }
+.topo-arrow-down { color: var(--accent); font-size: 18px; }
+.topo-row { display: flex; gap: 10px; align-items: center; }
+.topo-arrow-right { color: var(--teal); font-size: 20px; }
+.topo-arrow-vs { color: var(--yellow); font-size: 24px; font-weight: 900; }
+
+.topo-card.t1 { border-color: rgba(167,139,250,0.4); }
+.topo-card.t1 .topo-title { color: var(--accent); }
+.topo-card.t2 { border-color: rgba(20,184,166,0.4); }
+.topo-card.t2 .topo-title { color: var(--teal); }
+.topo-card.t3 { border-color: rgba(240,192,64,0.4); }
+.topo-card.t3 .topo-title { color: var(--yellow); }
+
+/* ===== SCREENSHOTS ===== */
+.player-shot {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #fff;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.player-shot img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+.feat-shot {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #fff;
+  border-radius: 14px;
+  margin-top: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.feat-shot img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+
+.hero-shot {
+  max-width: 900px;
+  margin: 18px auto 0;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.hero-shot img { width: 100%; height: auto; display: block; }
+
+.placeholder-shot {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px dashed rgba(255,255,255,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  color: rgba(255,255,255,0.35);
+  font-weight: 900;
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="slide-counter" id="slideCounter"></div>
+<button class="fullscreen-btn" id="fsBtn" title="Полный экран">&#x26F6;</button>
+
+<div class="deck">
+
+<!-- ============ СЛАЙД 1: ТИТУЛ ============ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;" class="anim-up">neovida.ai / ИИ. Новая реальность</div>
+  <div class="title-big anim-up-d1 pulse-glow" style="border-radius:24px; padding:14px 40px; display:inline-block;">Агентный подход</div>
+  <div class="title-sub anim-up-d2">Автоматизация на&nbsp;максималках</div>
+  <div class="title-meta anim-up-d3">Занятие 7 &middot; 16 апреля 2026</div>
+</div>
+
+<!-- ============ СЛАЙД 2: ПУТЬ КУРСА ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Мы прошли <span class="accent">шесть занятий</span>. Сегодня — седьмое</div>
+  <div class="lesson-grid anim-up-d1">
+    <div class="lesson-card done">
+      <div class="l-num">Занятие 1</div>
+      <div class="l-name">Погружение</div>
+      <div class="l-desc">Навигатор по ИИ</div>
+    </div>
+    <div class="lesson-card done">
+      <div class="l-num">Занятие 2</div>
+      <div class="l-name">Промпт-инженерия</div>
+      <div class="l-desc">Как думать с ИИ</div>
+    </div>
+    <div class="lesson-card done">
+      <div class="l-num">Занятие 3</div>
+      <div class="l-name">Ассистенты</div>
+      <div class="l-desc">Gems, NotebookLM</div>
+    </div>
+    <div class="lesson-card done">
+      <div class="l-num">Занятие 4</div>
+      <div class="l-name">Google Workspace</div>
+      <div class="l-desc">Canvas, Deep Research</div>
+    </div>
+  </div>
+  <div class="lesson-grid anim-up-d2" style="margin-top:16px;">
+    <div class="lesson-card done">
+      <div class="l-num">Занятие 5</div>
+      <div class="l-name">Данные</div>
+      <div class="l-desc">Аналитика, прогнозы</div>
+    </div>
+    <div class="lesson-card done">
+      <div class="l-num">Занятие 6</div>
+      <div class="l-name">Визуал</div>
+      <div class="l-desc">Презентации, картинки</div>
+    </div>
+    <div class="lesson-card today">
+      <div class="l-num">Занятие 7 &mdash; сегодня</div>
+      <div class="l-name">Агентный подход</div>
+      <div class="l-desc">Автоматизация на максималках</div>
+    </div>
+    <div class="lesson-card">
+      <div class="l-num">Занятие 8</div>
+      <div class="l-name">Стратегия</div>
+      <div class="l-desc">ИИ как рычаг роста</div>
+    </div>
+  </div>
+  <div class="quote anim-up-d3">Раньше вы <strong>писали запросы</strong> ИИ. Сегодня вы научитесь <strong>ставить ему цели</strong> — и он будет делать всё сам.</div>
+</div>
+
+<!-- ============ СЛАЙД 3: БЫЛО → СТАЛО ============ -->
+<div class="slide">
+  <div class="analogy-card anim-scale">
+    <div class="analogy-emoji anim-float">🤖</div>
+    <div class="analogy-title">Было &rarr; Стало</div>
+    <div class="analogy-body">
+      <span style="color:var(--coral);"><strong>Раньше:</strong></span> ты пишешь запрос &rarr; ИИ пишет ответ. <br>Дальше действуешь <em>ты сам</em>.<br><br>
+      <span style="color:var(--accent);"><strong>Теперь:</strong></span> ты ставишь <strong>цель</strong> &rarr; ИИ сам <strong>планирует</strong>, <strong>действует</strong>, <strong>проверяет себя</strong> и <strong>приносит результат</strong>.
+    </div>
+  </div>
+  <div class="quote coral anim-up-d2">Это и есть <strong>агент</strong>. Не чат. Не ассистент. Сотрудник с&nbsp;KPI.</div>
+</div>
+
+<!-- ============ СЛАЙД 4: БОТ / АССИСТЕНТ / АГЕНТ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Три разные вещи — <span class="accent">часто путают</span></div>
+  <div class="slide-subtitle anim-up-d1">Если не различать — будешь пробовать не тот инструмент и разочаруешься</div>
+  <div class="evo-grid">
+    <div class="evo-card bot anim-up-d2">
+      <div class="evo-num">1</div>
+      <div class="evo-emoji">🔘</div>
+      <div class="evo-name">Бот</div>
+      <div class="evo-tagline">Кнопки. Сценарий</div>
+      <div class="evo-body">
+        Жёсткая логика: <strong>если А &rarr; ответ Б</strong>.<br><br>
+        Не думает, не понимает. Просто выполняет то, что в него прописано.<br><br>
+        <em style="color:var(--white-60);">Пример: меню в Telegram-боте</em>
+      </div>
+    </div>
+    <div class="evo-card assistant anim-up-d3">
+      <div class="evo-num">2</div>
+      <div class="evo-emoji">💬</div>
+      <div class="evo-name">Ассистент</div>
+      <div class="evo-tagline">Интеллект. 1 задача</div>
+      <div class="evo-body">
+        Понимает контекст и работает с базой знаний.<br><br>
+        Отвечает умно на <strong>одну</strong> задачу: продажи, поддержка, помощь.<br><br>
+        <em style="color:var(--white-60);">Пример: GPTs, Gems, Claude Projects <span style="font-size:12px; display:block; margin-top:4px;">— кастомные чат-боты внутри ChatGPT, Gemini и&nbsp;Claude (как&nbsp;на&nbsp;уроке&nbsp;3).</span></em>
+      </div>
+    </div>
+    <div class="evo-card agent anim-up-d4">
+      <div class="evo-num">3</div>
+      <div class="evo-emoji">🦾</div>
+      <div class="evo-name">Агент</div>
+      <div class="evo-tagline">Цель. Много шагов. Сам</div>
+      <div class="evo-body">
+        Ты задаёшь <strong>цель</strong> — он сам выбирает шаги, использует инструменты, действует во внешнем мире.<br><br>
+        <em style="color:var(--white-60);">Пример: Manus собирает отчёт, пишет письмо, отправляет</em>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 5: ОПРЕДЕЛЕНИЕ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Что такое <span class="accent">агент</span> — формально</div>
+  <div class="definition-box anim-scale">
+    <div class="def-label">Определение</div>
+    <div class="def-text">
+      Агент — это <strong>несколько LLM-моделей</strong> под капотом и <em>оболочка</em> из инструментов, памяти, планировщика и скиллов, которая сама <strong>планирует и выполняет</strong> многошаговые задачи.
+    </div>
+    <div style="font-size:15px; color:var(--white-40); font-style:italic; margin-top:18px; text-align:left;">
+      <strong style="color:var(--accent);">LLM</strong> <span style="color:var(--white-60);">(Large Language Model)</span> — большая языковая модель, «мозг» ИИ. Это ChatGPT, Claude, Gemini и&nbsp;подобные.
+    </div>
+  </div>
+  <div class="quote anim-up-d2">Это не «умный чат». Это <strong>исполнитель</strong> — как сотрудник, которому ставят&nbsp;<span class="term">KPI</span> <span class="inline-gloss">(цель, по&nbsp;которой его оценивают)</span>.</div>
+</div>
+
+<!-- ============ СЛАЙД 6: ИНФОГРАФИКА «АГЕНТ ПОД КАПОТОМ» ============ -->
+<div class="slide">
+  <div class="slide-title anim-up" style="text-align:center;">Агент <span class="accent">под капотом</span></div>
+  <div class="infographic">
+
+    <div class="info-layer shell anim-up-d1">
+      <div class="info-label">&#x1F9E0; Оболочка агента — что делает его &laquo;умным исполнителем&raquo;</div>
+      <div class="info-blocks">
+        <div class="info-block">
+          <div class="info-block-icon">🎯</div>
+          <div class="info-block-name">Планировщик</div>
+          <div class="info-block-desc">Разбивает цель на шаги</div>
+        </div>
+        <div class="info-block">
+          <div class="info-block-icon">🧠</div>
+          <div class="info-block-name">Память</div>
+          <div class="info-block-desc">Помнит контекст и факты</div>
+        </div>
+        <div class="info-block">
+          <div class="info-block-icon">🛠️</div>
+          <div class="info-block-name">Инструменты</div>
+          <div class="info-block-desc">Браузер, почта, API, файлы</div>
+        </div>
+        <div class="info-block">
+          <div class="info-block-icon">🎓</div>
+          <div class="info-block-name">Скиллы</div>
+          <div class="info-block-desc">Готовые навыки и сценарии</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-arrow anim-up-d2">&darr;&nbsp;использует&nbsp;&darr;</div>
+
+    <div class="info-layer llm anim-up-d3">
+      <div class="info-label">&#x1F4AC; Мозг агента — LLM-модели <span style="color:var(--white-40); font-weight:400; text-transform:none; letter-spacing:0;">(большие языковые модели, часто несколько сразу)</span></div>
+      <div class="info-blocks">
+        <div class="info-block">
+          <div class="info-block-icon">◆</div>
+          <div class="info-block-name">Claude</div>
+          <div class="info-block-desc">от Anthropic</div>
+        </div>
+        <div class="info-block">
+          <div class="info-block-icon">◆</div>
+          <div class="info-block-name">GPT-5</div>
+          <div class="info-block-desc">от OpenAI (ChatGPT)</div>
+        </div>
+        <div class="info-block">
+          <div class="info-block-icon">◆</div>
+          <div class="info-block-name">Gemini</div>
+          <div class="info-block-desc">от Google</div>
+        </div>
+        <div class="info-block">
+          <div class="info-block-icon">◆</div>
+          <div class="info-block-name">DeepSeek</div>
+          <div class="info-block-desc">из Китая</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="small-text anim-up-d4" style="text-align:center;">Запомните эту схему — к ней мы вернёмся в конце урока</div>
+</div>
+
+<!-- ============ СЛАЙД 6b: ИНФОГРАФИКА NotebookLM ============ -->
+<div class="slide" style="padding:30px 60px; background:#f8f9fa; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+  <div style="max-width:1200px; width:100%; border-radius:20px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.15);" class="anim-scale">
+    <img src="screens/agent-anatomy.png" alt="Что такое AI-агент: Анатомия системы" style="width:100%; height:auto; display:block;">
+  </div>
+  <div style="margin-top:16px; font-size:16px; color:#64748b; text-align:center;" class="anim-up-d2">Инфографика: <strong>«Что такое AI-агент — Анатомия системы»</strong>. Память, планировщик, навыки, внешние инструменты — всё вокруг ядра из&nbsp;нескольких LLM.</div>
+</div>
+
+<!-- ============ СЛАЙД 7: ПРОГРАММА НА СЕГОДНЯ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Программа на <span class="accent">сегодня</span></div>
+  <div class="slide-subtitle anim-up-d1">Пройдём <strong>эволюцию агентов</strong>, сделаем <strong>3 практики</strong> и увидим <strong>верхушку</strong></div>
+  <div class="cards-grid-3 anim-up-d2">
+    <div class="card" style="border-top:4px solid var(--accent);">
+      <div class="card-title" style="color:var(--accent);">🧭 Теория</div>
+      <div class="card-body" style="font-size:16px; line-height:1.6;">
+        &bull; Бот / ассистент / агент<br>
+        &bull; Агент под капотом<br>
+        &bull; 7 этапов эволюции<br>
+        &bull; Риски и ловушки
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--coral);">
+      <div class="card-title" style="color:var(--coral);">🔥 3 практики</div>
+      <div class="card-body" style="font-size:16px; line-height:1.6;">
+        &bull; <strong>Suvvy</strong> — свой агент-продажник<br>
+        &bull; <strong>Manus</strong> — автономный исполнитель<br>
+        &bull; <strong>Браузерный агент</strong> — Comet / Atlas
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--teal);">
+      <div class="card-title" style="color:var(--teal);">⭐ Верхушка</div>
+      <div class="card-body" style="font-size:16px; line-height:1.6;">
+        <strong>OpenClaw</strong> — open-source агент на&nbsp;своём сервере.<br><br>
+        Покажу свой, живьём, в&nbsp;Telegram.
+      </div>
+    </div>
+  </div>
+  <div class="quote anim-up-d3">Фраза, которую унесёте с&nbsp;урока: <strong style="color:var(--accent);">«Оркестрация — это новый код»</strong>.<br><span class="gloss">Оркестрация — управление несколькими исполнителями так, чтобы они работали вместе как один организм.</span></div>
+</div>
+
+<!-- ============ СЛАЙД 8: ТАЙМЛАЙН ЭВОЛЮЦИИ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up" style="text-align:center;">Эволюция агентов — <span class="accent">7 этапов</span></div>
+  <div class="slide-subtitle anim-up-d1" style="text-align:center;">От простых пайплайнов 2022 года до open-source self-host в&nbsp;феврале 2026</div>
+  <div class="timeline anim-up-d2">
+    <div class="tl-step s1">
+      <div class="tl-dot">1</div>
+      <div class="tl-year">2022-24</div>
+      <div class="tl-name">No-code<br>пайплайны</div>
+      <div class="tl-tool">n8n, Make, Zapier</div>
+    </div>
+    <div class="tl-step s2">
+      <div class="tl-dot">2</div>
+      <div class="tl-year">2024-25</div>
+      <div class="tl-name">Коммерч.<br>конструкторы</div>
+      <div class="tl-tool">Suvvy, Nextbot</div>
+    </div>
+    <div class="tl-step s3">
+      <div class="tl-dot">3</div>
+      <div class="tl-year">2025</div>
+      <div class="tl-name">Автономные<br>агенты</div>
+      <div class="tl-tool">Manus, Genspark</div>
+    </div>
+    <div class="tl-step s4">
+      <div class="tl-dot">4</div>
+      <div class="tl-year">2025</div>
+      <div class="tl-name">Браузерные<br>агенты</div>
+      <div class="tl-tool">Comet, Atlas</div>
+    </div>
+    <div class="tl-step s5">
+      <div class="tl-dot">5</div>
+      <div class="tl-year">2025-26</div>
+      <div class="tl-name">Внутри<br>LLM</div>
+      <div class="tl-tool">Kimi Swarm, GPT-5</div>
+    </div>
+    <div class="tl-step s6">
+      <div class="tl-dot">6</div>
+      <div class="tl-year">2026</div>
+      <div class="tl-name">LLM —<br>конструктор</div>
+      <div class="tl-tool">Claude Code</div>
+    </div>
+    <div class="tl-step s7">
+      <div class="tl-dot">⭐</div>
+      <div class="tl-year">фев 2026</div>
+      <div class="tl-name">Open-source<br>self-host</div>
+      <div class="tl-tool">OpenClaw</div>
+    </div>
+  </div>
+
+  <div class="glossary-bar anim-up-d3">
+    <div class="glossary-bar-label">📖 Слова, которые встретятся дальше — запомним сразу</div>
+    <div class="gloss-item">
+      <div class="gloss-term">No-code</div>
+      <div class="gloss-desc">Без программирования. Собираешь мышкой, не пишешь код.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Пайплайн</div>
+      <div class="gloss-desc">Цепочка действий. Как конвейер: шаг 1 &rarr; шаг 2 &rarr; шаг 3.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Open-source</div>
+      <div class="gloss-desc">Открытый код. Программа бесплатна, её можно изменять.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Self-host</div>
+      <div class="gloss-desc">На своём сервере. Не в облаке провайдера — у тебя дома.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 9: ЭТАП 1 — ОБЛОЖКА ============ -->
+<div class="slide stage-cover s1 has-bg">
+  <img class="slide-bg-img" src="screens/bg-stage1.png" alt="">
+  <div class="stage-num anim-up">Этап 1 &middot; 2022-2024</div>
+  <div class="stage-title-big anim-up-d1">No-code пайплайны</div>
+  <div class="stage-tagline anim-up-d2">Собираешь цепочку «<strong>если&nbsp;А&nbsp;&rarr; тогда&nbsp;Б</strong>» из&nbsp;готовых блоков — <strong>без&nbsp;программирования</strong></div>
+  <div class="stage-diff anim-up-d3">С&nbsp;этого всё начиналось. Не&nbsp;ИИ, не&nbsp;интеллект — просто <em>конструктор связок</em> между сервисами.<br><br><span class="gloss">No-code = без кода. Пайплайн = цепочка действий, как конвейер на заводе.</span></div>
+</div>
+
+<!-- ============ СЛАЙД 10: ЭТАП 1 — ИГРОКИ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up" style="color:#cbd5e1;">Этап 1 — <span style="color:#94a3b8;">старая школа</span></div>
+  <div class="slide-subtitle anim-up-d1">Три сервиса, на которых держалась автоматизация <em>до</em> эпохи ИИ-агентов</div>
+  <div class="players-grid anim-up-d2">
+    <div class="player-card accent-s1">
+      <div class="player-shot"><img src="screens/n8n.png" alt="n8n landing"></div>
+      <div class="player-name">n8n</div>
+      <div class="player-desc">Бесплатный, ставится на&nbsp;свой сервер. Можно строить сложные цепочки с&nbsp;условиями и&nbsp;повторами.</div>
+      <a class="open-link" href="https://n8n.io" target="_blank">n8n.io <span class="arrow">↗</span></a>
+    </div>
+    <div class="player-card accent-s1">
+      <div class="player-shot"><img src="screens/make.png" alt="Make"></div>
+      <div class="player-name">Make</div>
+      <div class="player-desc">Визуальный редактор: тащишь блоки мышкой, соединяешь линиями. Платный, но&nbsp;очень понятный.</div>
+      <a class="open-link" href="https://www.make.com" target="_blank">make.com <span class="arrow">↗</span></a>
+    </div>
+    <div class="player-card accent-s1">
+      <div class="player-shot"><img src="screens/zapier.png" alt="Zapier"></div>
+      <div class="player-name">Zapier</div>
+      <div class="player-desc">Самый известный. Тысячи готовых связок: <em>«если заявка в&nbsp;форме &rarr; отправь письмо»</em>.</div>
+      <a class="open-link" href="https://zapier.com" target="_blank">zapier.com <span class="arrow">↗</span></a>
+    </div>
+  </div>
+  <div class="diff-card anim-up-d3" style="border-color:rgba(148,163,184,0.3); background:linear-gradient(135deg,rgba(148,163,184,0.12) 0%,rgba(148,163,184,0.02) 100%);">
+    <div class="diff-label" style="color:#94a3b8;">Что тут не&nbsp;так для&nbsp;2026</div>
+    <div class="diff-text">Нет интеллекта. Любое «подумай» или «пойми клиента» — <strong>невозможно</strong>. Только жёсткие правила. Всё, что не&nbsp;предусмотрено — <strong>ломается</strong>.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД: n8n БЕЗ ИИ (ДО) ============ -->
+<div class="slide" style="padding:40px 60px; background:#111;">
+  <div class="slide-title anim-up" style="text-align:center; font-size:32px;">Вот так выглядел n8n <span style="color:#94a3b8;">без&nbsp;ИИ</span></div>
+  <div class="slide-subtitle anim-up-d1" style="text-align:center; font-size:18px;">Длинная цепочка: каждый блок — жёсткое правило. Ни&nbsp;один не&nbsp;думает — только выполняет</div>
+  <div style="max-width:1200px; margin:20px auto 0; border-radius:16px; overflow:hidden; box-shadow:0 16px 50px rgba(148,163,184,0.15); border:1px solid rgba(148,163,184,0.3);" class="anim-scale">
+    <img src="screens/n8n-without-ai.png" alt="n8n без AI" style="width:100%; display:block;">
+  </div>
+  <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:18px;" class="anim-up-d2">
+    <div style="background:rgba(148,163,184,0.1); border:1px solid rgba(148,163,184,0.25); border-radius:8px; padding:8px 14px; font-size:13px; color:var(--white-70);">📍 Спарси Google Maps</div>
+    <div style="font-size:18px; color:var(--white-30);">→</div>
+    <div style="background:rgba(148,163,184,0.1); border:1px solid rgba(148,163,184,0.25); border-radius:8px; padding:8px 14px; font-size:13px; color:var(--white-70);">🔗 Извлеки ссылки</div>
+    <div style="font-size:18px; color:var(--white-30);">→</div>
+    <div style="background:rgba(148,163,184,0.1); border:1px solid rgba(148,163,184,0.25); border-radius:8px; padding:8px 14px; font-size:13px; color:var(--white-70);">🧹 Убери дубли</div>
+    <div style="font-size:18px; color:var(--white-30);">→</div>
+    <div style="background:rgba(148,163,184,0.1); border:1px solid rgba(148,163,184,0.25); border-radius:8px; padding:8px 14px; font-size:13px; color:var(--white-70);">🌐 Зайди на сайт</div>
+    <div style="font-size:18px; color:var(--white-30);">→</div>
+    <div style="background:rgba(148,163,184,0.1); border:1px solid rgba(148,163,184,0.25); border-radius:8px; padding:8px 14px; font-size:13px; color:var(--white-70);">📧 Найди email</div>
+    <div style="font-size:18px; color:var(--white-30);">→</div>
+    <div style="background:rgba(148,163,184,0.1); border:1px solid rgba(148,163,184,0.25); border-radius:8px; padding:8px 14px; font-size:13px; color:var(--white-70);">📊 В&nbsp;таблицу</div>
+  </div>
+  <div style="text-align:center; margin-top:14px; font-size:15px; color:var(--white-50);" class="anim-up-d3">14 блоков подряд. Каждый делает ровно одну операцию. <strong style="color:#94a3b8;">Если клиент написал с&nbsp;ошибкой — всё сломается.</strong> Мозга нет.</div>
+</div>
+
+<!-- ============ ПЕРЕХОД: ПОЯВИЛСЯ LLM ============ -->
+<div class="slide" style="padding:0; justify-content:stretch; align-items:stretch;">
+  <!-- Фоновая картинка мозга на весь слайд -->
+  <img class="slide-bg-img" src="screens/llm-brain.png" alt="" style="opacity:0.35;">
+
+  <!-- Контент поверх -->
+  <div style="position:relative; z-index:1; display:flex; flex-direction:column; justify-content:center; height:100%; padding:50px 70px;">
+
+    <!-- Верх: заголовок -->
+    <div style="margin-bottom:auto;">
+      <div style="font-size:13px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); font-weight:700;" class="anim-up">2023-2024 &middot; Переломный момент</div>
+    </div>
+
+    <!-- Центр: главная фраза -->
+    <div style="text-align:center; margin:0 auto; max-width:800px;">
+      <div style="font-size:52px; font-weight:900; color:var(--white); line-height:1.1; margin-bottom:12px; text-shadow:0 4px 30px rgba(0,0,0,0.6);" class="anim-up-d1">Появился <span style="color:var(--accent);">недостающий компонент</span></div>
+      <div style="font-size:18px; color:var(--white-80); line-height:1.5; text-shadow:0 2px 10px rgba(0,0,0,0.5);" class="anim-up-d2">
+        OpenAI открыл <span class="term" style="border-bottom-color:rgba(167,139,250,0.7);">API</span> <span class="inline-gloss">(возможность подключения)</span> — и&nbsp;старые платформы получили <strong style="color:var(--accent);">«мозг»</strong>
+      </div>
+    </div>
+
+    <!-- Сравнение: раньше vs теперь -->
+    <div style="display:grid; grid-template-columns:1fr 40px 1fr; gap:0; max-width:700px; margin:0 auto 14px;" class="anim-up-d2">
+      <div style="background:rgba(224,85,85,0.12); border:1px solid rgba(224,85,85,0.3); border-radius:12px; padding:12px 16px; backdrop-filter:blur(8px);">
+        <div style="font-size:12px; font-weight:700; color:var(--red); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">❌ Было</div>
+        <div style="font-size:16px; color:var(--white); line-height:1.4;">«Если&nbsp;А → делай&nbsp;Б»<br><span style="color:var(--white-60); font-size:13px;">Жёсткие правила. Не&nbsp;понимает контекст.</span></div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:center; font-size:22px; color:var(--accent);">&rarr;</div>
+      <div style="background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.4); border-radius:12px; padding:12px 16px; backdrop-filter:blur(8px);">
+        <div style="font-size:12px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">✅ Стало</div>
+        <div style="font-size:16px; color:var(--white); line-height:1.4;">«<strong>Пойми</strong> клиента → <strong>ответь</strong> осмысленно»<br><span style="color:var(--white-60); font-size:13px;">Интеллект. Контекст. Анализ.</span></div>
+      </div>
+    </div>
+
+    <!-- Низ: 3 сервиса + вывод -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:auto;">
+      <div style="background:rgba(15,15,30,0.8); border-radius:14px; padding:16px 18px; border:1px solid rgba(167,139,250,0.3); backdrop-filter:blur(8px);" class="anim-up-d2">
+        <div style="font-size:22px; font-weight:800; color:var(--white); margin-bottom:6px;">🔗 n8n</div>
+        <div style="font-size:14px; color:var(--white-60); margin-bottom:8px;">Было: цепочки «если-то»</div>
+        <div style="font-size:15px; color:var(--accent); font-weight:600;">+ AI-ноды</div>
+        <div style="font-size:13px; color:var(--white-80); margin-top:4px;">Теперь в&nbsp;цепочку можно вставить LLM-блок — и&nbsp;бот <em>понимает</em> клиента</div>
+      </div>
+      <div style="background:rgba(15,15,30,0.8); border-radius:14px; padding:16px 18px; border:1px solid rgba(167,139,250,0.3); backdrop-filter:blur(8px);" class="anim-up-d3">
+        <div style="font-size:22px; font-weight:800; color:var(--white); margin-bottom:6px;">🧩 Make</div>
+        <div style="font-size:14px; color:var(--white-60); margin-bottom:8px;">Было: визуальные связки</div>
+        <div style="font-size:15px; color:var(--accent); font-weight:600;">+ AI-модули</div>
+        <div style="font-size:13px; color:var(--white-80); margin-top:4px;">Модуль ChatGPT / Claude прямо в&nbsp;сценарии — анализ, генерация, классификация</div>
+      </div>
+      <div style="background:rgba(15,15,30,0.8); border-radius:14px; padding:16px 18px; border:1px solid rgba(167,139,250,0.3); backdrop-filter:blur(8px);" class="anim-up-d4">
+        <div style="font-size:22px; font-weight:800; color:var(--white); margin-bottom:6px;">⚡ Zapier</div>
+        <div style="font-size:14px; color:var(--white-60); margin-bottom:8px;">Было: тысячи интеграций</div>
+        <div style="font-size:15px; color:var(--accent); font-weight:600;">+ AI-действия</div>
+        <div style="font-size:13px; color:var(--white-80); margin-top:4px;">AI-шаг в&nbsp;любом сценарии — <em>«проанализируй заявку и&nbsp;реши, кому&nbsp;её отправить»</em></div>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:14px; font-size:17px; color:var(--white-80); text-shadow:0 2px 8px rgba(0,0,0,0.5);" class="anim-up-d4">
+      ☝️ В&nbsp;старых платформах <strong>тоже можно делать агентов</strong> — потому что теперь там есть LLM-блок. Но&nbsp;следом появились платформы, <em>изначально</em> построенные вокруг ИИ &darr;
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ СЛАЙД: n8n С МОЗГОМ (ПОСЛЕ) ============ -->
+<div class="slide" style="padding:40px 60px; background:#111;">
+  <div class="slide-title anim-up" style="text-align:center; font-size:32px;">Вот так теперь выглядит <span style="color:var(--accent);">n8n с&nbsp;мозгом</span></div>
+  <div class="slide-subtitle anim-up-d1" style="text-align:center; font-size:18px;">AI Agent + LLM-модель + память + база знаний — всё в&nbsp;одном сценарии</div>
+  <div style="max-width:1100px; margin:16px auto 0; border-radius:16px; overflow:hidden; box-shadow:0 16px 50px rgba(167,139,250,0.25); border:1px solid rgba(167,139,250,0.3);" class="anim-scale">
+    <img src="screens/n8n-with-ai.png" alt="n8n с AI Agent" style="width:100%; display:block;">
+  </div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px;" class="anim-up-d2">
+    <div style="background:rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.25); border-radius:12px; padding:14px 18px;">
+      <div style="font-size:13px; font-weight:700; color:var(--accent); margin-bottom:6px;">🧩 Каждая нода = код</div>
+      <div style="font-size:14px; color:var(--white-70); line-height:1.5;">Каждый кружок на&nbsp;схеме — это <strong style="color:var(--white);">кусок кода</strong>, в&nbsp;котором прописано, как&nbsp;он&nbsp;взаимодействует с&nbsp;другими. Здесь вы&nbsp;собираете это мышкой. Но&nbsp;под&nbsp;капотом — код.</div>
+    </div>
+    <div style="background:rgba(232,148,74,0.1); border:1px solid rgba(232,148,74,0.25); border-radius:12px; padding:14px 18px;">
+      <div style="font-size:13px; font-weight:700; color:var(--orange); margin-bottom:6px;">🔮 А на&nbsp;этапе 6...</div>
+      <div style="font-size:14px; color:var(--white-70); line-height:1.5;"><strong style="color:var(--white);">Claude Code сам пишет</strong> все эти ноды — без&nbsp;визуального конструктора. Вы&nbsp;описываете словами → он&nbsp;создаёт весь сценарий кодом.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 11: ЭТАП 2 — ОБЛОЖКА ============ -->
+<div class="slide stage-cover s2 has-bg">
+  <img class="slide-bg-img" src="screens/bg-stage2.png" alt="">
+  <div class="stage-num anim-up">Этап 2 &middot; 2024-2025</div>
+  <div class="stage-title-big anim-up-d1">Коммерческие<br>конструкторы</div>
+  <div class="stage-tagline anim-up-d2">Готовые платформы: <strong>собрать агента-продажника за&nbsp;час</strong> — без&nbsp;кода, без&nbsp;серверов</div>
+  <div class="stage-diff anim-up-d3">В&nbsp;отличие от&nbsp;n8n — здесь уже <em>есть интеллект</em> на&nbsp;базе LLM. Не&nbsp;«если-то», а&nbsp;понимание клиента.</div>
+</div>
+
+<!-- ============ СЛАЙД 12: ЭТАП 2 — ИГРОКИ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Этап 2 — <span style="color:var(--teal);">коммерч. конструкторы</span></div>
+  <div class="slide-subtitle anim-up-d1">Российские и&nbsp;международные. Общее: интеграции с&nbsp;мессенджерами + <span class="term">CRM</span> <span class="inline-gloss">(системой клиентов)</span> + готовый движок</div>
+  <div class="players-grid-4 anim-up-d2">
+    <div class="player-card accent-s2">
+      <div class="player-shot"><img src="screens/suvvy.png" alt="Suvvy"></div>
+      <div class="player-name">Suvvy</div>
+      <div class="player-desc">Российская. Продажи, саппорт, HR, маркетплейсы. Подключается к&nbsp;Telegram, WhatsApp, amoCRM, Bitrix.</div>
+      <a class="open-link" href="https://suvvy.ai" target="_blank">suvvy.ai <span class="arrow">↗</span></a>
+      <span class="player-badge">🇷🇺 РФ</span>
+    </div>
+    <div class="player-card accent-s2">
+      <div class="player-shot"><img src="screens/nextbot.png" alt="Nextbot"></div>
+      <div class="player-name">Nextbot</div>
+      <div class="player-desc">Российская на&nbsp;базе ChatGPT. Боты под любую нишу, база знаний, 5&nbsp;агентов в&nbsp;базовом тарифе.</div>
+      <a class="open-link" href="https://nextbot.ru" target="_blank">nextbot.ru <span class="arrow">↗</span></a>
+      <span class="player-badge">🇷🇺 РФ</span>
+    </div>
+    <div class="player-card accent-s2">
+      <div class="player-shot"><img src="screens/lindy.png" alt="Lindy"></div>
+      <div class="player-name">Lindy</div>
+      <div class="player-desc">Международная. Автоматизация почты, календаря, найма. Тесно связана с&nbsp;сервисами Google.</div>
+      <a class="open-link" href="https://www.lindy.ai" target="_blank">lindy.ai <span class="arrow">↗</span></a>
+      <span class="player-badge">🌍 глобал</span>
+    </div>
+    <div class="player-card accent-s2">
+      <div class="player-shot"><img src="screens/relevance.png" alt="Relevance AI"></div>
+      <div class="player-name">Relevance AI</div>
+      <div class="player-desc">Для&nbsp;крупных компаний. Команды агентов с&nbsp;ролями, подключение к&nbsp;корпоративным системам.</div>
+      <a class="open-link" href="https://relevanceai.com" target="_blank">relevanceai.com <span class="arrow">↗</span></a>
+      <span class="player-badge">🌍 глобал</span>
+    </div>
+  </div>
+  <div class="diff-card anim-up-d3" style="border-color:rgba(20,184,166,0.3);">
+    <div class="diff-label" style="color:var(--teal);">Чем отличается от&nbsp;этапа&nbsp;1</div>
+    <div class="diff-text">Под капотом — <strong>LLM</strong> <span class="inline-gloss">(языковая модель, «мозг» ИИ)</span>. Агент понимает запрос с&nbsp;ошибками, контекст диалога, эмоции клиента. Уже не&nbsp;«если-то», а&nbsp;<strong>осмысленный ответ</strong>.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 13: АНОНС ПРАКТИКИ SUVVY ============ -->
+<div class="slide" style="background: radial-gradient(ellipse at 50% 50%, rgba(124,58,237,0.25) 0%, transparent 65%); text-align:center; justify-content:center; align-items:center;">
+  <div style="font-size:14px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); font-weight:800; margin-bottom:30px;" class="anim-up">🔥 Практика №1 &middot; 25 минут</div>
+  <div style="font-size:84px; font-weight:900; color:var(--white); line-height:1.0; margin-bottom:24px; letter-spacing:-2px;" class="anim-up-d1">Делаем своего агента<br>в&nbsp;<span class="accent">Suvvy</span></div>
+  <div style="font-size:26px; color:var(--white-80); max-width:900px; margin:0 auto 40px; line-height:1.4;" class="anim-up-d2">Агент-продажник для вашего бизнеса. От&nbsp;регистрации до&nbsp;первого ответа клиенту в&nbsp;Telegram — <strong>вместе, шаг за&nbsp;шагом</strong>.</div>
+  <div style="font-size:18px; color:var(--white-40);" class="anim-up-d3">Всем открыть <strong style="color:var(--coral);">suvvy.ai</strong> на&nbsp;ноутбуках</div>
+</div>
+
+<!-- ============ СЛАЙД 14: ПРАКТИКА SUVVY — ПОДГОТОВКА ============ -->
+<div class="slide practice-slide">
+  <div class="slide-title anim-up"><span class="practice-banner">ПРАКТИКА</span>Что нам <span class="accent">понадобится</span></div>
+  <div class="slide-subtitle anim-up-d1">Перед стартом — 3 вещи. Подготовим за&nbsp;2&nbsp;минуты.</div>
+  <div class="cards-grid-3 anim-up-d2">
+    <div class="card">
+      <div class="card-title">1. Ниша бизнеса</div>
+      <div class="card-body">
+        Одним предложением, чем занимаетесь.<br><br>
+        <em>Пример: «Навесы под&nbsp;ключ в&nbsp;Уфе для&nbsp;ТСЖ и&nbsp;застройщиков».</em>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">2. База знаний</div>
+      <div class="card-body">
+        Прайс, <span class="term">FAQ</span> <span class="inline-gloss">(частые вопросы-ответы)</span> или&nbsp;текст сайта. Можно кратко, в&nbsp;3-5 абзацах.<br><br>
+        <em>Агент будет отвечать клиентам на&nbsp;основе этого.</em>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">3. Цель агента</div>
+      <div class="card-body">
+        Что он должен делать?<br><br>
+        <em>Например: «Отвечать на&nbsp;вопросы и&nbsp;звать на&nbsp;замер».</em>
+      </div>
+    </div>
+  </div>
+  <div class="quote anim-up-d3">У кого нет готовой ниши — берите условную. Главное сегодня — <strong>пройти весь путь создания</strong> от&nbsp;и&nbsp;до.</div>
+</div>
+
+<!-- ============ СЛАЙД 15: ПРАКТИКА SUVVY — ШАГИ 1-4 ============ -->
+<div class="slide practice-slide">
+  <div class="slide-title anim-up"><span class="practice-banner">ШАГИ 1-4</span>Создание и <span class="accent">базовая настройка</span></div>
+  <div class="step-list">
+    <div class="step-row anim-up-d1">
+      <div class="step-num-big">1</div>
+      <div class="step-content">
+        Открываем <strong><a href="https://suvvy.ai" target="_blank">suvvy.ai</a></strong> &rarr; кнопка <em>«Попробовать бесплатно»</em>. Регистрация через email.
+      </div>
+    </div>
+    <div class="step-row anim-up-d2">
+      <div class="step-num-big">2</div>
+      <div class="step-content">
+        В&nbsp;дашборде &rarr; <em>«Создать агента»</em> &rarr; выбираем шаблон <strong>«Продажник»</strong>.
+      </div>
+    </div>
+    <div class="step-row anim-up-d3">
+      <div class="step-num-big">3</div>
+      <div class="step-content">
+        Даём агенту <strong>имя</strong> и&nbsp;<strong>роль</strong>. <em>Пример: «Анна, менеджер по&nbsp;навесам»</em>.
+      </div>
+    </div>
+    <div class="step-row anim-up-d4">
+      <div class="step-num-big">4</div>
+      <div class="step-content">
+        Загружаем <strong>базу знаний</strong>: вставляем текст о&nbsp;бизнесе, прайс, ФАК. Suvvy сам индексирует.
+      </div>
+    </div>
+  </div>
+  <div class="quote anim-up-d4">На экране — живая работа. Повторяем вместе, не&nbsp;спешим.</div>
+</div>
+
+<!-- ============ СЛАЙД 16: ПРАКТИКА SUVVY — ШАГИ 5-8 ============ -->
+<div class="slide practice-slide">
+  <div class="slide-title anim-up"><span class="practice-banner">ШАГИ 5-8</span>Логика и <span class="accent">первая проверка</span></div>
+  <div class="step-list">
+    <div class="step-row anim-up-d1">
+      <div class="step-num-big">5</div>
+      <div class="step-content">
+        Раздел <strong>«Сценарии»</strong> &rarr; описываем цель: <em>«Квалифицируй клиента, собери 3 параметра: площадь, материал, срок. Предложи замер»</em>.
+      </div>
+    </div>
+    <div class="step-row anim-up-d2">
+      <div class="step-num-big">6</div>
+      <div class="step-content">
+        <strong>Подключаем к&nbsp;Telegram</strong>: создаём своего бота через <em>@BotFather</em> <span class="inline-gloss">(официальный бот Telegram для&nbsp;создания других ботов — команда <code>/newbot</code>)</span>, копируем <span class="term">токен</span> <span class="inline-gloss">(секретный ключ-пароль)</span> и&nbsp;вставляем в&nbsp;Suvvy.
+      </div>
+    </div>
+    <div class="step-row anim-up-d3">
+      <div class="step-num-big">7</div>
+      <div class="step-content">
+        <strong>Тест в&nbsp;песочнице</strong> <span class="inline-gloss">(встроенная тестовая чат-зона Suvvy)</span>: пишем «Здравствуйте, сколько стоит навес 30м²?». Смотрим ответ агента.
+      </div>
+    </div>
+    <div class="step-row anim-up-d4">
+      <div class="step-num-big">8</div>
+      <div class="step-content">
+        Если ответ плохой — правим <strong>базу знаний</strong> или&nbsp;<strong>инструкцию</strong> агенту. Это и&nbsp;есть главная работа: <em>тюнинг</em> <span class="inline-gloss">(донастройка под себя)</span>.
+      </div>
+    </div>
+  </div>
+  <div class="quote anim-up-d4">🎯 Цель практики: <strong>ваш агент отвечает в&nbsp;Telegram</strong> на&nbsp;вопрос клиента. Это уже рабочий прототип.</div>
+</div>
+
+<!-- ============ СЛАЙД 17: ЭТАП 3 — ОБЛОЖКА ============ -->
+<div class="slide stage-cover s3 has-bg">
+  <img class="slide-bg-img" src="screens/bg-stage3.png" alt="">
+  <div class="stage-num anim-up">Этап 3 &middot; 2025</div>
+  <div class="stage-title-big anim-up-d1">Автономные агенты</div>
+  <div class="stage-tagline anim-up-d2">Не&nbsp;ты собираешь — он&nbsp;<strong>сам решает</strong>, что делать. Ты&nbsp;даёшь цель — он&nbsp;приносит результат.</div>
+  <div class="stage-diff anim-up-d3">В&nbsp;отличие от&nbsp;конструкторов (этап&nbsp;2) — здесь <em>ничего не&nbsp;нужно собирать</em>. Агент сам планирует шаги и&nbsp;выполняет их.</div>
+</div>
+
+<!-- ============ СЛАЙД 18: LLM-ЧАТ vs АВТОНОМНЫЙ АГЕНТ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Чем Manus отличается от <span style="color:#c084fc;">обычного ChatGPT</span></div>
+  <div class="slide-subtitle anim-up-d1">Важный момент: любую LLM можно попросить «собери отчёт» — но&nbsp;это <em>не то&nbsp;же самое</em>. Смотри разницу:</div>
+  <div class="split-screen">
+    <div class="split-side left anim-up-d2">
+      <div class="split-label">💬 Обычный чат (LLM)</div>
+      <div class="split-icon">🗣️</div>
+      <div class="split-title">Говорит,<br>но не&nbsp;действует</div>
+      <div class="split-body" style="font-size:16px;">
+        ChatGPT, Claude, DeepSeek, Gemini.<br><br>
+        &bull; Напишет <strong>текст-ответ</strong> в&nbsp;чате<br>
+        &bull; Может описать, как&nbsp;искать данные<br>
+        &bull; <strong style="color:#e05555;">Не&nbsp;откроет сайты</strong> за&nbsp;тебя<br>
+        &bull; <strong style="color:#e05555;">Не&nbsp;создаст файл</strong> (Excel, PDF)<br>
+        &bull; <strong style="color:#e05555;">Не&nbsp;запустит код</strong><br><br>
+        <em style="color:var(--white-60);">Результат = текст в&nbsp;окне чата. Дальше ты всё делаешь руками.</em>
+      </div>
+    </div>
+    <div class="split-arrow">&rArr;</div>
+    <div class="split-side right anim-up-d3">
+      <div class="split-label">🦾 Автономный агент (Manus)</div>
+      <div class="split-icon">⚙️</div>
+      <div class="split-title">Действует и&nbsp;приносит<br><em style="color:#c084fc;">готовый продукт</em></div>
+      <div class="split-body" style="font-size:16px;">
+        У&nbsp;Manus есть <strong>виртуальный компьютер</strong>. Внутри него агент:<br><br>
+        &bull; <strong style="color:var(--green);">Открывает браузер</strong>, заходит на&nbsp;сайты<br>
+        &bull; <strong style="color:var(--green);">Пишет код</strong> и&nbsp;сам его запускает<br>
+        &bull; <strong style="color:var(--green);">Создаёт файлы</strong>: .xlsx, .pdf, готовый сайт<br>
+        &bull; <strong style="color:var(--green);">Собирает рабочие приложения</strong> целиком<br><br>
+        <em style="color:var(--white);">Результат = <strong>скачиваемый продукт</strong>. Готовый сайт, отчёт в&nbsp;Excel, работающий Telegram-бот.</em>
+      </div>
+    </div>
+  </div>
+  <div class="quote anim-up-d4" style="margin-top:20px;"><strong>Коротко:</strong> LLM — советчик, который <em>объясняет словами</em>. Manus — исполнитель, который <em>делает руками</em> и&nbsp;отдаёт тебе готовый файл.</div>
+</div>
+
+<!-- ============ СЛАЙД 19: ИГРОКИ ЭТАПА 3 (featured grid) ============ -->
+<div class="slide" style="padding:22px 52px;">
+  <div class="slide-title anim-up" style="font-size:30px; margin-bottom:4px;">Этап 3 — <span style="color:#c084fc;">кто это умеет</span></div>
+  <div class="slide-subtitle anim-up-d1" style="font-size:15px; margin-bottom:4px;">Главный игрок + три конкурента</div>
+  <div class="feat-grid">
+    <div class="feat-main anim-up-d2">
+      <div class="feat-main-name" style="font-size:36px; margin-top:4px;">★ Manus</div>
+      <div class="feat-main-tagline" style="font-size:14px; margin-bottom:4px;">Автономный агент: <strong>сам открывает браузер, пишет код, приносит результат</strong>. Куплен Meta за&nbsp;$2&nbsp;млрд.</div>
+      <div class="feat-shot" style="aspect-ratio:16/7;"><img src="screens/manus.png" alt="Manus"></div>
+      <div class="feat-main-facts" style="margin-top:6px; font-size:12px; line-height:1.4; padding:8px 12px;">
+        &bull; Глубокий анализ рынка &bull; Собирает сайты (Web App Builder) &bull; <strong>Сам создаёт агентов</strong> для&nbsp;Telegram &bull; Виртуальный компьютер
+      </div>
+      <a class="open-link" href="https://manus.im" target="_blank" style="margin-top:6px;">manus.im <span class="arrow">↗</span></a>
+    </div>
+    <div class="feat-side">
+      <div class="feat-mini anim-up-d3" style="padding:0; overflow:hidden;">
+        <div style="background:#111; aspect-ratio:16/5; border-radius:12px 12px 0 0; overflow:hidden;"><img src="screens/genspark.png" alt="Genspark" style="width:100%; height:100%; object-fit:cover; object-position:center;"></div>
+        <div style="padding:10px 14px 12px;">
+          <div class="feat-mini-name" style="font-size:17px;">Genspark</div>
+          <div class="feat-mini-desc" style="font-size:12px;"><strong>9&nbsp;LLM</strong> + 80 инструментов. Умеет <em>звонить по&nbsp;телефону</em> AI-голосом.</div>
+          <a class="open-link" href="https://www.genspark.ai" target="_blank">genspark.ai <span class="arrow">↗</span></a>
+        </div>
+      </div>
+      <div class="feat-mini anim-up-d3" style="padding:0; overflow:hidden;">
+        <div style="background:#fff; aspect-ratio:16/5; border-radius:12px 12px 0 0; overflow:hidden;"><img src="screens/deepagent.png" alt="DeepAgent" style="width:100%; height:100%; object-fit:cover; object-position:top;"></div>
+        <div style="padding:10px 14px 12px;">
+          <div class="feat-mini-name" style="font-size:17px;">DeepAgent</div>
+          <div class="feat-mini-desc" style="font-size:12px;">Создаёт Telegram-ботов, генерирует дашборды.</div>
+        </div>
+      </div>
+      <div class="feat-mini anim-up-d4" style="padding:0; overflow:hidden;">
+        <div style="background:#f5f5f5; aspect-ratio:16/5; border-radius:12px 12px 0 0; overflow:hidden;"><img src="screens/glm.png" alt="GLM z.ai" style="width:100%; height:100%; object-fit:cover; object-position:top;"></div>
+        <div style="padding:10px 14px 12px;">
+          <div class="feat-mini-name" style="font-size:17px;">Китайские: GLM, Doubao</div>
+          <div class="feat-mini-desc" style="font-size:12px;">GLM (z.ai) — работает из&nbsp;РФ без&nbsp;VPN. Doubao — от&nbsp;ByteDance.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 20: АГЕНТЫ СОЗДАЮТ АГЕНТОВ (matryoshka) ============ -->
+<div class="slide">
+  <div class="slide-title anim-up" style="text-align:center;">Самое странное открытие 2026</div>
+  <div class="slide-subtitle anim-up-d1" style="text-align:center;">Автономные агенты научились <strong style="color:#c084fc;">создавать других агентов</strong></div>
+  <div class="matryoshka anim-up-d2">
+    <div class="matry-box l1">
+      👤 Ты
+      <small>даёшь цель</small>
+    </div>
+    <div class="matry-arrow">&rarr;</div>
+    <div class="matry-box l1">
+      🦾 Manus<br>(агент)
+      <small>берёт в работу</small>
+    </div>
+    <div class="matry-arrow">&rarr;</div>
+    <div class="matry-box l2">
+      🤖 Создаёт<br>Telegram-бота<br>(ещё один агент)
+      <small>под твою задачу</small>
+    </div>
+    <div class="matry-arrow">&rarr;</div>
+    <div class="matry-box l3">
+      ✅ Готовый<br>Telegram-бот
+      <small>работает без&nbsp;тебя</small>
+    </div>
+  </div>
+  <div class="quote anim-up-d3" style="margin-top:36px;">Ты один раз попросил — получил <strong>двух новых сотрудников</strong>: Manus, который подумал, и&nbsp;Telegram-бота, который теперь отвечает клиентам.</div>
+</div>
+
+<!-- ============ СЛАЙД 20b: СКОЛЬКО СТОИТ MANUS ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Сколько стоит <span style="color:#c084fc;">Manus</span></div>
+  <div class="slide-subtitle anim-up-d1">Важно понимать до&nbsp;практики: есть <strong style="color:var(--green);">бесплатный тариф</strong>, но&nbsp;с&nbsp;нюансами</div>
+
+  <div class="hero-shot anim-up-d2" style="max-width:1100px;"><img src="screens/manus-pricing.png" alt="Manus Pricing"></div>
+
+  <div class="cards-grid-3 anim-up-d3" style="margin-top:18px;">
+    <div class="card" style="border-top:4px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">🆓 Бесплатно</div>
+      <div class="card-body" style="font-size:15px; line-height:1.6;">
+        <strong>1000 кредитов</strong> сразу (навсегда) + 300/день.<br>
+        Хватает на&nbsp;1-2 серьёзных задачи попробовать. Без&nbsp;карты.
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid #c084fc;">
+      <div class="card-title" style="color:#c084fc;">$20-40 / мес</div>
+      <div class="card-body" style="font-size:15px; line-height:1.6;">
+        Для&nbsp;регулярной работы: больше кредитов, параллельные задачи, <span class="term">API-доступ</span> <span class="inline-gloss">(подключение из&nbsp;других сервисов)</span>.
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--coral);">
+      <div class="card-title" style="color:var(--coral);">$200 / мес</div>
+      <div class="card-body" style="font-size:15px; line-height:1.6;">
+        Extended — для&nbsp;команд и&nbsp;больших проектов. Массовая генерация, приоритетные серверы.
+      </div>
+    </div>
+  </div>
+
+  <div class="diff-card anim-up-d4" style="border-color:rgba(240,192,64,0.35); background:linear-gradient(135deg,rgba(240,192,64,0.1) 0%,rgba(240,192,64,0.02) 100%);">
+    <div class="diff-label" style="color:var(--yellow);">⚠️ Важный нюанс</div>
+    <div class="diff-text">Manus <strong>НЕ показывает</strong> сколько кредитов съест задача <em>до</em>&nbsp;запуска. Одна сложная задача может сжечь 900+ кредитов за&nbsp;раз — это почти все ваши бесплатные. Начинайте с&nbsp;маленьких задач и&nbsp;смотрите расход.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 21: АНОНС ПРАКТИКИ MANUS ============ -->
+<div class="slide" style="background: radial-gradient(ellipse at 50% 50%, rgba(192,132,252,0.28) 0%, transparent 65%); text-align:center; justify-content:center; align-items:center;">
+  <div style="font-size:14px; letter-spacing:3px; text-transform:uppercase; color:#c084fc; font-weight:800; margin-bottom:30px;" class="anim-up">🔥 Практика №2 &middot; 10 минут</div>
+  <div style="font-size:84px; font-weight:900; color:var(--white); line-height:1.0; margin-bottom:24px; letter-spacing:-2px;" class="anim-up-d1">Запускаем <span style="color:#c084fc;">Manus</span><br>на живой задаче</div>
+  <div style="font-size:26px; color:var(--white-80); max-width:900px; margin:0 auto 40px; line-height:1.4;" class="anim-up-d2">Я даю Manus <strong>одну фразу</strong> — мы смотрим, как он открывает браузер, ищет, читает, анализирует и&nbsp;приносит готовый отчёт.</div>
+  <div style="font-size:18px; color:var(--white-40);" class="anim-up-d3">Все смотрят на&nbsp;экран — это демо ведущего</div>
+</div>
+
+<!-- ============ СЛАЙД 22: ПРАКТИКА MANUS — ШАГИ ============ -->
+<div class="slide practice-slide">
+  <div class="slide-title anim-up"><span class="practice-banner">ПРАКТИКА</span>Делаем вместе в&nbsp;<span class="accent">Manus</span></div>
+  <div class="slide-subtitle anim-up-d1">Я&nbsp;показываю на&nbsp;экране — вы&nbsp;повторяете на&nbsp;своих ноутбуках. Бесплатных кредитов хватит.</div>
+  <div class="step-list">
+    <div class="step-row anim-up-d1">
+      <div class="step-num-big">1</div>
+      <div class="step-content">
+        Открываем <strong><a href="https://manus.im" target="_blank">manus.im</a></strong> &rarr; регистрация через Google (бесплатно, без&nbsp;карты). Получаем <em>1000 стартовых кредитов</em>.
+      </div>
+    </div>
+    <div class="step-row anim-up-d2">
+      <div class="step-num-big">2</div>
+      <div class="step-content">
+        В&nbsp;поле ввода пишем <strong>задачу одной фразой</strong>. Например:<br>
+        <em>«Найди 5&nbsp;компаний по&nbsp;навесам в&nbsp;Уфе, собери цены за&nbsp;м², сроки и&nbsp;отзывы. Сделай сравнительную таблицу в&nbsp;Excel.»</em>
+      </div>
+    </div>
+    <div class="step-row anim-up-d3">
+      <div class="step-num-big">3</div>
+      <div class="step-content">
+        <strong>Наблюдаем</strong>: Manus сам открывает браузер, заходит на&nbsp;сайты, читает страницы, копирует данные. Вы&nbsp;видите каждый шаг — его «мысли» в&nbsp;реальном времени.
+      </div>
+    </div>
+    <div class="step-row anim-up-d4">
+      <div class="step-num-big">4</div>
+      <div class="step-content">
+        <strong>Скачиваем результат</strong>: Manus отдаёт готовый файл (Excel, PDF или&nbsp;даже мини-сайт). Это <em>не&nbsp;текст в&nbsp;чате</em> — это файл, который можно открыть и&nbsp;использовать.
+      </div>
+    </div>
+  </div>
+  <div class="quote anim-up-d4">💡 Начинайте с&nbsp;маленькой задачи — одна сложная может съесть все 1000 бесплатных кредитов за&nbsp;раз.</div>
+</div>
+
+<!-- ============ ПРАКТИКА MANUS — ПРОМПТЫ ПОД РАЗНЫЕ НИШИ ============ -->
+<div class="slide practice-slide">
+  <div class="slide-title anim-up"><span class="practice-banner">ПРОМПТЫ</span>Выберите свой — <span class="accent">впишите свою компанию</span></div>
+  <div class="slide-subtitle anim-up-d1">Скопируйте подходящий промпт, замените <strong>[...]</strong> на&nbsp;свои данные и&nbsp;вставьте в&nbsp;Manus</div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;" class="anim-up-d2">
+
+    <div style="background:rgba(124,58,237,0.05); border:1px solid rgba(124,58,237,0.2); border-radius:12px; padding:14px 16px;">
+      <div style="font-size:13px; font-weight:800; color:var(--accent-dark); margin-bottom:6px;">🔍 Анализ конкурентов</div>
+      <div style="font-size:13px; color:#475569; line-height:1.6; font-style:italic;">«Найди 5&nbsp;компаний по&nbsp;<strong>[моя ниша]</strong> в&nbsp;<strong>[мой город]</strong>. Собери цены, отзывы, сроки. Сделай сравнительную таблицу в&nbsp;Excel и&nbsp;дай рекомендацию.»</div>
+    </div>
+
+    <div style="background:rgba(124,58,237,0.05); border:1px solid rgba(124,58,237,0.2); border-radius:12px; padding:14px 16px;">
+      <div style="font-size:13px; font-weight:800; color:var(--accent-dark); margin-bottom:6px;">📊 Исследование рынка</div>
+      <div style="font-size:13px; color:#475569; line-height:1.6; font-style:italic;">«Проведи исследование рынка <strong>[моя ниша]</strong> в&nbsp;России. Тренды 2026, объём рынка, топ-10 игроков, средний чек. Сделай PDF-отчёт.»</div>
+    </div>
+
+    <div style="background:rgba(124,58,237,0.05); border:1px solid rgba(124,58,237,0.2); border-radius:12px; padding:14px 16px;">
+      <div style="font-size:13px; font-weight:800; color:var(--accent-dark); margin-bottom:6px;">📝 Контент-план</div>
+      <div style="font-size:13px; color:#475569; line-height:1.6; font-style:italic;">«Составь контент-план на&nbsp;месяц для&nbsp;Instagram компании <strong>[моя компания]</strong>. 30&nbsp;постов: темы, заголовки, хештеги. Сделай таблицу в&nbsp;Excel.»</div>
+    </div>
+
+    <div style="background:rgba(124,58,237,0.05); border:1px solid rgba(124,58,237,0.2); border-radius:12px; padding:14px 16px;">
+      <div style="font-size:13px; font-weight:800; color:var(--accent-dark); margin-bottom:6px;">💰 Коммерческое предложение</div>
+      <div style="font-size:13px; color:#475569; line-height:1.6; font-style:italic;">«Создай коммерческое предложение для&nbsp;компании <strong>[моя компания]</strong>. Услуги: <strong>[перечень]</strong>. Клиент: <strong>[тип клиента]</strong>. Сделай красивый PDF.»</div>
+    </div>
+
+    <div style="background:rgba(124,58,237,0.05); border:1px solid rgba(124,58,237,0.2); border-radius:12px; padding:14px 16px;">
+      <div style="font-size:13px; font-weight:800; color:var(--accent-dark); margin-bottom:6px;">🌐 Мини-сайт</div>
+      <div style="font-size:13px; color:#475569; line-height:1.6; font-style:italic;">«Собери одностраничный сайт-визитку для&nbsp;<strong>[моя компания]</strong>. О&nbsp;нас, услуги, цены, контакты. Стиль минималистичный. Дай ссылку.»</div>
+    </div>
+
+    <div style="background:rgba(124,58,237,0.05); border:1px solid rgba(124,58,237,0.2); border-radius:12px; padding:14px 16px;">
+      <div style="font-size:13px; font-weight:800; color:var(--accent-dark); margin-bottom:6px;">🤖 Создать Telegram-бота</div>
+      <div style="font-size:13px; color:#475569; line-height:1.6; font-style:italic;">«Создай Telegram-бота для&nbsp;<strong>[моя компания]</strong>, который отвечает на&nbsp;вопросы клиентов по&nbsp;прайсу и&nbsp;записывает на&nbsp;консультацию.»</div>
+    </div>
+
+  </div>
+
+  <div class="quote anim-up-d3" style="border-left-color:var(--accent-dark);">Выберите <strong>один</strong> промпт, впишите свою компанию — и&nbsp;запустите. Через 5&nbsp;минут у&nbsp;вас будет готовый результат в&nbsp;файле.</div>
+</div>
+
+<!-- ============ СЛАЙД 23: ЧТО ЗАПОМНИТЬ ПРО АВТОНОМНЫХ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Manus vs ChatGPT — <span style="color:#c084fc;">в&nbsp;чём реальная разница</span></div>
+  <div class="slide-subtitle anim-up-d1">ChatGPT тоже может «собрать отчёт по&nbsp;конкурентам». Но&nbsp;результат — разный:</div>
+  <div class="cards-grid anim-up-d2" style="margin-top:14px;">
+    <div class="card" style="border-left: 4px solid #94a3b8;">
+      <div class="card-title" style="color:#94a3b8;">💬 ChatGPT / Gemini</div>
+      <div class="card-body" style="font-size:15px;">
+        &bull; Даст <strong>текст</strong> в&nbsp;чате — копируй сам<br>
+        &bull; Не&nbsp;создаст Excel / PDF / сайт<br>
+        &bull; Не&nbsp;зайдёт на&nbsp;сайты конкурентов <em>реально</em><br>
+        &bull; Не&nbsp;запустит код и&nbsp;не&nbsp;проверит результат<br>
+        &bull; Всё в&nbsp;рамках одного окна чата
+      </div>
+    </div>
+    <div class="card" style="border-left: 4px solid #c084fc; background:linear-gradient(145deg, rgba(192,132,252,0.1) 0%, transparent 100%);">
+      <div class="card-title" style="color:#c084fc;">🦾 Manus</div>
+      <div class="card-body" style="font-size:15px;">
+        &bull; Создаёт <strong>готовые файлы</strong>: .xlsx, .pdf, .html<br>
+        &bull; <strong>Реально заходит</strong> на&nbsp;сайты, читает прайсы<br>
+        &bull; Может <strong>собрать рабочий сайт</strong> или&nbsp;приложение<br>
+        &bull; Может <strong>создать Telegram-бота</strong> с&nbsp;нуля<br>
+        &bull; Работает <strong>30+ шагов автономно</strong>, не&nbsp;спрашивая
+      </div>
+    </div>
+  </div>
+  <div class="diff-card anim-up-d3" style="border-color:rgba(192,132,252,0.4);">
+    <div class="diff-label" style="color:#c084fc;">Простая аналогия</div>
+    <div class="diff-text">ChatGPT — это <strong>консультант</strong>, который объясняет что делать. Manus — это <strong>подрядчик</strong>, который берёт задачу и&nbsp;приносит готовый результат в&nbsp;файле. Платишь больше — но&nbsp;получаешь продукт, а&nbsp;не&nbsp;текст.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 24: ЭТАП 4 — ОБЛОЖКА ============ -->
+<div class="slide stage-cover s4 has-bg">
+  <img class="slide-bg-img" src="screens/bg-stage4.png" alt="">
+  <div class="stage-num anim-up">Этап 4 &middot; 2025</div>
+  <div class="stage-title-big anim-up-d1">Браузерные<br>агенты</div>
+  <div class="stage-tagline anim-up-d2">Агент живёт <strong>в&nbsp;твоём браузере</strong> и&nbsp;<em>сам кликает</em>, заполняет формы, ищет, покупает — вместо тебя</div>
+  <div class="stage-diff anim-up-d3">В&nbsp;отличие от&nbsp;Manus — он&nbsp;не&nbsp;в&nbsp;облаке, а&nbsp;на&nbsp;твоей машине. Ты&nbsp;видишь каждый клик своими глазами.</div>
+</div>
+
+<!-- ============ СЛАЙД 25: ОБЫЧНЫЙ vs АГЕНТСКИЙ БРАУЗЕР (split) ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Агентский <span style="color:var(--green);">браузер</span> — что это</div>
+  <div class="slide-subtitle anim-up-d1">Представь обычный Chrome, но&nbsp;с&nbsp;«режимом автопилота» — как&nbsp;у&nbsp;Tesla на&nbsp;дороге</div>
+
+  <div class="browser-vis anim-up-d2" style="margin-top:18px;">
+    <div class="browser-chrome">
+      <div class="browser-dots"><span></span><span></span><span></span></div>
+      <div class="browser-url">comet.perplexity.ai <span class="cursor-ai" style="color:var(--green);">&#9632;</span></div>
+    </div>
+    <div class="browser-content">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
+        <div>
+          <div style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:2px; color:#94a3b8; margin-bottom:10px;">🐢 Обычный браузер</div>
+          <div style="font-size:17px; color:var(--white-80); line-height:1.6;">Ты ищешь &rarr; ты читаешь &rarr; ты копируешь &rarr; ты клеишь в&nbsp;доку &rarr; ты пишешь.<br><br><strong>Всё руками.</strong></div>
+        </div>
+        <div>
+          <div style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:2px; color:var(--green); margin-bottom:10px;">✨ Агентский браузер</div>
+          <div style="font-size:17px; color:var(--white-80); line-height:1.6;">Ты говоришь: «<em>Сравни 5&nbsp;отелей в&nbsp;Сочи, выбери лучший, забронируй</em>».<br><br>Браузер <strong>открывает вкладки, читает, заполняет формы — сам</strong>.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 26: ОБЗОР — 4 БРАУЗЕРНЫХ АГЕНТА СО СКРИНШОТАМИ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Этап 4 — <span style="color:var(--green);">кто играет на&nbsp;этом поле</span></div>
+  <div class="slide-subtitle anim-up-d1">Все 4 вышли во&nbsp;второй половине 2025. Сначала посмотрим <em>как они выглядят</em> — потом разберём принцип.</div>
+  <div class="players-grid-4 anim-up-d2">
+    <div class="player-card" style="border-left:4px solid var(--green);">
+      <div class="player-shot"><img src="screens/comet.png" alt="Perplexity Comet"></div>
+      <div class="player-name" style="color:var(--green);">1. Perplexity Comet</div>
+      <div class="player-desc">Июль 2025. От&nbsp;создателей Perplexity. Глубокий поиск, ресёрч, понимание контента. <strong>Сегодня покажу именно его.</strong></div>
+      <a class="open-link" href="https://comet.perplexity.ai" target="_blank">comet.perplexity.ai <span class="arrow">↗</span></a>
+    </div>
+    <div class="player-card" style="border-left:4px solid var(--green);">
+      <div class="player-shot"><img src="screens/atlas.png" alt="ChatGPT Atlas"></div>
+      <div class="player-name" style="color:var(--green);">2. ChatGPT Atlas</div>
+      <div class="player-desc">Октябрь 2025. От&nbsp;OpenAI. Фокус на&nbsp;<em>задачах по&nbsp;цепочке</em>: заполни форму, купи, забронируй.</div>
+      <a class="open-link" href="https://openai.com/index/introducing-chatgpt-atlas/" target="_blank">chatgpt.com/atlas <span class="arrow">↗</span></a>
+    </div>
+    <div class="player-card" style="border-left:4px solid var(--green);">
+      <div class="player-shot"><img src="screens/claude-browser.png" alt="Claude in Chrome"></div>
+      <div class="player-name" style="color:var(--green);">3. Claude Browser</div>
+      <div class="player-desc">Ноябрь 2025. Расширение от&nbsp;Anthropic. Claude управляет активной вкладкой — как&nbsp;«пилот».</div>
+      <a class="open-link" href="https://www.anthropic.com/news/claude-for-chrome" target="_blank">anthropic.com <span class="arrow">↗</span></a>
+    </div>
+    <div class="player-card" style="border-left:4px solid var(--green);">
+      <div class="player-shot"><img src="screens/browseros.png" alt="BrowserOS"></div>
+      <div class="player-name" style="color:var(--green);">4. BrowserOS</div>
+      <div class="player-desc">2026. <span class="term">Open-source</span> <span class="inline-gloss">(бесплатный, открытый код)</span>: ставится локально, подключаешь свою LLM.</div>
+      <a class="open-link" href="https://browseros.com" target="_blank">browseros.com <span class="arrow">↗</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 27: ОБЩИЙ ПРИНЦИП БРАУЗЕРНЫХ АГЕНТОВ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Общий <span style="color:var(--green);">принцип</span> — все 4 работают одинаково</div>
+  <div class="slide-subtitle anim-up-d1">Разберём на&nbsp;примере Comet. У&nbsp;Atlas, Claude и&nbsp;BrowserOS — тот&nbsp;же принцип, разный интерфейс.</div>
+
+  <div class="hflow anim-up-d2" style="grid-template-columns:repeat(4,1fr);">
+    <div class="hflow-step" style="border-color:rgba(94,196,122,0.35);">
+      <div class="hflow-label" style="color:var(--green);">1. Говоришь</div>
+      <div class="hflow-title">Задача словами</div>
+      <div class="hflow-body">«Найди 5 отелей в&nbsp;Сочи до&nbsp;5000₽ с&nbsp;рейтингом 8+».</div>
+    </div>
+    <div class="hflow-step" style="border-color:rgba(94,196,122,0.35);">
+      <div class="hflow-label" style="color:var(--green);">2. Он&nbsp;видит</div>
+      <div class="hflow-title">Читает твой экран</div>
+      <div class="hflow-body">Агент анализирует <em>активную вкладку</em>, понимает что на&nbsp;странице.</div>
+    </div>
+    <div class="hflow-step" style="border-color:rgba(94,196,122,0.35);">
+      <div class="hflow-label" style="color:var(--green);">3. Кликает</div>
+      <div class="hflow-title">Управляет мышкой</div>
+      <div class="hflow-body">Открывает вкладки, заполняет формы, прокручивает, копирует — как&nbsp;человек.</div>
+    </div>
+    <div class="hflow-step" style="border-color:rgba(94,196,122,0.35);">
+      <div class="hflow-label" style="color:var(--green);">4. Ты&nbsp;видишь</div>
+      <div class="hflow-title">Каждый шаг — на&nbsp;экране</div>
+      <div class="hflow-body">Можешь в&nbsp;любой момент <strong>вмешаться</strong>: остановить, поправить, продолжить.</div>
+    </div>
+  </div>
+
+  <div class="diff-card anim-up-d3" style="border-color:rgba(94,196,122,0.3);">
+    <div class="diff-label" style="color:var(--green);">Зачем это вообще нужно</div>
+    <div class="diff-text">Обычный ChatGPT даёт <em>текст-ответ</em>. Manus работает в&nbsp;своём облаке — ты не&nbsp;видишь процесс. Браузерный агент — <strong>твой напарник за&nbsp;тем&nbsp;же экраном</strong>. Это идеальный вариант для&nbsp;задач, где важно <em>видеть что происходит</em> и&nbsp;сохранить контроль.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 28: PERPLEXITY COMET — РАЗБОР ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Разбор <span style="color:var(--green);">Perplexity Comet</span> подробно</div>
+  <div class="slide-subtitle anim-up-d1">Почему именно Comet — а&nbsp;не&nbsp;Atlas. И&nbsp;что у&nbsp;него есть, чего нет у&nbsp;других.</div>
+
+  <div class="split-screen" style="grid-template-columns:1.1fr 1.2fr; gap:20px;">
+    <div class="split-side right anim-up-d2" style="border-color:rgba(94,196,122,0.45); background:linear-gradient(145deg, rgba(94,196,122,0.12) 0%, rgba(94,196,122,0.03) 100%);">
+      <div class="split-label" style="color:var(--green);">⚡ Главные фишки Comet</div>
+      <div class="split-body" style="font-size:16px; line-height:1.7;">
+        &bull; <strong>Глубокий ресёрч</strong> — читает десятки источников и&nbsp;сводит в&nbsp;один ответ<br>
+        &bull; <strong>Понимает контекст страницы</strong> — выделил абзац в&nbsp;статье, спросил — получил пояснение<br>
+        &bull; <strong>Работает в&nbsp;любой вкладке</strong> — не&nbsp;надо уходить из&nbsp;Gmail/Notion/соцсетей<br>
+        &bull; <strong>Бесплатный уровень есть</strong> — попробовать без&nbsp;карты<br>
+        &bull; <strong>Доступен на&nbsp;Mac, Windows, iOS, Android</strong> — везде одинаково
+      </div>
+    </div>
+    <div class="split-side left anim-up-d3" style="border-color:rgba(94,196,122,0.2); background:rgba(255,255,255,0.03);">
+      <div class="split-label" style="color:var(--green);">📸 Как выглядит</div>
+      <div style="background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,0.3); margin-top:8px;">
+        <img src="screens/comet.png" alt="Comet" style="width:100%; display:block;">
+      </div>
+      <div style="font-size:13px; color:var(--white-60); margin-top:12px; text-align:center; font-style:italic;">comet.perplexity.ai — «The browser that works for you»</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 29: PERPLEXITY — 3 УРОВНЯ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Perplexity — <span style="color:var(--green);">три уровня агентности</span></div>
+  <div class="slide-subtitle anim-up-d1">Один бренд, три продукта — каждый следующий умеет больше</div>
+
+  <div class="cards-grid-3 anim-up-d2">
+    <div class="card" style="border-top:4px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">🆓 Comet — бесплатно</div>
+      <div class="card-body" style="font-size:14px; line-height:1.55;">
+        AI-браузер. <strong>Кликает по&nbsp;вашим командам</strong>: «открой ссылку», «прокрути к&nbsp;ценам». Суммаризирует страницы. Отвечает на&nbsp;вопросы по&nbsp;контенту.<br><br>
+        5 Deep Research запросов в&nbsp;день.
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--blue);">
+      <div class="card-title" style="color:var(--blue);">💎 Pro — $20/мес</div>
+      <div class="card-body" style="font-size:14px; line-height:1.55;">
+        Всё из&nbsp;бесплатного + <strong>агент управляет браузером</strong>: заполняет формы, сравнивает товары в&nbsp;разных вкладках, ищет лучшие цены, оформляет покупки. <span class="term">Multi-step</span> <span class="inline-gloss">(многошаговые цепочки)</span>.
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--coral);">
+      <div class="card-title" style="color:var(--coral);">🖥️ Computer — $200/мес</div>
+      <div class="card-body" style="font-size:14px; line-height:1.55;">
+        Полный автопилот. <strong>19&nbsp;моделей</strong> одновременно: Claude, GPT-5, Gemini, Grok. Видит экран, кликает мышкой, печатает. Даёшь цель → уходишь → приносит результат. Запущен фев&nbsp;2026.
+      </div>
+    </div>
+  </div>
+
+  <div class="quote anim-up-d3" style="border-left-color:var(--green);">Для&nbsp;практики сегодня используем <strong>бесплатный Comet</strong> — его уже хватает, чтобы увидеть разницу. А&nbsp;Pro ($20) — если&nbsp;понравится и&nbsp;захочется глубже.</div>
+</div>
+
+<!-- ============ СЛАЙД 30: АНОНС ПРАКТИКИ 3 — COMET ============ -->
+<div class="slide" style="background: radial-gradient(ellipse at 50% 50%, rgba(94,196,122,0.25) 0%, transparent 65%); text-align:center; justify-content:center; align-items:center;">
+  <div style="font-size:14px; letter-spacing:3px; text-transform:uppercase; color:var(--green); font-weight:800; margin-bottom:22px;" class="anim-up">🔥 Практика №3 &middot; 8 минут</div>
+  <div style="font-size:64px; font-weight:900; color:var(--white); line-height:1.0; margin-bottom:16px; letter-spacing:-2px;" class="anim-up-d1">Даю задачу <span style="color:var(--green);">Comet</span></div>
+  <div style="font-size:22px; color:var(--white-80); max-width:900px; margin:0 auto 20px; line-height:1.35;" class="anim-up-d2">Смотрим, как Comet <strong>сам открывает сайты, читает и&nbsp;собирает результат</strong> — прямо в&nbsp;моём браузере.</div>
+  <div style="font-size:16px; color:var(--white-40);" class="anim-up-d3">Все смотрят на&nbsp;экран — это демо ведущего</div>
+</div>
+
+<!-- ============ СЛАЙД 31: ПРАКТИКА COMET — ШАГИ (ПРОВЕРЕННЫЕ) ============ -->
+<div class="slide practice-slide">
+  <div class="slide-title anim-up"><span class="practice-banner" style="background:var(--green); box-shadow:0 4px 16px rgba(94,196,122,0.35);">ПРАКТИКА</span>Делаем вместе в&nbsp;<span style="color:var(--green);">Comet</span></div>
+  <div class="slide-subtitle anim-up-d1">Comet — <strong>бесплатный AI-браузер</strong>. Он&nbsp;умеет кликать, открывать ссылки и&nbsp;навигировать по&nbsp;вашим командам.</div>
+  <div class="step-list">
+    <div class="step-row anim-up-d1">
+      <div class="step-num-big" style="background:var(--green);">1</div>
+      <div class="step-content">
+        Скачиваем <strong><a href="https://comet.perplexity.ai" target="_blank">Comet</a></strong> (Mac/Win/iOS/Android) — бесплатно, без&nbsp;карты. Открываем.
+      </div>
+    </div>
+    <div class="step-row anim-up-d2">
+      <div class="step-num-big" style="background:var(--green);">2</div>
+      <div class="step-content">
+        Говорим Comet: <em>«Открой сайт компании по&nbsp;навесам в&nbsp;Уфе, найди раздел с&nbsp;ценами, прокрути к&nbsp;прайсу»</em> — он&nbsp;<strong>сам кликает, открывает, прокручивает</strong>.
+      </div>
+    </div>
+    <div class="step-row anim-up-d3">
+      <div class="step-num-big" style="background:var(--green);">3</div>
+      <div class="step-content">
+        <strong>Выделяем</strong> блок с&nbsp;ценами на&nbsp;странице &rarr; спрашиваем: <em>«Сколько стоит навес 30&nbsp;м²?»</em> — Comet <strong>анализирует контент</strong> и&nbsp;отвечает в&nbsp;панели сбоку.
+      </div>
+    </div>
+    <div class="step-row anim-up-d4">
+      <div class="step-num-big" style="background:var(--green);">4</div>
+      <div class="step-content">
+        Нажимаем <strong>«Summarize page»</strong> — Comet суммаризирует <em>всю страницу</em> за&nbsp;5 секунд. Работает на&nbsp;любом сайте.
+      </div>
+    </div>
+  </div>
+  <div class="quote anim-up-d4">💡 Это бесплатно. А&nbsp;в&nbsp;Pro ($20/мес) Comet ещё умеет: заполнять формы, сравнивать товары в&nbsp;разных вкладках, искать лучшие цены и&nbsp;даже оформлять покупки.</div>
+</div>
+
+<!-- ============ СЛАЙД 32: ЭТАПЫ 5-6 — ОБЛОЖКА ============ -->
+<div class="slide title-slide" style="background: radial-gradient(ellipse at 50% 40%, rgba(66,133,244,0.2) 0%, transparent 60%);">
+  <img class="slide-bg-img" src="screens/bg-stage56.png" alt="">
+  <div style="font-size:14px; letter-spacing:3px; text-transform:uppercase; color:var(--white-60); margin-bottom:20px; position:relative; z-index:1;" class="anim-up">Этапы 5 и 6</div>
+  <div class="title-big anim-up-d1" style="color:var(--blue); font-size:64px; position:relative; z-index:1;">Агенты внутри LLM<br><span style="color:var(--orange);">+ LLM как конструктор</span></div>
+  <div class="title-sub anim-up-d2" style="font-size:24px; position:relative; z-index:1;">Два этапа одним блоком — здесь <strong>не&nbsp;нужно ничего нового устанавливать</strong></div>
+</div>
+
+<!-- ============ СЛАЙД 33: ЭТАП 5 — АГЕНТЫ ВНУТРИ LLM ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Этап 5 — <span style="color:var(--blue);">агенты <em>внутри</em> LLM</span></div>
+  <div class="slide-subtitle anim-up-d1">У&nbsp;самой модели есть «кнопка Agent». Не&nbsp;отдельный сервис — а&nbsp;режим в&nbsp;привычном ChatGPT или&nbsp;Kimi.</div>
+  <div class="cards-grid anim-up-d2">
+    <div class="card" style="border-left:4px solid var(--blue);">
+      <div class="card-title" style="color:var(--blue);">Kimi K2.5 Agent Swarm</div>
+      <div class="card-body" style="font-size:15px; line-height:1.6;">
+        Модель от&nbsp;Moonshot AI (Китай). Режим <span class="term">Agent Swarm</span> <span class="inline-gloss">(рой агентов)</span> — запускает до&nbsp;<strong>100 sub-agents параллельно</strong>. Ускорение 4.5x по&nbsp;сравнению с&nbsp;одиночным.<br><br>
+        <span style="font-size:13px; color:var(--white-60);">kimi.com/ai-models/kimi-k2-5</span>
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--blue);">
+      <div class="card-title" style="color:var(--blue);">ChatGPT Agent Mode (GPT-5)</div>
+      <div class="card-body" style="font-size:15px; line-height:1.6;">
+        Встроенный в&nbsp;GPT-5. ChatGPT сам вызывает инструменты: ищет в&nbsp;интернете, пишет код, генерирует картинки, создаёт файлы — внутри одного чата, без&nbsp;отдельного сервиса.<br><br>
+        <span style="font-size:13px; color:var(--white-60);">+ Gemini Agent (Google) / Qwen Agent (Alibaba)</span>
+      </div>
+    </div>
+  </div>
+  <div class="diff-card anim-up-d3" style="border-color:rgba(66,133,244,0.3);">
+    <div class="diff-label" style="color:var(--blue);">Чем это отличается от&nbsp;Manus</div>
+    <div class="diff-text">Manus — <strong>отдельный сервис</strong>, в&nbsp;который ты идёшь специально. Агенты внутри LLM — это <strong>«кнопка Agent» в&nbsp;привычном ChatGPT/Kimi</strong>, который ты&nbsp;и&nbsp;так используешь каждый день.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 34: ЭТАП 6a — АГЕНТЫ-КОДЕРЫ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Этап 6a — <span style="color:var(--orange);">агенты-кодеры</span>. Два вида</div>
+  <div class="slide-subtitle anim-up-d1">Тут легко запутаться. Поэтому разделим сразу на&nbsp;две полочки:</div>
+
+  <div class="split-screen anim-up-d2" style="grid-template-columns:1fr 60px 1fr; gap:0; margin-top:10px;">
+
+    <!-- ЛЕВАЯ: Фирменные -->
+    <div class="split-side left" style="border-color:rgba(232,148,74,0.4); padding:24px;">
+      <div class="split-label" style="color:var(--orange);">🏪 Фирменный агент</div>
+      <div style="font-size:18px; color:var(--white); font-weight:700; margin-bottom:8px;">Создатель модели = создатель агента</div>
+      <div style="font-size:15px; color:var(--white-80); line-height:1.5; margin-bottom:14px;">
+        Работает <strong>только со&nbsp;своей моделью</strong>. Как&nbsp;фирменный магазин одного бренда.
+      </div>
+      <div class="card" style="margin-bottom:10px; padding:14px 16px; border-left:3px solid var(--orange);">
+        <div class="card-title" style="color:var(--orange); font-size:17px;">◆ Claude Code</div>
+        <div class="card-body" style="font-size:14px;">Агент от&nbsp;<strong>Anthropic</strong>. Работает на&nbsp;модели Claude. Живёт в&nbsp;терминале. Сам пишет, запускает и&nbsp;чинит код.</div>
+        <a class="open-link" href="https://claude.ai/code" target="_blank" style="margin-top:8px;">claude.ai/code <span class="arrow">↗</span></a>
+      </div>
+      <div class="card" style="padding:14px 16px; border-left:3px solid var(--orange);">
+        <div class="card-title" style="color:var(--orange); font-size:17px;">⬡ ChatGPT Codex</div>
+        <div class="card-body" style="font-size:14px;">Агент от&nbsp;<strong>OpenAI</strong>. Работает на&nbsp;модели GPT. Облачный: даёшь задачу — приходит готовый код.</div>
+        <a class="open-link" href="https://openai.com/index/introducing-codex/" target="_blank" style="margin-top:8px;">openai.com/codex <span class="arrow">↗</span></a>
+      </div>
+    </div>
+
+    <!-- СТРЕЛКА -->
+    <div style="display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px;">
+      <div style="font-size:14px; color:var(--white-40); writing-mode:vertical-rl; letter-spacing:2px;">vs</div>
+    </div>
+
+    <!-- ПРАВАЯ: Универсальные -->
+    <div class="split-side right" style="border-color:rgba(232,148,74,0.45); background:linear-gradient(145deg, rgba(232,148,74,0.12) 0%, rgba(232,148,74,0.03) 100%); padding:24px;">
+      <div class="split-label" style="color:var(--orange);">🏬 Универсальная среда</div>
+      <div style="font-size:18px; color:var(--white); font-weight:700; margin-bottom:8px;">Среда одна — модели на&nbsp;выбор</div>
+      <div style="font-size:15px; color:var(--white-80); line-height:1.5; margin-bottom:14px;">
+        Подключаешь <strong>любую LLM</strong> как&nbsp;движок. Как&nbsp;торговый центр, где много брендов.
+      </div>
+      <div class="card" style="margin-bottom:10px; padding:14px 16px; border-left:3px solid var(--orange);">
+        <div class="card-title" style="color:var(--orange); font-size:17px;">▶ Cursor</div>
+        <div class="card-body" style="font-size:14px;">Редактор кода с&nbsp;Agent Mode. Подключаешь Claude, GPT или&nbsp;Gemini — на&nbsp;выбор. Самый популярный.</div>
+        <a class="open-link" href="https://cursor.com" target="_blank" style="margin-top:8px;">cursor.com <span class="arrow">↗</span></a>
+      </div>
+      <div class="card" style="padding:14px 16px; border-left:3px solid var(--orange);">
+        <div class="card-title" style="color:var(--orange); font-size:17px;">🚀 Google Antigravity</div>
+        <div class="card-body" style="font-size:14px;">IDE от&nbsp;Google. Несколько агентов работают параллельно. <strong>Бесплатно</strong> для&nbsp;Gmail. Ноябрь 2025.</div>
+        <a class="open-link" href="https://idx.google.com/antigravity" target="_blank" style="margin-top:8px;">antigravity <span class="arrow">↗</span></a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="quote anim-up-d3" style="border-left-color:var(--orange); margin-top:14px; font-size:19px;">Все четыре — <strong>сами агенты</strong>. И&nbsp;все четыре могут <strong>создавать новых агентов</strong> — это вайбкодинг. Дальше — версия для&nbsp;всех &darr;</div>
+</div>
+
+<!-- ============ СЛАЙД 34b: ЭТАП 6b — АГЕНТЫ-СТРОИТЕЛИ (SaaS) ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Этап 6b — <span style="color:var(--orange);">агенты-строители</span> <span class="inline-gloss">(для&nbsp;всех, без&nbsp;кода)</span></div>
+  <div class="slide-subtitle anim-up-d1">Тот&nbsp;же принцип: LLM + инструменты + планировщик. Но&nbsp;обёрнуто в&nbsp;<span class="term">SaaS</span> <span class="inline-gloss">(онлайн-сервис)</span> — описал словами &rarr; получил готовый сайт.</div>
+
+  <div class="players-grid-4 anim-up-d2">
+    <div class="player-card" style="border-left:4px solid var(--orange);">
+      <div class="player-logo">💜</div>
+      <div class="player-name" style="color:var(--orange);">Lovable</div>
+      <div class="player-desc">Описал приложение на&nbsp;русском &rarr; получил рабочий сайт с&nbsp;базой данных. Деплой одной кнопкой.</div>
+      <a class="open-link" href="https://lovable.dev" target="_blank">lovable.dev <span class="arrow">↗</span></a>
+    </div>
+    <div class="player-card" style="border-left:4px solid var(--orange);">
+      <div class="player-logo">⚡</div>
+      <div class="player-name" style="color:var(--orange);">Bolt.new</div>
+      <div class="player-desc">Быстрый генератор лендингов и&nbsp;приложений. Работает прямо в&nbsp;браузере, можно редактировать код.</div>
+      <a class="open-link" href="https://bolt.new" target="_blank">bolt.new <span class="arrow">↗</span></a>
+    </div>
+    <div class="player-card" style="border-left:4px solid var(--orange);">
+      <div class="player-logo">🔵</div>
+      <div class="player-name" style="color:var(--orange);">Replit</div>
+      <div class="player-desc">Полноценная среда разработки в&nbsp;браузере. Встроенный агент пишет, запускает и&nbsp;деплоит код за&nbsp;тебя.</div>
+      <a class="open-link" href="https://replit.com" target="_blank">replit.com <span class="arrow">↗</span></a>
+    </div>
+    <div class="player-card" style="border-left:4px solid var(--orange);">
+      <div class="player-logo">▲</div>
+      <div class="player-name" style="color:var(--orange);">v0.dev</div>
+      <div class="player-desc">От&nbsp;создателей Vercel. Генерирует UI-компоненты и&nbsp;целые страницы по&nbsp;описанию. Копируешь код.</div>
+      <a class="open-link" href="https://v0.dev" target="_blank">v0.dev <span class="arrow">↗</span></a>
+    </div>
+  </div>
+
+  <div class="analogy-card anim-up-d3" style="padding:22px 30px; background:linear-gradient(135deg,rgba(232,148,74,0.15) 0%,rgba(232,148,74,0.03) 100%); border-color:rgba(232,148,74,0.4);">
+    <div class="analogy-title" style="color:var(--orange); font-size:22px;">💡 Ага-момент</div>
+    <div class="analogy-body" style="font-size:19px;">Помните, на&nbsp;<strong>занятии&nbsp;6</strong> вы&nbsp;создавали лендинги в&nbsp;Bolt и&nbsp;v0? <br>Так вот — <strong style="color:var(--orange);">вы&nbsp;уже пользовались агентами и&nbsp;не&nbsp;знали об&nbsp;этом!</strong></div>
+  </div>
+</div>
+
+<!-- ============ АНОНС ПРАКТИКИ LOVABLE ============ -->
+<div class="slide" style="background: radial-gradient(ellipse at 50% 50%, rgba(232,148,74,0.25) 0%, transparent 65%); text-align:center; justify-content:center; align-items:center;">
+  <div style="font-size:14px; letter-spacing:3px; text-transform:uppercase; color:var(--orange); font-weight:800; margin-bottom:24px;" class="anim-up">🔥 Практика №4 &middot; 15 минут</div>
+  <div style="font-size:72px; font-weight:900; color:var(--white); line-height:1.0; margin-bottom:18px; letter-spacing:-2px;" class="anim-up-d1">Создаём лендинг<br>в&nbsp;<span style="color:var(--orange);">Lovable</span></div>
+  <div style="font-size:22px; color:var(--white-80); max-width:900px; margin:0 auto 24px; line-height:1.4;" class="anim-up-d2">Скриншот чужого лендинга + ваша тема = <strong>готовый сайт за&nbsp;5 минут</strong>.<br>Агент-строитель в&nbsp;деле.</div>
+  <div style="font-size:16px; color:var(--white-40);" class="anim-up-d3">Всем открыть <strong style="color:var(--orange);">lovable.dev</strong> на&nbsp;ноутбуках</div>
+</div>
+
+<!-- ============ ПРАКТИКА LOVABLE — ПОДГОТОВКА ============ -->
+<div class="slide practice-slide">
+  <div class="slide-title anim-up"><span class="practice-banner" style="background:var(--orange); box-shadow:0 4px 16px rgba(232,148,74,0.35);">ПОДГОТОВКА</span>Что нам <span style="color:var(--orange);">понадобится</span></div>
+  <div class="slide-subtitle anim-up-d1">Три вещи — подготовим за&nbsp;3&nbsp;минуты</div>
+  <div class="cards-grid-3 anim-up-d2" style="grid-template-columns:1fr 1fr 1fr;">
+    <div class="card">
+      <div class="card-title">1. Расширение GoFullPage</div>
+      <div class="card-body">
+        Ставим за&nbsp;10 секунд: Chrome → магазин расширений → <strong>GoFullPage</strong> → Установить.<br><br>
+        Оно делает <em>скриншот ВСЕЙ страницы</em> — от&nbsp;шапки до&nbsp;футера, одним кликом.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">2. Референс (чужой лендинг)</div>
+      <div class="card-body">
+        Найдите лендинг, который вам нравится по&nbsp;стилю. Любой. Откройте его в&nbsp;Chrome и&nbsp;нажмите иконку GoFullPage → скачается <strong>длинный скриншот</strong> всей страницы.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">3. Ваша тема</div>
+      <div class="card-body">
+        Одним предложением: чем занимаетесь, кто клиенты, что&nbsp;продаёте.<br><br>
+        <em>Пример: «Навесы под&nbsp;ключ в&nbsp;Уфе для&nbsp;ТСЖ и&nbsp;застройщиков»</em>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ПРАКТИКА LOVABLE — ШАГИ ============ -->
+<div class="slide practice-slide">
+  <div class="slide-title anim-up"><span class="practice-banner" style="background:var(--orange); box-shadow:0 4px 16px rgba(232,148,74,0.35);">ШАГИ 1-5</span>Создаём лендинг в <span style="color:var(--orange);">Lovable</span></div>
+  <div class="step-list">
+    <div class="step-row anim-up-d1">
+      <div class="step-num-big" style="background:var(--orange);">1</div>
+      <div class="step-content">
+        Открываем <strong><a href="https://lovable.dev" target="_blank">lovable.dev</a></strong> → регистрация через Google. Бесплатно, хватит кредитов на&nbsp;лендинг.
+      </div>
+    </div>
+    <div class="step-row anim-up-d2">
+      <div class="step-num-big" style="background:var(--orange);">2</div>
+      <div class="step-content">
+        Нажимаем <strong>«Прикрепить файл»</strong> → загружаем <strong>скриншот референсного лендинга</strong> (тот длинный скриншот из&nbsp;GoFullPage).
+      </div>
+    </div>
+    <div class="step-row anim-up-d3">
+      <div class="step-num-big" style="background:var(--orange);">3</div>
+      <div class="step-content">
+        Вставляем <strong>готовый промпт</strong> (шаблон ниже), заменяя [...] на&nbsp;свою тему. Нажимаем <em>Enter</em>.
+      </div>
+    </div>
+    <div class="step-row anim-up-d4">
+      <div class="step-num-big" style="background:var(--orange);">4</div>
+      <div class="step-content">
+        <strong>Ждём 2-3 минуты</strong> — Lovable генерирует полноценный сайт. Справа — превью в&nbsp;реальном времени.
+      </div>
+    </div>
+    <div class="step-row anim-up-d4">
+      <div class="step-num-big" style="background:var(--orange);">5</div>
+      <div class="step-content">
+        Нажимаем <strong>«Publish»</strong> → готовый сайт по&nbsp;ссылке. Можно отправить клиенту прямо сейчас.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ПРАКТИКА LOVABLE — ПРОМПТ ============ -->
+<div class="slide practice-slide">
+  <div class="slide-title anim-up"><span class="practice-banner" style="background:var(--orange); box-shadow:0 4px 16px rgba(232,148,74,0.35);">ПРОМПТ</span>Шаблон запроса для <span style="color:var(--orange);">Lovable</span></div>
+  <div class="slide-subtitle anim-up-d1">Скопируйте, замените [...] на&nbsp;свои данные, вставьте вместе со&nbsp;скриншотом</div>
+  <div style="background:rgba(232,148,74,0.06); border:2px solid rgba(232,148,74,0.3); border-radius:14px; padding:20px 24px; font-size:15px; line-height:1.7; color:#334155; margin-top:8px;" class="anim-up-d2">
+    <div style="font-size:12px; font-weight:800; color:var(--orange); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">📋 Промпт — скопировать и&nbsp;вставить</div>
+    Создай одностраничный лендинг.<br><br>
+    <strong>Бизнес:</strong> [например: установка навесов под ключ в Уфе]<br>
+    <strong>Клиенты:</strong> [например: ТСЖ, застройщики, частные дома]<br>
+    <strong>Услуги:</strong> [например: навесы для авто, козырьки, беседки]<br>
+    <strong>Преимущества:</strong> [например: гарантия 5 лет, монтаж за 1 день, собственное производство]<br>
+    <strong>Контакты:</strong> [телефон, город, адрес]<br><br>
+    Используй прикреплённый скриншот как <strong>референс дизайна</strong> — повтори структуру, стиль и расположение блоков.<br><br>
+    Блоки: шапка с заголовком и кнопкой, о компании, услуги с ценами, преимущества, отзывы, контакты с картой, футер.<br>
+    Стиль: современный, минималистичный, мобильная адаптация.
+  </div>
+  <div class="quote anim-up-d3" style="border-left-color:var(--orange);">💡 Промпт + скриншот референса = Lovable понимает <strong>и&nbsp;что написать, и&nbsp;как это должно выглядеть</strong>.</div>
+</div>
+
+<!-- ============ СЛАЙД 35: РИСКИ И ЛОВУШКИ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up" style="color:var(--coral);">⚠️ Риски и <span class="coral">ловушки</span> агентов</div>
+  <div class="slide-subtitle anim-up-d1">Агенты — мощная штука. Но&nbsp;у&nbsp;каждой силы есть обратная сторона. Знать заранее — не&nbsp;попасться.</div>
+  <div class="cards-grid anim-up-d2">
+    <div class="card" style="border-top:4px solid var(--red);">
+      <div class="card-title" style="color:var(--red);">🌀 Каскадные ошибки</div>
+      <div class="card-body" style="font-size:15px;">Агент ошибся на&nbsp;шаге 3 — и&nbsp;все следующие 10&nbsp;шагов пошли по&nbsp;ложному пути. Чем длиннее цепочка — тем больше риск.</div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--yellow);">
+      <div class="card-title" style="color:var(--yellow);">🔄 Бесконечные циклы</div>
+      <div class="card-body" style="font-size:15px;">Агент застрял и&nbsp;пытается решить задачу снова и&nbsp;снова — сжигает кредиты (и&nbsp;деньги) без&nbsp;результата. Manus за&nbsp;одну задачу может сжечь $50.</div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--accent);">
+      <div class="card-title" style="color:var(--accent);">🎭 <span class="term">Prompt injection</span></div>
+      <div class="card-body" style="font-size:15px;"><span class="inline-gloss">(скрытая манипуляция)</span> Злоумышленник прячет команду на&nbsp;веб-странице — агент выполняет её, думая, что это часть задачи. Как&nbsp;«трюк» для&nbsp;ИИ.</div>
+    </div>
+    <div class="card" style="border-top:4px solid #94a3b8;">
+      <div class="card-title" style="color:#94a3b8;">👤 Кто отвечает?</div>
+      <div class="card-body" style="font-size:15px;">Если агент нарушил закон — кто виноват? Разработчик? Владелец? ИИ? Юридически это пока серая зона. Всегда проверяйте результат.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 36b: МУЛЬТИАГЕНТНОСТЬ — ВВЕДЕНИЕ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">А&nbsp;теперь — <span class="accent">мультиагентность</span></div>
+  <div class="slide-subtitle anim-up-d1">До&nbsp;этого мы говорили про <strong>одного агента</strong>, который делает задачу. Но&nbsp;что, если задача <em>слишком сложная</em> для&nbsp;одного?</div>
+
+  <div class="analogy-card anim-up-d2" style="padding:30px 36px;">
+    <div class="analogy-emoji" style="font-size:56px;">🏢</div>
+    <div class="analogy-title">Аналогия: компания из&nbsp;одного человека vs&nbsp;команда</div>
+    <div class="analogy-body" style="font-size:20px;">
+      <strong>Один агент</strong> — это фрилансер. Он&nbsp;хорош, но&nbsp;один. Если задача большая — он&nbsp;тонет.<br><br>
+      <strong>Мультиагентная система</strong> — это <em>компания</em>. Директор раздаёт задачи, каждый сотрудник делает свою часть, результат собирается вместе.<br><br>
+      <span style="color:var(--accent);">Несколько агентов &rarr; каждый со&nbsp;своей ролью &rarr; общая цель.</span>
+    </div>
+  </div>
+
+  <div class="quote anim-up-d3">Это именно то, что делают <strong>Kimi Agent Swarm</strong> (100 агентов параллельно), <strong>OpenClaw</strong> (несколько агентов на&nbsp;сервере) и <strong>Google Antigravity</strong> (Manager + Worker View).</div>
+</div>
+
+<!-- ============ ИНФОГРАФИКА МУЛЬТИАГЕНТНОСТИ (NotebookLM) ============ -->
+<div class="slide" style="padding:30px 60px; background:#1a1a2e; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+  <div style="max-width:1200px; width:100%; border-radius:20px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.4); border:1px solid rgba(167,139,250,0.2);" class="anim-scale">
+    <img src="screens/multiagent-infographic.png" alt="Мультиагентность — инфографика" style="width:100%; height:auto; display:block;">
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 36c: 3 ТОПОЛОГИИ МУЛЬТИАГЕНТОВ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Три способа <span class="accent">организовать команду</span> агентов</div>
+  <div class="slide-subtitle anim-up-d1">Как в&nbsp;реальной компании — разные структуры подходят для&nbsp;разных задач</div>
+
+  <div class="topo-grid anim-up-d2">
+
+    <!-- Иерархическая -->
+    <div class="topo-card t1">
+      <div class="topo-title">1. Директор + сотрудники</div>
+      <div class="topo-subtitle">Иерархическая</div>
+      <div class="topo-visual">
+        <div class="topo-node boss">👔 Директор</div>
+        <div class="topo-arrow-down">↓&nbsp;&nbsp;↓&nbsp;&nbsp;↓</div>
+        <div class="topo-row">
+          <div class="topo-node worker">📝 Аналитик</div>
+          <div class="topo-node worker">🎨 Дизайнер</div>
+          <div class="topo-node worker">📧 Рассылка</div>
+        </div>
+      </div>
+      <div class="topo-desc">Один агент <strong>раздаёт задачи</strong> другим, собирает результаты и&nbsp;отдаёт итог.</div>
+      <div class="topo-example">Пример: создать маркетинговую кампанию — 1&nbsp;планирует, 3&nbsp;делают.</div>
+    </div>
+
+    <!-- Swarm / Эстафета -->
+    <div class="topo-card t2">
+      <div class="topo-title">2. Эстафета</div>
+      <div class="topo-subtitle">Плоская / Swarm</div>
+      <div class="topo-visual">
+        <div class="topo-row">
+          <div class="topo-node worker" style="border-color:var(--teal);">🔍 Парсер</div>
+          <div class="topo-arrow-right">&rarr;</div>
+          <div class="topo-node worker" style="border-color:var(--teal);">📊 Аналитик</div>
+          <div class="topo-arrow-right">&rarr;</div>
+          <div class="topo-node worker" style="border-color:var(--teal);">📧 Отправка</div>
+        </div>
+      </div>
+      <div class="topo-desc">Нет начальника. Каждый <strong>передаёт эстафету</strong> следующему: сделал своё → передал дальше.</div>
+      <div class="topo-example">Пример: собрать данные → проанализировать → отправить отчёт по&nbsp;почте.</div>
+    </div>
+
+    <!-- Дебат -->
+    <div class="topo-card t3">
+      <div class="topo-title">3. Дебат</div>
+      <div class="topo-subtitle">Генератор vs Критик</div>
+      <div class="topo-visual">
+        <div class="topo-row" style="gap:16px;">
+          <div class="topo-node gen">✍️ Создаёт</div>
+          <div class="topo-arrow-vs">⇄</div>
+          <div class="topo-node critic">🔎 Критикует</div>
+        </div>
+        <div style="font-size:13px; color:var(--yellow); margin-top:8px;">Спорят, пока не&nbsp;договорятся</div>
+      </div>
+      <div class="topo-desc">Два агента <strong>спорят</strong>: один предлагает, другой ищет ошибки. Итог — проверенный результат.</div>
+      <div class="topo-example">Пример: составить договор — юрист пишет, ревизор проверяет.</div>
+    </div>
+
+  </div>
+
+  <div class="diff-card anim-up-d3" style="border-color:rgba(167,139,250,0.35); margin-top:14px;">
+    <div class="diff-label" style="color:var(--accent);">Зачем это знать</div>
+    <div class="diff-text"><strong>Оркестрация</strong> <span class="inline-gloss">(управление командой агентов)</span> — это главная компетенция 2026. Не&nbsp;«какую модель выбрать», а&nbsp;«<strong>как организовать агентов в&nbsp;команду</strong>». Именно это отличает тех, кто получает результат.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 36: ЭТАП 7 ОБЛОЖКА — OPENCLAW ============ -->
+<div class="slide title-slide" style="background: radial-gradient(ellipse at 50% 40%, rgba(224,116,97,0.25) 0%, transparent 60%);">
+  <img class="slide-bg-img" src="screens/bg-stage7.png" alt="">
+  <div style="font-size:14px; letter-spacing:3px; text-transform:uppercase; color:var(--coral); font-weight:800; margin-bottom:20px; position:relative; z-index:1;" class="anim-up">⭐ Этап 7 &middot; Февраль 2026 &middot; Верхушка эволюции</div>
+  <div class="title-big anim-up-d1" style="color:var(--coral); font-size:80px; position:relative; z-index:1;">Open-source<br>self-host агенты</div>
+  <div class="title-sub anim-up-d2" style="font-size:24px; position:relative; z-index:1;">Свой агент. На&nbsp;своём сервере. С&nbsp;любой LLM. <strong>Полный контроль. Ничего не&nbsp;арендуем.</strong></div>
+</div>
+
+<!-- ============ СЛАЙД 37: OPENCLAW ОПИСАНИЕ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Что такое <span style="color:var(--coral);">OpenClaw</span></div>
+  <div class="slide-subtitle anim-up-d1">247&nbsp;000 звёзд на&nbsp;GitHub. Создан в&nbsp;Австрии. Февраль 2026 — взорвал интернет.</div>
+  <div class="feat-grid anim-up-d2" style="grid-template-columns:1fr 1.2fr;">
+    <div style="background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 12px 50px rgba(0,0,0,0.4);">
+      <img src="screens/openclaw.png" alt="OpenClaw" style="width:100%; display:block;">
+    </div>
+    <div>
+      <div class="card" style="border-left:4px solid var(--coral); margin-bottom:12px;">
+        <div class="card-title" style="color:var(--coral);">Что это</div>
+        <div class="card-body" style="font-size:15px; line-height:1.6;">
+          <span class="term">Self-hosted</span> <span class="inline-gloss">(на&nbsp;своём сервере)</span> агентский runtime <span class="inline-gloss">(движок)</span>. Подключается к&nbsp;любой LLM (Claude, GPT, DeepSeek). Общаешься через мессенджер: <strong>Telegram, Signal, WhatsApp, Discord</strong>.
+        </div>
+      </div>
+      <div class="card" style="border-left:4px solid var(--teal); margin-bottom:12px;">
+        <div class="card-title" style="color:var(--teal);">Чем отличается от&nbsp;всего предыдущего</div>
+        <div class="card-body" style="font-size:15px; line-height:1.6;">
+          Suvvy, Manus, Comet — <em>чужие серверы, чужие правила</em>. OpenClaw — <strong>твой сервер, твои данные, твои интеграции</strong>. Никакого vendor lock-in <span class="inline-gloss">(зависимости от&nbsp;одной компании)</span>.
+        </div>
+      </div>
+      <div class="card" style="border-left:4px solid var(--green);">
+        <div class="card-title" style="color:var(--green);">💰 Бесплатно</div>
+        <div class="card-body" style="font-size:15px;">Open-source. Платишь только за&nbsp;сервер (~200-500 ₽/мес на&nbsp;Timeweb) и&nbsp;за&nbsp;LLM (API-ключ).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 38: OPENCLAW АНАЛОГИ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">OpenClaw — <span style="color:var(--coral);">не&nbsp;единственный</span></div>
+  <div class="slide-subtitle anim-up-d1">Есть 3-4 похожих проекта. Все — open-source, все — self-hosted.</div>
+  <div class="players-grid-4 anim-up-d2">
+    <div class="player-card accent-s7" style="border-color:rgba(224,116,97,0.5); background:linear-gradient(145deg,rgba(224,116,97,0.1) 0%,transparent 100%);">
+      <div class="player-logo" style="font-size:32px;">🦞</div>
+      <div class="player-name" style="color:var(--coral);">OpenClaw</div>
+      <div class="player-desc">Лидер. 247k звёзд. Telegram, Signal, WhatsApp, Discord. Timeweb маркетплейс — 2&nbsp;клика.</div>
+      <a class="open-link" href="https://openclaw.ai" target="_blank">openclaw.ai <span class="arrow">↗</span></a>
+    </div>
+    <div class="player-card accent-s7">
+      <div class="player-logo" style="font-size:32px;">🛡️</div>
+      <div class="player-name" style="color:var(--coral);">NemoClaw</div>
+      <div class="player-desc">От&nbsp;NVIDIA. Тот&nbsp;же принцип, но&nbsp;с&nbsp;<span class="term">security guardrails</span> <span class="inline-gloss">(защитными барьерами)</span>. Для&nbsp;компаний.</div>
+    </div>
+    <div class="player-card accent-s7">
+      <div class="player-logo" style="font-size:32px;">📟</div>
+      <div class="player-name" style="color:var(--coral);">LibreChat</div>
+      <div class="player-desc">Поддерживает 75+ LLM-провайдеров. Фокус на&nbsp;чат-интерфейсе. Open-source, Docker.</div>
+    </div>
+    <div class="player-card accent-s7">
+      <div class="player-logo" style="font-size:32px;">⌨️</div>
+      <div class="player-name" style="color:var(--coral);">Cline</div>
+      <div class="player-desc">5M+ установок. Плагин для&nbsp;VS Code — агент прямо в&nbsp;редакторе кода. Для&nbsp;тех, кто пишет код.</div>
+    </div>
+  </div>
+  <div class="diff-card anim-up-d3" style="border-color:rgba(224,116,97,0.3);">
+    <div class="diff-label" style="color:var(--coral);">Зачем нужен self-host, если&nbsp;есть Manus и&nbsp;Suvvy</div>
+    <div class="diff-text"><strong>Приватность:</strong> данные не&nbsp;уходят на&nbsp;чужие серверы. <strong>Контроль:</strong> можно менять LLM, добавлять свои инструменты. <strong>Бесплатно:</strong> нет подписки, только сервер + API.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 39: ДЕМО OPENCLAW — ПЕРЕДАЧА ВЕДУЩЕМУ ============ -->
+<div class="slide" style="background: radial-gradient(ellipse at 50% 50%, rgba(224,116,97,0.3) 0%, transparent 65%); text-align:center; justify-content:center; align-items:center;">
+  <div style="font-size:14px; letter-spacing:3px; text-transform:uppercase; color:var(--coral); font-weight:800; margin-bottom:30px;" class="anim-up">⭐ Демо OpenClaw &middot; 20 минут</div>
+  <div style="font-size:72px; font-weight:900; color:var(--white); line-height:1.0; margin-bottom:20px; letter-spacing:-2px;" class="anim-up-d1">Мой <span style="color:var(--coral);">OpenClaw</span> в&nbsp;деле</div>
+  <div style="font-size:24px; color:var(--white-80); max-width:900px; margin:0 auto 30px; line-height:1.4;" class="anim-up-d2">Сейчас покажу свой уже настроенный OpenClaw — <strong>живьём, в&nbsp;Telegram</strong>. Что он&nbsp;умеет, какие задачи решает, как&nbsp;с&nbsp;ним общаюсь каждый день.</div>
+  <div style="font-size:18px; color:var(--white-40);" class="anim-up-d3">Переключаюсь на&nbsp;Telegram — все смотрят на&nbsp;экран</div>
+</div>
+
+<!-- ============ СЛАЙД 40: ИТОГ — ИНФОГРАФИКА СНОВА ============ -->
+<div class="slide">
+  <div class="slide-title anim-up" style="text-align:center;">Вспоминаем <span class="accent">главную схему</span></div>
+  <div class="infographic">
+    <div class="info-layer shell anim-up-d1" style="padding:18px 24px;">
+      <div class="info-label">&#x1F9E0; Оболочка агента</div>
+      <div class="info-blocks">
+        <div class="info-block"><div class="info-block-icon">🎯</div><div class="info-block-name">Планировщик</div><div class="info-block-desc">Разбивает цель на&nbsp;шаги</div></div>
+        <div class="info-block"><div class="info-block-icon">🧠</div><div class="info-block-name">Память</div><div class="info-block-desc">Помнит контекст</div></div>
+        <div class="info-block"><div class="info-block-icon">🛠️</div><div class="info-block-name">Инструменты</div><div class="info-block-desc">Браузер, почта, API</div></div>
+        <div class="info-block"><div class="info-block-icon">🎓</div><div class="info-block-name">Скиллы</div><div class="info-block-desc">Готовые навыки</div></div>
+      </div>
+    </div>
+    <div class="info-arrow anim-up-d2">&darr; использует &darr;</div>
+    <div class="info-layer llm anim-up-d3" style="padding:18px 24px;">
+      <div class="info-label">&#x1F4AC; LLM-модели</div>
+      <div class="info-blocks">
+        <div class="info-block"><div class="info-block-icon">◆</div><div class="info-block-name">Claude</div><div class="info-block-desc">Anthropic</div></div>
+        <div class="info-block"><div class="info-block-icon">◆</div><div class="info-block-name">GPT-5</div><div class="info-block-desc">OpenAI</div></div>
+        <div class="info-block"><div class="info-block-icon">◆</div><div class="info-block-name">Gemini</div><div class="info-block-desc">Google</div></div>
+        <div class="info-block"><div class="info-block-icon">◆</div><div class="info-block-name">DeepSeek</div><div class="info-block-desc">Китай</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="quote anim-up-d4" style="margin-top:18px; text-align:center;"><strong style="color:var(--accent);">Агент = несколько LLM + оболочка (планировщик, память, инструменты, скиллы).</strong> Это главная мысль урока.</div>
+</div>
+
+<!-- ============ СЛАЙД 41: КАКОЙ ПОДХОД КОМУ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Какой подход <span class="accent">выбрать под свою задачу</span></div>
+  <table class="tbl anim-up-d1">
+    <tr><th>Я&nbsp;хочу...</th><th>Подход</th><th>Инструмент</th></tr>
+    <tr><td><strong>Быстро запустить</strong> агента-продажника</td><td>Этап 2 — конструктор</td><td style="color:var(--teal);">Suvvy / Nextbot</td></tr>
+    <tr><td><strong>Разовое исследование</strong> под ключ</td><td>Этап 3 — автономный</td><td style="color:#c084fc;">Manus / Genspark</td></tr>
+    <tr><td><strong>Рутину в&nbsp;браузере</strong> за&nbsp;меня</td><td>Этап 4 — браузерный</td><td style="color:var(--green);">Comet / Atlas</td></tr>
+    <tr><td><strong>Кнопка Agent</strong> в&nbsp;привычном ChatGPT</td><td>Этап 5 — внутри LLM</td><td style="color:var(--blue);">Kimi Swarm / GPT-5</td></tr>
+    <tr><td><strong>Сам создавать</strong> агентов кодом</td><td>Этап 6 — конструктор</td><td style="color:var(--orange);">Claude Code / Cursor</td></tr>
+    <tr><td><strong>Свой сервер</strong>, полный контроль</td><td>Этап 7 — self-host</td><td style="color:var(--coral);">OpenClaw / NemoClaw</td></tr>
+  </table>
+  <div class="quote anim-up-d2">Начните с&nbsp;этапов 2-4 — это даст <strong>быстрый результат</strong>. Когда захотите глубже — этапы 5-7 ждут.</div>
+</div>
+
+<!-- ============ СЛАЙД 42: ДОМАШКА ============ -->
+<div class="slide practice-slide">
+  <div class="slide-title anim-up"><span class="practice-banner">ДОМАШКА</span>На&nbsp;эту неделю</div>
+  <div class="step-list">
+    <div class="step-row anim-up-d1">
+      <div class="step-num-big">1</div>
+      <div class="step-content">
+        <strong>Доделайте агента в&nbsp;Suvvy</strong> — если не&nbsp;успели на&nbsp;уроке. Пусть он&nbsp;отвечает хотя&nbsp;бы на&nbsp;3 вопроса вашего клиента.
+      </div>
+    </div>
+    <div class="step-row anim-up-d2">
+      <div class="step-num-big">2</div>
+      <div class="step-content">
+        <strong>Попробуйте Manus</strong> — дайте ему одну реальную задачу из&nbsp;вашего бизнеса (анализ, отчёт, сбор данных). Бесплатные 1000 кредитов хватит.
+      </div>
+    </div>
+    <div class="step-row anim-up-d3">
+      <div class="step-num-big">3</div>
+      <div class="step-content">
+        <strong>Установите Perplexity Comet</strong> на&nbsp;ноутбук — попробуйте выделить текст на&nbsp;любом сайте и&nbsp;спросить «объясни простыми словами».
+      </div>
+    </div>
+  </div>
+  <div class="quote anim-up-d4">Все ссылки — в&nbsp;шпаргалке, отправлю в&nbsp;чат сразу после занятия.</div>
+</div>
+
+<!-- ============ СЛАЙД 43: ВОРОНКА НА ВАЙБКОДИНГ ============ -->
+<div class="slide" style="text-align:center; justify-content:center; align-items:center; background:radial-gradient(ellipse at 50% 40%, rgba(224,116,97,0.2) 0%, transparent 60%);">
+  <div style="font-size:14px; letter-spacing:3px; text-transform:uppercase; color:var(--coral); font-weight:700; margin-bottom:24px;" class="anim-up">Следующий шаг</div>
+  <div style="font-size:52px; font-weight:900; color:var(--white); line-height:1.1; margin-bottom:20px;" class="anim-up-d1">Хотите <strong style="color:var(--coral);">сами создавать</strong> таких агентов?</div>
+  <div style="font-size:24px; color:var(--white-80); max-width:800px; margin:0 auto 30px; line-height:1.4;" class="anim-up-d2">Этапы 6 и&nbsp;7 — это уже <strong>вайбкодинг</strong>. Вы&nbsp;описываете словами — Claude Code создаёт готового агента за&nbsp;вас. Без&nbsp;знания программирования.</div>
+  <div style="font-size:20px; color:var(--coral); font-weight:700;" class="anim-up-d3">Расскажу подробнее после занятия — спрашивайте в&nbsp;чате.</div>
+</div>
+
+<!-- ============ СЛАЙД 44: АНОНС ЗАНЯТИЯ 8 ============ -->
+<div class="slide" style="text-align:center; justify-content:center; align-items:center;">
+  <div style="font-size:24px; color:var(--white-60); margin-bottom:24px;" class="anim-up">Следующее занятие</div>
+  <div style="font-size:56px; font-weight:900; color:var(--white); margin-bottom:16px;" class="anim-up-d1">Стратегия</div>
+  <div style="font-size:28px; color:var(--white-80); margin-bottom:48px;" class="anim-up-d2">ИИ как рычаг роста + безопасность + внедрение</div>
+  <div style="font-size:20px; color:var(--white-40);" class="anim-up-d3">Занятие 8 &middot; Финальное</div>
+</div>
+
+<!-- ============ СЛАЙД 45: СПАСИБО ============ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;" class="anim-up">neovida.ai</div>
+  <div class="title-big anim-up-d1" style="color:var(--accent);">Спасибо!</div>
+  <div class="title-sub anim-up-d2">До&nbsp;встречи на&nbsp;занятии&nbsp;8 <span class="typing-dots"><span></span><span></span><span></span></span></div>
+</div>
+
+</div><!-- /deck -->
+
+<script>
+(function() {
+  var slides = document.querySelectorAll('.slide');
+  var total = slides.length;
+  var current = 0;
+  var counter = document.getElementById('slideCounter');
+  var progress = document.getElementById('progressBar');
+  var fsBtn = document.getElementById('fsBtn');
+
+  function show(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[current].classList.remove('active');
+    slides[current].classList.add('prev');
+    current = idx;
+    slides.forEach(function(s, i) {
+      s.classList.remove('active', 'prev');
+      if (i < current) s.classList.add('prev');
+    });
+    slides[current].classList.add('active');
+    counter.textContent = (current + 1) + ' / ' + total;
+    progress.style.width = ((current + 1) / total * 100) + '%';
+    slides[current].scrollTop = 0;
+  }
+
+  function next() { show(current + 1); }
+  function prev() { show(current - 1); }
+
+  slides[0].classList.add('active');
+  counter.textContent = '1 / ' + total;
+  progress.style.width = (1 / total * 100) + '%';
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+    if (e.key === 'Home') { e.preventDefault(); show(0); }
+    if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+  });
+
+  var touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].screenX - touchStartX;
+    var dy = e.changedTouches[0].screenY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) { if (dx < 0) next(); else prev(); }
+  }, { passive: true });
+
+  fsBtn.addEventListener('click', function() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){});
+    else document.exitFullscreen();
+  });
+})();
+</script>
+</body>
+</html>
