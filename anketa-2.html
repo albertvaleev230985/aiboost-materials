@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>ИИ: Новая реальность — Анкета</title>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
@@ -34,17 +34,85 @@
     overflow-x: hidden;
   }
 
-  /* ═══ Lucide icon defaults ═══ */
   .lucide { flex-shrink: 0; }
 
-  /* ═══ Floating particles background ═══ */
-  .particles {
+  /* ═══ SPLASH SCREEN ═══ */
+  .splash {
     position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+    inset: 0;
+    z-index: 1000;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    transition: opacity 0.6s, transform 0.6s;
+  }
+
+  .splash.hide {
+    opacity: 0;
+    transform: scale(1.05);
     pointer-events: none;
-    z-index: 0;
+  }
+
+  .splash-logo {
+    width: 72px; height: 72px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--coral), var(--coral-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: splashPulse 1.5s ease infinite;
+  }
+
+  .splash-logo .lucide { width: 36px; height: 36px; color: #fff; stroke-width: 1.5; }
+
+  @keyframes splashPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(224,116,97,0.4); }
+    50% { box-shadow: 0 0 0 20px rgba(224,116,97,0); }
+  }
+
+  .splash-text {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--coral);
+    opacity: 0;
+    animation: fadeUp 0.6s 0.3s forwards;
+  }
+
+  .splash-bar {
+    width: 120px; height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
     overflow: hidden;
+    opacity: 0;
+    animation: fadeUp 0.4s 0.5s forwards;
+  }
+
+  .splash-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--coral), var(--coral-light));
+    border-radius: 2px;
+    animation: barFill 1.8s 0.6s cubic-bezier(0.4,0,0.2,1) forwards;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes barFill {
+    to { width: 100%; }
+  }
+
+  /* ═══ Particles ═══ */
+  .particles {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 0; overflow: hidden;
   }
 
   .particle {
@@ -63,15 +131,13 @@
 
   /* ═══ Progress bar ═══ */
   .progress-bar {
-    position: fixed;
-    top: 0; left: 0;
+    position: fixed; top: 0; left: 0;
     height: 3px;
     background: linear-gradient(90deg, var(--coral), var(--coral-light), var(--purple));
     background-size: 200% 100%;
     animation: shimmer 3s ease infinite;
-    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
     z-index: 100;
-    border-radius: 0 2px 2px 0;
   }
 
   @keyframes shimmer {
@@ -80,20 +146,20 @@
     100% { background-position: 0% 50%; }
   }
 
-  /* ═══ Main container ═══ */
+  /* ═══ Main ═══ */
   .main {
-    position: relative;
-    z-index: 1;
-    max-width: 540px;
-    margin: 0 auto;
-    padding: 0 20px;
+    position: relative; z-index: 1;
+    max-width: 540px; margin: 0 auto; padding: 0 20px;
+    opacity: 0;
+    transition: opacity 0.5s 0.2s;
   }
+
+  .main.visible { opacity: 1; }
 
   /* ═══ Hero ═══ */
   .hero {
-    text-align: center;
-    padding: 48px 0 32px;
-    animation: heroIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: center; padding: 48px 0 32px;
+    animation: heroIn 0.8s cubic-bezier(0.16,1,0.3,1);
   }
 
   @keyframes heroIn {
@@ -102,196 +168,153 @@
   }
 
   .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+    display: inline-flex; align-items: center; gap: 8px;
     background: rgba(224,116,97,0.08);
     border: 1px solid rgba(224,116,97,0.15);
-    border-radius: 100px;
-    padding: 6px 18px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--coral);
-    letter-spacing: 1.5px;
+    border-radius: 100px; padding: 6px 18px;
+    font-size: 12px; font-weight: 700;
+    color: var(--coral); letter-spacing: 1.5px; text-transform: uppercase;
     margin-bottom: 20px;
-    text-transform: uppercase;
   }
 
   .hero-badge .lucide { width: 14px; height: 14px; }
 
   .hero h1 {
-    font-size: 34px;
-    font-weight: 900;
-    color: #fff;
-    margin-bottom: 10px;
-    letter-spacing: -0.5px;
+    font-size: 34px; font-weight: 900;
+    color: #fff; margin-bottom: 10px; letter-spacing: -0.5px;
   }
 
   .hero h1 span {
     background: linear-gradient(135deg, var(--coral), var(--coral-light));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
 
-  .hero p {
-    font-size: 15px;
-    color: var(--text-secondary);
-    max-width: 400px;
-    margin: 0 auto;
+  .hero-subtitle {
+    font-size: 15px; color: var(--text-secondary);
+    max-width: 400px; margin: 0 auto;
+    min-height: 1.6em;
   }
+
+  /* Typing cursor */
+  .typing-cursor {
+    display: inline-block;
+    width: 2px; height: 1em;
+    background: var(--coral);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink 0.8s step-end infinite;
+  }
+
+  @keyframes blink { 50% { opacity: 0; } }
 
   /* ═══ Step indicator ═══ */
   .step-indicator {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0;
+    display: flex; justify-content: center; align-items: center;
     margin: 8px 0 36px;
-    animation: heroIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+    animation: heroIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.15s both;
   }
 
   .step-dot {
-    width: 40px;
-    height: 40px;
+    width: 40px; height: 40px;
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     border: 2px solid var(--border);
-    color: var(--text-dim);
-    background: var(--bg);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    z-index: 2;
-    flex-shrink: 0;
+    color: var(--text-dim); background: var(--bg);
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    position: relative; z-index: 2; flex-shrink: 0;
   }
 
   .step-dot .lucide { width: 18px; height: 18px; stroke-width: 2; }
 
   .step-dot.active {
-    border-color: var(--coral);
-    color: #fff;
-    background: var(--coral);
-    box-shadow: 0 0 20px rgba(224,116,97,0.3);
+    border-color: var(--coral); color: #fff; background: var(--coral);
+    box-shadow: 0 0 20px rgba(224,116,97,0.3), 0 0 60px rgba(224,116,97,0.1);
     animation: dotPulse 2s ease infinite;
   }
 
-  .step-dot.active .lucide { color: #fff; }
-
   .step-dot.done {
-    border-color: var(--coral);
-    color: #fff;
-    background: var(--coral);
+    border-color: var(--coral); color: #fff; background: var(--coral);
   }
 
   .step-dot.done .step-icon { display: none; }
   .step-dot .step-check { display: none; }
   .step-dot.done .step-check { display: flex; }
-
-  .step-dot.done .step-check .lucide {
-    width: 18px; height: 18px;
-    animation: checkPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
+  .step-dot.done .step-check .lucide { animation: checkPop 0.3s cubic-bezier(0.34,1.56,0.64,1); }
 
   @keyframes dotPulse {
-    0%, 100% { box-shadow: 0 0 20px rgba(224,116,97,0.3); }
-    50% { box-shadow: 0 0 30px rgba(224,116,97,0.5); }
+    0%, 100% { box-shadow: 0 0 20px rgba(224,116,97,0.3), 0 0 60px rgba(224,116,97,0.1); }
+    50% { box-shadow: 0 0 30px rgba(224,116,97,0.5), 0 0 80px rgba(224,116,97,0.15); }
   }
 
-  @keyframes checkPop {
-    from { transform: scale(0); }
-    to { transform: scale(1); }
-  }
+  @keyframes checkPop { from { transform: scale(0); } to { transform: scale(1); } }
 
   .step-line {
-    width: 48px;
-    height: 2px;
+    width: 48px; height: 2px;
     background: var(--border);
-    transition: background 0.4s;
-    flex-shrink: 0;
+    transition: background 0.4s; flex-shrink: 0;
   }
 
   .step-line.done { background: var(--coral); }
 
+  /* ═══ Floating step counter ═══ */
+  .step-counter {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15,15,25,0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 8px 20px;
+    font-size: 13px; font-weight: 600;
+    color: var(--text-secondary);
+    z-index: 50;
+    display: flex; align-items: center; gap: 8px;
+    transition: opacity 0.3s;
+  }
+
+  .step-counter .lucide { width: 14px; height: 14px; color: var(--coral); }
+  .step-counter .current { color: var(--coral); font-weight: 800; }
+
   /* ═══ Step content ═══ */
   .step { display: none; }
+  .step.active { display: block; animation: stepIn 0.45s cubic-bezier(0.16,1,0.3,1); }
+  .step.leaving { animation: stepOut 0.25s cubic-bezier(0.4,0,1,1) forwards; }
 
-  .step.active {
-    display: block;
-    animation: stepIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .step.leaving {
-    animation: stepOut 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
-  }
-
-  @keyframes stepIn {
-    from { opacity: 0; transform: translateX(40px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  @keyframes stepOut {
-    from { opacity: 1; transform: translateX(0); }
-    to { opacity: 0; transform: translateX(-40px); }
-  }
+  @keyframes stepIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes stepOut { from { opacity: 1; } to { opacity: 0; transform: translateX(-40px); } }
 
   .step-title {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--coral);
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--coral);
     margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    display: flex; align-items: center; gap: 10px;
   }
 
   .step-title .lucide { width: 16px; height: 16px; stroke-width: 2.5; }
-
-  .step-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: rgba(224,116,97,0.15);
-  }
+  .step-title::after { content: ''; flex: 1; height: 1px; background: rgba(224,116,97,0.15); }
 
   /* ═══ Fields ═══ */
   .field { margin-bottom: 24px; }
 
   .field label {
-    display: block;
-    font-size: 14px;
-    font-weight: 600;
-    color: #D0D0DD;
-    margin-bottom: 8px;
+    display: block; font-size: 14px; font-weight: 600;
+    color: #D0D0DD; margin-bottom: 8px;
   }
 
-  .field label .req { color: var(--coral); margin-left: 2px; }
-
-  .field .hint {
-    font-size: 13px;
-    color: #666680;
-    margin-bottom: 8px;
-  }
+  .field label .req { color: var(--coral); }
+  .field .hint { font-size: 13px; color: #666680; margin-bottom: 8px; }
 
   input[type="text"], textarea {
-    width: 100%;
-    padding: 14px 16px;
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: 14px;
-    color: var(--text);
-    font-size: 15px;
-    font-family: inherit;
-    transition: all 0.25s;
-    outline: none;
+    width: 100%; padding: 14px 16px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 14px; color: var(--text);
+    font-size: 15px; font-family: inherit;
+    transition: all 0.25s; outline: none;
   }
 
   textarea { min-height: 90px; resize: vertical; line-height: 1.5; }
 
-  input[type="text"]:focus, textarea:focus {
+  input:focus, textarea:focus {
     border-color: rgba(224,116,97,0.5);
     background: var(--surface-hover);
     box-shadow: 0 0 0 4px rgba(224,116,97,0.08);
@@ -299,289 +322,243 @@
 
   input::placeholder, textarea::placeholder { color: var(--text-dim); }
 
-  /* ═══ Radio & Checkbox groups ═══ */
-  .radio-group, .checkbox-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+  /* ═══ Options ═══ */
+  .radio-group, .checkbox-group { display: flex; flex-direction: column; gap: 8px; }
 
   .option {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    display: flex; align-items: center; gap: 12px;
     padding: 13px 16px;
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: 14px;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    user-select: none;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 14px; cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    user-select: none; position: relative; overflow: hidden;
   }
 
-  .option:hover {
-    background: var(--surface-hover);
-    border-color: var(--border-hover);
-    transform: translateY(-1px);
-  }
-
+  .option:hover { background: var(--surface-hover); border-color: var(--border-hover); transform: translateY(-1px); }
   .option:active { transform: translateY(0) scale(0.99); }
 
   .option.selected {
     background: rgba(224,116,97,0.06);
     border-color: rgba(224,116,97,0.3);
+    box-shadow: 0 0 20px rgba(224,116,97,0.06);
   }
 
-  .radio-dot {
-    width: 20px; height: 20px;
+  /* Ripple */
+  .ripple {
+    position: absolute;
     border-radius: 50%;
+    background: rgba(224,116,97,0.15);
+    transform: scale(0);
+    animation: rippleAnim 0.6s ease-out forwards;
+    pointer-events: none;
+  }
+
+  @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+  .radio-dot {
+    width: 20px; height: 20px; border-radius: 50%;
     border: 2px solid rgba(255,255,255,0.15);
-    flex-shrink: 0;
-    transition: all 0.25s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-shrink: 0; transition: all 0.25s;
+    display: flex; align-items: center; justify-content: center;
   }
 
   .selected .radio-dot { border-color: var(--coral); }
 
   .selected .radio-dot::after {
-    content: '';
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: var(--coral);
-    animation: dotPopIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    content: ''; width: 10px; height: 10px;
+    border-radius: 50%; background: var(--coral);
+    animation: dotPopIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
   }
 
   .check-box {
-    width: 20px; height: 20px;
-    border-radius: 7px;
+    width: 20px; height: 20px; border-radius: 7px;
     border: 2px solid rgba(255,255,255,0.15);
-    flex-shrink: 0;
-    transition: all 0.25s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-shrink: 0; transition: all 0.25s;
+    display: flex; align-items: center; justify-content: center;
   }
 
   .selected .check-box {
-    border-color: var(--coral);
-    background: var(--coral);
-    animation: boxPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .selected .check-box .lucide {
-    width: 12px; height: 12px;
-    color: #fff;
-    stroke-width: 3;
-    animation: checkPop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border-color: var(--coral); background: var(--coral);
+    animation: boxPop 0.25s cubic-bezier(0.34,1.56,0.64,1);
   }
 
   .check-box .lucide { display: none; }
-  .selected .check-box .lucide { display: block; }
+  .selected .check-box .lucide { display: block; width: 12px; height: 12px; color: #fff; stroke-width: 3; }
 
-  @keyframes dotPopIn {
-    from { transform: scale(0); }
-    to { transform: scale(1); }
-  }
+  @keyframes dotPopIn { from { transform: scale(0); } to { transform: scale(1); } }
+  @keyframes boxPop { 50% { transform: scale(1.15); } }
 
-  @keyframes boxPop {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-    100% { transform: scale(1); }
-  }
-
-  .option-text {
-    font-size: 14px;
-    color: #B0B0C0;
-    transition: color 0.2s;
-  }
-
+  .option-text { font-size: 14px; color: #B0B0C0; transition: color 0.2s; }
   .selected .option-text { color: var(--text); }
 
-  /* ═══ Notice box ═══ */
+  /* ═══ Sparkle burst ═══ */
+  .sparkle-burst {
+    position: absolute; pointer-events: none;
+    width: 4px; height: 4px; border-radius: 50%;
+    animation: sparkleFly 0.5s ease-out forwards;
+  }
+
+  @keyframes sparkleFly {
+    from { transform: translate(0,0) scale(1); opacity: 1; }
+    to { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+  }
+
+  /* ═══ Notice ═══ */
   .notice {
-    display: flex;
-    gap: 14px;
-    padding: 16px;
-    background: rgba(224,116,97,0.05);
-    border: 1px solid rgba(224,116,97,0.12);
-    border-radius: 14px;
-    margin-bottom: 16px;
-    align-items: flex-start;
+    display: flex; gap: 14px; padding: 16px;
+    background: rgba(224,116,97,0.05); border: 1px solid rgba(224,116,97,0.12);
+    border-radius: 14px; margin-bottom: 16px; align-items: flex-start;
   }
 
-  .notice .notice-icon {
-    width: 40px; height: 40px;
-    border-radius: 10px;
+  .notice-icon {
+    width: 40px; height: 40px; border-radius: 10px;
     background: rgba(224,116,97,0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
 
-  .notice .notice-icon .lucide {
-    width: 20px; height: 20px;
-    color: var(--coral);
-  }
-
+  .notice-icon .lucide { width: 20px; height: 20px; color: var(--coral); }
   .notice p { font-size: 14px; color: #B0B0C0; line-height: 1.5; }
   .notice strong { color: var(--coral); }
 
-  /* ═══ Navigation buttons ═══ */
-  .nav-row {
-    display: flex;
-    gap: 12px;
-    margin-top: 32px;
-    padding-bottom: 48px;
-  }
+  /* ═══ Buttons ═══ */
+  .nav-row { display: flex; gap: 12px; margin-top: 32px; padding-bottom: 80px; }
 
   .btn {
-    flex: 1;
-    padding: 16px;
-    border-radius: 14px;
-    font-size: 15px;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    letter-spacing: 0.3px;
-    border: none;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    flex: 1; padding: 16px; border-radius: 14px;
+    font-size: 15px; font-weight: 700; font-family: inherit;
+    cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    border: none; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
   }
 
   .btn .lucide { width: 18px; height: 18px; stroke-width: 2.5; }
 
-  .btn-next {
-    background: linear-gradient(135deg, var(--coral), var(--coral-dark));
-    color: #fff;
-  }
+  .btn-next { background: linear-gradient(135deg, var(--coral), var(--coral-dark)); color: #fff; }
 
   .btn-next::before {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%;
+    content: ''; position: absolute; top: 0; left: -100%;
     width: 200%; height: 100%;
-    background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.1) 50%, transparent 75%);
+    background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.12) 50%, transparent 75%);
     transition: left 0.6s;
   }
 
   .btn-next:hover::before { left: 100%; }
-
-  .btn-next:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(224,116,97,0.35);
-  }
-
-  .btn-next:active { transform: translateY(0); }
-
-  .btn-next:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none !important;
-    box-shadow: none !important;
-  }
+  .btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(224,116,97,0.35); }
+  .btn-next:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
   .btn-back {
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    color: var(--text-secondary);
-    flex: 0 0 auto;
-    width: 52px;
-    padding: 16px 0;
+    background: var(--surface); border: 1.5px solid var(--border);
+    color: var(--text-secondary); flex: 0 0 auto; width: 52px; padding: 16px 0;
   }
 
-  .btn-back:hover {
-    background: var(--surface-hover);
-    border-color: var(--border-hover);
-    color: var(--text);
+  .btn-back:hover { background: var(--surface-hover); color: var(--text); }
+
+  /* ═══ SUCCESS / PROFILE SCREEN ═══ */
+  .success { display: none; text-align: center; padding: 40px 0 80px; }
+  .success.visible { display: block; animation: successIn 0.6s cubic-bezier(0.16,1,0.3,1); }
+
+  @keyframes successIn { from { opacity: 0; transform: scale(0.95) translateY(20px); } to { opacity: 1; transform: none; } }
+
+  .profile-card {
+    background: linear-gradient(135deg, rgba(224,116,97,0.06), rgba(139,110,181,0.04));
+    border: 1px solid rgba(224,116,97,0.12);
+    border-radius: 20px;
+    padding: 32px 24px;
+    margin-bottom: 24px;
+    text-align: left;
+    animation: cardIn 0.5s 0.2s cubic-bezier(0.16,1,0.3,1) both;
   }
 
-  /* ═══ Success screen ═══ */
-  .success { display: none; text-align: center; padding: 60px 0 80px; }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
 
-  .success.visible {
-    display: block;
-    animation: successIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  .profile-header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 20px; padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
   }
 
-  @keyframes successIn {
-    from { opacity: 0; transform: scale(0.9) translateY(20px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+  .profile-avatar {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: linear-gradient(135deg, var(--coral), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
   }
 
-  .success-icon {
-    width: 96px; height: 96px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(224,116,97,0.15), rgba(139,110,181,0.15));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 28px;
-    animation: successBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
-  }
+  .profile-avatar .lucide { width: 28px; height: 28px; color: #fff; stroke-width: 1.5; }
 
-  .success-icon .lucide {
-    width: 44px; height: 44px;
-    color: var(--coral);
-    stroke-width: 1.5;
-  }
+  .profile-name { font-size: 20px; font-weight: 800; color: #fff; }
+  .profile-role { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
 
-  @keyframes successBounce {
-    from { transform: scale(0); }
-    to { transform: scale(1); }
-  }
-
-  .success h2 {
-    font-size: 28px; font-weight: 900;
-    color: #fff; margin-bottom: 16px;
-  }
-
-  .success p {
-    font-size: 15px;
-    color: var(--text-secondary);
-    line-height: 1.7;
-    max-width: 380px;
-    margin: 0 auto;
-  }
-
-  .success .address {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 20px;
-    padding: 12px 20px;
-    background: var(--surface);
-    border: 1px solid var(--border);
+  .profile-insight {
+    padding: 16px;
+    background: rgba(255,255,255,0.02);
     border-radius: 12px;
-    font-size: 14px;
-    color: var(--text);
+    margin-bottom: 16px;
+    border-left: 3px solid var(--coral);
   }
 
-  .success .address .lucide { width: 16px; height: 16px; color: var(--coral); }
+  .profile-insight p {
+    font-size: 14px; line-height: 1.6;
+    color: #C0C0D0;
+  }
+
+  .profile-insight .highlight { color: var(--coral); font-weight: 600; }
+
+  .profile-powers {
+    margin-top: 16px;
+  }
+
+  .profile-powers-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--coral);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .profile-powers-title .lucide { width: 14px; height: 14px; }
+
+  .power-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0;
+    font-size: 14px; color: #B0B0C0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    opacity: 0;
+    animation: powerIn 0.4s forwards;
+  }
+
+  .power-item:last-child { border: none; }
+
+  .power-item .lucide { width: 16px; height: 16px; color: var(--coral); stroke-width: 2; }
+
+  @keyframes powerIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+
+  .success-footer {
+    animation: cardIn 0.5s 0.5s cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  .success-badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px;
+    font-size: 14px; color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .success-badge .lucide { width: 16px; height: 16px; color: var(--coral); }
+
+  .success-date { font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
 
   /* ═══ Confetti ═══ */
-  .confetti-container {
-    position: fixed; top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none; z-index: 200; overflow: hidden;
-  }
+  .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 200; overflow: hidden; }
 
   .confetti-piece {
     position: absolute; top: -20px;
-    width: 10px; height: 10px;
-    opacity: 0;
-    animation: confettiFall linear forwards;
+    opacity: 0; animation: confettiFall linear forwards;
   }
 
   @keyframes confettiFall {
-    0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
     75% { opacity: 1; }
     100% { transform: translateY(100vh) rotate(720deg) scale(0.5); opacity: 0; }
   }
@@ -594,69 +571,55 @@
   }
 
   .footer a { color: var(--coral); text-decoration: none; }
-  .footer .lucide { width: 12px; height: 12px; color: var(--text-dim); }
+  .footer .lucide { width: 12px; height: 12px; }
 
-  /* ═══ Error shake ═══ */
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-6px); }
-    40%, 80% { transform: translateX(6px); }
-  }
-
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25%,75% { transform: translateX(-6px); } 50% { transform: translateX(6px); } }
   .shake { animation: shake 0.4s; }
 
-  /* ═══ Responsive ═══ */
   @media (max-width: 480px) {
     .hero { padding: 36px 0 24px; }
     .hero h1 { font-size: 28px; }
     .step-dot { width: 36px; height: 36px; }
     .step-dot .lucide { width: 16px; height: 16px; }
-    .step-line { width: 32px; }
+    .step-line { width: 28px; }
+    .profile-card { padding: 24px 18px; }
   }
 </style>
 </head>
 <body>
 
+<!-- ═══ SPLASH ═══ -->
+<div class="splash" id="splash">
+  <div class="splash-logo"><i data-lucide="sparkles"></i></div>
+  <div class="splash-text">neovida</div>
+  <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+</div>
+
 <div class="particles" id="particles"></div>
 <div class="progress-bar" id="progress" style="width: 0%"></div>
 
-<div class="main">
+<div class="main" id="mainContent">
 
   <div class="hero" id="heroBlock">
     <div class="hero-badge"><i data-lucide="sparkles"></i> neovida</div>
     <h1>ИИ: Новая <span>реальность</span></h1>
-    <p>Заполните анкету за 3 минуты — мы адаптируем программу под вас</p>
+    <p class="hero-subtitle" id="heroSubtitle"></p>
   </div>
 
   <div class="step-indicator" id="stepIndicator">
-    <div class="step-dot active" data-step="0">
-      <span class="step-icon"><i data-lucide="user"></i></span>
-      <span class="step-check"><i data-lucide="check"></i></span>
-    </div>
+    <div class="step-dot active" data-step="0"><span class="step-icon"><i data-lucide="user"></i></span><span class="step-check"><i data-lucide="check"></i></span></div>
     <div class="step-line" data-line="0"></div>
-    <div class="step-dot" data-step="1">
-      <span class="step-icon"><i data-lucide="brain"></i></span>
-      <span class="step-check"><i data-lucide="check"></i></span>
-    </div>
+    <div class="step-dot" data-step="1"><span class="step-icon"><i data-lucide="brain"></i></span><span class="step-check"><i data-lucide="check"></i></span></div>
     <div class="step-line" data-line="1"></div>
-    <div class="step-dot" data-step="2">
-      <span class="step-icon"><i data-lucide="target"></i></span>
-      <span class="step-check"><i data-lucide="check"></i></span>
-    </div>
+    <div class="step-dot" data-step="2"><span class="step-icon"><i data-lucide="target"></i></span><span class="step-check"><i data-lucide="check"></i></span></div>
     <div class="step-line" data-line="2"></div>
-    <div class="step-dot" data-step="3">
-      <span class="step-icon"><i data-lucide="laptop"></i></span>
-      <span class="step-check"><i data-lucide="check"></i></span>
-    </div>
+    <div class="step-dot" data-step="3"><span class="step-icon"><i data-lucide="laptop"></i></span><span class="step-check"><i data-lucide="check"></i></span></div>
   </div>
 
-  <!-- Step 0: О вас -->
+  <!-- Step 0 -->
   <div class="step active" data-step="0">
     <div class="step-title"><i data-lucide="user"></i> О вас</div>
-    <div class="field">
-      <label>Как вас зовут? <span class="req">*</span></label>
-      <input type="text" id="f_name" placeholder="Имя и фамилия">
-    </div>
+    <div class="field"><label>Как вас зовут? <span class="req">*</span></label><input type="text" id="f_name" placeholder="Имя и фамилия"></div>
     <div class="field">
       <label>Чем вы занимаетесь? <span class="req">*</span></label>
       <div class="radio-group" data-field="occupation">
@@ -667,11 +630,7 @@
         <div class="option" data-value="Сотрудник компании"><div class="radio-dot"></div><span class="option-text">Сотрудник компании</span></div>
       </div>
     </div>
-    <div class="field">
-      <label>Сфера деятельности <span class="req">*</span></label>
-      <div class="hint">Кратко, в 2–3 словах</div>
-      <input type="text" id="f_business" placeholder="Например: металлоконструкции, ресторан, юруслуги">
-    </div>
+    <div class="field"><label>Сфера деятельности <span class="req">*</span></label><div class="hint">Кратко, в 2–3 словах</div><input type="text" id="f_business" placeholder="Например: металлоконструкции, ресторан, юруслуги"></div>
     <div class="field">
       <label>Сколько человек в команде?</label>
       <div class="radio-group" data-field="team_size">
@@ -682,12 +641,10 @@
         <div class="option" data-value="Больше 50"><div class="radio-dot"></div><span class="option-text">Больше 50</span></div>
       </div>
     </div>
-    <div class="nav-row">
-      <button class="btn btn-next" onclick="nextStep()">Далее <i data-lucide="arrow-right"></i></button>
-    </div>
+    <div class="nav-row"><button class="btn btn-next" onclick="nextStep()">Далее <i data-lucide="arrow-right"></i></button></div>
   </div>
 
-  <!-- Step 1: Опыт -->
+  <!-- Step 1 -->
   <div class="step" data-step="1">
     <div class="step-title"><i data-lucide="brain"></i> Ваш опыт с ИИ</div>
     <div class="field">
@@ -705,12 +662,11 @@
     </div>
   </div>
 
-  <!-- Step 2: Задачи -->
+  <!-- Step 2 -->
   <div class="step" data-step="2">
     <div class="step-title"><i data-lucide="target"></i> Задачи и ожидания</div>
     <div class="field">
-      <label>Какие задачи отнимают больше всего времени?</label>
-      <div class="hint">Можно выбрать несколько</div>
+      <label>Какие задачи отнимают больше всего времени?</label><div class="hint">Можно выбрать несколько</div>
       <div class="checkbox-group" data-field="routines">
         <div class="option" data-value="Тексты (письма, посты, КП, документы)"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Тексты (письма, посты, КП, документы)</span></div>
         <div class="option" data-value="Таблицы, отчёты, данные"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Таблицы, отчёты, данные</span></div>
@@ -723,8 +679,7 @@
       </div>
     </div>
     <div class="field">
-      <label>Что хотите получить от курса?</label>
-      <div class="hint">Можно выбрать несколько</div>
+      <label>Что хотите получить от курса?</label><div class="hint">Можно выбрать несколько</div>
       <div class="checkbox-group" data-field="goals">
         <div class="option" data-value="Научиться использовать ИИ в бизнесе"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Научиться использовать ИИ в бизнесе</span></div>
         <div class="option" data-value="Ускорить рутинные процессы"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Ускорить рутинные процессы</span></div>
@@ -735,25 +690,18 @@
         <div class="option" data-value="Создавать контент быстрее"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Создавать контент быстрее и качественнее</span></div>
       </div>
     </div>
-    <div class="field">
-      <label>Есть конкретная задача, которую хотите решить с помощью ИИ?</label>
-      <div class="hint">Необязательно, но поможет адаптировать программу</div>
-      <textarea id="f_task" placeholder="Например: автоматизировать ответы клиентам, делать контент для соцсетей, анализировать конкурентов..."></textarea>
-    </div>
+    <div class="field"><label>Есть конкретная задача, которую хотите решить с помощью ИИ?</label><div class="hint">Необязательно, но поможет адаптировать программу</div><textarea id="f_task" placeholder="Например: автоматизировать ответы клиентам, делать контент для соцсетей..."></textarea></div>
     <div class="nav-row">
       <button class="btn btn-back" onclick="prevStep()"><i data-lucide="arrow-left"></i></button>
       <button class="btn btn-next" onclick="nextStep()">Далее <i data-lucide="arrow-right"></i></button>
     </div>
   </div>
 
-  <!-- Step 3: Техника -->
+  <!-- Step 3 -->
   <div class="step" data-step="3">
     <div class="step-title"><i data-lucide="laptop"></i> Техника</div>
     <div class="field">
-      <div class="notice">
-        <div class="notice-icon"><i data-lucide="laptop"></i></div>
-        <p>На каждом занятии <strong>необходим ноутбук</strong> — мы будем работать руками в реальном времени. Телефона или планшета недостаточно.</p>
-      </div>
+      <div class="notice"><div class="notice-icon"><i data-lucide="laptop"></i></div><p>На каждом занятии <strong>необходим ноутбук</strong> — мы будем работать руками. Телефона или планшета недостаточно.</p></div>
       <label>Какой ноутбук возьмёте? <span class="req">*</span></label>
       <div class="radio-group" data-field="device">
         <div class="option" data-value="Ноутбук (Windows)"><div class="radio-dot"></div><span class="option-text">Ноутбук (Windows)</span></div>
@@ -763,41 +711,55 @@
     </div>
     <div class="nav-row">
       <button class="btn btn-back" onclick="prevStep()"><i data-lucide="arrow-left"></i></button>
-      <button class="btn btn-next" id="submitBtn" onclick="submitForm()"><i data-lucide="send"></i> Отправить анкету</button>
+      <button class="btn btn-next" id="submitBtn" onclick="submitForm()"><i data-lucide="send"></i> Отправить</button>
     </div>
   </div>
 
-  <!-- Success -->
+  <!-- ═══ SUCCESS: Personalized Profile ═══ -->
   <div class="success" id="successScreen">
-    <div class="success-icon"><i data-lucide="circle-check-big"></i></div>
-    <h2>Спасибо!</h2>
-    <p>Анкета отправлена. Ждём вас на первом занятии!</p>
-    <div class="address"><i data-lucide="map-pin"></i> Менделеева 137/3, Iremel Tower, 15 этаж</div>
-    <p style="margin-top:20px; font-size:14px">Среда, 23 апреля · 19:00<br>Не забудьте ноутбук!</p>
+    <div id="profileContent"></div>
   </div>
 
 </div>
 
-<div class="footer">
-  <i data-lucide="sparkles"></i>
-  <a href="https://neovida.ai">neovida.ai</a> · 2026
+<!-- Step counter -->
+<div class="step-counter" id="stepCounter">
+  <i data-lucide="layers"></i>
+  Шаг <span class="current" id="stepNum">1</span> из 4
 </div>
 
+<div class="footer"><i data-lucide="sparkles"></i><a href="https://neovida.ai">neovida.ai</a> · 2026</div>
 <div class="confetti-container" id="confetti"></div>
 
 <script>
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGRbaNKnI3S2bipd6BRopuzOrZjjOOLpyJ5Kgfo1MvBCdCxjqepz1fy6jScc_k0L4/exec';
 
-  const state = {
-    name: '', occupation: '', business_area: '', team_size: '',
-    ai_level: '', routines: [], goals: [], specific_task: '', device: ''
-  };
-
+  const state = { name:'', occupation:'', business_area:'', team_size:'', ai_level:'', routines:[], goals:[], specific_task:'', device:'' };
   let currentStep = 0;
-  const totalSteps = 4;
 
-  // Init Lucide icons
+  // ═══ Init ═══
   lucide.createIcons();
+
+  // Splash → Form
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('hide');
+    document.getElementById('mainContent').classList.add('visible');
+    typeText('heroSubtitle', 'Заполните анкету за 3 минуты — мы адаптируем программу под вас');
+  }, 2600);
+
+  // Typing effect
+  function typeText(id, text) {
+    const el = document.getElementById(id);
+    el.innerHTML = '<span class="typing-cursor"></span>';
+    let i = 0;
+    const interval = setInterval(() => {
+      el.innerHTML = text.slice(0, ++i) + '<span class="typing-cursor"></span>';
+      if (i >= text.length) {
+        clearInterval(interval);
+        setTimeout(() => { el.innerHTML = text; }, 1500);
+      }
+    }, 30);
+  }
 
   // Particles
   (function() {
@@ -812,14 +774,42 @@
     }
   })();
 
-  // Radio buttons
+  // ═══ Ripple + Sparkle on options ═══
+  function addRipple(e, el) {
+    const r = document.createElement('div');
+    r.className = 'ripple';
+    const rect = el.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px;`;
+    el.appendChild(r);
+    setTimeout(() => r.remove(), 600);
+  }
+
+  function addSparkles(el) {
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width * 0.1;
+    const cy = rect.top + rect.height / 2;
+    const colors = ['#E07461', '#F0A090', '#8B6EB5', '#FFD700'];
+    for (let i = 0; i < 6; i++) {
+      const s = document.createElement('div');
+      s.className = 'sparkle-burst';
+      const angle = (Math.PI * 2 / 6) * i + Math.random() * 0.5;
+      const dist = 20 + Math.random() * 25;
+      s.style.cssText = `left:${cx}px;top:${cy}px;background:${colors[i%4]};--tx:${Math.cos(angle)*dist}px;--ty:${Math.sin(angle)*dist}px;`;
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 500);
+    }
+  }
+
+  // Radio
   document.querySelectorAll('.radio-group').forEach(g => {
     const f = g.dataset.field;
     g.querySelectorAll('.option').forEach(o => {
-      o.addEventListener('click', () => {
+      o.addEventListener('click', (e) => {
         g.querySelectorAll('.option').forEach(x => x.classList.remove('selected'));
         o.classList.add('selected');
         state[f] = o.dataset.value;
+        addRipple(e, o);
       });
     });
   });
@@ -828,9 +818,12 @@
   document.querySelectorAll('.checkbox-group').forEach(g => {
     const f = g.dataset.field;
     g.querySelectorAll('.option').forEach(o => {
-      o.addEventListener('click', () => {
+      o.addEventListener('click', (e) => {
+        const wasSelected = o.classList.contains('selected');
         o.classList.toggle('selected');
         state[f] = Array.from(g.querySelectorAll('.option.selected')).map(x => x.dataset.value);
+        addRipple(e, o);
+        if (!wasSelected) addSparkles(o);
       });
     });
   });
@@ -840,103 +833,173 @@
   document.getElementById('f_business').addEventListener('input', e => state.business_area = e.target.value);
   document.getElementById('f_task').addEventListener('input', e => state.specific_task = e.target.value);
 
-  // Navigation
+  // ═══ Navigation ═══
   function validateStep(s) {
-    if (s === 0) {
+    if (s===0) {
       if (!state.name.trim()) { shakeField('f_name'); return false; }
       if (!state.occupation) { alert('Выберите, чем вы занимаетесь'); return false; }
       if (!state.business_area.trim()) { shakeField('f_business'); return false; }
     }
-    if (s === 1 && !state.ai_level) { alert('Выберите ваш уровень опыта с ИИ'); return false; }
-    if (s === 3 && !state.device) { alert('Укажите, какой ноутбук возьмёте'); return false; }
+    if (s===1 && !state.ai_level) { alert('Выберите ваш уровень опыта'); return false; }
+    if (s===3 && !state.device) { alert('Укажите, какой ноутбук возьмёте'); return false; }
     return true;
   }
 
   function shakeField(id) {
     const el = document.getElementById(id);
-    el.classList.add('shake');
-    el.style.borderColor = 'var(--coral)';
-    el.focus();
-    setTimeout(() => { el.classList.remove('shake'); el.style.borderColor = ''; }, 600);
+    el.classList.add('shake'); el.style.borderColor='var(--coral)'; el.focus();
+    setTimeout(()=>{el.classList.remove('shake');el.style.borderColor='';}, 600);
   }
 
   function goToStep(n) {
     const old = document.querySelector('.step.active');
     const next = document.querySelector(`.step[data-step="${n}"]`);
-    old.classList.remove('active');
-    old.classList.add('leaving');
-    setTimeout(() => {
-      old.classList.remove('leaving');
-      next.classList.add('active');
-      currentStep = n;
-      updateIndicator();
-      updateProgress();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    old.classList.remove('active'); old.classList.add('leaving');
+    setTimeout(()=>{
+      old.classList.remove('leaving'); next.classList.add('active');
+      currentStep = n; updateIndicator(); updateProgress();
+      document.getElementById('stepNum').textContent = n + 1;
+      window.scrollTo({top:0, behavior:'smooth'});
     }, 250);
   }
 
-  function nextStep() { if (validateStep(currentStep) && currentStep < totalSteps - 1) goToStep(currentStep + 1); }
-  function prevStep() { if (currentStep > 0) goToStep(currentStep - 1); }
+  function nextStep() { if (validateStep(currentStep) && currentStep < 3) goToStep(currentStep+1); }
+  function prevStep() { if (currentStep > 0) goToStep(currentStep-1); }
 
   function updateIndicator() {
-    document.querySelectorAll('.step-dot').forEach(d => {
+    document.querySelectorAll('.step-dot').forEach(d=>{
       const s = parseInt(d.dataset.step);
-      d.classList.remove('active', 'done');
+      d.classList.remove('active','done');
       if (s < currentStep) d.classList.add('done');
       else if (s === currentStep) d.classList.add('active');
     });
-    document.querySelectorAll('.step-line').forEach(l => {
+    document.querySelectorAll('.step-line').forEach(l=>{
       l.classList.toggle('done', parseInt(l.dataset.line) < currentStep);
     });
   }
 
   function updateProgress() {
-    document.getElementById('progress').style.width = Math.round(((currentStep + 1) / totalSteps) * 100) + '%';
+    document.getElementById('progress').style.width = Math.round(((currentStep+1)/4)*100)+'%';
   }
 
-  // Submit
+  // ═══ Submit ═══
   async function submitForm() {
     if (!validateStep(3)) return;
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.innerHTML = '<svg class="lucide" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Отправляю...';
+
     try {
       if (SCRIPT_URL) {
-        await fetch(SCRIPT_URL, {
-          method: 'POST', mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(state)
-        });
+        await fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(state) });
       }
-      document.querySelector('.step.active').classList.remove('active');
-      document.getElementById('stepIndicator').style.display = 'none';
-      document.getElementById('heroBlock').style.display = 'none';
-      document.getElementById('successScreen').classList.add('visible');
-      document.getElementById('progress').style.width = '100%';
-      launchConfetti();
-    } catch (e) {
+      showProfile();
+    } catch(e) {
       btn.disabled = false;
-      btn.innerHTML = '<i data-lucide="send"></i> Отправить анкету';
+      btn.innerHTML = '<i data-lucide="send"></i> Отправить';
       lucide.createIcons();
-      alert('Ошибка отправки. Попробуйте ещё раз.');
+      alert('Ошибка. Попробуйте ещё раз.');
     }
+  }
+
+  // ═══ PERSONALIZED PROFILE ═══
+  function showProfile() {
+    document.querySelector('.step.active').classList.remove('active');
+    document.getElementById('stepIndicator').style.display = 'none';
+    document.getElementById('heroBlock').style.display = 'none';
+    document.getElementById('stepCounter').style.display = 'none';
+    document.getElementById('progress').style.width = '100%';
+
+    const firstName = state.name.split(' ')[0];
+
+    // AI level message
+    const lvlMap = {
+      'Ни разу не пробовал(а)': {
+        title: 'Чистый лист — лучшая стартовая позиция',
+        text: `${firstName}, вы ещё не пробовали нейросети — и это отлично! Никаких вредных привычек, будете учиться <span class="highlight">сразу правильно</span>. Мы начнём с нуля и за 8 занятий вы будете работать с ИИ увереннее, чем многие «опытные» пользователи.`
+      },
+      'Пробовал(а) пару раз': {
+        title: 'Первый шаг уже сделан',
+        text: `${firstName}, у вас есть любопытство и первый опыт — это <span class="highlight">главное</span>. На курсе разберёмся, как превратить «пробовал пару раз» в «<span class="highlight">использую каждый день и экономлю часы</span>». Всё встанет на свои места.`
+      },
+      'Использую иногда': {
+        title: 'Крепкая база для прорыва',
+        text: `${firstName}, у вас уже есть опыт — вы понимаете, что ИИ работает. На курсе мы покажем, как перейти от «иногда» к «<span class="highlight">системно и каждый день</span>». Вы удивитесь, сколько ещё возможностей вы не используете.`
+      },
+      'Использую регулярно': {
+        title: 'Продвинутый уровень',
+        text: `${firstName}, впечатляет! Вы уже регулярно работаете с ИИ. На курсе откроете <span class="highlight">инструменты и техники, о которых ещё не слышали</span> — агенты, автоматизации, стратегическое применение. Выйдете на совершенно другой уровень.`
+      }
+    };
+
+    const lvl = lvlMap[state.ai_level] || lvlMap['Пробовал(а) пару раз'];
+
+    // Powers based on routines
+    const powerMap = {
+      'Тексты (письма, посты, КП, документы)': 'Писать тексты, КП и посты в 3–5 раз быстрее',
+      'Таблицы, отчёты, данные': 'Анализировать данные и строить отчёты за минуты',
+      'Поиск информации и аналитика рынка': 'Исследовать рынок и конкурентов с помощью ИИ',
+      'Контент и визуал': 'Создавать визуал и контент без дизайнера',
+      'Общение с клиентами / переписка': 'Автоматизировать переписку и ответы клиентам',
+      'Продажи и работа с лидами': 'Усилить воронку продаж с помощью ИИ',
+      'Подбор и обучение сотрудников': 'Ускорить подбор и адаптацию сотрудников',
+      'Планирование и управление задачами': 'Организовать задачи и планирование эффективнее'
+    };
+
+    let powers = state.routines.map(r => powerMap[r]).filter(Boolean);
+    if (powers.length === 0) powers = ['Освоить ключевые AI-инструменты для вашей сферы', 'Автоматизировать рутинные процессы', 'Создать готовые решения под ваши задачи'];
+    if (powers.length > 5) powers = powers.slice(0, 5);
+
+    // Role label
+    const roleShort = state.occupation.split('/')[0].trim();
+
+    const html = `
+      <div class="profile-card">
+        <div class="profile-header">
+          <div class="profile-avatar"><i data-lucide="user-round"></i></div>
+          <div>
+            <div class="profile-name">${state.name}</div>
+            <div class="profile-role">${roleShort} · ${state.business_area}${state.team_size ? ' · ' + state.team_size : ''}</div>
+          </div>
+        </div>
+
+        <div class="profile-insight">
+          <p>${lvl.text}</p>
+        </div>
+
+        <div class="profile-powers">
+          <div class="profile-powers-title"><i data-lucide="zap"></i> На курсе вы научитесь</div>
+          ${powers.map((p, i) => `<div class="power-item" style="animation-delay:${0.3 + i*0.1}s"><i data-lucide="check-circle"></i> ${p}</div>`).join('')}
+        </div>
+      </div>
+
+      <div class="success-footer">
+        <div class="success-badge"><i data-lucide="map-pin"></i> Менделеева 137/3, Iremel Tower, 15 этаж</div>
+        <div class="success-date">Среда, 23 апреля · 19:00</div>
+        <p style="margin-top:16px; font-size:14px; color:var(--text-secondary)">Рады, что вы с нами. До встречи на курсе!</p>
+      </div>
+    `;
+
+    document.getElementById('profileContent').innerHTML = html;
+    document.getElementById('successScreen').classList.add('visible');
+    lucide.createIcons();
+    launchConfetti();
   }
 
   // Confetti
   function launchConfetti() {
     const c = document.getElementById('confetti');
-    const colors = ['#E07461', '#F0A090', '#8B6EB5', '#FFD700', '#50C878', '#3B82F6', '#fff'];
+    const colors = ['#E07461','#F0A090','#8B6EB5','#FFD700','#50C878','#3B82F6','#fff'];
     for (let i = 0; i < 60; i++) {
       const p = document.createElement('div');
       p.className = 'confetti-piece';
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      const shape = ['circle', 'square', 'strip'][Math.floor(Math.random() * 3)];
-      let w = 8 + Math.random() * 6;
-      let h = shape === 'strip' ? w * 2.5 : w;
-      p.style.cssText = `left:${Math.random()*100}%;width:${w}px;height:${h}px;background:${color};border-radius:${shape === 'circle' ? '50%' : '2px'};animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*0.5}s;`;
+      const color = colors[Math.floor(Math.random()*colors.length)];
+      const shape = ['circle','square','strip'][Math.floor(Math.random()*3)];
+      let w = 8+Math.random()*6, h = shape==='strip' ? w*2.5 : w;
+      p.style.cssText = `left:${Math.random()*100}%;width:${w}px;height:${h}px;background:${color};border-radius:${shape==='circle'?'50%':'2px'};animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*0.5}s;`;
       c.appendChild(p);
     }
-    setTimeout(() => c.innerHTML = '', 4000);
+    setTimeout(()=>c.innerHTML='', 4000);
   }
 
   updateProgress();
