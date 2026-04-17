@@ -723,8 +723,31 @@
   <div class="step active" data-step="0">
     <div class="step-title"><i data-lucide="user"></i> О вас</div>
     <div class="field"><label>Имя и фамилия <span class="req">*</span></label><input type="text" id="f_name" placeholder="Например: Марат Шакиров"></div>
-    <div class="field"><label>Telegram <span class="req">*</span></label><div class="hint">Ссылка на ваш аккаунт или @username</div><input type="text" id="f_telegram" placeholder="https://t.me/username или @username"></div>
-    <div class="field"><label>Номер телефона <span class="req">*</span></label><input type="tel" id="f_phone" placeholder="+7 (___) ___-__-__"></div>
+    <div class="field">
+      <label>Telegram <span class="req">*</span></label>
+      <div class="hint">Ссылка на ваш аккаунт</div>
+      <input type="text" id="f_telegram" placeholder="https://t.me/username" inputmode="url">
+      <div class="tg-error" id="tgError" style="display:none; color:#E07461; font-size:12px; margin-top:6px; display:none;">Введите ссылку формата https://t.me/username</div>
+      <div class="tg-help-toggle" id="tgHelpToggle" style="margin-top:8px;">
+        <span style="font-size:13px; color:var(--coral); cursor:pointer; display:inline-flex; align-items:center; gap:4px;" onclick="document.getElementById('tgHelp').style.display=document.getElementById('tgHelp').style.display==='none'?'block':'none'"><i data-lucide="help-circle" style="width:14px;height:14px;"></i> Как найти свою ссылку?</span>
+      </div>
+      <div id="tgHelp" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; font-size:13px; color:#B0B0C0; line-height:1.6;">
+        <strong style="color:var(--text);">iPhone / Android:</strong><br>
+        1. Откройте Telegram → Настройки<br>
+        2. Нажмите на своё имя вверху<br>
+        3. Найдите строку <strong style="color:var(--coral)">Имя пользователя</strong><br>
+        4. Ваша ссылка: <strong style="color:var(--text)">https://t.me/ваш_username</strong><br><br>
+        <strong style="color:var(--text);">Если нет username:</strong><br>
+        Настройки → Имя пользователя → придумайте и сохраните
+      </div>
+    </div>
+    <div class="field">
+      <label>Номер телефона <span class="req">*</span></label>
+      <div style="display:flex; align-items:center; gap:0;">
+        <div style="padding:14px 12px; background:rgba(224,116,97,0.08); border:1.5px solid var(--border); border-right:none; border-radius:14px 0 0 14px; font-size:15px; font-weight:600; color:var(--coral); user-select:none;">+7</div>
+        <input type="tel" id="f_phone" placeholder="(917) 123-45-67" style="border-radius:0 14px 14px 0;" inputmode="numeric">
+      </div>
+    </div>
     <div class="field">
       <label>Чем вы занимаетесь? <span class="req">*</span></label>
       <div class="radio-group" data-field="occupation">
@@ -935,17 +958,71 @@
 
   // Text inputs
   document.getElementById('f_name').addEventListener('input', e => state.name = e.target.value);
-  document.getElementById('f_telegram').addEventListener('input', e => state.telegram = e.target.value);
-  document.getElementById('f_phone').addEventListener('input', e => state.phone = e.target.value);
   document.getElementById('f_business').addEventListener('input', e => state.business_area = e.target.value);
   document.getElementById('f_task').addEventListener('input', e => state.specific_task = e.target.value);
+
+  // ═══ Telegram: validate link ═══
+  const tgInput = document.getElementById('f_telegram');
+  const tgError = document.getElementById('tgError');
+
+  function normalizeTg(val) {
+    val = val.trim();
+    // @username → https://t.me/username
+    if (/^@[\w]{3,}/.test(val)) return 'https://t.me/' + val.slice(1);
+    // t.me/username (без https)
+    if (/^t\.me\/[\w]{3,}/.test(val)) return 'https://' + val;
+    return val;
+  }
+
+  function isValidTg(val) {
+    return /^https?:\/\/t\.me\/[\w]{3,}/.test(val);
+  }
+
+  tgInput.addEventListener('input', e => {
+    const raw = e.target.value;
+    state.telegram = normalizeTg(raw);
+    if (raw.length > 3 && !isValidTg(state.telegram)) {
+      tgError.style.display = 'block';
+    } else {
+      tgError.style.display = 'none';
+    }
+  });
+
+  tgInput.addEventListener('blur', e => {
+    if (state.telegram && isValidTg(state.telegram) && e.target.value !== state.telegram) {
+      e.target.value = state.telegram;
+    }
+  });
+
+  // ═══ Phone: auto-format with +7 prefix ═══
+  const phoneInput = document.getElementById('f_phone');
+
+  phoneInput.addEventListener('input', e => {
+    let digits = e.target.value.replace(/\D/g, '');
+    // Remove leading 7 or 8 if user types full number
+    if (digits.length > 0 && (digits[0] === '7' || digits[0] === '8') && digits.length > 10) {
+      digits = digits.slice(1);
+    }
+    // Limit to 10 digits
+    digits = digits.slice(0, 10);
+    // Format: (___) ___-__-__
+    let formatted = '';
+    if (digits.length > 0) formatted += '(' + digits.slice(0, 3);
+    if (digits.length >= 3) formatted += ') ';
+    if (digits.length > 3) formatted += digits.slice(3, 6);
+    if (digits.length > 6) formatted += '-' + digits.slice(6, 8);
+    if (digits.length > 8) formatted += '-' + digits.slice(8, 10);
+
+    e.target.value = formatted;
+    state.phone = digits.length === 10 ? '+7' + digits : '';
+  });
 
   // ═══ Navigation ═══
   function validateStep(s) {
     if (s===0) {
       if (!state.name.trim() || state.name.trim().split(/\s+/).length < 2) { shakeField('f_name'); return false; }
-      if (!state.telegram.trim()) { shakeField('f_telegram'); return false; }
-      if (!state.phone.trim()) { shakeField('f_phone'); return false; }
+      if (!isValidTg(state.telegram)) { tgError.style.display='block'; shakeField('f_telegram'); return false; }
+      if (!state.phone || state.phone.length !== 12) { shakeField('f_phone'); return false; } // +7 + 10 digits = 12
       if (!state.occupation) { alert('Выберите, чем вы занимаетесь'); return false; }
       if (!state.business_area.trim()) { shakeField('f_business'); return false; }
     }
