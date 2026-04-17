@@ -634,23 +634,29 @@
   .rule-text { font-size: 14px; color: #B0B0C0; line-height: 1.5; }
   .rule-item.checked .rule-text { color: var(--text); }
 
-  .rules-ready {
-    margin-top: 20px; text-align: center;
-    opacity: 0; transform: translateY(10px);
-    transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+  .btn-accept {
+    width: 100%; padding: 18px; margin-top: 24px;
+    border-radius: 14px; border: none;
+    font-size: 16px; font-weight: 800; font-family: inherit;
+    cursor: pointer; transition: all 0.3s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: rgba(255,255,255,0.04); border: 1.5px solid var(--border);
+    color: var(--text-dim); pointer-events: none;
   }
 
-  .rules-ready.visible { opacity: 1; transform: none; }
-
-  .rules-ready-text {
-    font-size: 15px; font-weight: 700; color: #50C878;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    margin-bottom: 8px;
+  .btn-accept.active {
+    background: linear-gradient(135deg, #50C878, #3aad5c);
+    border-color: transparent;
+    color: #fff; pointer-events: auto;
+    box-shadow: 0 8px 32px rgba(80,200,120,0.25);
   }
 
-  .rules-ready-text .lucide { width: 18px; height: 18px; }
+  .btn-accept.active:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(80,200,120,0.35);
+  }
 
-  .rules-ready-sub { font-size: 13px; color: var(--text-secondary); }
+  .btn-accept .lucide { width: 20px; height: 20px; }
 
   /* ═══ Confetti ═══ */
   .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 200; overflow: hidden; }
@@ -843,8 +849,13 @@
     </div>
   </div>
 
-  <!-- ═══ SUCCESS: Personalized Profile ═══ -->
-  <div class="success" id="successScreen">
+  <!-- ═══ RULES SCREEN ═══ -->
+  <div class="success" id="rulesScreen">
+    <div id="rulesContent"></div>
+  </div>
+
+  <!-- ═══ PROFILE SCREEN ═══ -->
+  <div class="success" id="profileScreen">
     <div id="profileContent"></div>
   </div>
 
@@ -1079,7 +1090,7 @@
       if (SCRIPT_URL) {
         await fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(state) });
       }
-      showProfile();
+      showRules();
     } catch(e) {
       btn.disabled = false;
       btn.innerHTML = '<i data-lucide="send"></i> Отправить';
@@ -1088,17 +1099,44 @@
     }
   }
 
-  // ═══ PERSONALIZED PROFILE ═══
-  function showProfile() {
+  // ═══ STEP 1: RULES ═══
+  function showRules() {
     document.querySelector('.step.active').classList.remove('active');
     document.getElementById('stepIndicator').style.display = 'none';
     document.getElementById('heroBlock').style.display = 'none';
     document.getElementById('stepCounter').style.display = 'none';
+    document.getElementById('progress').style.width = '85%';
+
+    const rules = [
+      'Приходить на каждое занятие с ноутбуком — мы работаем руками, не слушаем лекции',
+      'Выполнять домашние задания между занятиями — именно там закрепляется навык',
+      'Не пропускать занятия без предупреждения — каждое строится на предыдущем',
+      'Задавать вопросы — нет глупых вопросов, есть невысказанные',
+      'Пробовать инструменты сразу, не откладывая — «потом» значит «никогда»'
+    ];
+
+    document.getElementById('rulesContent').innerHTML = `
+      <div class="rules-card" style="opacity:1; animation:none;">
+        <div class="rules-header"><i data-lucide="shield-check"></i><div class="rules-title">Правила курса</div></div>
+        <div class="rules-subtitle">Мы точно знаем, какой у вас будет результат — но только если мы договоримся о правилах.<br>Так будет честно по отношению друг к другу.</div>
+        <div class="rules-subtitle" style="margin-bottom:16px; color:var(--text); font-weight:600;">Отметьте каждый пункт:</div>
+        ${rules.map((r, i) => `<div class="rule-item" data-rule="${i}" onclick="toggleRule(this)"><div class="rule-check"><i data-lucide="check"></i></div><div class="rule-text">${r}</div></div>`).join('')}
+        <button class="btn-accept" id="btnAccept" onclick="acceptRules()"><i data-lucide="check-circle"></i> Принимаю правила</button>
+      </div>
+    `;
+
+    document.getElementById('rulesScreen').classList.add('visible');
+    lucide.createIcons();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  // ═══ STEP 2: PROFILE ═══
+  function acceptRules() {
+    document.getElementById('rulesScreen').classList.remove('visible');
     document.getElementById('progress').style.width = '100%';
 
     const firstName = state.name.split(' ')[0];
 
-    // AI level message
     const lvlMap = {
       'Ни разу не пробовал(а)': `${firstName}, вы ещё не пробовали нейросети — и это <span class="highlight">отличная стартовая позиция</span>! Никаких вредных привычек — будете учиться сразу правильно. За 8 занятий вы будете работать с ИИ увереннее, чем многие «опытные» пользователи.`,
       'Пробовал(а) пару раз': `${firstName}, у вас есть любопытство и первый опыт — это <span class="highlight">главное</span>. На курсе всё встанет на свои места: вы поймёте, как превратить разовые эксперименты в <span class="highlight">систему, которая экономит часы каждый день</span>.`,
@@ -1109,7 +1147,6 @@
     const lvlText = lvlMap[state.ai_level] || lvlMap['Пробовал(а) пару раз'];
     const roleShort = state.occupation.split('/')[0].trim();
 
-    // 8 program items — one per lesson
     const program = [
       { n: '1', text: '<strong>Понять, как устроен ИИ</strong> — что он умеет, где его границы, и почему это меняет правила игры' },
       { n: '2', text: '<strong>Правильно формулировать запросы</strong> — получать результат с первого раза, а не с десятого' },
@@ -1119,15 +1156,6 @@
       { n: '6', text: '<strong>Создавать визуал и контент</strong> — без дизайнера, без фотографа, без видеографа' },
       { n: '7', text: '<strong>Строить AI-агентов</strong> — которые работают за вас: отвечают клиентам, пишут, считают' },
       { n: '8', text: '<strong>Внедрить ИИ в бизнес стратегически</strong> — не как игрушку, а как систему, которая даёт результат' }
-    ];
-
-    // Rules
-    const rules = [
-      'Приходить на каждое занятие с ноутбуком — мы работаем руками, не слушаем лекции',
-      'Выполнять домашние задания между занятиями — именно там закрепляется навык',
-      'Не пропускать занятия без предупреждения — каждое строится на предыдущем',
-      'Задавать вопросы — нет глупых вопросов, есть невысказанные',
-      'Пробовать инструменты сразу, не откладывая — «потом» значит «никогда»'
     ];
 
     const html = `
@@ -1150,17 +1178,7 @@
         </div>
       </div>
 
-      <div class="rules-card">
-        <div class="rules-header"><i data-lucide="shield-check"></i><div class="rules-title">Правила курса</div></div>
-        <div class="rules-subtitle">Мы точно знаем, какой у вас будет результат — но только если мы договоримся о правилах. Так будет честно по отношению друг к другу.</div>
-        ${rules.map((r, i) => `<div class="rule-item" data-rule="${i}" onclick="toggleRule(this)"><div class="rule-check"><i data-lucide="check"></i></div><div class="rule-text">${r}</div></div>`).join('')}
-        <div class="rules-ready" id="rulesReady">
-          <div class="rules-ready-text"><i data-lucide="circle-check-big"></i> Готово! Вы в команде</div>
-          <div class="rules-ready-sub">Ждём вас на первом занятии</div>
-        </div>
-      </div>
-
-      <div class="success-footer" style="margin-top: 24px;">
+      <div class="success-footer">
         <div class="success-badge"><i data-lucide="map-pin"></i> Менделеева 137/3, Iremel Tower, 15 этаж</div>
         <div class="success-date">Среда, 23 апреля · 19:00</div>
         <p style="margin-top:16px; font-size:14px; color:var(--text-secondary)">Рады, что вы с нами. До встречи на курсе!</p>
@@ -1168,9 +1186,10 @@
     `;
 
     document.getElementById('profileContent').innerHTML = html;
-    document.getElementById('successScreen').classList.add('visible');
+    document.getElementById('profileScreen').classList.add('visible');
     lucide.createIcons();
     launchConfetti();
+    window.scrollTo({top:0, behavior:'smooth'});
   }
 
   // Rules toggle
@@ -1178,11 +1197,11 @@
     el.classList.toggle('checked');
     const allRules = document.querySelectorAll('.rule-item');
     const checkedRules = document.querySelectorAll('.rule-item.checked');
-    const ready = document.getElementById('rulesReady');
+    const btn = document.getElementById('btnAccept');
     if (checkedRules.length === allRules.length) {
-      ready.classList.add('visible');
+      btn.classList.add('active');
     } else {
-      ready.classList.remove('visible');
+      btn.classList.remove('active');
     }
   }
 
