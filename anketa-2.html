@@ -723,6 +723,8 @@
     <div class="step-dot" data-step="2"><span class="step-icon"><i data-lucide="target"></i></span><span class="step-check"><i data-lucide="check"></i></span></div>
     <div class="step-line" data-line="2"></div>
     <div class="step-dot" data-step="3"><span class="step-icon"><i data-lucide="laptop"></i></span><span class="step-check"><i data-lucide="check"></i></span></div>
+    <div class="step-line" data-line="3"></div>
+    <div class="step-dot" data-step="4"><span class="step-icon"><i data-lucide="shield-check"></i></span><span class="step-check"><i data-lucide="check"></i></span></div>
   </div>
 
   <!-- Step 0 -->
@@ -845,13 +847,23 @@
     </div>
     <div class="nav-row">
       <button class="btn btn-back" onclick="prevStep()"><i data-lucide="arrow-left"></i></button>
-      <button class="btn btn-next" id="submitBtn" onclick="submitForm()"><i data-lucide="send"></i> Отправить</button>
+      <button class="btn btn-next" onclick="nextStep()">Далее <i data-lucide="arrow-right"></i></button>
     </div>
   </div>
 
-  <!-- ═══ RULES SCREEN ═══ -->
-  <div class="success" id="rulesScreen">
-    <div id="rulesContent"></div>
+  <!-- Step 4: Правила -->
+  <div class="step" data-step="4">
+    <div class="step-title"><i data-lucide="shield-check"></i> Наши договорённости</div>
+    <p style="font-size:14px; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">Мы точно знаем, какой у вас будет результат — но только если мы договоримся о правилах. Так будет честно по отношению друг к другу.</p>
+    <div class="rule-item" onclick="toggleRule(this)"><div class="rule-check"><i data-lucide="check"></i></div><div class="rule-text">Приходить на каждое занятие с ноутбуком — мы работаем руками, не слушаем лекции</div></div>
+    <div class="rule-item" onclick="toggleRule(this)"><div class="rule-check"><i data-lucide="check"></i></div><div class="rule-text">Выполнять домашние задания между занятиями — именно там закрепляется навык</div></div>
+    <div class="rule-item" onclick="toggleRule(this)"><div class="rule-check"><i data-lucide="check"></i></div><div class="rule-text">Не пропускать занятия без предупреждения — каждое строится на предыдущем</div></div>
+    <div class="rule-item" onclick="toggleRule(this)"><div class="rule-check"><i data-lucide="check"></i></div><div class="rule-text">Задавать вопросы — нет глупых вопросов, есть невысказанные</div></div>
+    <div class="rule-item" onclick="toggleRule(this)"><div class="rule-check"><i data-lucide="check"></i></div><div class="rule-text">Пробовать инструменты сразу, не откладывая — «потом» значит «никогда»</div></div>
+    <div class="nav-row">
+      <button class="btn btn-back" onclick="prevStep()"><i data-lucide="arrow-left"></i></button>
+      <button class="btn-accept" id="submitBtn" onclick="submitForm()"><i data-lucide="check-circle"></i> Принимаю правила</button>
+    </div>
   </div>
 
   <!-- ═══ PROFILE SCREEN ═══ -->
@@ -864,7 +876,7 @@
 <!-- Step counter -->
 <div class="step-counter" id="stepCounter">
   <i data-lucide="layers"></i>
-  Шаг <span class="current" id="stepNum">1</span> из 4
+  Шаг <span class="current" id="stepNum">1</span> из 5
 </div>
 
 <div class="footer"><span style="font-weight:900;letter-spacing:-1px;color:var(--coral)">N</span> <a href="https://neovida.ai">neovida.ai</a> · 2026</div>
@@ -1039,6 +1051,11 @@
     }
     if (s===1 && !state.ai_level) { alert('Выберите ваш уровень опыта'); return false; }
     if (s===3 && !state.device) { alert('Укажите, какой ноутбук возьмёте'); return false; }
+    if (s===4) {
+      const allRules = document.querySelectorAll('.step[data-step="4"] .rule-item');
+      const checked = document.querySelectorAll('.step[data-step="4"] .rule-item.checked');
+      if (checked.length < allRules.length) { alert('Отметьте все правила, чтобы продолжить'); return false; }
+    }
     return true;
   }
 
@@ -1060,7 +1077,7 @@
     }, 250);
   }
 
-  function nextStep() { if (validateStep(currentStep) && currentStep < 3) goToStep(currentStep+1); }
+  function nextStep() { if (validateStep(currentStep) && currentStep < 4) goToStep(currentStep+1); }
   function prevStep() { if (currentStep > 0) goToStep(currentStep-1); }
 
   function updateIndicator() {
@@ -1076,63 +1093,34 @@
   }
 
   function updateProgress() {
-    document.getElementById('progress').style.width = Math.round(((currentStep+1)/4)*100)+'%';
+    document.getElementById('progress').style.width = Math.round(((currentStep+1)/5)*100)+'%';
   }
 
   // ═══ Submit ═══
   async function submitForm() {
-    if (!validateStep(3)) return;
+    if (!validateStep(4)) return;
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
-    btn.innerHTML = '<svg class="lucide" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Отправляю...';
+    btn.style.opacity = '0.5';
 
     try {
       if (SCRIPT_URL) {
         await fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(state) });
       }
-      showRules();
+      showProfile();
     } catch(e) {
       btn.disabled = false;
-      btn.innerHTML = '<i data-lucide="send"></i> Отправить';
-      lucide.createIcons();
+      btn.style.opacity = '1';
       alert('Ошибка. Попробуйте ещё раз.');
     }
   }
 
-  // ═══ STEP 1: RULES ═══
-  function showRules() {
+  // ═══ PROFILE ═══
+  function showProfile() {
     document.querySelector('.step.active').classList.remove('active');
     document.getElementById('stepIndicator').style.display = 'none';
     document.getElementById('heroBlock').style.display = 'none';
     document.getElementById('stepCounter').style.display = 'none';
-    document.getElementById('progress').style.width = '85%';
-
-    const rules = [
-      'Приходить на каждое занятие с ноутбуком — мы работаем руками, не слушаем лекции',
-      'Выполнять домашние задания между занятиями — именно там закрепляется навык',
-      'Не пропускать занятия без предупреждения — каждое строится на предыдущем',
-      'Задавать вопросы — нет глупых вопросов, есть невысказанные',
-      'Пробовать инструменты сразу, не откладывая — «потом» значит «никогда»'
-    ];
-
-    document.getElementById('rulesContent').innerHTML = `
-      <div class="rules-card" style="opacity:1; animation:none;">
-        <div class="rules-header"><i data-lucide="shield-check"></i><div class="rules-title">Правила курса</div></div>
-        <div class="rules-subtitle">Мы точно знаем, какой у вас будет результат — но только если мы договоримся о правилах.<br>Так будет честно по отношению друг к другу.</div>
-        <div class="rules-subtitle" style="margin-bottom:16px; color:var(--text); font-weight:600;">Отметьте каждый пункт:</div>
-        ${rules.map((r, i) => `<div class="rule-item" data-rule="${i}" onclick="toggleRule(this)"><div class="rule-check"><i data-lucide="check"></i></div><div class="rule-text">${r}</div></div>`).join('')}
-        <button class="btn-accept" id="btnAccept" onclick="acceptRules()"><i data-lucide="check-circle"></i> Принимаю правила</button>
-      </div>
-    `;
-
-    document.getElementById('rulesScreen').classList.add('visible');
-    lucide.createIcons();
-    window.scrollTo({top:0, behavior:'smooth'});
-  }
-
-  // ═══ STEP 2: PROFILE ═══
-  function acceptRules() {
-    document.getElementById('rulesScreen').classList.remove('visible');
     document.getElementById('progress').style.width = '100%';
 
     const firstName = state.name.split(' ')[0];
@@ -1172,6 +1160,7 @@
         </div>
         <div class="profile-powers">
           <div class="profile-powers-title"><i data-lucide="zap"></i> На курсе вы научитесь</div>
+          <p style="font-size:14px; color:var(--text-secondary); margin-bottom:16px; line-height:1.5;">За 8 занятий мы пройдём путь <span class="highlight">от личной эффективности к автономности</span> — когда ИИ работает на вас, а не вы на него.</p>
           <div class="program-list">
             ${program.map((p, i) => `<div class="program-item" style="animation-delay:${0.3 + i*0.08}s"><div class="program-num">${p.n}</div><div class="program-text">${p.text}</div></div>`).join('')}
           </div>
@@ -1195,9 +1184,9 @@
   // Rules toggle
   function toggleRule(el) {
     el.classList.toggle('checked');
-    const allRules = document.querySelectorAll('.rule-item');
-    const checkedRules = document.querySelectorAll('.rule-item.checked');
-    const btn = document.getElementById('btnAccept');
+    const allRules = document.querySelectorAll('.step[data-step="4"] .rule-item');
+    const checkedRules = document.querySelectorAll('.step[data-step="4"] .rule-item.checked');
+    const btn = document.getElementById('submitBtn');
     if (checkedRules.length === allRules.length) {
       btn.classList.add('active');
     } else {
