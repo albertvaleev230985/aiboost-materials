@@ -18,16 +18,32 @@
 </main>
 
 <script type="module">
-import { parseUserFromURL } from './participants.js';
-import { renderHeader, loadLocal, notFoundUser } from './app.js';
+import { parseUserFromURL, PARTICIPANTS } from './participants.js';
+import { renderHeader, loadLocal } from './app.js';
 
 const user = parseUserFromURL();
 renderHeader(user);
+const content = document.getElementById('content');
 
 if (!user) {
-  notFoundUser();
+  // Общий вход (по QR на слайде / в шпаргалке) — список участников, каждый жмёт своё имя
+  content.innerHTML = `
+    <div class="h1">Привет!</div>
+    <div class="lead">Выбери себя — откроется твоя персональная страница занятия&nbsp;8.</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:24px;">
+      ${PARTICIPANTS.map(p => `
+        <a href="?user=${p.slug}" class="card outline-accent" style="text-decoration:none; cursor:pointer; display:block;">
+          <div class="card-title" style="display:flex; align-items:center; gap:14px;">
+            <span class="user-ava" style="width:48px; height:48px; font-size:20px;">${p.name[0]}</span>
+            <span>${p.name}</span>
+          </div>
+          <div class="card-body" style="font-size:14px; margin-top:6px;">${p.sphere}</div>
+        </a>
+      `).join('')}
+    </div>
+    <div class="muted small ta-c mt-4">Не видишь себя? Спроси у&nbsp;Альберта свою персональную ссылку.</div>
+  `;
 } else {
-  const content = document.getElementById('content');
 
   // читаем сохранённый прогресс, чтобы показать статус каждой карточки
   const testState = loadLocal(user, 'test'); // { answers: [], done: false, score: number }
