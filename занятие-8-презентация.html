@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность | Занятие 8 — Стратегия</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0f0f1e;
+  --bg-2: #1a1a2e;
+  --accent: #E07461;            /* коралл — бренд neovida, финальная тема */
+  --accent-dark: #B84F3C;
+  --accent-glow: rgba(224,116,97,0.38);
+  --gold: #f0c040;              /* золотой — пик, сертификат */
+  --gold-glow: rgba(240,192,64,0.35);
+  --violet: #A78BFA;            /* фиолет — сохраняем из урока 7 для "агентов" */
+  --teal: #14b8a6;
+  --green: #5ec47a;
+  --blue: #4285f4;
+  --cyan: #0891b2;
+  --red: #e05555;
+  --orange: #e8944a;
+  --white: #ffffff;
+  --white-80: rgba(255,255,255,0.8);
+  --white-70: rgba(255,255,255,0.7);
+  --white-60: rgba(255,255,255,0.6);
+  --white-40: rgba(255,255,255,0.4);
+  --white-20: rgba(255,255,255,0.2);
+  --white-10: rgba(255,255,255,0.1);
+}
+
+html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--white); -webkit-font-smoothing: antialiased; }
+a { color: var(--accent); text-decoration: underline; cursor: pointer; }
+a:hover { color: var(--gold); }
+
+.deck { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+.slide {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 60px 80px; opacity: 0; visibility: hidden;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translateX(40px); overflow-y: auto;
+}
+.slide.active { opacity: 1; visibility: visible; transform: translateX(0); }
+.slide.prev { transform: translateX(-40px); }
+
+.slide-title { font-size: 46px; font-weight: 800; line-height: 1.15; margin-bottom: 28px; }
+.slide-title .accent { color: var(--accent); }
+.slide-title .gold { color: var(--gold); }
+.slide-subtitle { font-size: 24px; font-weight: 400; color: var(--white-80); margin-bottom: 32px; line-height: 1.4; }
+
+.point { margin-bottom: 14px; padding-left: 8px; font-size: 22px; line-height: 1.5; color: var(--white-80); }
+.point strong { color: var(--white); font-weight: 600; }
+
+.quote { margin-top: 20px; padding: 22px 30px; border-left: 4px solid var(--accent); background: var(--white-10); border-radius: 0 12px 12px 0; font-size: 22px; font-weight: 500; line-height: 1.5; font-style: italic; }
+.quote.gold { border-left-color: var(--gold); }
+
+.card { background: var(--white-10); border-radius: 16px; padding: 24px; margin-bottom: 16px; }
+.card-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+.card-body { font-size: 18px; color: var(--white-80); line-height: 1.5; }
+.cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+.cards-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-top: 12px; }
+
+.slide-counter { position: fixed; bottom: 24px; right: 32px; font-size: 16px; font-weight: 600; color: var(--white-40); z-index: 100; pointer-events: none; }
+.fullscreen-btn { position: fixed; top: 20px; right: 24px; z-index: 100; background: var(--white-10); border: 1px solid var(--white-20); color: var(--white-60); width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.fullscreen-btn:hover { background: var(--white-20); color: var(--white); }
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(to right, var(--accent), var(--gold)); z-index: 100; transition: width 0.4s ease; box-shadow: 0 0 10px var(--accent-glow); }
+
+/* TITLE slide */
+.slide.title-slide { text-align: center; justify-content: center; align-items: center; background: radial-gradient(ellipse at 50% 40%, rgba(224,116,97,0.2) 0%, transparent 60%), radial-gradient(ellipse at 50% 90%, rgba(240,192,64,0.1) 0%, transparent 50%); }
+.title-big { font-size: 82px; font-weight: 900; letter-spacing: -2.5px; background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 20px; line-height: 1.05; }
+.title-sub { font-size: 32px; font-weight: 500; color: var(--white-80); margin-bottom: 48px; line-height: 1.3; }
+.title-meta { font-size: 20px; color: var(--white-40); }
+
+/* LESSON GRID — путь курса */
+.lesson-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 12px; }
+.lesson-card { background: var(--white-10); border-radius: 14px; padding: 18px 16px; border-left: 4px solid var(--white-20); }
+.lesson-card.done { opacity: 0.6; }
+.lesson-card.today {
+  background: linear-gradient(135deg, rgba(224,116,97,0.22) 0%, rgba(240,192,64,0.08) 100%);
+  border: 2px solid rgba(224,116,97,0.5);
+  box-shadow: 0 10px 40px rgba(224,116,97,0.2);
+}
+.lesson-card .l-num { font-size: 13px; font-weight: 700; color: var(--white-40); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.lesson-card.today .l-num { color: var(--accent); }
+.lesson-card .l-name { font-size: 17px; font-weight: 700; color: var(--white); margin-bottom: 3px; }
+.lesson-card .l-desc { font-size: 13px; color: var(--white-60); line-height: 1.35; }
+.lesson-card.today .l-name { color: var(--accent); }
+
+/* TIMELINE сегодняшнего урока */
+.today-timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; position: relative; }
+.today-timeline::before { content: ''; position: absolute; top: 28px; left: 8%; right: 8%; height: 2px; background: linear-gradient(to right, var(--accent) 0%, var(--gold) 100%); z-index: 0; }
+.tt-step { position: relative; z-index: 1; text-align: center; }
+.tt-dot { width: 56px; height: 56px; border-radius: 50%; background: var(--bg-2); border: 3px solid var(--accent); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: var(--accent); }
+.tt-step.peak .tt-dot { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 30px var(--gold-glow); }
+.tt-label { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+.tt-time { font-size: 12px; color: var(--white-40); text-transform: uppercase; letter-spacing: 1px; }
+
+/* QR для теста */
+.qr-slide { text-align: center; justify-content: center; align-items: center; background: radial-gradient(ellipse at 50% 50%, rgba(224,116,97,0.2) 0%, transparent 60%); }
+.qr-card { background: #fff; padding: 32px; border-radius: 28px; box-shadow: 0 20px 80px rgba(0,0,0,0.4); margin: 20px auto; display: inline-block; }
+.qr-card img { display: block; width: 340px; height: 340px; }
+.qr-url { font-size: 28px; font-weight: 800; color: var(--white); letter-spacing: 1px; font-family: 'Inter', monospace; margin-top: 10px; }
+.qr-note { font-size: 18px; color: var(--white-60); margin-top: 18px; max-width: 700px; }
+.qr-placeholder {
+  width: 340px; height: 340px; background: repeating-linear-gradient(45deg, #fff 0, #fff 10px, #f0f0f0 10px, #f0f0f0 20px);
+  display: flex; align-items: center; justify-content: center; font-size: 22px; color: #888; font-weight: 700; text-align: center; padding: 20px;
+}
+
+/* ГАЛАКТИКА ИНСТРУМЕНТОВ — мозаичная сетка с группировкой по стране */
+.galaxy { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 8px; }
+.galaxy-zone { background: var(--white-10); border-radius: 18px; padding: 20px 24px; border: 1px solid var(--white-20); }
+.galaxy-zone.usa { border-color: rgba(66,133,244,0.35); }
+.galaxy-zone.china { border-color: rgba(224,85,85,0.35); }
+.galaxy-zone.russia { border-color: rgba(94,196,122,0.4); }
+.galaxy-zone.special { border-color: rgba(167,139,250,0.4); }
+.gz-label { font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+.galaxy-zone.usa .gz-label { color: var(--blue); }
+.galaxy-zone.china .gz-label { color: var(--red); }
+.galaxy-zone.russia .gz-label { color: var(--green); }
+.galaxy-zone.special .gz-label { color: var(--violet); }
+.gz-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 100px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  font-size: 14px; font-weight: 600;
+  color: var(--white-80);
+  transition: all 0.2s;
+}
+.chip:hover { background: rgba(255,255,255,0.15); transform: translateY(-1px); }
+.chip-icon { font-size: 15px; }
+
+/* 10 ПАРАДИГМ — грид 5×2 */
+.paradigms { display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+.paradigm {
+  background: linear-gradient(145deg, rgba(224,116,97,0.12) 0%, rgba(240,192,64,0.04) 100%);
+  border: 1px solid rgba(224,116,97,0.3);
+  border-radius: 14px;
+  padding: 16px 18px;
+  transition: transform 0.2s;
+}
+.paradigm:hover { transform: translateY(-3px); border-color: var(--accent); }
+.paradigm-num { font-size: 12px; font-weight: 800; color: var(--accent); letter-spacing: 1.5px; }
+.paradigm-name { font-size: 17px; font-weight: 800; color: var(--white); margin: 6px 0 8px; line-height: 1.2; }
+.paradigm-flip { font-size: 13px; color: var(--white-70); line-height: 1.4; }
+.paradigm-flip strong { color: var(--gold); }
+
+/* ПЕРСОНАЛЬНЫЙ СТЕК — карточка участника */
+.person-card {
+  background: linear-gradient(145deg, rgba(224,116,97,0.14) 0%, rgba(240,192,64,0.04) 100%);
+  border: 2px solid rgba(224,116,97,0.35);
+  border-radius: 22px;
+  padding: 30px 36px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  max-width: 1000px;
+  margin: 14px auto 0;
+}
+.person-head { display: flex; align-items: center; gap: 22px; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px dashed rgba(255,255,255,0.15); }
+.person-ava {
+  width: 76px; height: 76px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--gold));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 34px; font-weight: 900; color: var(--bg);
+  flex-shrink: 0; box-shadow: 0 8px 24px var(--accent-glow);
+}
+.person-name { font-size: 34px; font-weight: 900; color: var(--white); margin-bottom: 4px; line-height: 1.1; }
+.person-sphere { font-size: 16px; color: var(--gold); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+.stack-label { font-size: 13px; font-weight: 800; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+.stack-chain { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.stack-tool {
+  padding: 10px 16px; border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+  font-size: 15px; font-weight: 700; color: var(--white);
+}
+.stack-tool .tool-kind { font-size: 11px; font-weight: 500; color: var(--white-60); letter-spacing: 1px; text-transform: uppercase; display: block; }
+.person-killer { background: rgba(240,192,64,0.1); border-left: 4px solid var(--gold); padding: 14px 20px; border-radius: 0 12px 12px 0; font-size: 16px; color: var(--white-80); line-height: 1.5; }
+.person-killer strong { color: var(--gold); }
+
+/* КРАСНЫЕ ЛИНИИ */
+.lines-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+.line-card {
+  background: linear-gradient(145deg, rgba(224,85,85,0.12) 0%, rgba(224,85,85,0.03) 100%);
+  border: 2px solid rgba(224,85,85,0.35);
+  border-radius: 16px;
+  padding: 22px 26px;
+}
+.line-card.ok { background: linear-gradient(145deg, rgba(94,196,122,0.12) 0%, rgba(94,196,122,0.03) 100%); border-color: rgba(94,196,122,0.4); }
+.line-label { font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+.line-card .line-label { color: var(--red); }
+.line-card.ok .line-label { color: var(--green); }
+.line-text { font-size: 18px; color: var(--white); font-weight: 600; line-height: 1.4; margin-bottom: 8px; }
+.line-why { font-size: 14px; color: var(--white-60); line-height: 1.5; }
+
+/* ROADMAP card — шаблон */
+.roadmap-card {
+  background: #fff;
+  color: #1e1b4b;
+  border-radius: 20px;
+  padding: 30px 40px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  max-width: 1100px;
+  margin: 14px auto 0;
+}
+.roadmap-card .rm-title { font-size: 28px; font-weight: 900; color: var(--accent-dark); margin-bottom: 6px; text-align: center; }
+.roadmap-card .rm-sub { font-size: 14px; color: #64748b; text-align: center; margin-bottom: 24px; letter-spacing: 2px; text-transform: uppercase; }
+.rm-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 30px; }
+.rm-field { border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+.rm-field-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent-dark); color: #fff;
+  font-size: 13px; font-weight: 800;
+  margin-right: 8px;
+}
+.rm-field-label { font-size: 15px; font-weight: 700; color: #1e1b4b; margin-bottom: 6px; }
+.rm-field-hint { font-size: 12px; color: #94a3b8; font-style: italic; }
+
+/* STATUS BANNER (разбор / пауза) */
+.status-banner { text-align: center; justify-content: center; align-items: center; }
+.sb-badge { display: inline-block; padding: 8px 24px; border-radius: 100px; font-size: 13px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 30px; }
+.sb-badge.pause { background: rgba(240,192,64,0.2); color: var(--gold); border: 1px solid rgba(240,192,64,0.5); }
+.sb-badge.live { background: rgba(224,116,97,0.2); color: var(--accent); border: 1px solid rgba(224,116,97,0.5); }
+.sb-title { font-size: 68px; font-weight: 900; letter-spacing: -2px; line-height: 1.05; margin-bottom: 20px; }
+.sb-text { font-size: 22px; color: var(--white-70); line-height: 1.5; max-width: 800px; margin: 0 auto; }
+
+/* ВИДЕОМАНИФЕСТ — 3 вопроса */
+.vm-questions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 24px; }
+.vm-q {
+  background: linear-gradient(145deg, rgba(240,192,64,0.14) 0%, rgba(240,192,64,0.04) 100%);
+  border: 2px solid rgba(240,192,64,0.4);
+  border-radius: 20px;
+  padding: 30px 28px;
+  text-align: center;
+  box-shadow: 0 14px 40px rgba(240,192,64,0.1);
+}
+.vm-num {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900; color: var(--bg);
+  margin: 0 auto 18px;
+}
+.vm-text { font-size: 22px; font-weight: 700; color: var(--white); line-height: 1.35; margin-bottom: 8px; }
+.vm-hint { font-size: 14px; color: var(--white-60); line-height: 1.45; font-style: italic; }
+
+/* ФИНАЛ — "топ 5%" */
+.peak-slide { text-align: center; justify-content: center; align-items: center; background: radial-gradient(ellipse at 50% 40%, rgba(240,192,64,0.2) 0%, transparent 55%), radial-gradient(ellipse at 50% 90%, rgba(224,116,97,0.12) 0%, transparent 50%); }
+.peak-badge { display: inline-block; padding: 10px 32px; border-radius: 100px; background: linear-gradient(135deg, var(--accent), var(--gold)); color: var(--bg); font-size: 15px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 34px; box-shadow: 0 10px 30px var(--accent-glow); }
+.peak-title { font-size: 92px; font-weight: 900; letter-spacing: -3px; line-height: 1.0; margin-bottom: 24px; background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.peak-body { font-size: 24px; color: var(--white-80); line-height: 1.5; max-width: 900px; margin: 0 auto 28px; }
+.peak-body strong { color: var(--gold); }
+
+/* GLOSSARY BAR */
+.glossary-bar { margin-top: 24px; padding: 16px 22px; background: rgba(224,116,97,0.08); border: 1px solid rgba(224,116,97,0.2); border-radius: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.glossary-bar-label { grid-column: 1 / -1; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); margin-bottom: -4px; }
+.gloss-item { }
+.gloss-term { font-size: 14px; font-weight: 800; color: var(--white); margin-bottom: 3px; }
+.gloss-desc { font-size: 12px; color: var(--white-60); line-height: 1.4; }
+
+/* ANIMATIONS */
+@keyframes pulseGlow { 0%,100% { box-shadow: 0 0 30px var(--accent-glow); } 50% { box-shadow: 0 0 60px var(--gold-glow); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInScale { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+@keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+.pulse-glow { animation: pulseGlow 2.4s ease-in-out infinite; }
+.slide.active .anim-up { animation: slideUp 0.6s ease-out both; }
+.slide.active .anim-up-d1 { animation: slideUp 0.6s ease-out 0.15s both; }
+.slide.active .anim-up-d2 { animation: slideUp 0.6s ease-out 0.3s both; }
+.slide.active .anim-up-d3 { animation: slideUp 0.6s ease-out 0.45s both; }
+.slide.active .anim-up-d4 { animation: slideUp 0.6s ease-out 0.6s both; }
+.slide.active .anim-scale { animation: fadeInScale 0.5s ease-out 0.2s both; }
+.slide.active .anim-float { animation: floaty 3s ease-in-out infinite; }
+
+.small-text { font-size: 16px; color: var(--white-40); margin-top: 20px; }
+.term { border-bottom: 1px dashed rgba(224,116,97,0.55); padding-bottom: 1px; font-weight: 600; color: var(--white); }
+
+/* RESPONSIVE NOT A PRIORITY (it's a presentation on a single screen) */
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="slide-counter" id="slideCounter"></div>
+<button class="fullscreen-btn" id="fsBtn" title="Полный экран">&#x26F6;</button>
+
+<div class="deck">
+
+<!-- ============ СЛАЙД 1: ТИТУЛ ============ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;" class="anim-up">neovida.ai / ИИ. Новая реальность</div>
+  <div class="title-big anim-up-d1">Стратегия</div>
+  <div class="title-sub anim-up-d2">ИИ как <strong style="color:var(--gold);">рычаг роста</strong>. Собираем всё в&nbsp;один план</div>
+  <div class="title-meta anim-up-d3">Занятие 8 &middot; Финальное</div>
+</div>
+
+<!-- ============ СЛАЙД 2: ПУТЬ КУРСА ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Мы прошли <span class="accent">семь занятий</span>. Сегодня — восьмое, последнее</div>
+  <div class="lesson-grid anim-up-d1">
+    <div class="lesson-card done">
+      <div class="l-num">Занятие 1</div>
+      <div class="l-name">Погружение</div>
+      <div class="l-desc">ChatGPT, Qwen, Gemini, VPN, настройка</div>
+    </div>
+    <div class="lesson-card done">
+      <div class="l-num">Занятие 2</div>
+      <div class="l-name">Промпт-инженерия</div>
+      <div class="l-desc">РКЗФО, техники, память, мета-промпт</div>
+    </div>
+    <div class="lesson-card done">
+      <div class="l-num">Занятие 3</div>
+      <div class="l-name">Ассистенты</div>
+      <div class="l-desc">Gems + NotebookLM + Audio Overview</div>
+    </div>
+    <div class="lesson-card done">
+      <div class="l-num">Занятие 4</div>
+      <div class="l-name">Google Workspace</div>
+      <div class="l-desc">Canvas, Deep Research, Labs</div>
+    </div>
+  </div>
+  <div class="lesson-grid anim-up-d2" style="margin-top:16px;">
+    <div class="lesson-card done">
+      <div class="l-num">Занятие 5</div>
+      <div class="l-name">Данные</div>
+      <div class="l-desc">Аналитика, конкуренты, прогнозы</div>
+    </div>
+    <div class="lesson-card done">
+      <div class="l-num">Занятие 6</div>
+      <div class="l-name">Визуал</div>
+      <div class="l-desc">Презентации, картинки, лендинги, видео</div>
+    </div>
+    <div class="lesson-card done">
+      <div class="l-num">Занятие 7</div>
+      <div class="l-name">Агенты</div>
+      <div class="l-desc">Suvvy, Manus, Comet, Lovable</div>
+    </div>
+    <div class="lesson-card today">
+      <div class="l-num">Занятие 8 &mdash; сегодня</div>
+      <div class="l-name">Стратегия</div>
+      <div class="l-desc">Собираем всё в&nbsp;рабочий стек + план</div>
+    </div>
+  </div>
+  <div class="quote gold anim-up-d3">Семь уроков вы&nbsp;<strong>узнавали и&nbsp;пробовали</strong>. Сегодня — <strong>собираем</strong> это в&nbsp;ваш личный инструментарий и&nbsp;план внедрения.</div>
+</div>
+
+<!-- ============ СЛАЙД 3: ФОРМАТ СЕГОДНЯ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Что будет <span class="accent">сегодня</span></div>
+  <div class="slide-subtitle anim-up-d1">Не лекция. <strong>Четыре живых этапа</strong> — и&nbsp;в&nbsp;конце у&nbsp;каждого на&nbsp;руках будет план.</div>
+  <div class="today-timeline anim-up-d2">
+    <div class="tt-step">
+      <div class="tt-dot">1</div>
+      <div class="tt-label">Живой тест</div>
+      <div class="tt-time">15 вопросов · 20 мин</div>
+    </div>
+    <div class="tt-step">
+      <div class="tt-dot">2</div>
+      <div class="tt-label">Ретроспектива</div>
+      <div class="tt-time">Что мы реально прошли · 35 мин</div>
+    </div>
+    <div class="tt-step">
+      <div class="tt-dot">3</div>
+      <div class="tt-label">Красные линии + карта</div>
+      <div class="tt-time">Что НЕ делегируем + план · 35 мин</div>
+    </div>
+    <div class="tt-step peak">
+      <div class="tt-dot">★</div>
+      <div class="tt-label">Сертификаты + видео</div>
+      <div class="tt-time">Пик курса · 20 мин</div>
+    </div>
+  </div>
+  <div class="quote anim-up-d3">Живой тест — не&nbsp;экзамен. Это <strong style="color:var(--gold);">зеркало</strong>: сейчас вы&nbsp;увидите, <em>сколько всего</em> за&nbsp;7&nbsp;недель оказалось у&nbsp;вас в&nbsp;голове.</div>
+</div>
+
+<!-- ============ СЛАЙД 4: QR ТЕСТА ============ -->
+<div class="slide qr-slide">
+  <div style="font-size:13px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); font-weight:800; margin-bottom:24px;" class="anim-up">🎯 ЖИВОЙ ТЕСТ · 20 МИНУТ</div>
+  <div style="font-size:52px; font-weight:900; color:var(--white); margin-bottom:18px; line-height:1.1;" class="anim-up-d1">Открываем <span class="accent">тест</span> у&nbsp;каждого на&nbsp;телефоне</div>
+  <div class="qr-card anim-scale">
+    <img src="https://materials.neovida.ai/lesson-8-app/qr/_landing.png" alt="QR тест" style="display:block; width:340px; height:340px;">
+  </div>
+  <div class="qr-url anim-up-d2">materials.neovida.ai/lesson-8-app</div>
+  <div class="qr-note anim-up-d3">Сканируй камерой телефона → выбери своё имя → получишь свою страницу с&nbsp;тестом и&nbsp;картой.</div>
+</div>
+
+<!-- ============ СЛАЙД 5: ИНСТРУКЦИЯ К ТЕСТУ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Три <span class="accent">простые правила</span> теста</div>
+  <div class="cards-grid-3 anim-up-d1" style="margin-top:24px;">
+    <div class="card" style="border-top:4px solid var(--accent);">
+      <div style="font-size:48px; margin-bottom:10px;">🤝</div>
+      <div class="card-title" style="color:var(--accent);">Без подглядываний</div>
+      <div class="card-body">Это не экзамен — это <strong>зеркало для&nbsp;вас</strong>. Подглядите — и&nbsp;не&nbsp;увидите реального среза.</div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--gold);">
+      <div style="font-size:48px; margin-bottom:10px;">⏱</div>
+      <div class="card-title" style="color:var(--gold);">15 вопросов · 20 минут</div>
+      <div class="card-body">По минуте на&nbsp;вопрос. Сложных всего <strong>один</strong>. Остальные — узнавание того, что реально было на&nbsp;уроках.</div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--green);">
+      <div style="font-size:48px; margin-bottom:10px;">🎁</div>
+      <div class="card-title" style="color:var(--green);">Ошибки = подарок</div>
+      <div class="card-body">После теста каждый получит <strong>персональный отчёт</strong>. Ошибки — это то, что мы&nbsp;вместе разберём ещё раз.</div>
+    </div>
+  </div>
+  <div class="quote gold anim-up-d2" style="margin-top:24px;">Целевая планка — <strong>12-13 из&nbsp;15 правильных</strong> у&nbsp;каждого. И&nbsp;это реально: всё, что в&nbsp;тесте, — вы&nbsp;уже делали руками.</div>
+</div>
+
+<!-- ============ СЛАЙД 6: ПАУЗА — ИДЁТ ТЕСТ ============ -->
+<div class="slide status-banner">
+  <div class="sb-badge live anim-up">🔴 LIVE · ТЕСТ ИДЁТ</div>
+  <div class="sb-title anim-up-d1"><span style="color:var(--accent);">Пишем!</span></div>
+  <div class="sb-text anim-up-d2">Сосредоточьтесь. Не&nbsp;торопитесь. Это ваш&nbsp;<em>зеркальный</em> момент.</div>
+</div>
+
+<!-- ============ СЛАЙД 7: РАЗБОР ТЕСТА ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Что получилось — <span class="accent">смотрим вместе</span></div>
+  <div class="slide-subtitle anim-up-d1">На&nbsp;ТВ — <strong>heatmap 15×7</strong>: вопросы × участники. Зелёное — группа сильна. Жёлтое — разберём коллективно. Красное — освежим прямо сейчас.</div>
+
+  <div class="cards-grid anim-up-d2" style="margin-top:18px;">
+    <div class="card ok" style="border-left:4px solid var(--green); background:rgba(94,196,122,0.08);">
+      <div class="card-title" style="color:var(--green);">🟢 Освоено</div>
+      <div class="card-body">
+        Темы, где группа отвечала уверенно. <strong>Это&nbsp;—&nbsp;ваше</strong>: больше не&nbsp;переживаем.
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--gold); background:rgba(240,192,64,0.08);">
+      <div class="card-title" style="color:var(--gold);">🟡 Освежим вместе</div>
+      <div class="card-body">
+        2-3 темы, где ошиблись чаще. Правильный ответ, <strong>почему</strong> именно он, где это было на&nbsp;уроках.
+      </div>
+    </div>
+  </div>
+  <div class="quote anim-up-d3" style="border-left-color:var(--green);">У&nbsp;каждого на&nbsp;телефоне — <strong>персональный отчёт</strong>. Там фокус на&nbsp;<em>«что&nbsp;ты&nbsp;уже знаешь»</em>, а&nbsp;не&nbsp;на&nbsp;ошибках. Откройте и&nbsp;посмотрите.</div>
+</div>
+
+<!-- ============ СЛАЙД 8: ПЕРЕХОД К РЕТРОСПЕКТИВЕ ============ -->
+<div class="slide status-banner">
+  <div class="sb-badge live anim-up">ЧАСТЬ 2 · РЕТРОСПЕКТИВА</div>
+  <div class="sb-title anim-up-d1">А&nbsp;теперь — <span style="color:var(--gold);">зацените масштаб</span></div>
+  <div class="sb-text anim-up-d2">За&nbsp;7&nbsp;недель вы&nbsp;прошли столько, что большинство профессионалов не&nbsp;осваивают за&nbsp;год. Давайте посмотрим <strong>что именно</strong>.</div>
+</div>
+
+<!-- ============ СЛАЙД 9: ГАЛАКТИКА ИНСТРУМЕНТОВ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up"><span class="accent">30+ сервисов</span>, которые вы&nbsp;лично трогали руками</div>
+  <div class="slide-subtitle anim-up-d1">95% профессионалов в&nbsp;стране знают 2-3 из&nbsp;этого списка. Вы&nbsp;— весь.</div>
+  <div class="galaxy">
+    <div class="galaxy-zone usa anim-up-d2">
+      <div class="gz-label">🇺🇸 США — база</div>
+      <div class="gz-chips">
+        <span class="chip"><span class="chip-icon">💬</span>ChatGPT</span>
+        <span class="chip"><span class="chip-icon">⚙️</span>Custom Instructions</span>
+        <span class="chip"><span class="chip-icon">🤖</span>GPTs</span>
+        <span class="chip"><span class="chip-icon">🎨</span>DALL-E</span>
+        <span class="chip"><span class="chip-icon">💎</span>Gemini</span>
+        <span class="chip"><span class="chip-icon">✨</span>Gems</span>
+        <span class="chip"><span class="chip-icon">📔</span>NotebookLM</span>
+        <span class="chip"><span class="chip-icon">🎙</span>Audio Overview</span>
+        <span class="chip"><span class="chip-icon">🖼</span>Slide Deck</span>
+        <span class="chip"><span class="chip-icon">🖥</span>Canvas</span>
+        <span class="chip"><span class="chip-icon">🔍</span>Deep Research</span>
+        <span class="chip"><span class="chip-icon">🧪</span>Google Labs</span>
+        <span class="chip"><span class="chip-icon">🌊</span>Flow</span>
+        <span class="chip"><span class="chip-icon">◆</span>Claude</span>
+        <span class="chip"><span class="chip-icon">⚡</span>Perplexity</span>
+        <span class="chip"><span class="chip-icon">☄</span>Comet</span>
+      </div>
+    </div>
+    <div class="galaxy-zone china anim-up-d2">
+      <div class="gz-label">🇨🇳 Китай — быстро растёт</div>
+      <div class="gz-chips">
+        <span class="chip"><span class="chip-icon">🀄</span>Qwen</span>
+        <span class="chip"><span class="chip-icon">📊</span>Kimi Slides</span>
+        <span class="chip"><span class="chip-icon">🌐</span>Kimi Swarm</span>
+        <span class="chip"><span class="chip-icon">💠</span>ChatGLM / z.ai</span>
+        <span class="chip"><span class="chip-icon">🤖</span>Manus</span>
+        <span class="chip"><span class="chip-icon">🎬</span>Kling</span>
+        <span class="chip"><span class="chip-icon">📽</span>Seedance</span>
+        <span class="chip"><span class="chip-icon">🧠</span>DeepSeek</span>
+      </div>
+    </div>
+    <div class="galaxy-zone russia anim-up-d3">
+      <div class="gz-label">🇷🇺 Россия — без VPN</div>
+      <div class="gz-chips">
+        <span class="chip"><span class="chip-icon">🎨</span>Kandinsky</span>
+        <span class="chip"><span class="chip-icon">✨</span>Шедеврум</span>
+        <span class="chip"><span class="chip-icon">💬</span>GigaChat</span>
+        <span class="chip"><span class="chip-icon">🔔</span>Алиса</span>
+        <span class="chip"><span class="chip-icon">🤝</span>Suvvy</span>
+      </div>
+    </div>
+    <div class="galaxy-zone special anim-up-d3">
+      <div class="gz-label">🧰 Специализированные</div>
+      <div class="gz-chips">
+        <span class="chip"><span class="chip-icon">🅰</span>Ideogram</span>
+        <span class="chip"><span class="chip-icon">✏️</span>Recraft</span>
+        <span class="chip"><span class="chip-icon">🎭</span>Leonardo</span>
+        <span class="chip"><span class="chip-icon">📽</span>Gamma</span>
+        <span class="chip"><span class="chip-icon">🏗</span>v0.dev</span>
+        <span class="chip"><span class="chip-icon">💝</span>Lovable</span>
+        <span class="chip"><span class="chip-icon">🎥</span>HeyGen</span>
+        <span class="chip"><span class="chip-icon">🎙</span>D-ID</span>
+        <span class="chip"><span class="chip-icon">🔗</span>n8n</span>
+        <span class="chip"><span class="chip-icon">🧩</span>Make</span>
+        <span class="chip"><span class="chip-icon">⚡</span>Zapier</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 10: 10 ПАРАДИГМ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up"><span class="accent">Десять способов мышления</span>, которые вы&nbsp;теперь умеете</div>
+  <div class="slide-subtitle anim-up-d1">Инструменты меняются каждые полгода. Эти <strong>подходы</strong> останутся с&nbsp;вами надолго.</div>
+  <div class="paradigms">
+    <div class="paradigm anim-up-d2">
+      <div class="paradigm-num">01 · Урок 2</div>
+      <div class="paradigm-name">Формула РКЗФО</div>
+      <div class="paradigm-flip">От «что-то спросить» → к&nbsp;<strong>ТЗ для&nbsp;ИИ</strong> как сотруднику</div>
+    </div>
+    <div class="paradigm anim-up-d2">
+      <div class="paradigm-num">02 · Урок 2</div>
+      <div class="paradigm-name">Контекстное окно</div>
+      <div class="paradigm-flip">4 правила памяти: важное в&nbsp;начало/конец, <strong>новый чат</strong>, резюме</div>
+    </div>
+    <div class="paradigm anim-up-d2">
+      <div class="paradigm-num">03 · Урок 2</div>
+      <div class="paradigm-name">Few-shot + CoT</div>
+      <div class="paradigm-flip">Примеры и&nbsp;«рассуждай пошагово» — как&nbsp;<strong>усилители</strong></div>
+    </div>
+    <div class="paradigm anim-up-d2">
+      <div class="paradigm-num">04 · Урок 2</div>
+      <div class="paradigm-name">Мета-промптинг</div>
+      <div class="paradigm-flip">«Наговори голосом» → ИИ <strong>сам делает промпт</strong> из&nbsp;сумбура</div>
+    </div>
+    <div class="paradigm anim-up-d3">
+      <div class="paradigm-num">05 · Урок 3</div>
+      <div class="paradigm-name">Ассистентный подход</div>
+      <div class="paradigm-flip">От разовых промптов → к&nbsp;<strong>персональному ассистенту</strong> (Gems)</div>
+    </div>
+    <div class="paradigm anim-up-d3">
+      <div class="paradigm-num">06 · Урок 3</div>
+      <div class="paradigm-name">Базы знаний</div>
+      <div class="paradigm-flip">NotebookLM — ИИ, который <strong>не&nbsp;галлюцинирует</strong>, цитирует источник</div>
+    </div>
+    <div class="paradigm anim-up-d3">
+      <div class="paradigm-num">07 · Уроки 4-5</div>
+      <div class="paradigm-name">Исследование + форсайт</div>
+      <div class="paradigm-flip">Deep Research — <strong>глубокий анализ</strong> на&nbsp;десятках источников</div>
+    </div>
+    <div class="paradigm anim-up-d3">
+      <div class="paradigm-num">08 · Урок 6</div>
+      <div class="paradigm-name">Визуал-стек</div>
+      <div class="paradigm-flip">3 подхода к&nbsp;презентациям + <strong>обратный промптинг</strong> из&nbsp;скриншота</div>
+    </div>
+    <div class="paradigm anim-up-d4">
+      <div class="paradigm-num">09 · Урок 6</div>
+      <div class="paradigm-name">Веб-продакшн</div>
+      <div class="paradigm-flip">Лендинг за&nbsp;5 минут <strong>по&nbsp;скриншоту-референсу</strong> (Lovable)</div>
+    </div>
+    <div class="paradigm anim-up-d4">
+      <div class="paradigm-num">10 · Урок 7</div>
+      <div class="paradigm-name">Агентный подход</div>
+      <div class="paradigm-flip">От ассистента («отвечает») → к&nbsp;агенту (<strong>«делает руками»</strong>)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 11: РАЗНИЦА БОТ / АССИСТЕНТ / АГЕНТ (напоминание) ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Главное различие, которое у&nbsp;вас <span class="accent">теперь в&nbsp;голове</span></div>
+  <div class="slide-subtitle anim-up-d1">Три слова, которые путают 95% людей. Вы&nbsp;— не&nbsp;путаете.</div>
+  <div class="cards-grid-3" style="margin-top:18px;">
+    <div class="card anim-up-d2" style="border:2px solid rgba(96,165,250,0.35); background:linear-gradient(145deg, rgba(96,165,250,0.1) 0%, rgba(96,165,250,0.02) 100%);">
+      <div style="font-size:48px; margin-bottom:10px;">🔘</div>
+      <div class="card-title" style="color:var(--blue);">Бот</div>
+      <div class="card-body"><strong>Кнопки. Сценарий.</strong><br>«Если&nbsp;А → ответ&nbsp;Б». Не&nbsp;думает. Делает ровно то, что прописано.</div>
+    </div>
+    <div class="card anim-up-d3" style="border:2px solid rgba(224,116,97,0.4); background:linear-gradient(145deg, rgba(224,116,97,0.12) 0%, rgba(224,116,97,0.02) 100%);">
+      <div style="font-size:48px; margin-bottom:10px;">💬</div>
+      <div class="card-title" style="color:var(--accent);">Ассистент</div>
+      <div class="card-body"><strong>Интеллект. Одна задача.</strong><br>Gem, GPT, Claude Project. Понимает контекст, отвечает умно — но&nbsp;<em>в&nbsp;чате</em>.</div>
+    </div>
+    <div class="card anim-up-d4" style="border:2px solid rgba(167,139,250,0.5); background:linear-gradient(145deg, rgba(167,139,250,0.14) 0%, rgba(167,139,250,0.03) 100%);">
+      <div style="font-size:48px; margin-bottom:10px;">🦾</div>
+      <div class="card-title" style="color:var(--violet);">Агент</div>
+      <div class="card-body"><strong>Цель. Много шагов. Сам.</strong><br>Suvvy, Manus, Comet. Получил цель → планирует, действует во&nbsp;внешнем мире, приносит результат.</div>
+    </div>
+  </div>
+  <div class="quote gold anim-up-d4" style="margin-top:22px;">Вы&nbsp;ушли с&nbsp;7-го урока <strong>оркестратором</strong>: знаете, кого из&nbsp;троих куда звать. Это и&nbsp;есть компетенция 2026-го.</div>
+</div>
+
+<!-- ============ СЛАЙД 12: АНОНС ПЕРСОНАЛЬНОГО СТЕКА ============ -->
+<div class="slide status-banner">
+  <div class="sb-badge live anim-up">🎯 ПЕРСОНАЛЬНО · КАЖДОМУ</div>
+  <div class="sb-title anim-up-d1">Ваш <span style="color:var(--gold);">боевой стек</span></div>
+  <div class="sb-text anim-up-d2">У&nbsp;каждого — своя сфера и&nbsp;свои задачи. <strong>5-7 инструментов</strong> именно под неё. Не&nbsp;«изучить всё», а&nbsp;<em>применить точечно</em>.</div>
+</div>
+
+<!-- ============ СЛАЙД 13: АЙРАТ ============ -->
+<div class="slide">
+  <div class="person-card anim-scale">
+    <div class="person-head">
+      <div class="person-ava">А</div>
+      <div>
+        <div class="person-name">Айрат</div>
+        <div class="person-sphere">Металлоконструкции · навесы · Уфа</div>
+      </div>
+    </div>
+    <div class="stack-label">Твой боевой стек</div>
+    <div class="stack-chain">
+      <div class="stack-tool"><span class="tool-kind">мозг</span>ChatGPT + Custom</div>
+      <div class="stack-tool"><span class="tool-kind">ассистент</span>Gem «Продажник навесов»</div>
+      <div class="stack-tool"><span class="tool-kind">база знаний</span>NotebookLM (прайс + ГОСТы)</div>
+      <div class="stack-tool"><span class="tool-kind">визуал</span>Kandinsky (фото объектов)</div>
+      <div class="stack-tool"><span class="tool-kind">лендинг</span>Lovable (по скриншоту)</div>
+      <div class="stack-tool"><span class="tool-kind">агент</span>Suvvy в Telegram</div>
+    </div>
+    <div class="person-killer"><strong>Главный выигрыш:</strong> Suvvy-агент в&nbsp;Telegram отвечает клиентам на&nbsp;типовые вопросы <em>за&nbsp;тебя</em>. 10 часов в&nbsp;неделю возвращаются на&nbsp;монтаж и&nbsp;стратегию.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 14: МАРАТ ============ -->
+<div class="slide">
+  <div class="person-card anim-scale">
+    <div class="person-head">
+      <div class="person-ava">М</div>
+      <div>
+        <div class="person-name">Марат</div>
+        <div class="person-sphere">Крафтовый бар «Шемрак» · Уфа</div>
+      </div>
+    </div>
+    <div class="stack-label">Твой боевой стек</div>
+    <div class="stack-chain">
+      <div class="stack-tool"><span class="tool-kind">мозг</span>Gemini</div>
+      <div class="stack-tool"><span class="tool-kind">ассистент</span>Gem «Бар-менеджер»</div>
+      <div class="stack-tool"><span class="tool-kind">база знаний</span>NotebookLM (меню + рецепты)</div>
+      <div class="stack-tool"><span class="tool-kind">контент</span>Шедеврум (посты и акции)</div>
+      <div class="stack-tool"><span class="tool-kind">презентация</span>Kimi Slides (для партнёров)</div>
+    </div>
+    <div class="person-killer"><strong>Главный выигрыш:</strong> Gem-бар-менеджер + Шедеврум = <em>контент-машина</em>. Акции, посты, меню, ответы на&nbsp;отзывы — всё в&nbsp;одном диалоге.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 15: АЙГУЛЬ ============ -->
+<div class="slide">
+  <div class="person-card anim-scale">
+    <div class="person-head">
+      <div class="person-ava">А</div>
+      <div>
+        <div class="person-name">Айгуль</div>
+        <div class="person-sphere">Управляющий детского центра · Уфа</div>
+      </div>
+    </div>
+    <div class="stack-label">Твой боевой стек</div>
+    <div class="stack-chain">
+      <div class="stack-tool"><span class="tool-kind">мозг</span>Gemini</div>
+      <div class="stack-tool"><span class="tool-kind">ассистент</span>Gem «Методист»</div>
+      <div class="stack-tool"><span class="tool-kind">база знаний</span>NotebookLM (программы занятий)</div>
+      <div class="stack-tool"><span class="tool-kind">приложение</span>Canvas (квиз «подбери программу»)</div>
+      <div class="stack-tool"><span class="tool-kind">презентация</span>Gamma (день открытых дверей)</div>
+    </div>
+    <div class="person-killer"><strong>Главный выигрыш:</strong> квиз в&nbsp;Canvas + Gem-методист = <em>первая линия общения с&nbsp;родителями</em>. Быстрые ответы, красивые программы, понятные предложения.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 16: ИЛЬГИЗ ============ -->
+<div class="slide">
+  <div class="person-card anim-scale">
+    <div class="person-head">
+      <div class="person-ava">И</div>
+      <div>
+        <div class="person-name">Ильгиз</div>
+        <div class="person-sphere">Газовое оборудование · Уфа</div>
+      </div>
+    </div>
+    <div class="stack-label">Твой боевой стек</div>
+    <div class="stack-chain">
+      <div class="stack-tool"><span class="tool-kind">мозг</span>ChatGPT + Custom</div>
+      <div class="stack-tool"><span class="tool-kind">ассистент</span>Gem «Консультант по газу»</div>
+      <div class="stack-tool"><span class="tool-kind">база знаний</span>NotebookLM (СНиПы + прайс)</div>
+      <div class="stack-tool"><span class="tool-kind">исследование</span>Deep Research (тренды)</div>
+      <div class="stack-tool"><span class="tool-kind">приложение</span>Canvas (калькулятор котла)</div>
+      <div class="stack-tool"><span class="tool-kind">лендинг</span>Lovable</div>
+    </div>
+    <div class="person-killer"><strong>Главный выигрыш:</strong> NotebookLM с&nbsp;СНиПами = <em>ты&nbsp;не&nbsp;галлюцинируешь</em>. Клиент спрашивает ГОСТ — ты&nbsp;отвечаешь точно, со&nbsp;ссылкой на&nbsp;документ.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 17: МИХАИЛ Г. ============ -->
+<div class="slide">
+  <div class="person-card anim-scale">
+    <div class="person-head">
+      <div class="person-ava">М</div>
+      <div>
+        <div class="person-name">Михаил Г.</div>
+        <div class="person-sphere">Инженер · телеком</div>
+      </div>
+    </div>
+    <div class="stack-label">Твой боевой стек</div>
+    <div class="stack-chain">
+      <div class="stack-tool"><span class="tool-kind">мозг</span>Gemini</div>
+      <div class="stack-tool"><span class="tool-kind">база знаний</span>NotebookLM (техдокументация)</div>
+      <div class="stack-tool"><span class="tool-kind">приложение</span>Canvas (расчётные калькуляторы)</div>
+      <div class="stack-tool"><span class="tool-kind">исследование</span>Deep Research (стандарты)</div>
+      <div class="stack-tool"><span class="tool-kind">агент</span>Manus (разовые отчёты)</div>
+    </div>
+    <div class="person-killer"><strong>Главный выигрыш:</strong> ИИ — твой <em>второй мозг</em>. Сравнение решений, анализ стандартов, расчёты — быстрее в&nbsp;5-10 раз.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 18: МИХАИЛ ============ -->
+<div class="slide">
+  <div class="person-card anim-scale">
+    <div class="person-head">
+      <div class="person-ava">М</div>
+      <div>
+        <div class="person-name">Михаил</div>
+        <div class="person-sphere">Строительство линий связи</div>
+      </div>
+    </div>
+    <div class="stack-label">Твой боевой стек</div>
+    <div class="stack-chain">
+      <div class="stack-tool"><span class="tool-kind">мозг</span>ChatGPT</div>
+      <div class="stack-tool"><span class="tool-kind">ассистент</span>Gem «Прораб»</div>
+      <div class="stack-tool"><span class="tool-kind">база знаний</span>NotebookLM (ТЗ + ГОСТы)</div>
+      <div class="stack-tool"><span class="tool-kind">приложение</span>Canvas (калькулятор сметы)</div>
+      <div class="stack-tool"><span class="tool-kind">документы</span>Gemini + Google Docs</div>
+    </div>
+    <div class="person-killer"><strong>Главный выигрыш:</strong> калькулятор сметы в&nbsp;Canvas + ТЗ в&nbsp;NotebookLM = <em>черновики за&nbsp;15&nbsp;минут</em>, которые раньше делал полдня.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 19: ИСКАНДЕР ============ -->
+<div class="slide">
+  <div class="person-card anim-scale">
+    <div class="person-head">
+      <div class="person-ava">И</div>
+      <div>
+        <div class="person-name">Искандер</div>
+        <div class="person-sphere">Запчасти для сельхозтехники</div>
+      </div>
+    </div>
+    <div class="stack-label">Твой боевой стек</div>
+    <div class="stack-chain">
+      <div class="stack-tool"><span class="tool-kind">мозг</span>Qwen / ChatGPT</div>
+      <div class="stack-tool"><span class="tool-kind">ассистент</span>Gem «Менеджер запчастей»</div>
+      <div class="stack-tool"><span class="tool-kind">база знаний</span>NotebookLM (каталог + совместимость)</div>
+      <div class="stack-tool"><span class="tool-kind">исследование</span>Deep Research (B2B-рынок)</div>
+      <div class="stack-tool"><span class="tool-kind">описания</span>ChatGPT по Few-shot шаблону</div>
+    </div>
+    <div class="person-killer"><strong>Главный выигрыш:</strong> Gem-менеджер мгновенно отвечает на&nbsp;«подходит&nbsp;ли&nbsp;эта запчасть к&nbsp;МТЗ-82?» — <em>без&nbsp;часа листания каталога</em>.</div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 20: КРАСНЫЕ ЛИНИИ (заголовок) ============ -->
+<div class="slide status-banner">
+  <div class="sb-badge live anim-up" style="background:rgba(224,85,85,0.2); color:var(--red); border-color:rgba(224,85,85,0.5);">ЧАСТЬ 3 · ГРАНИЦЫ</div>
+  <div class="sb-title anim-up-d1"><span style="color:var(--red);">Красные</span> линии</div>
+  <div class="sb-text anim-up-d2">Вы&nbsp;знаете что <strong>можно</strong>. Теперь — про то, чего <strong>нельзя</strong>. Это не&nbsp;страшилки — это правила, чтобы ИИ не&nbsp;сработал против вас.</div>
+</div>
+
+<!-- ============ СЛАЙД 21: КРАСНЫЕ ЛИНИИ · СЕТКА ============ -->
+<div class="slide">
+  <div class="slide-title anim-up"><span style="color:var(--red);">Семь границ</span>, которые не&nbsp;переходим</div>
+  <div class="lines-grid" style="grid-template-columns:1fr 1fr 1fr; margin-top:18px;">
+    <div class="line-card anim-up-d1">
+      <div class="line-label">🚫 Нельзя №1</div>
+      <div class="line-text">Автоматизировать хаос</div>
+      <div class="line-why">Если в&nbsp;бизнесе бардак — ИИ его <strong>усилит</strong>. Сначала процесс, потом автоматизация.</div>
+    </div>
+    <div class="line-card anim-up-d1">
+      <div class="line-label">🚫 Нельзя №2</div>
+      <div class="line-text">Доверять цифрам без проверки</div>
+      <div class="line-why">Галлюцинации — реальность. Даты, номера ГОСТов, законы, цены — <strong>всегда перепроверяй</strong>.</div>
+    </div>
+    <div class="line-card anim-up-d1">
+      <div class="line-label">🚫 Нельзя №3</div>
+      <div class="line-text">Сливать чужие данные</div>
+      <div class="line-why">Персональные данные клиентов, паспорта, финансовая отчётность — <strong>в&nbsp;публичный ИИ не&nbsp;грузим</strong>.</div>
+    </div>
+    <div class="line-card anim-up-d2">
+      <div class="line-label">🚫 Нельзя №4</div>
+      <div class="line-text">Отдавать финальное решение</div>
+      <div class="line-why">ИИ готовит черновик — <strong>решаете всегда вы</strong>. Особенно договоры, юристика, медицина, крупные деньги.</div>
+    </div>
+    <div class="line-card anim-up-d2">
+      <div class="line-label">🚫 Нельзя №5</div>
+      <div class="line-text">Строить на&nbsp;одном сервисе</div>
+      <div class="line-why">Закрылся, поменял условия, выключился VPN — и&nbsp;вы&nbsp;без руки. <strong>Всегда 2-3 альтернативы</strong>.</div>
+    </div>
+    <div class="line-card anim-up-d2">
+      <div class="line-label">🚫 Нельзя №6</div>
+      <div class="line-text">Отключать собственный мозг</div>
+      <div class="line-why">«Автопилот» = деградация. ИИ ускоряет, но&nbsp;<strong>думаете вы</strong>. Не&nbsp;наоборот.</div>
+    </div>
+    <div class="line-card ok anim-up-d3" style="grid-column: span 3;">
+      <div class="line-label">✅ Главное правило</div>
+      <div class="line-text">ИИ — это усилитель, а&nbsp;не&nbsp;замена</div>
+      <div class="line-why">Человек с&nbsp;ИИ заменит человека без&nbsp;ИИ. Но&nbsp;ИИ сам по&nbsp;себе никого не&nbsp;заменяет — он&nbsp;работает, когда его <strong>правильно направляет профессионал</strong>.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 22: АНОНС ДОРОЖНОЙ КАРТЫ ============ -->
+<div class="slide status-banner">
+  <div class="sb-badge live anim-up">ЧАСТЬ 4 · ВАША КАРТА</div>
+  <div class="sb-title anim-up-d1">Теперь — <span style="color:var(--gold);">ваш ход</span></div>
+  <div class="sb-text anim-up-d2">30 минут тихой работы. Открываем карту в&nbsp;браузере на&nbsp;ноутбуке. 6&nbsp;полей — и&nbsp;в&nbsp;конце у&nbsp;вас на&nbsp;руках <strong>персональный PDF</strong>: ваш план внедрения ИИ.</div>
+</div>
+
+<!-- ============ СЛАЙД 23: ШАБЛОН ДОРОЖНОЙ КАРТЫ ============ -->
+<div class="slide" style="background:#f8f9fa;">
+  <div class="roadmap-card anim-scale">
+    <div class="rm-title">Моя дорожная карта ИИ</div>
+    <div class="rm-sub">Куда я иду с&nbsp;ИИ в&nbsp;ближайшие 30&nbsp;дней</div>
+    <div class="rm-fields">
+      <div class="rm-field">
+        <div class="rm-field-label"><span class="rm-field-num">1</span>Мой рабочий стек</div>
+        <div class="rm-field-hint">3-5 инструментов, которые использую постоянно</div>
+      </div>
+      <div class="rm-field">
+        <div class="rm-field-label"><span class="rm-field-num">2</span>3 процесса на&nbsp;автоматизацию</div>
+        <div class="rm-field-hint">Что делаю руками каждую неделю и&nbsp;передаю ИИ</div>
+      </div>
+      <div class="rm-field">
+        <div class="rm-field-label"><span class="rm-field-num">3</span>Мой главный ассистент</div>
+        <div class="rm-field-hint">Gem/GPT под конкретную роль — что и&nbsp;как&nbsp;назову</div>
+      </div>
+      <div class="rm-field">
+        <div class="rm-field-label"><span class="rm-field-num">4</span>Моя красная линия</div>
+        <div class="rm-field-hint">Что я&nbsp;никогда не&nbsp;отдам ИИ</div>
+      </div>
+      <div class="rm-field">
+        <div class="rm-field-label"><span class="rm-field-num">5</span>Кому расскажу и&nbsp;научу</div>
+        <div class="rm-field-hint">Команда, партнёр, супруг(а), ребёнок</div>
+      </div>
+      <div class="rm-field">
+        <div class="rm-field-label"><span class="rm-field-num">6</span>Мой манифест</div>
+        <div class="rm-field-hint">Одна фраза: как&nbsp;я&nbsp;буду жить с&nbsp;ИИ</div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center; margin-top:22px; font-size:17px; color:#64748b;" class="anim-up-d2">Открываем свою карту в&nbsp;браузере — ссылка та&nbsp;же, что у&nbsp;теста. <strong style="color:#1e1b4b;">30&nbsp;минут тихой работы</strong>. Заполняем честно — как&nbsp;реально будем делать. В&nbsp;конце — кнопка «Скачать PDF».</div>
+</div>
+
+<!-- ============ СЛАЙД 24: ПАУЗА ДЛЯ ЗАПОЛНЕНИЯ ============ -->
+<div class="slide status-banner">
+  <div class="sb-badge pause anim-up">⏳ ТИХАЯ РАБОТА · 30 МИНУТ</div>
+  <div class="sb-title anim-up-d1">Пишем <span style="color:var(--gold);">карту</span></div>
+  <div class="sb-text anim-up-d2">Думайте честно. Не «как должно быть правильно», а&nbsp;<strong>как вы&nbsp;реально будете делать</strong>. Чем конкретнее — тем ценнее.</div>
+</div>
+
+<!-- ============ СЛАЙД 25: МАНИФЕСТ ВСЛУХ ============ -->
+<div class="slide">
+  <div class="slide-title anim-up" style="text-align:center;">Манифесты — <span class="accent">по&nbsp;кругу, вслух</span></div>
+  <div class="slide-subtitle anim-up-d1" style="text-align:center;">Поле №6 вашей карты. <strong>Одна фраза</strong> — как&nbsp;вы&nbsp;будете жить с&nbsp;ИИ. 30 секунд на&nbsp;человека.</div>
+  <div style="text-align:center; font-size:22px; color:var(--white-80); max-width:900px; margin:30px auto 0; line-height:1.5;" class="anim-up-d2">
+    Зачитываете так, чтобы <strong style="color:var(--gold);">самому было слышно</strong>. Это вы&nbsp;сами себе договариваетесь.
+  </div>
+  <div class="quote gold anim-up-d3" style="margin-top:32px;">После того как&nbsp;каждый зачитал — переходим к&nbsp;финалу.</div>
+</div>
+
+<!-- ============ СЛАЙД 26: ФИНАЛ — ПИК ============ -->
+<div class="slide peak-slide">
+  <div class="peak-badge anim-up">⭐ ФИНАЛ КУРСА</div>
+  <div class="peak-title anim-up-d1 pulse-glow" style="padding:8px 40px; display:inline-block; border-radius:24px;">Вы теперь<br>в&nbsp;топ-5%</div>
+  <div class="peak-body anim-up-d2">
+    Большинство профессионалов в&nbsp;стране не&nbsp;используют ИИ системно. Вы&nbsp;— <strong>используете</strong>. И&nbsp;у&nbsp;вас есть план.
+  </div>
+  <div class="peak-body anim-up-d3" style="font-size:22px; color:var(--white-80);">
+    Сертификаты и&nbsp;видеоотзывы — <strong style="color:var(--gold);">ваш финальный кадр</strong>.
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 27: 3 ВОПРОСА ДЛЯ ВИДЕО ============ -->
+<div class="slide">
+  <div class="slide-title anim-up" style="text-align:center;">Что сказать <span class="gold">в&nbsp;видеоотзыв</span></div>
+  <div class="slide-subtitle anim-up-d1" style="text-align:center;">Три простых вопроса. <strong>2-3 минуты</strong>. Без заготовок — говорите честно, как&nbsp;думаете.</div>
+  <div class="vm-questions">
+    <div class="vm-q anim-up-d2">
+      <div class="vm-num">1</div>
+      <div class="vm-text">Что у&nbsp;меня было <em>до&nbsp;курса</em>?</div>
+      <div class="vm-hint">Как работал с&nbsp;ИИ, если&nbsp;вообще работал. Одним-двумя предложениями.</div>
+    </div>
+    <div class="vm-q anim-up-d3">
+      <div class="vm-num">2</div>
+      <div class="vm-text">Что я&nbsp;<em>получил</em>?</div>
+      <div class="vm-hint">Самая полезная штука с&nbsp;курса. Один инструмент, один навык, одно открытие.</div>
+    </div>
+    <div class="vm-q anim-up-d4">
+      <div class="vm-num">3</div>
+      <div class="vm-text">Мой <em>манифест</em></div>
+      <div class="vm-hint">Прочитайте поле №6 из&nbsp;вашей карты. Живьём, своими словами.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ СЛАЙД 28: ПОСТ-КУРС ============ -->
+<div class="slide">
+  <div class="slide-title anim-up">Что у&nbsp;вас <span class="accent">дальше</span>, после&nbsp;урока</div>
+  <div class="cards-grid-3 anim-up-d1">
+    <div class="card" style="border-top:4px solid var(--accent);">
+      <div style="font-size:40px; margin-bottom:10px;">📚</div>
+      <div class="card-title" style="color:var(--accent);">Мега-шпаргалка</div>
+      <div class="card-body">
+        Весь курс в&nbsp;одном документе: 8&nbsp;шпаргалок, все презентации, стек под задачу, принципы, запрещённое. Пришлю в&nbsp;чат <strong>сегодня вечером</strong>.
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--gold);">
+      <div style="font-size:40px; margin-bottom:10px;">📜</div>
+      <div class="card-title" style="color:var(--gold);">Ваш сертификат</div>
+      <div class="card-body">
+        Именной сертификат neovida.ai. Покажете клиентам, партнёрам, в&nbsp;резюме. Заслужили — <strong>не&nbsp;стесняйтесь</strong>.
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--green);">
+      <div style="font-size:40px; margin-bottom:10px;">📹</div>
+      <div class="card-title" style="color:var(--green);">Записи уроков</div>
+      <div class="card-body">
+        Записи всех 8&nbsp;занятий + записи онлайн-курса на&nbsp;те&nbsp;же темы. Можно вернуться к&nbsp;любой теме в&nbsp;любой момент.
+      </div>
+    </div>
+  </div>
+  <div class="quote anim-up-d2" style="margin-top:24px;">Наш чат работает ещё <strong>две недели</strong>. Задавайте вопросы, делитесь результатами — я&nbsp;на&nbsp;связи. Потом чат архивируется.</div>
+</div>
+
+<!-- ============ СЛАЙД 29: СПАСИБО ============ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;" class="anim-up">neovida.ai · Экзоскелет для&nbsp;профессионала</div>
+  <div class="title-big anim-up-d1">Спасибо</div>
+  <div class="title-sub anim-up-d2">Было мощно. Пусть&nbsp;ИИ работает на&nbsp;вас — <strong style="color:var(--gold);">каждый день</strong>.</div>
+  <div class="title-meta anim-up-d3">До связи в&nbsp;чате · Альберт Валеев · 2026</div>
+</div>
+
+</div><!-- /deck -->
+
+<script>
+(function() {
+  var slides = document.querySelectorAll('.slide');
+  var total = slides.length;
+  var current = 0;
+  var counter = document.getElementById('slideCounter');
+  var progress = document.getElementById('progressBar');
+  var fsBtn = document.getElementById('fsBtn');
+
+  function show(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[current].classList.remove('active');
+    slides[current].classList.add('prev');
+    current = idx;
+    slides.forEach(function(s, i) {
+      s.classList.remove('active', 'prev');
+      if (i < current) s.classList.add('prev');
+    });
+    slides[current].classList.add('active');
+    counter.textContent = (current + 1) + ' / ' + total;
+    progress.style.width = ((current + 1) / total * 100) + '%';
+    slides[current].scrollTop = 0;
+  }
+
+  function next() { show(current + 1); }
+  function prev() { show(current - 1); }
+
+  slides[0].classList.add('active');
+  counter.textContent = '1 / ' + total;
+  progress.style.width = (1 / total * 100) + '%';
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+    if (e.key === 'Home') { e.preventDefault(); show(0); }
+    if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+  });
+
+  var touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].screenX - touchStartX;
+    var dy = e.changedTouches[0].screenY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) { if (dx < 0) next(); else prev(); }
+  }, { passive: true });
+
+  fsBtn.addEventListener('click', function() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){});
+    else document.exitFullscreen();
+  });
+})();
+</script>
+</body>
+</html>
