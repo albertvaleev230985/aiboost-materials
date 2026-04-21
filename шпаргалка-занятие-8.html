@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Boost — Шпаргалка. Занятие 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f1e;
+    --bg-2: #1a1a2e;
+    --card: rgba(255,255,255,0.06);
+    --card-hover: rgba(255,255,255,0.1);
+    --accent: #E07461;
+    --accent-dark: #B84F3C;
+    --gold: #f0c040;
+    --white: #ffffff;
+    --white-90: rgba(255,255,255,0.9);
+    --white-70: rgba(255,255,255,0.7);
+    --white-50: rgba(255,255,255,0.5);
+    --white-30: rgba(255,255,255,0.3);
+    --white-15: rgba(255,255,255,0.15);
+    --white-08: rgba(255,255,255,0.08);
+    --green: #5ec47a;
+    --red: #e05555;
+    --violet: #A78BFA;
+    --teal: #14b8a6;
+    --blue: #4285f4;
+    --orange: #e8944a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--white-90); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+  .header {
+    background: linear-gradient(135deg, var(--accent), var(--gold));
+    color: var(--bg); padding: 36px 24px; text-align: center;
+  }
+  .header-logo { font-size: 12px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; opacity: 0.85; margin-bottom: 10px; }
+  .header h1 { font-size: 30px; font-weight: 900; margin-bottom: 6px; line-height: 1.1; letter-spacing: -0.5px; }
+  .header p { font-size: 15px; opacity: 0.85; font-weight: 500; }
+
+  .container { max-width: 760px; margin: 0 auto; padding: 0 20px 60px; }
+
+  .intro {
+    background: var(--card); border: 1px solid var(--white-08);
+    border-radius: 16px; padding: 20px 24px; margin: 24px 0;
+    font-size: 16px; line-height: 1.6; color: var(--white-90);
+  }
+  .intro strong { color: var(--gold); }
+  .intro em { color: var(--accent); font-style: normal; font-weight: 600; }
+
+  .section { margin: 36px 0; }
+  .section-title {
+    font-size: 20px; font-weight: 800; color: var(--white);
+    margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+  }
+  .section-title .num {
+    background: linear-gradient(135deg, var(--accent), var(--gold));
+    color: var(--bg); width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 900; flex-shrink: 0;
+  }
+  .section-subtitle { font-size: 14px; color: var(--white-50); margin-bottom: 16px; margin-left: 40px; }
+
+  /* === Access cards (QR + ссылка на каждого) === */
+  .access-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .access-card {
+    background: var(--card); border: 1px solid var(--white-08);
+    border-radius: 14px; padding: 16px; display: flex; gap: 14px; align-items: center;
+    text-decoration: none; transition: background 0.2s, transform 0.15s;
+  }
+  .access-card:hover { background: var(--card-hover); transform: translateY(-2px); }
+  .access-card.host { grid-column: span 2; background: linear-gradient(145deg, rgba(240,192,64,0.14), rgba(224,116,97,0.04)); border: 1px solid rgba(240,192,64,0.35); }
+  .access-qr {
+    width: 92px; height: 92px; background: #fff; border-radius: 10px;
+    flex-shrink: 0; padding: 4px;
+  }
+  .access-qr img { width: 100%; height: 100%; display: block; }
+  .access-info { flex: 1; min-width: 0; }
+  .access-name { font-size: 17px; font-weight: 800; color: var(--white); margin-bottom: 2px; }
+  .access-sphere { font-size: 12px; color: var(--gold); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .access-link { font-size: 11px; color: var(--white-50); font-family: monospace; word-break: break-all; line-height: 1.3; }
+
+  /* === 10 парадигм === */
+  .paradigms { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .paradigm {
+    background: linear-gradient(145deg, rgba(224,116,97,0.09), rgba(240,192,64,0.02));
+    border: 1px solid rgba(224,116,97,0.25);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .p-label { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .p-name { font-size: 15px; font-weight: 800; color: var(--white); margin-bottom: 6px; }
+  .p-flip { font-size: 13px; color: var(--white-70); line-height: 1.4; }
+  .p-flip strong { color: var(--gold); }
+
+  /* === Галактика инструментов === */
+  .galaxy { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  .zone { background: var(--card); border: 1px solid var(--white-08); border-radius: 12px; padding: 14px 16px; }
+  .zone.usa { border-color: rgba(66,133,244,0.3); }
+  .zone.china { border-color: rgba(224,85,85,0.3); }
+  .zone.russia { border-color: rgba(94,196,122,0.35); }
+  .zone.special { border-color: rgba(167,139,250,0.3); }
+  .zone-label { font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .zone.usa .zone-label { color: var(--blue); }
+  .zone.china .zone-label { color: var(--red); }
+  .zone.russia .zone-label { color: var(--green); }
+  .zone.special .zone-label { color: var(--violet); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: 4px 10px; border-radius: 100px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    font-size: 12px; font-weight: 600; color: var(--white-70);
+  }
+
+  /* === Красные линии === */
+  .lines { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .line {
+    background: linear-gradient(145deg, rgba(224,85,85,0.1), rgba(224,85,85,0.02));
+    border: 1px solid rgba(224,85,85,0.3); border-radius: 12px; padding: 14px 16px;
+  }
+  .line.ok { background: linear-gradient(145deg, rgba(94,196,122,0.1), rgba(94,196,122,0.02)); border-color: rgba(94,196,122,0.35); grid-column: span 2; }
+  .l-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; color: var(--red); }
+  .line.ok .l-label { color: var(--green); }
+  .l-text { font-size: 15px; color: var(--white); font-weight: 700; margin-bottom: 4px; }
+  .l-why { font-size: 12px; color: var(--white-50); line-height: 1.45; }
+  .l-why strong { color: var(--white-90); }
+
+  /* === Links to previous lessons === */
+  .lessons-list {
+    background: var(--card); border: 1px solid var(--white-08);
+    border-radius: 14px; padding: 4px 0; margin-top: 14px;
+  }
+  .lesson-link {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 18px; text-decoration: none; color: var(--white-90);
+    border-bottom: 1px solid var(--white-08); transition: background 0.15s;
+  }
+  .lesson-link:last-child { border-bottom: none; }
+  .lesson-link:hover { background: var(--card-hover); }
+  .lesson-num {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--gold));
+    color: var(--bg); display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; flex-shrink: 0;
+  }
+  .lesson-text { flex: 1; }
+  .lesson-title { font-size: 15px; font-weight: 700; color: var(--white); }
+  .lesson-sub { font-size: 12px; color: var(--white-50); margin-top: 1px; }
+  .lesson-arrow { color: var(--white-30); font-size: 18px; }
+
+  /* === Footer === */
+  .footer {
+    margin-top: 48px; padding: 24px; text-align: center;
+    border-top: 1px solid var(--white-08); font-size: 13px; color: var(--white-50);
+  }
+  .footer strong { color: var(--gold); }
+
+  @media (max-width: 640px) {
+    .access-grid, .paradigms, .galaxy, .lines { grid-template-columns: 1fr; }
+    .access-card.host, .line.ok { grid-column: auto; }
+    .header h1 { font-size: 24px; }
+    .section-title { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">neovida.ai · AI Boost</div>
+  <h1>Занятие 8 · Стратегия</h1>
+  <p>Финал курса «ИИ. Новая реальность» — твоя страница доступа и&nbsp;краткий справочник курса</p>
+</div>
+
+<div class="container">
+
+  <div class="intro">
+    На&nbsp;этой странице — <strong>всё, что нужно сегодня на&nbsp;уроке</strong>: твоя персональная ссылка на&nbsp;<em>живой тест</em> и&nbsp;на&nbsp;<em>дорожную карту</em>, плюс справочник по&nbsp;всему курсу — вернись сюда в&nbsp;любой момент, когда захочешь освежить.
+  </div>
+
+  <!-- ===== 1. ДОСТУПЫ ===== -->
+  <div class="section">
+    <div class="section-title"><span class="num">1</span>Твой доступ</div>
+    <div class="section-subtitle">Найди себя, сканируй QR камерой телефона или жми на&nbsp;карточку</div>
+    <div class="access-grid" id="accessGrid"></div>
+  </div>
+
+  <!-- ===== 2. ЧТО МЫ ПРОШЛИ ===== -->
+  <div class="section">
+    <div class="section-title"><span class="num">2</span>10 парадигм курса</div>
+    <div class="section-subtitle">Инструменты меняются — эти подходы остаются</div>
+    <div class="paradigms">
+      <div class="paradigm">
+        <div class="p-label">01 · Урок 2</div>
+        <div class="p-name">Формула РКЗФО</div>
+        <div class="p-flip">От «что-то спросить» → к&nbsp;<strong>ТЗ для&nbsp;ИИ</strong> как сотруднику</div>
+      </div>
+      <div class="paradigm">
+        <div class="p-label">02 · Урок 2</div>
+        <div class="p-name">Контекстное окно</div>
+        <div class="p-flip">4 правила памяти: важное в&nbsp;начало/конец, <strong>новый чат</strong>, резюме</div>
+      </div>
+      <div class="paradigm">
+        <div class="p-label">03 · Урок 2</div>
+        <div class="p-name">Few-shot + CoT</div>
+        <div class="p-flip">Примеры и&nbsp;«рассуждай пошагово» — <strong>усилители</strong> ответа</div>
+      </div>
+      <div class="paradigm">
+        <div class="p-label">04 · Урок 2</div>
+        <div class="p-name">Мета-промптинг</div>
+        <div class="p-flip">«Наговори голосом» → ИИ <strong>сам делает промпт</strong> из&nbsp;сумбура</div>
+      </div>
+      <div class="paradigm">
+        <div class="p-label">05 · Урок 3</div>
+        <div class="p-name">Ассистентный подход</div>
+        <div class="p-flip">От разовых промптов → к&nbsp;<strong>персональному ассистенту</strong> (Gems)</div>
+      </div>
+      <div class="paradigm">
+        <div class="p-label">06 · Урок 3</div>
+        <div class="p-name">Базы знаний</div>
+        <div class="p-flip">NotebookLM — <strong>без галлюцинаций</strong>, цитирует источник</div>
+      </div>
+      <div class="paradigm">
+        <div class="p-label">07 · Уроки 4-5</div>
+        <div class="p-name">Исследование + форсайт</div>
+        <div class="p-flip">Deep Research — <strong>глубокий анализ</strong> на&nbsp;десятках источников</div>
+      </div>
+      <div class="paradigm">
+        <div class="p-label">08 · Урок 6</div>
+        <div class="p-name">Визуал-стек</div>
+        <div class="p-flip">3 подхода к&nbsp;презентациям + <strong>обратный промптинг</strong> из&nbsp;скриншота</div>
+      </div>
+      <div class="paradigm">
+        <div class="p-label">09 · Урок 6</div>
+        <div class="p-name">Веб-продакшн</div>
+        <div class="p-flip">Лендинг за&nbsp;5 минут <strong>по&nbsp;скриншоту-референсу</strong> (Lovable)</div>
+      </div>
+      <div class="paradigm">
+        <div class="p-label">10 · Урок 7</div>
+        <div class="p-name">Агентный подход</div>
+        <div class="p-flip">От ассистента («отвечает») → к&nbsp;агенту (<strong>«делает руками»</strong>)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 3. ГАЛАКТИКА ИНСТРУМЕНТОВ ===== -->
+  <div class="section">
+    <div class="section-title"><span class="num">3</span>Галактика инструментов</div>
+    <div class="section-subtitle">30+ сервисов, которые ты лично трогал руками за&nbsp;курс</div>
+    <div class="galaxy">
+      <div class="zone usa">
+        <div class="zone-label">🇺🇸 США — база</div>
+        <div class="chips">
+          <span class="chip">ChatGPT</span>
+          <span class="chip">Custom Instructions</span>
+          <span class="chip">GPTs</span>
+          <span class="chip">DALL-E</span>
+          <span class="chip">Gemini</span>
+          <span class="chip">Gems</span>
+          <span class="chip">NotebookLM</span>
+          <span class="chip">Audio Overview</span>
+          <span class="chip">Slide Deck</span>
+          <span class="chip">Canvas</span>
+          <span class="chip">Deep Research</span>
+          <span class="chip">Google Labs</span>
+          <span class="chip">Flow</span>
+          <span class="chip">Claude</span>
+          <span class="chip">Perplexity</span>
+          <span class="chip">Comet</span>
+        </div>
+      </div>
+      <div class="zone china">
+        <div class="zone-label">🇨🇳 Китай — быстро растёт</div>
+        <div class="chips">
+          <span class="chip">Qwen</span>
+          <span class="chip">Kimi Slides</span>
+          <span class="chip">Kimi Swarm</span>
+          <span class="chip">ChatGLM / z.ai</span>
+          <span class="chip">Manus</span>
+          <span class="chip">Kling</span>
+          <span class="chip">Seedance</span>
+          <span class="chip">DeepSeek</span>
+        </div>
+      </div>
+      <div class="zone russia">
+        <div class="zone-label">🇷🇺 Россия — без VPN</div>
+        <div class="chips">
+          <span class="chip">Kandinsky</span>
+          <span class="chip">Шедеврум</span>
+          <span class="chip">GigaChat</span>
+          <span class="chip">Алиса</span>
+          <span class="chip">Suvvy</span>
+        </div>
+      </div>
+      <div class="zone special">
+        <div class="zone-label">🧰 Специализированные</div>
+        <div class="chips">
+          <span class="chip">Ideogram</span>
+          <span class="chip">Recraft</span>
+          <span class="chip">Leonardo</span>
+          <span class="chip">Gamma</span>
+          <span class="chip">v0.dev</span>
+          <span class="chip">Lovable</span>
+          <span class="chip">HeyGen</span>
+          <span class="chip">D-ID</span>
+          <span class="chip">n8n</span>
+          <span class="chip">Make</span>
+          <span class="chip">Zapier</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 4. КРАСНЫЕ ЛИНИИ ===== -->
+  <div class="section">
+    <div class="section-title"><span class="num">4</span>Красные линии</div>
+    <div class="section-subtitle">Что НЕ делегируем ИИ — правила, чтобы он не сработал против нас</div>
+    <div class="lines">
+      <div class="line">
+        <div class="l-label">🚫 №1</div>
+        <div class="l-text">Автоматизировать хаос</div>
+        <div class="l-why">Если в&nbsp;бизнесе бардак — ИИ его <strong>усилит</strong>. Сначала процесс, потом автоматизация.</div>
+      </div>
+      <div class="line">
+        <div class="l-label">🚫 №2</div>
+        <div class="l-text">Доверять цифрам без проверки</div>
+        <div class="l-why">Галлюцинации — реальность. Даты, номера ГОСТов, законы, цены — <strong>всегда перепроверяй</strong>.</div>
+      </div>
+      <div class="line">
+        <div class="l-label">🚫 №3</div>
+        <div class="l-text">Сливать чужие данные</div>
+        <div class="l-why">Персональные данные клиентов, паспорта, отчётность — <strong>в&nbsp;публичный ИИ не&nbsp;грузим</strong>.</div>
+      </div>
+      <div class="line">
+        <div class="l-label">🚫 №4</div>
+        <div class="l-text">Отдавать финальное решение</div>
+        <div class="l-why">ИИ готовит черновик — <strong>решаешь ты</strong>. Особенно договоры, юристика, медицина, крупные деньги.</div>
+      </div>
+      <div class="line">
+        <div class="l-label">🚫 №5</div>
+        <div class="l-text">Строить на&nbsp;одном сервисе</div>
+        <div class="l-why">Закрылся, поменял условия, VPN упал — и&nbsp;ты&nbsp;без руки. <strong>Всегда 2-3 альтернативы</strong>.</div>
+      </div>
+      <div class="line">
+        <div class="l-label">🚫 №6</div>
+        <div class="l-text">Отключать свой мозг</div>
+        <div class="l-why">«Автопилот» = деградация. ИИ ускоряет — <strong>думаешь ты</strong>. Не&nbsp;наоборот.</div>
+      </div>
+      <div class="line ok">
+        <div class="l-label">✅ Главное правило</div>
+        <div class="l-text">ИИ — усилитель, не&nbsp;замена</div>
+        <div class="l-why">Человек с&nbsp;ИИ заменит человека без&nbsp;ИИ. Но&nbsp;ИИ сам по&nbsp;себе никого не&nbsp;заменяет — он&nbsp;работает, когда его <strong>правильно направляет профессионал</strong>.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 5. ПРЕДЫДУЩИЕ УРОКИ ===== -->
+  <div class="section">
+    <div class="section-title"><span class="num">5</span>Все шпаргалки курса</div>
+    <div class="section-subtitle">Вернись к&nbsp;любому уроку в&nbsp;любой момент</div>
+    <div class="lessons-list">
+      <a class="lesson-link" href="https://materials.neovida.ai/занятие-2-шпаргалка-участника.html" target="_blank">
+        <div class="lesson-num">1-2</div>
+        <div class="lesson-text">
+          <div class="lesson-title">Погружение + Промпт-инженерия</div>
+          <div class="lesson-sub">VPN, ChatGPT, Qwen, Gemini · формула РКЗФО, техники, контекстное окно</div>
+        </div>
+        <div class="lesson-arrow">→</div>
+      </a>
+      <a class="lesson-link" href="https://materials.neovida.ai/шпаргалка-занятие-3.html" target="_blank">
+        <div class="lesson-num">3</div>
+        <div class="lesson-text">
+          <div class="lesson-title">Ассистентный подход</div>
+          <div class="lesson-sub">Gems · NotebookLM · Audio Overview · связка Gem+NotebookLM</div>
+        </div>
+        <div class="lesson-arrow">→</div>
+      </a>
+      <a class="lesson-link" href="https://materials.neovida.ai/шпаргалка-занятие-4.html" target="_blank">
+        <div class="lesson-num">4</div>
+        <div class="lesson-text">
+          <div class="lesson-title">Google Workspace</div>
+          <div class="lesson-sub">Canvas · Deep Research · Google Labs · NotebookLM-подкасты</div>
+        </div>
+        <div class="lesson-arrow">→</div>
+      </a>
+      <a class="lesson-link" href="https://materials.neovida.ai/шпаргалка-занятие-5.html" target="_blank">
+        <div class="lesson-num">5</div>
+        <div class="lesson-text">
+          <div class="lesson-title">Данные + форсайтинг</div>
+          <div class="lesson-sub">Портрет клиента · разведка конкурентов · рентген расходов · прогноз на&nbsp;12&nbsp;мес</div>
+        </div>
+        <div class="lesson-arrow">→</div>
+      </a>
+      <a class="lesson-link" href="https://materials.neovida.ai/шпаргалка-занятие-6.html" target="_blank">
+        <div class="lesson-num">6</div>
+        <div class="lesson-text">
+          <div class="lesson-title">Визуал — нейрокреатор</div>
+          <div class="lesson-sub">Презентации (Kimi/NotebookLM/Gamma) · картинки · лендинги · видео + аватары</div>
+        </div>
+        <div class="lesson-arrow">→</div>
+      </a>
+      <a class="lesson-link" href="https://materials.neovida.ai/шпаргалка-занятие-7.html" target="_blank">
+        <div class="lesson-num">7</div>
+        <div class="lesson-text">
+          <div class="lesson-title">Агентный подход</div>
+          <div class="lesson-sub">Suvvy · Manus · Perplexity Comet · Lovable · 7 этапов эволюции агентов</div>
+        </div>
+        <div class="lesson-arrow">→</div>
+      </a>
+      <a class="lesson-link" href="https://materials.neovida.ai/занятие-8-презентация.html" target="_blank">
+        <div class="lesson-num">8</div>
+        <div class="lesson-text">
+          <div class="lesson-title">Стратегия (презентация этого урока)</div>
+          <div class="lesson-sub">Ретроспектива · красные линии · дорожная карта · финал</div>
+        </div>
+        <div class="lesson-arrow">→</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="footer">
+    <strong>Чат курса</strong> работает ещё <strong>2 недели</strong> — задавай вопросы, делись результатами.
+    <br><br>
+    neovida.ai · экзоскелет для&nbsp;профессионала · 2026
+  </div>
+
+</div>
+
+<script type="module">
+// Динамически вставляю доступы из participants.js веб-приложения — единый источник правды
+import { PARTICIPANTS } from 'https://materials.neovida.ai/lesson-8-app/participants.js';
+
+const BASE = 'https://materials.neovida.ai/lesson-8-app';
+const grid = document.getElementById('accessGrid');
+
+PARTICIPANTS.forEach(p => {
+  const link = `${BASE}/?user=${p.slug}`;
+  grid.insertAdjacentHTML('beforeend', `
+    <a class="access-card" href="${link}">
+      <div class="access-qr"><img src="${BASE}/qr/${p.slug}.png" alt="QR ${p.name}"></div>
+      <div class="access-info">
+        <div class="access-name">${p.name}</div>
+        <div class="access-sphere">${p.sphere}</div>
+        <div class="access-link">?user=${p.slug}</div>
+      </div>
+    </a>
+  `);
+});
+
+// Host-карточка для Альберта — отдельно, на всю ширину
+grid.insertAdjacentHTML('beforeend', `
+  <a class="access-card host" href="${BASE}/host.html?key=albert2026">
+    <div class="access-qr"><img src="${BASE}/qr/_host.png" alt="QR host"></div>
+    <div class="access-info">
+      <div class="access-name">🎛 Альберт · Дашборд ведущего</div>
+      <div class="access-sphere" style="color:var(--gold);">Host · на ТВ</div>
+      <div class="access-link">host.html?key=albert2026</div>
+    </div>
+  </a>
+`);
+</script>
+
+</body>
+</html>
