@@ -4,8 +4,8 @@ export const PARTICIPANTS = [
   { slug: 'marat',    name: 'Марат',     fullName: 'Шайдулин Марат',     sphere: 'Крафтовый бар «Шемрак»'      },
   { slug: 'aigul',    name: 'Айгуль',    fullName: 'Рахматуллина Айгуль', sphere: 'Управляющий детским центром' },
   { slug: 'ilgiz',    name: 'Ильгиз',    fullName: 'Рахматуллин Ильгиз',  sphere: 'Газовое оборудование'        },
-  { slug: 'mishag',   name: 'Михаил Г.', fullName: null,                 sphere: 'Инженер · телеком'           },
-  { slug: 'misha',    name: 'Михаил',    fullName: null,                 sphere: 'Строительство линий связи'   },
+  { slug: 'mishag',   name: 'Михаил Г.', fullName: 'Гончар Михаил',       sphere: 'Инженер · телеком'           },
+  { slug: 'misha',    name: 'Михаил',    fullName: 'Желудков Михаил',     sphere: 'Строительство линий связи'   },
   { slug: 'iskander', name: 'Искандер',  fullName: 'Бибарцев Искандер',   sphere: 'Запчасти для сельхозтехники' },
 ];
 
