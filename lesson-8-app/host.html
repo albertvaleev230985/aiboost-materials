@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Boost · дашборд ведущего</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab-btn { padding: 10px 18px; background: var(--white-10); border: 1px solid var(--white-20); border-radius: 10px; color: var(--white-60); font-weight: 700; font-size: 14px; cursor: pointer; }
+  .tab-btn.active { background: linear-gradient(135deg, var(--accent), var(--gold)); color: var(--bg); border-color: transparent; }
+  .tab-body { display: none; }
+  .tab-body.active { display: block; }
+  .manifest-card { padding: 18px 22px; }
+  .manifest-text { font-size: 18px; color: var(--white); line-height: 1.4; margin-top: 6px; font-style: italic; border-left: 3px solid var(--gold); padding-left: 14px; }
+</style>
+</head>
+<body class="app">
+
+<header class="app-header" id="app-header">
+  <div class="brand"><span class="brand-dot"></span>neovida · AI Boost · ведущий</div>
+  <div class="user-chip"><div class="user-ava" style="background: linear-gradient(135deg, var(--gold), var(--accent));">А</div>Альберт · host</div>
+</header>
+
+<main class="wrap wide">
+  <div id="content"></div>
+</main>
+
+<div class="modal-backdrop" id="modal">
+  <div class="modal" style="position:relative;">
+    <button class="close" id="modal-close">×</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script type="module">
+import { PARTICIPANTS, HOST_KEY } from './participants.js';
+import { QUESTIONS } from './questions.js';
+import { loadLocal } from './app.js';
+import { subscribeAll, resetAll } from './firebase.js';
+
+// Кеш состояний из Firebase. Обновляется через подписку.
+// Структура: { ayrat: { test: {...}, roadmap: {...} }, marat: {...}, ... }
+let remoteStates = {};
+let fbConnected = false;
+
+function fbStatusText() {
+  if (!fbConnected) return '📡 Подключение к Firebase…';
+  const keys = Object.keys(remoteStates).length;
+  return keys > 0 ? `🟢 Firebase онлайн · данные от ${keys} уч.` : '🟢 Firebase онлайн · ждём участников';
+}
+
+// защита по ключу
+const params = new URLSearchParams(location.search);
+const key = params.get('key');
+if (key !== HOST_KEY) {
+  document.getElementById('content').innerHTML = `
+    <div class="card outline-accent"><div class="card-tag accent">Доступ</div>
+      <div class="card-title">Нужен ключ ведущего</div>
+      <div class="card-body">Добавь в&nbsp;URL параметр <code style="background:var(--white-10); padding:2px 8px; border-radius:4px;">?key=...</code> — ключ хранится в&nbsp;participants.js.</div>
+    </div>
+  `;
+  throw new Error('no key');
+}
+
+const content = document.getElementById('content');
+let activeTab = 'test';
+
+function loadAllStates() {
+  const states = {};
+  PARTICIPANTS.forEach(p => {
+    const remote = remoteStates[p.slug] || {};
+    // Firebase приоритетен. Если его нет — используем localStorage как фолбэк
+    // (актуально только для локального демо-теста на этом ноутбуке).
+    states[p.slug] = {
+      test: remote.test || loadLocal(p, 'test'),
+      roadmap: remote.roadmap || loadLocal(p, 'roadmap'),
+    };
+  });
+  return states;
+}
+
+function render() {
+  const states = loadAllStates();
+
+  content.innerHTML = `
+    <div class="h1">Дашборд занятия&nbsp;8</div>
+    <div class="lead">Видно, кто и&nbsp;где: тест, карта, манифесты. Обновляется автоматически.</div>
+
+    <div class="tabs">
+      <button class="tab-btn ${activeTab === 'test' ? 'active' : ''}" data-tab="test">🎯 Тест</button>
+      <button class="tab-btn ${activeTab === 'heatmap' ? 'active' : ''}" data-tab="heatmap">🔥 Heatmap 15×7</button>
+      <button class="tab-btn ${activeTab === 'roadmap' ? 'active' : ''}" data-tab="roadmap">🗺 Карты</button>
+      <button class="tab-btn ${activeTab === 'manifest' ? 'active' : ''}" data-tab="manifest">🎬 Манифесты</button>
+    </div>
+
+    <div class="tab-body ${activeTab === 'test' ? 'active' : ''}" id="tab-test"></div>
+    <div class="tab-body ${activeTab === 'heatmap' ? 'active' : ''}" id="tab-heatmap"></div>
+    <div class="tab-body ${activeTab === 'roadmap' ? 'active' : ''}" id="tab-roadmap"></div>
+    <div class="tab-body ${activeTab === 'manifest' ? 'active' : ''}" id="tab-manifest"></div>
+
+    <div class="mt-4 ta-c">
+      <span id="fb-status" class="muted small">${fbStatusText()}</span>
+      <button id="reset-btn" class="btn btn-ghost" style="padding:8px 16px; font-size:13px; margin-left:16px;">🧹 Очистить всё перед уроком</button>
+    </div>
+  `;
+
+  document.getElementById('reset-btn').addEventListener('click', async () => {
+    if (!confirm('Удалить ВСЕ данные из Firebase (все тесты и карты всех участников)? Это нельзя отменить.')) return;
+    try {
+      await resetAll();
+      // Заодно чистим локальный кеш этого ноутбука, чтобы fallback не показывал старые демо-данные
+      Object.keys(localStorage).forEach(k => { if (k.startsWith('aiboost8:')) localStorage.removeItem(k); });
+      alert('Очищено. Дашборд обновится автоматически.');
+    } catch (e) {
+      alert('Ошибка: ' + e.message);
+    }
+  });
+
+  // TEST
+  document.getElementById('tab-test').innerHTML = `
+    <div class="host-grid">
+      ${PARTICIPANTS.map(p => {
+        const t = states[p.slug].test;
+        if (t?.done) return `
+          <div class="host-cell done">
+            <div class="name">${p.name}</div>
+            <div class="status">готово</div>
+            <div class="score">${t.score}</div>
+          </div>`;
+        if (t?.answeredCount > 0) return `
+          <div class="host-cell progress">
+            <div class="name">${p.name}</div>
+            <div class="status">идёт</div>
+            <div class="score" style="font-size:22px;">${t.answeredCount}/${QUESTIONS.length}</div>
+          </div>`;
+        return `
+          <div class="host-cell">
+            <div class="name">${p.name}</div>
+            <div class="status">не начал</div>
+            <div class="score" style="font-size:22px;">—</div>
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+
+  // HEATMAP
+  const hm = document.getElementById('tab-heatmap');
+  const allDone = PARTICIPANTS.every(p => states[p.slug].test?.done);
+  if (!allDone) {
+    hm.innerHTML = `<div class="card"><div class="muted">Heatmap раскрывается, когда все&nbsp;7 участников завершат тест. Пока в&nbsp;процессе — следи на&nbsp;вкладке «Тест».</div></div>`;
+  } else {
+    hm.innerHTML = `
+      <div class="muted small mt-2">Зелёное — правильный ответ. Красное — ошибка. Клик на&nbsp;номер вопроса — разбор со&nbsp;всеми ответами группы.</div>
+      <div class="heatmap">
+        <table>
+          <tr>
+            <th class="name">Участник</th>
+            ${QUESTIONS.map((_, i) => `<th class="qcol" data-q="${i}">${i + 1}</th>`).join('')}
+            <th>Σ</th>
+          </tr>
+          ${PARTICIPANTS.map(p => {
+            const t = states[p.slug].test;
+            const ans = t?.answers || [];
+            return `<tr>
+              <td class="name" style="text-align:left; padding-left:14px; color:var(--white); font-weight:600;">${p.name}</td>
+              ${QUESTIONS.map((q, i) => {
+                if (ans[i] == null) return `<td class="pending">—</td>`;
+                return ans[i] === q.correct ? `<td class="ok">✓</td>` : `<td class="bad">✗</td>`;
+              }).join('')}
+              <td style="font-weight:800; color:var(--gold);">${t?.score || 0}</td>
+            </tr>`;
+          }).join('')}
+        </table>
+      </div>
+    `;
+    hm.querySelectorAll('.qcol').forEach(el => {
+      el.addEventListener('click', () => showQuestionDetail(parseInt(el.dataset.q), states));
+    });
+  }
+
+  // ROADMAP
+  document.getElementById('tab-roadmap').innerHTML = `
+    <div class="host-grid">
+      ${PARTICIPANTS.map(p => {
+        const r = states[p.slug].roadmap;
+        const filled = r?.filledCount || 0;
+        const total = r?.total || 6;
+        const cls = r?.done ? 'done' : filled > 0 ? 'progress' : '';
+        return `
+          <div class="host-cell ${cls}">
+            <div class="name">${p.name}</div>
+            <div class="status">${r?.done ? '✅ готово' : filled > 0 ? 'пишет' : '—'}</div>
+            <div class="score" style="font-size:28px;">${filled}/${total}</div>
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+
+  // MANIFEST (для финала — вести видеозапись)
+  document.getElementById('tab-manifest').innerHTML = PARTICIPANTS.map(p => {
+    const r = states[p.slug].roadmap;
+    const m = r?.manifest?.trim();
+    return `
+      <div class="card ${m ? 'outline-gold' : ''} manifest-card">
+        <div class="user-chip" style="margin-bottom:8px;"><div class="user-ava">${p.name[0]}</div><strong>${p.name}</strong> <span class="muted small">· ${p.sphere}</span></div>
+        ${m ? `<div class="manifest-text">${m}</div>` : `<div class="muted small">Манифест пока не написан.</div>`}
+      </div>
+    `;
+  }).join('');
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => { activeTab = btn.dataset.tab; render(); });
+  });
+}
+
+function showQuestionDetail(qIdx, states) {
+  const q = QUESTIONS[qIdx];
+  const counts = [0, 0, 0, 0];
+  const byWho = {};
+  PARTICIPANTS.forEach(p => {
+    const ans = states[p.slug].test?.answers?.[qIdx];
+    if (ans != null) {
+      counts[ans]++;
+      byWho[ans] = byWho[ans] || [];
+      byWho[ans].push(p.name);
+    }
+  });
+  const total = counts.reduce((a, b) => a + b, 0);
+  const maxBar = Math.max(1, ...counts);
+
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `
+    <div class="card-tag accent">Вопрос ${qIdx + 1} · ${q.theme}</div>
+    <h3>${q.text}</h3>
+    ${q.options.map((opt, i) => {
+      const isCorrect = i === q.correct;
+      const who = byWho[i] || [];
+      const pct = Math.round((counts[i] / Math.max(1, total)) * 100);
+      return `
+        <div style="padding:10px 14px; background:${isCorrect ? 'rgba(94,196,122,0.12)' : 'rgba(255,255,255,0.04)'}; border:1px solid ${isCorrect ? 'rgba(94,196,122,0.45)' : 'var(--white-20)'}; border-radius:12px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <div style="font-size:15px; line-height:1.4; color:var(--white); flex:1;">
+              <span style="color:${isCorrect ? 'var(--green)' : 'var(--white-60)'}; font-weight:800;">${String.fromCharCode(65 + i)}${isCorrect ? ' ✅' : ''}</span> ${opt}
+            </div>
+            <div style="font-weight:800; color:var(--gold);">${counts[i]}/${total}</div>
+          </div>
+          ${who.length ? `<div class="muted small" style="margin-top:6px;">${who.join(', ')}</div>` : ''}
+        </div>
+      `;
+    }).join('')}
+    <div class="card outline-gold" style="margin-top:14px;">
+      <div class="card-tag gold">Для разбора</div>
+      <div class="card-body">${q.explanation}</div>
+      <div class="muted small mt-2"><strong>Подсказка ведущему:</strong> ${q.hostNote}</div>
+    </div>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+document.getElementById('modal-close').addEventListener('click', () => document.getElementById('modal').classList.remove('open'));
+document.getElementById('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') e.currentTarget.classList.remove('open'); });
+
+render();
+
+// Ререндер только если данные реально изменились — сохраняем открытую модалку, фокус, активную вкладку.
+let lastSnapshot = JSON.stringify(loadAllStates());
+function maybeRender() {
+  const current = JSON.stringify(loadAllStates());
+  if (current !== lastSnapshot) {
+    lastSnapshot = current;
+    render();
+  }
+}
+
+// Firebase realtime: push-based обновления. Когда участник пишет — сразу прилетает.
+subscribeAll((data) => {
+  remoteStates = data;
+  fbConnected = true;
+  maybeRender();
+});
+
+// Фолбэк: storage-event для локальных вкладок того же origin (если Firebase лёг)
+window.addEventListener('storage', (e) => {
+  if (e.key && e.key.startsWith('aiboost8:')) maybeRender();
+});
+</script>
+
+</body>
+</html>

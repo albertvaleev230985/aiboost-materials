@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Boost · живой тест</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="app">
+
+<header class="app-header" id="app-header"></header>
+
+<main class="wrap">
+  <div id="content"></div>
+</main>
+
+<script type="module">
+import { parseUserFromURL } from './participants.js';
+import { renderHeader, loadLocal, syncState, notFoundUser } from './app.js';
+import { QUESTIONS, scoreFor, strengthReport } from './questions.js';
+
+const user = parseUserFromURL();
+renderHeader(user);
+if (!user) { notFoundUser(); throw new Error('no user'); }
+
+const content = document.getElementById('content');
+const saved = loadLocal(user, 'test') || {};
+let answers = saved.answers ? [...saved.answers] : Array(QUESTIONS.length).fill(null);
+let viewed = saved.done ? QUESTIONS.length : answers.findIndex(a => a == null);
+if (viewed === -1) viewed = QUESTIONS.length;
+
+function persist() {
+  const done = answers.every(a => a != null);
+  const state = {
+    kind: 'test',
+    answers,
+    done,
+    score: done ? scoreFor(answers) : null,
+    answeredCount: answers.filter(a => a != null).length,
+    ts: Date.now(),
+  };
+  syncState(user, state);
+}
+
+function render() {
+  if (viewed >= QUESTIONS.length) { renderReport(); return; }
+
+  const q = QUESTIONS[viewed];
+  const dots = QUESTIONS.map((_, i) => {
+    if (answers[i] != null && i !== viewed) return '<span class="dot done"></span>';
+    if (i === viewed) return '<span class="dot current"></span>';
+    return '<span class="dot"></span>';
+  }).join('');
+
+  content.innerHTML = `
+    <div class="progress-row">${dots}</div>
+    <div class="q-counter">Вопрос ${viewed + 1} из ${QUESTIONS.length}</div>
+    <div class="q-text">${q.text}</div>
+    <div id="opts"></div>
+    <div style="display:flex; gap:12px; justify-content:space-between; margin-top:20px;">
+      <button id="back" class="btn btn-ghost" ${viewed === 0 ? 'disabled' : ''}>← Предыдущий</button>
+      <button id="fwd" class="btn btn-ghost" ${answers[viewed] == null ? 'disabled' : ''}>${viewed + 1 === QUESTIONS.length ? 'Увидеть результат →' : 'Следующий →'}</button>
+    </div>
+    <div class="muted small mt-2">Ответ сохраняется автоматически. Можно вернуться и&nbsp;изменить до&nbsp;того, как&nbsp;увидишь итог.</div>
+  `;
+
+  const opts = document.getElementById('opts');
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'q-opt' + (answers[viewed] === i ? ' selected' : '');
+    btn.innerHTML = `<span class="letter">${String.fromCharCode(65 + i)}</span>${opt}`;
+    btn.addEventListener('click', () => {
+      answers[viewed] = i;
+      persist();
+      render();
+    });
+    opts.appendChild(btn);
+  });
+
+  document.getElementById('back').addEventListener('click', () => { if (viewed > 0) { viewed--; render(); } });
+  document.getElementById('fwd').addEventListener('click', () => { if (answers[viewed] != null) { viewed++; render(); } });
+}
+
+function renderReport() {
+  persist();
+  const report = strengthReport(answers);
+  const s = report.score;
+  const tag = s >= 13 ? '🌟 Уверенный пользователь ИИ'
+            : s >= 10 ? '🔥 Крепкая база — почти всё знаешь'
+            : s >= 7  ? '👌 Освоил ядро курса'
+            :           '🎯 Есть что освежить — и&nbsp;это нормально';
+
+  const refreshBlock = report.toRefresh.length ? `
+    <div class="card outline-gold">
+      <div class="card-tag gold">🔁 Стоит освежить</div>
+      <div class="card-title">${report.toRefresh.length} ${report.toRefresh.length === 1 ? 'тема' : report.toRefresh.length < 5 ? 'темы' : 'тем'} — разберём вместе</div>
+      <div class="strength-list">
+        ${report.toRefresh.map(i => `
+          <div class="strength-item">
+            <div class="ico">🟡</div>
+            <div class="body"><strong>${i.theme}</strong><br><span class="muted small">${i.explanation}</span></div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="muted small mt-2">Не «ошибки» — это темы для&nbsp;быстрого освежения у&nbsp;экрана с&nbsp;Альбертом.</div>
+    </div>
+  ` : `
+    <div class="card outline-green">
+      <div class="card-tag green">🎯 Чисто</div>
+      <div class="card-title">15 из&nbsp;15 правильно</div>
+      <div class="card-body">Весь курс в&nbsp;голове без единого пробела. Это редкий результат.</div>
+    </div>
+  `;
+
+  content.innerHTML = `
+    <div class="score-hero">
+      <div class="score-small">Твой результат</div>
+      <div class="score-big">${s}<span style="font-size:48px; opacity:0.45;">/${report.total}</span></div>
+      <div class="score-label">${tag}</div>
+    </div>
+
+    <div class="card outline-green">
+      <div class="card-tag green">✅ Уже в&nbsp;арсенале</div>
+      <div class="card-title">${report.known.length} ${report.known.length === 1 ? 'тема' : report.known.length < 5 ? 'темы' : 'тем'} ты&nbsp;знаешь уверенно</div>
+      <div class="strength-list">
+        ${report.known.map(i => `
+          <div class="strength-item">
+            <div class="ico">✅</div>
+            <div class="body"><strong>${i.theme}</strong><br><span class="muted small">${i.explanation}</span></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    ${refreshBlock}
+
+    <div class="mt-4 ta-c">
+      <a href="roadmap.html${window.location.search}" class="btn btn-primary">Перейти к&nbsp;моей карте →</a>
+      <div class="muted small mt-2">Следующий шаг — собрать это всё в&nbsp;твой план на&nbsp;30&nbsp;дней.</div>
+    </div>
+  `;
+}
+
+render();
+</script>
+
+</body>
+</html>

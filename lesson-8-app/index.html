@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Boost · занятие 8 · мой доступ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="app">
+
+<header class="app-header" id="app-header"></header>
+
+<main class="wrap">
+  <div id="content"></div>
+</main>
+
+<script type="module">
+import { parseUserFromURL } from './participants.js';
+import { renderHeader, loadLocal, notFoundUser } from './app.js';
+
+const user = parseUserFromURL();
+renderHeader(user);
+
+if (!user) {
+  notFoundUser();
+} else {
+  const content = document.getElementById('content');
+
+  // читаем сохранённый прогресс, чтобы показать статус каждой карточки
+  const testState = loadLocal(user, 'test'); // { answers: [], done: false, score: number }
+  const mapState = loadLocal(user, 'roadmap'); // { fields: {...}, done: false }
+
+  const testStatus = testState?.done
+    ? `<span class="card-tag green">✅ Выполнено · ${testState.score}/15</span>`
+    : testState?.answers?.length
+      ? `<span class="card-tag gold">🟡 В процессе · ${testState.answers.filter(x => x != null).length}/15</span>`
+      : `<span class="card-tag accent">🔴 Не начато</span>`;
+
+  const mapStatus = mapState?.done
+    ? `<span class="card-tag green">✅ Сохранено</span>`
+    : mapState?.fields
+      ? `<span class="card-tag gold">🟡 Черновик</span>`
+      : `<span class="card-tag accent">⏳ Ждёт вас</span>`;
+
+  content.innerHTML = `
+    <div class="h1">Привет, ${user.name}!</div>
+    <div class="lead">Твоя сфера — <span class="highlight-gold">${user.sphere}</span>. На&nbsp;этой странице — два&nbsp;действия занятия&nbsp;8.</div>
+
+    <div class="card outline-accent" style="cursor:pointer;" onclick="location.href='test.html${window.location.search}'">
+      ${testStatus}
+      <div class="card-title">🎯 Живой тест — 15 вопросов</div>
+      <div class="card-body">
+        15 вопросов по всем 7 урокам. Целевая планка — <strong>12-13 правильных</strong>. Не&nbsp;экзамен, а&nbsp;зеркало: сколько всего у&nbsp;тебя теперь в&nbsp;голове. 20 минут.
+        <div style="margin-top:16px;">
+          <a href="test.html${window.location.search}" class="btn btn-primary">${testState?.done ? 'Посмотреть мой отчёт' : testState?.answers?.length ? 'Продолжить тест' : 'Открыть тест'} &rarr;</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card outline-gold" style="cursor:pointer;" onclick="location.href='roadmap.html${window.location.search}'">
+      ${mapStatus}
+      <div class="card-title">🗺 Моя дорожная карта ИИ</div>
+      <div class="card-body">
+        6 полей — стек, процессы, ассистент, красная линия, план для&nbsp;команды, твой манифест. В&nbsp;конце — <strong>PDF, который уезжает к&nbsp;тебе на&nbsp;ноутбук</strong>.
+        <div style="margin-top:16px;">
+          <a href="roadmap.html${window.location.search}" class="btn btn-ghost">${mapState?.done ? 'Открыть и скачать PDF' : mapState?.fields ? 'Продолжить карту' : 'Открыть карту'} &rarr;</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <div class="muted small">Что дальше? Сертификат вручит Альберт лично. Запись видеоотзыва — 2-3 минуты, 3 вопроса на&nbsp;экране. После урока пришлём мега-шпаргалку со&nbsp;всеми материалами.</div>
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>

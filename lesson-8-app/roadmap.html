@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Boost · моя дорожная карта</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="app">
+
+<header class="app-header no-print" id="app-header"></header>
+
+<main class="wrap">
+  <div id="content"></div>
+</main>
+
+<script type="module">
+import { parseUserFromURL } from './participants.js';
+import { renderHeader, loadLocal, syncState, notFoundUser, debounce } from './app.js';
+
+const user = parseUserFromURL();
+renderHeader(user);
+if (!user) { notFoundUser(); throw new Error('no user'); }
+
+const FIELDS = [
+  { key: 'stack',    label: 'Мой рабочий стек',                       hint: '3-5 инструментов, которые я буду использовать постоянно. Напиши названия через запятую, например: «ChatGPT + Gem «Продажник» + NotebookLM + Lovable»' },
+  { key: 'processes',label: '3 процесса на автоматизацию в этом месяце', hint: 'Что я реально делаю руками каждую неделю и что передам ИИ. По одному процессу в строке.' },
+  { key: 'assistant',label: 'Мой главный ассистент (Gem / GPT)',       hint: 'Роль + название + база знаний. Например: «Продажник навесов — Gem в Gemini + NotebookLM с прайсом и ГОСТами»' },
+  { key: 'redline',  label: 'Моя красная линия',                       hint: 'Что я никогда не отдам ИИ: финальное решение по договору, персональные данные клиентов, диагнозы и т.д.' },
+  { key: 'share',    label: 'Кому я расскажу и чему научу',           hint: 'Команда, партнёр, супруг(а), ребёнок. Конкретно: кто и чему до конца месяца.' },
+  { key: 'manifest', label: 'Мой манифест',                           hint: 'Одна фраза. Как я буду жить с ИИ. Это то, что ты зачитаешь вслух и скажешь на камеру.' },
+];
+
+const saved = loadLocal(user, 'roadmap') || {};
+const state = {
+  fields: saved.fields || {},
+  done: saved.done || false,
+};
+
+function render() {
+  const today = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  content.innerHTML = `
+    <div class="h1">Моя дорожная карта ИИ</div>
+    <div class="lead">
+      <strong>${user.name}</strong> · ${user.sphere} · ${today}<br>
+      Шесть полей. Заполни честно — как ты реально будешь делать. В&nbsp;конце — кнопка <strong class="highlight-gold">«Скачать PDF»</strong>, карта уедет к&nbsp;тебе на&nbsp;ноутбук.
+    </div>
+
+    <form class="map-form" id="form" autocomplete="off">
+      ${FIELDS.map((f, i) => `
+        <div class="field">
+          <div class="field-label"><span class="field-num">${i + 1}</span>${f.label}</div>
+          <div class="field-hint">${f.hint}</div>
+          <textarea name="${f.key}" rows="${f.key === 'manifest' ? 2 : 4}" placeholder="Пиши здесь своими словами...">${state.fields[f.key] || ''}</textarea>
+        </div>
+      `).join('')}
+
+      <div class="map-actions no-print">
+        <div class="save-hint" id="save-hint">Автосохранение: локально в&nbsp;браузере</div>
+        <button type="button" class="btn btn-ghost" id="reset-btn">Очистить</button>
+        <button type="button" class="btn btn-primary" id="pdf-btn">📥 Скачать PDF</button>
+      </div>
+    </form>
+
+    <div class="card no-print" style="margin-top:24px;">
+      <div class="muted small">
+        💡 После скачивания PDF сохранится в&nbsp;твоей папке Downloads. Запомни путь — карту можно открыть в&nbsp;любой момент и&nbsp;вернуться к&nbsp;плану через неделю.
+      </div>
+    </div>
+  `;
+
+  const form = document.getElementById('form');
+  const hint = document.getElementById('save-hint');
+
+  const persist = debounce(() => {
+    const fd = new FormData(form);
+    state.fields = Object.fromEntries(fd.entries());
+    const filledCount = Object.values(state.fields).filter(v => v && v.trim().length > 0).length;
+    state.done = filledCount === FIELDS.length;
+    syncState(user, {
+      kind: 'roadmap',
+      fields: state.fields,
+      done: state.done,
+      filledCount,
+      total: FIELDS.length,
+      manifest: state.fields.manifest || '',
+      ts: Date.now(),
+    });
+    hint.classList.add('saved');
+    hint.textContent = state.done ? '✅ Все 6 полей заполнены · сохранено' : `💾 Сохранено · ${filledCount} из ${FIELDS.length}`;
+  }, 300);
+
+  form.addEventListener('input', persist);
+
+  document.getElementById('pdf-btn').addEventListener('click', () => {
+    // убедимся, что состояние сохранено до печати
+    persist();
+    setTimeout(() => window.print(), 120);
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    if (!confirm('Очистить все поля карты? Восстановить не получится.')) return;
+    state.fields = {};
+    state.done = false;
+    syncState(user, { kind: 'roadmap', fields: {}, done: false, filledCount: 0, total: FIELDS.length, ts: Date.now() });
+    render();
+  });
+}
+
+const content = document.getElementById('content');
+render();
+</script>
+
+</body>
+</html>
