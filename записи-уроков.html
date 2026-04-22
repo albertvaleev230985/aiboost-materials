@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>AI Boost — Записи онлайн-уроков</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f1e;
+    --bg-2: #1a1a2e;
+    --card: rgba(255,255,255,0.06);
+    --card-hover: rgba(255,255,255,0.10);
+    --accent: #E07461;
+    --accent-dark: #B84F3C;
+    --gold: #f0c040;
+    --white: #ffffff;
+    --white-90: rgba(255,255,255,0.9);
+    --white-70: rgba(255,255,255,0.7);
+    --white-50: rgba(255,255,255,0.5);
+    --white-30: rgba(255,255,255,0.3);
+    --white-15: rgba(255,255,255,0.15);
+    --white-08: rgba(255,255,255,0.08);
+    --blue: #4285f4;
+    --red: #e05555;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--white-90); line-height: 1.5; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+  /* === Шапка === */
+  .header {
+    background: linear-gradient(135deg, var(--accent), var(--gold));
+    color: var(--bg); padding: 36px 24px; text-align: center;
+  }
+  .header-logo { font-size: 12px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; opacity: 0.85; margin-bottom: 10px; }
+  .header h1 { font-size: 28px; font-weight: 900; margin-bottom: 6px; line-height: 1.1; }
+  .header p { font-size: 15px; opacity: 0.85; font-weight: 500; }
+
+  .container { max-width: 760px; margin: 0 auto; padding: 0 20px 60px; }
+
+  /* === Парольная форма === */
+  #lock-screen { text-align: center; padding: 60px 20px; }
+  #lock-screen .ico { font-size: 56px; margin-bottom: 20px; }
+  #lock-screen h2 { font-size: 22px; color: var(--white); margin-bottom: 10px; }
+  #lock-screen p { font-size: 15px; color: var(--white-70); max-width: 480px; margin: 0 auto 28px; line-height: 1.6; }
+  #lock-screen p strong { color: var(--gold); }
+  #lock-form {
+    display: flex; gap: 8px; max-width: 360px; margin: 0 auto;
+  }
+  #pwd {
+    flex: 1; padding: 14px 16px;
+    background: rgba(255,255,255,0.05); border: 1.5px solid var(--white-15);
+    border-radius: 12px; color: var(--white); font-size: 15px;
+    transition: border-color 0.15s;
+  }
+  #pwd:focus { outline: none; border-color: var(--accent); background: rgba(255,255,255,0.08); }
+  #pwd::placeholder { color: var(--white-30); }
+  #submit-btn {
+    padding: 14px 24px;
+    background: linear-gradient(135deg, var(--accent), var(--gold));
+    color: var(--bg); border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 800; cursor: pointer;
+    transition: transform 0.15s;
+  }
+  #submit-btn:hover { transform: translateY(-2px); }
+  #pwd-error { color: var(--red); font-size: 13px; margin-top: 12px; min-height: 16px; }
+
+  /* === Содержимое после разблокировки === */
+  #content { display: none; padding-top: 28px; }
+  #content.unlocked { display: block; }
+
+  .intro {
+    background: var(--card); border: 1px solid var(--white-08);
+    border-radius: 16px; padding: 20px 24px; margin-bottom: 24px;
+    font-size: 15px; line-height: 1.6; color: var(--white-90);
+  }
+  .intro strong { color: var(--gold); }
+
+  .lesson-row {
+    display: grid; grid-template-columns: 36px 1fr auto;
+    gap: 14px; align-items: center;
+    background: linear-gradient(145deg, rgba(66,133,244,0.06), rgba(167,139,250,0.02));
+    border: 1px solid rgba(66,133,244,0.18);
+    border-radius: 14px; padding: 14px 18px; margin-bottom: 8px;
+  }
+  .lesson-row.pending { opacity: 0.55; border-color: var(--white-08); background: var(--card); }
+  .lesson-num {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: rgba(66,133,244,0.15); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 900;
+  }
+  .lesson-row.pending .lesson-num { background: var(--white-08); color: var(--white-50); }
+  .lesson-name { font-size: 15px; font-weight: 700; color: var(--white); }
+  .lesson-meta { font-size: 12px; color: var(--white-50); margin-top: 2px; font-style: italic; }
+  .lesson-row.pending .lesson-meta { color: var(--white-30); }
+
+  .pill {
+    display: inline-block; padding: 7px 16px; border-radius: 100px;
+    font-size: 12px; font-weight: 700;
+    text-decoration: none; transition: all 0.15s;
+    border: 1px solid var(--white-15); color: var(--white-90);
+    background: rgba(255,255,255,0.04);
+  }
+  .pill:hover { background: rgba(224,116,97,0.18); border-color: rgba(224,116,97,0.4); color: var(--white); }
+  .pill.disabled { opacity: 0.4; pointer-events: none; }
+
+  .footer {
+    margin-top: 36px; padding: 20px 0; text-align: center;
+    border-top: 1px solid var(--white-08); font-size: 13px; color: var(--white-50);
+  }
+
+  @media (max-width: 640px) {
+    .lesson-row { grid-template-columns: 36px 1fr; }
+    .lesson-row .pill { grid-column: 1 / -1; padding-left: 50px; text-align: center; }
+    .header h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">neovida.ai · AI Boost</div>
+  <h1>🎁 Записи онлайн-уроков</h1>
+  <p>Бонус для&nbsp;выпускников офлайн-курса · 5 записей в&nbsp;Zoom</p>
+</div>
+
+<div class="container">
+
+  <!-- ===== Lock screen ===== -->
+  <div id="lock-screen">
+    <div class="ico">🔒</div>
+    <h2>Введи пароль группы</h2>
+    <p>Это закрытый бонус для&nbsp;выпускников. Пароль <strong>Альберт прислал в&nbsp;TG-чате</strong> вместе со&nbsp;ссылкой.</p>
+    <form id="lock-form" onsubmit="return checkPwd(event)">
+      <input type="password" id="pwd" placeholder="пароль" autofocus autocomplete="off">
+      <button id="submit-btn" type="submit">Открыть</button>
+    </form>
+    <div id="pwd-error"></div>
+  </div>
+
+  <!-- ===== Unlocked content ===== -->
+  <div id="content">
+    <div class="intro">
+      Здесь будут записи <strong>5 онлайн-уроков</strong> параллельной группы — те же темы, другой формат. Альберт постепенно добавляет ссылки. Заходи через&nbsp;пару дней.
+    </div>
+
+    <div class="lesson-row pending">
+      <div class="lesson-num">1</div>
+      <div>
+        <div class="lesson-name">Добро пожаловать в&nbsp;эпоху ИИ</div>
+        <div class="lesson-meta">Альберт скоро добавит ссылку и&nbsp;пароль</div>
+      </div>
+      <a class="pill disabled">Скоро</a>
+    </div>
+    <div class="lesson-row pending">
+      <div class="lesson-num">2</div>
+      <div>
+        <div class="lesson-name">Промпт-инженерия от&nbsp;А до&nbsp;Я</div>
+        <div class="lesson-meta">Альберт скоро добавит ссылку и&nbsp;пароль</div>
+      </div>
+      <a class="pill disabled">Скоро</a>
+    </div>
+    <div class="lesson-row pending">
+      <div class="lesson-num">3</div>
+      <div>
+        <div class="lesson-name">Ассистентный подход</div>
+        <div class="lesson-meta">Альберт скоро добавит ссылку и&nbsp;пароль</div>
+      </div>
+      <a class="pill disabled">Скоро</a>
+    </div>
+    <div class="lesson-row pending">
+      <div class="lesson-num">4</div>
+      <div>
+        <div class="lesson-name">Google Workspace</div>
+        <div class="lesson-meta">Альберт скоро добавит ссылку и&nbsp;пароль</div>
+      </div>
+      <a class="pill disabled">Скоро</a>
+    </div>
+    <div class="lesson-row pending">
+      <div class="lesson-num">5</div>
+      <div>
+        <div class="lesson-name">Данные + форсайтинг</div>
+        <div class="lesson-meta">Альберт скоро добавит ссылку и&nbsp;пароль</div>
+      </div>
+      <a class="pill disabled">Скоро</a>
+    </div>
+
+    <div class="footer">
+      Нет нужного материала? Напиши в&nbsp;чат, Альберт ответит.
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Простая JS-защита (не криптостойкая — этого достаточно для группового пароля)
+  const PASSWORD = 'aiboost2026';
+  const STORAGE_KEY = 'aiboost-lessons-unlocked';
+
+  function unlock() {
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('content').classList.add('unlocked');
+  }
+
+  function checkPwd(e) {
+    e.preventDefault();
+    const input = document.getElementById('pwd').value.trim();
+    const err = document.getElementById('pwd-error');
+    if (input === PASSWORD) {
+      try { sessionStorage.setItem(STORAGE_KEY, '1'); } catch(_) {}
+      unlock();
+    } else {
+      err.textContent = 'Неверный пароль. Спроси в чате — Альберт пришлёт.';
+      document.getElementById('pwd').value = '';
+    }
+    return false;
+  }
+
+  // Если уже разблокировано в этой сессии — пропускаем
+  try {
+    if (sessionStorage.getItem(STORAGE_KEY) === '1') unlock();
+  } catch(_) {}
+</script>
+
+</body>
+</html>
