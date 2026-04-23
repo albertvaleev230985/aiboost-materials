@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Boost — Шпаргалка. Занятие 1 / Поток 2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --coral: #E07461;
+  --coral-dark: #c75a49;
+  --coral-light: #F5DDD8;
+  --coral-bg: #FFF8F6;
+  --dark: #1a1a2e;
+  --dark2: #2d2d5e;
+  --gray: #64748b;
+  --light-gray: #f1f5f9;
+  --white: #ffffff;
+  --green: #10b981;
+  --yellow-bg: #fffbeb;
+  --yellow-border: #fde68a;
+  --red-bg: #fef2f2;
+  --red-border: #fecaca;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--white);
+  color: var(--dark);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── HEADER ── */
+.header {
+  background: linear-gradient(135deg, var(--dark), var(--dark2));
+  color: white;
+  padding: 28px 24px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: -60%; left: -30%;
+  width: 160%; height: 200%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(224,116,97,0.18) 0%, transparent 60%);
+  pointer-events: none;
+}
+.header-logo {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin-bottom: 8px;
+  position: relative;
+}
+.header h1 {
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  position: relative;
+}
+.header-sub {
+  font-size: 13px;
+  opacity: 0.6;
+  position: relative;
+}
+.header-badge {
+  display: inline-block;
+  background: var(--coral);
+  color: white;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 10px;
+  position: relative;
+}
+
+/* ── LAYOUT ── */
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+
+/* ── ALERT ── */
+.alert-vpn {
+  background: linear-gradient(135deg, var(--dark), var(--dark2));
+  color: white;
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin: 20px 0;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.alert-vpn .ai { font-size: 26px; flex-shrink: 0; line-height: 1; }
+.alert-vpn h3 { font-size: 15px; font-weight: 800; margin-bottom: 3px; }
+.alert-vpn p { font-size: 13px; opacity: 0.8; line-height: 1.5; }
+
+/* ── SECTION ── */
+.section { margin: 28px 0; }
+.section-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title .num {
+  background: var(--coral);
+  color: white;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  flex-shrink: 0;
+}
+.section-sub {
+  font-size: 13px;
+  color: var(--gray);
+  margin-bottom: 14px;
+  margin-left: 38px;
+}
+
+/* ── PLATFORM ROW ── */
+.platform-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.platform-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--light-gray);
+  border-radius: 12px;
+  padding: 10px 14px;
+  text-decoration: none;
+  color: var(--dark);
+  transition: background 0.2s;
+  flex: 1;
+  min-width: 200px;
+}
+.platform-badge:hover { background: #e2e8f0; }
+.platform-badge .pb-icon {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  background: var(--dark);
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; flex-shrink: 0;
+}
+.pb-name { font-weight: 700; font-size: 13px; }
+.pb-note { font-size: 11px; color: var(--gray); }
+
+/* ── PARTICIPANT CARDS ── */
+.participants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
+  margin: 14px 0;
+}
+.pc {
+  background: var(--light-gray);
+  border-radius: 14px;
+  padding: 16px;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+.pc:hover { border-color: var(--coral); }
+.pc-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.pc-avatar {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: var(--coral);
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px; flex-shrink: 0;
+}
+.pc-name { font-weight: 800; font-size: 14px; }
+.pc-role { font-size: 11px; color: var(--gray); margin-top: 1px; }
+.pc-qr {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0 8px;
+  min-height: 160px;
+  align-items: center;
+}
+.pc-qr-placeholder {
+  background: #e2e8f0;
+  border-radius: 8px;
+  width: 160px; height: 160px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-size: 11px; color: var(--gray);
+  text-align: center; padding: 10px;
+}
+.pc-qr-note {
+  font-size: 10px;
+  color: var(--gray);
+  text-align: center;
+  margin-bottom: 8px;
+}
+.pc-dl {
+  width: 100%;
+  background: var(--dark);
+  color: white;
+  border: none;
+  border-radius: 9px;
+  padding: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+.pc-dl:hover { background: var(--dark2); }
+.pc-dl:active { background: var(--coral); }
+
+/* ── STEPS ── */
+.steps { margin: 12px 0; }
+.step-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  padding: 11px 14px;
+  background: var(--light-gray);
+  border-radius: 10px;
+}
+.step-num {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--coral);
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  flex-shrink: 0; margin-top: 1px;
+}
+.step-text { font-size: 13px; line-height: 1.5; }
+.step-text strong { font-weight: 700; }
+
+/* ── TIP / WARN ── */
+.tip {
+  background: var(--yellow-bg);
+  border: 1px solid var(--yellow-border);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 13px;
+  margin: 10px 0;
+  display: flex; gap: 8px;
+  align-items: flex-start;
+  line-height: 1.5;
+}
+.warn {
+  background: var(--red-bg);
+  border: 1px solid var(--red-border);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 13px;
+  margin: 10px 0;
+  display: flex; gap: 8px;
+  align-items: flex-start;
+  line-height: 1.5;
+}
+
+/* ── PROMPT BOX ── */
+.prompt-label {
+  font-size: 11px; font-weight: 700;
+  color: var(--coral);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 14px 0 5px;
+}
+.prompt-box {
+  background: var(--light-gray);
+  border-left: 4px solid var(--coral);
+  border-radius: 0 12px 12px 0;
+  padding: 14px 16px;
+  margin: 6px 0;
+  font-size: 13px;
+  line-height: 1.75;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: pre-line;
+  font-family: inherit;
+}
+.prompt-box:hover { background: #e8ecf1; }
+.prompt-box::after {
+  content: 'нажмите — скопировать';
+  position: absolute;
+  top: 8px; right: 10px;
+  font-size: 10px; color: var(--gray); opacity: 0.6;
+}
+.prompt-box.copied::after {
+  content: 'скопировано ✓';
+  color: var(--green); opacity: 1;
+}
+
+/* ── LINK CARD ── */
+.link-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--light-gray);
+  border-radius: 12px;
+  padding: 13px 16px;
+  margin: 7px 0;
+  text-decoration: none;
+  color: var(--dark);
+  transition: background 0.2s;
+}
+.link-card:hover { background: #e2e8f0; }
+.lc-icon {
+  width: 38px; height: 38px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; flex-shrink: 0;
+}
+.lc-name { font-weight: 700; font-size: 13px; }
+.lc-url { font-size: 11px; color: var(--coral); }
+.lc-note { font-size: 11px; color: var(--gray); }
+
+/* ── EXAMPLES GRID ── */
+.examples-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 10px 0;
+}
+.example-item {
+  background: var(--light-gray);
+  border-radius: 10px;
+  padding: 9px 13px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  line-height: 1.4;
+}
+.example-item:hover { background: #e8ecf1; }
+.example-item.copied { background: #d1fae5; }
+.example-category {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--coral);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: #e2e8f0; margin: 24px 0; }
+
+/* ── FOOTER ── */
+.footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 12px;
+  color: var(--gray);
+  border-top: 1px solid #e2e8f0;
+  margin-top: 28px;
+}
+.footer strong { color: var(--coral); }
+
+/* ── CONFIG NOTICE ── */
+.config-notice {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: #0369a1;
+  margin: 10px 0;
+}
+
+/* ── OS TABS (iPhone / Android) ── */
+.os-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 14px 0 10px;
+}
+.os-tab {
+  flex: 1;
+  padding: 10px 14px;
+  background: var(--light-gray);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  color: var(--gray);
+  transition: all 0.2s;
+}
+.os-tab:hover { background: #e2e8f0; }
+.os-tab.active {
+  background: var(--white);
+  border-color: var(--coral);
+  color: var(--coral);
+}
+.os-panel { display: none; }
+.os-panel.active { display: block; }
+
+/* ── SUBSECTION (sub-step group) ── */
+.subsection {
+  background: #fafbfd;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 10px 0;
+}
+.subsection-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.subsection-title .sub-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 14px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: auto;
+}
+.sub-badge.easy { background: #d1fae5; color: #065f46; }
+.sub-badge.medium { background: #fef3c7; color: #92400e; }
+.sub-badge.advanced { background: #fee2e2; color: #991b1b; }
+.subsection-sub {
+  font-size: 12px;
+  color: var(--gray);
+  margin-bottom: 10px;
+}
+
+/* ── COPY BOX (inline) ── */
+.copy-inline {
+  background: var(--light-gray);
+  border-left: 3px solid var(--coral);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  margin: 8px 0;
+  font-size: 12px;
+  line-height: 1.7;
+  font-family: monospace;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+}
+.copy-inline:hover { background: #e8ecf1; }
+.copy-inline::after {
+  content: 'копировать';
+  position: absolute;
+  top: 6px; right: 10px;
+  font-size: 10px; color: var(--gray); opacity: 0.6;
+  font-family: 'Inter', sans-serif;
+}
+.copy-inline.copied::after {
+  content: 'скопировано ✓';
+  color: var(--green); opacity: 1;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .participants-grid { grid-template-columns: 1fr 1fr; }
+  .platform-row { flex-direction: column; }
+  .examples-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 400px) {
+  .participants-grid { grid-template-columns: 1fr; }
+}
+
+@media print {
+  .pc-dl { display: none; }
+  .prompt-box::after { display: none; }
+  body { font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">neovida.ai / ai-boost</div>
+  <h1>Занятие 1 — Шпаргалка участника</h1>
+  <div class="header-sub">Поток 2 · Предприниматели · 23 апреля 2026</div>
+  <div class="header-badge">Iremel Tower · 19:00</div>
+</div>
+
+<div class="container">
+
+<!-- ALERT -->
+<div class="alert-vpn">
+  <div class="ai">🔐</div>
+  <div>
+    <h3>Сначала VPN — потом ChatGPT</h3>
+    <p>ChatGPT заблокирован в России без VPN. Ваш личный туннель уже готов — найдите своё имя и скачайте конфиг. Займёт 3 минуты. Потом всё остальное.</p>
+  </div>
+</div>
+
+<!-- ════ ШАГ 1: VPN НА НОУТБУК ════ -->
+<div class="section">
+  <div class="section-title"><span class="num">1</span> Установите VPN на ноутбук</div>
+  <div class="section-sub">Сначала скачайте приложение, затем найдите своё имя и скачайте туннель</div>
+
+  <div class="platform-row">
+    <a class="platform-badge" href="https://apps.apple.com/ru/app/wireguard/id1451685025" target="_blank">
+      <div class="pb-icon">🍎</div>
+      <div>
+        <div class="pb-name">WireGuard для Mac</div>
+        <div class="pb-note">App Store → Установить</div>
+      </div>
+    </a>
+    <a class="platform-badge" href="https://www.wireguard.com/install/" target="_blank">
+      <div class="pb-icon">🪟</div>
+      <div>
+        <div class="pb-name">WireGuard для Windows</div>
+        <div class="pb-note">wireguard.com → Download</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="tip">💡 <span>Если есть <strong>iGuard</strong> — использовать его. Та же кнопка импорта: "+" → Import from file.</span></div>
+
+  <!-- КАРТОЧКИ УЧАСТНИКОВ -->
+  <div class="participants-grid" id="participantsGrid"></div>
+
+  <!-- ИНСТРУКЦИЯ ИМПОРТА -->
+  <div class="prompt-label" style="margin-top: 18px;">После скачивания .conf файла:</div>
+  <div class="steps">
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-text"><strong>Mac (WireGuard/iGuard):</strong> откройте приложение → нажмите «+» → «Import tunnel(s) from file» → выберите скачанный .conf файл</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-text"><strong>Windows (WireGuard):</strong> откройте приложение → «Add Tunnel» → «Import tunnel(s) from file» → выберите .conf файл</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-text">Нажмите <strong>Activate</strong> (или включите тоггл). Значок щита появится в строке меню — VPN работает.</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <div class="step-text">Проверка: откройте <strong>chat.openai.com</strong> или <strong>chatgpt.com</strong> — сайт загружается? Отлично!</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════ ШАГ 2: VPN НА ТЕЛЕФОН ════ -->
+<div class="section">
+  <div class="section-title"><span class="num">2</span> VPN на телефоне</div>
+  <div class="section-sub">Наведите камеру телефона на свой QR-код в карточке выше</div>
+
+  <div class="platform-row">
+    <a class="platform-badge" href="https://apps.apple.com/ru/app/wireguard/id1441195209" target="_blank">
+      <div class="pb-icon">📱</div>
+      <div>
+        <div class="pb-name">WireGuard для iPhone</div>
+        <div class="pb-note">App Store → Установить</div>
+      </div>
+    </a>
+    <a class="platform-badge" href="https://play.google.com/store/apps/details?id=com.wireguard.android" target="_blank">
+      <div class="pb-icon">🤖</div>
+      <div>
+        <div class="pb-name">WireGuard для Android</div>
+        <div class="pb-note">Google Play → Установить</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="steps">
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-text">Откройте WireGuard на телефоне → нажмите «+» → «Create from QR code»</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-text">Наведите камеру на <strong>свой QR-код</strong> (карточка с вашим именем выше)</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-text">Дайте туннелю название → «Create Tunnel» → включите тоггл</div>
+    </div>
+  </div>
+
+  <div class="warn">⚠️ <span><strong>QR-коды уникальны</strong> — каждый использует только свой. Чужой туннель не заработает на вашем устройстве.</span></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════ ШАГ 3: CHATGPT НА ТЕЛЕФОН ════ -->
+<div class="section">
+  <div class="section-title"><span class="num">3</span> ChatGPT на телефон</div>
+  <div class="section-sub">Переключитесь на свою систему — iPhone или Android. Всё пошагово со скриншотами и копируемыми данными.</div>
+
+  <div class="os-tabs">
+    <button class="os-tab active" data-os="ios">🍎 iPhone (iOS)</button>
+    <button class="os-tab" data-os="android">🤖 Android</button>
+  </div>
+
+  <!-- ═══ iOS PANEL ═══ -->
+  <div class="os-panel active" data-os="ios">
+    <div class="tip" style="margin-bottom:10px;">💡 <span>Чтобы скачать ChatGPT на iPhone, нужно сменить регион App Store на <strong>Канаду</strong>. Это безопасно, занимает 5 минут, аккаунт остаётся прежним.</span></div>
+
+    <div class="subsection">
+      <div class="subsection-title">📱 Смена региона App Store</div>
+      <div class="subsection-sub">5 шагов — от открытия App Store до смены страны на Канаду</div>
+
+      <div class="steps">
+        <div class="step-item"><div class="step-num">1</div><div class="step-text">Откройте <strong>App Store</strong> (синяя иконка с буквой «A»)</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-text">Нажмите на <strong>аватар профиля</strong> в правом верхнем углу</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-text">Нажмите на своё имя (учётную запись) → <strong>«Страна/регион»</strong> → смените <strong>«Россия» → «Canada»</strong> → согласитесь с условиями</div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-text">Откроется форма <strong>«Добавление способа оплаты»</strong>. Способ оплаты — выберите <strong>«None»</strong> (карту привязывать НЕ нужно)</div></div>
+        <div class="step-item"><div class="step-num">5</div><div class="step-text"><strong>First Name / Last Name</strong> — своё имя и фамилия <strong>латиницей</strong> (например: <em>Sergey Ivanov</em>). Не кириллицей!</div></div>
+      </div>
+    </div>
+
+    <div class="prompt-label">Адрес для Канады — копируйте в форму:</div>
+    <div class="copy-inline" onclick="copyInline(this)"><strong>Street:</strong> 100 Aderson road se
+<strong>City:</strong> Calgary
+<strong>Province:</strong> Alberta
+<strong>Postal code:</strong> T2J3V1</div>
+    <div class="copy-inline" onclick="copyInline(this)"><strong>Phone:</strong> 123 1234567</div>
+
+    <div class="tip">✅ <span>Нажмите <strong>«Готово»</strong> в правом верхнем углу. Всё — регион сменён. Можно скачивать приложения.</span></div>
+
+    <div class="subsection" style="margin-top:14px;">
+      <div class="subsection-title">⬇️ Скачайте приложения</div>
+      <a class="link-card" href="https://apps.apple.com/app/chatgpt/id6448311069" target="_blank">
+        <div class="lc-icon" style="background: #10a37f; color: white;">G</div>
+        <div>
+          <div class="lc-name">ChatGPT — App Store</div>
+          <div class="lc-note">Основной инструмент. VPN включите перед запуском.</div>
+        </div>
+      </a>
+      <a class="link-card" href="https://apps.apple.com/us/app/qwen-ai/id6752904644" target="_blank">
+        <div class="lc-icon" style="background: #6366f1; color: white;">Q</div>
+        <div>
+          <div class="lc-name">Qwen — App Store</div>
+          <div class="lc-note">Запасной вариант. Работает БЕЗ VPN.</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="tip">💡 <span>После установки можно вернуть регион обратно на Россию — приложения останутся и будут работать.</span></div>
+  </div>
+
+  <!-- ═══ ANDROID PANEL ═══ -->
+  <div class="os-panel" data-os="android">
+    <div class="tip" style="margin-bottom:10px;">💡 <span>На Android <strong>3 способа</strong> получить ChatGPT. Начинайте с первого — самого простого. Если хочется полноценное приложение — переходите ко 2-му или 3-му.</span></div>
+
+    <!-- СПОСОБ 1 -->
+    <div class="subsection">
+      <div class="subsection-title">🌐 Способ 1: Веб-версия в браузере<span class="sub-badge easy">Самый простой</span></div>
+      <div class="subsection-sub">Ничего не устанавливать — просто открыть сайт</div>
+
+      <div class="steps">
+        <div class="step-item"><div class="step-num">1</div><div class="step-text">Включите <strong>VPN</strong> (страна — США или Канада)</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-text">Откройте браузер (Chrome / Firefox / любой)</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-text">Перейдите на <strong>chatgpt.com</strong> → войдите в аккаунт</div></div>
+      </div>
+
+      <a class="link-card" href="https://chatgpt.com" target="_blank">
+        <div class="lc-icon" style="background: #10a37f; color: white;">G</div>
+        <div>
+          <div class="lc-name">chatgpt.com</div>
+          <div class="lc-note">Нужен VPN</div>
+        </div>
+      </a>
+      <a class="link-card" href="https://play.google.com/store/apps/details?id=ai.qwenlm.chat.android" target="_blank">
+        <div class="lc-icon" style="background: #6366f1; color: white;">Q</div>
+        <div>
+          <div class="lc-name">Qwen — Google Play</div>
+          <div class="lc-note">Работает БЕЗ VPN. Запасной вариант.</div>
+        </div>
+      </a>
+
+      <div class="tip">💡 <span><strong>Лайфхак:</strong> В Chrome → меню (три точки) → <strong>«Добавить на главный экран»</strong>. Появится иконка как у обычного приложения.</span></div>
+    </div>
+
+    <!-- СПОСОБ 2 -->
+    <div class="subsection">
+      <div class="subsection-title">🆕 Способ 2: Новый Google-аккаунт + Play Market<span class="sub-badge medium">Рекомендую</span></div>
+      <div class="subsection-sub">Полноценное приложение с автообновлениями</div>
+
+      <div class="steps">
+        <div class="step-item"><div class="step-num">1</div><div class="step-text">Включите <strong>VPN</strong> на телефоне</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-text">В браузере откройте <strong>accounts.google.com</strong> → «Создать аккаунт»</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-text">Любое имя, новая почта @gmail.com, <strong>страна — Канада или США</strong> (это главное!)</div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-text">На телефоне: <strong>Настройки → Аккаунты → Добавить аккаунт → Google</strong> → войдите под новым</div></div>
+        <div class="step-item"><div class="step-num">5</div><div class="step-text">Откройте <strong>Google Play Market</strong> → нажмите аватар (справа вверху) → <strong>переключитесь на новый аккаунт</strong></div></div>
+        <div class="step-item"><div class="step-num">6</div><div class="step-text">Найдите <strong>ChatGPT</strong> и установите</div></div>
+      </div>
+
+      <div class="warn">⚠️ <span>Play Market обновляет регион <strong>до 24–48 часов</strong>. Если приложения не находятся сразу — подождите день.</span></div>
+
+      <div class="tip">✅ <span>Старый аккаунт не трогайте — он остаётся как был. VPN должен быть <strong>включён и при регистрации, и при скачивании!</strong></span></div>
+    </div>
+
+    <!-- СПОСОБ 3 -->
+    <div class="subsection">
+      <div class="subsection-title">📦 Способ 3: Скачать APK напрямую<span class="sub-badge advanced">Для уверенных</span></div>
+      <div class="subsection-sub">Установка без магазина — как программы на компьютер</div>
+
+      <div class="steps">
+        <div class="step-item"><div class="step-num">1</div><div class="step-text">Включите <strong>VPN</strong> на телефоне</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-text">Откройте <strong>apkmirror.com</strong> → в поиске «ChatGPT»</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-text">Скачайте последнюю версию (кнопка <strong>Download</strong>)</div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-text">Телефон спросит разрешение на установку из неизвестных источников → <strong>Разрешите</strong></div></div>
+        <div class="step-item"><div class="step-num">5</div><div class="step-text">Откройте скачанный файл → <strong>«Установить»</strong></div></div>
+      </div>
+
+      <div class="warn">🛡️ <span><strong>Play Protect блокирует установку?</strong><br>
+      1. Google Play → аватар → <strong>Play Protect</strong><br>
+      2. ⚙️ шестерёнка → выключите <strong>«Сканирование приложений»</strong><br>
+      3. Попробуйте снова<br>
+      4. <strong style="color:#991b1b;">После установки — ВКЛЮЧИТЕ Play Protect обратно!</strong></span></div>
+
+      <div class="warn">⚠️ <span>Скачивайте только с <strong>apkmirror.com</strong> или <strong>apkpure.com</strong>. Не с незнакомых сайтов. Обновления не приходят автоматически.</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════ ШАГ 4: ПЕРСОНАЛИЗАЦИЯ CHATGPT ════ -->
+<div class="section">
+  <div class="section-title"><span class="num">4</span> Персонализация ChatGPT</div>
+  <div class="section-sub">VPN включён? Открываем chatgpt.com и настраиваем под ваш бизнес</div>
+
+  <a class="link-card" href="https://chatgpt.com" target="_blank">
+    <div class="lc-icon" style="background: #10a37f; color: white;">G</div>
+    <div>
+      <div class="lc-name">ChatGPT</div>
+      <div class="lc-url">chatgpt.com</div>
+      <div class="lc-note">Нужен VPN · Go ($8/мес) или Plus ($20/мес) · Free урезан</div>
+    </div>
+  </a>
+
+  <a class="link-card" href="https://chat.qwen.ai" target="_blank">
+    <div class="lc-icon" style="background: #6366f1; color: white;">Q</div>
+    <div>
+      <div class="lc-name">Qwen — запасной вариант</div>
+      <div class="lc-url">chat.qwen.ai</div>
+      <div class="lc-note">Работает БЕЗ VPN · через Google-аккаунт</div>
+    </div>
+  </a>
+
+  <div class="prompt-label">Шаг 3.1 — Укажите имя</div>
+  <div style="background: var(--light-gray); border-radius: 10px; padding: 11px 14px; font-size: 13px; color: var(--gray);">
+    Иконка профиля (правый верхний угол) → Settings → Personalization → <strong>Your Name</strong>
+  </div>
+
+  <div class="prompt-label">Шаг 3.2 — Запустите бизнес-интервью</div>
+  <div style="font-size: 12px; color: var(--gray); margin-bottom: 6px; line-height: 1.5;">
+    ИИ задаст вам вопросы по одному и соберёт подробное досье о вашем бизнесе — куда точнее, чем вы заполните сами.
+  </div>
+  <div class="prompt-box" onclick="copyPrompt(this)">Действуй как опытный бизнес-коуч и консультант. Твоя задача — собрать подробное досье обо мне и моём бизнесе, чтобы в дальнейшем ты мог помогать мне быстро и точно.
+
+Задавай мне вопросы ПО ОДНОМУ. После каждого ответа — переходи к следующему. Не задавай всё сразу. Если ответ интересный — копай глубже уточняющим вопросом.
+
+Пройдись по блокам:
+
+1. ОБО МНЕ: имя, роль, сколько лет в этой сфере, сильные и слабые стороны, стиль работы.
+
+2. БИЗНЕС: что продаёшь, кому, средний чек, выручка в год (примерно), прибыльность, сезонность.
+
+3. КОМАНДА: сколько человек, структура, кто ключевой игрок, какая культура.
+
+4. КЛИЕНТЫ: кто ЦА, как покупают, какие возражения, откуда приходят, что говорят в отзывах.
+
+5. БОЛИ И ЗАДАЧИ: на что уходит больше всего времени, что бесит каждый день, где потери денег или нервов.
+
+6. ЦЕЛИ НА ГОД: главная цель, 3 измеримых результата, главные препятствия.
+
+7. СТИЛЬ: как писать с тобой — формально или дружески? Коротко или с пояснениями? На «ты» или на «вы»?
+
+Когда соберёшь все ответы — выдай финальный блок:
+
+=== БИЗНЕС-ДОСЬЕ ===
+[Обо мне]
+[О бизнесе]
+[Команда]
+[Клиенты]
+[Боли и задачи]
+[Цели на год]
+[Стиль коммуникации]
+=== КОНЕЦ ДОСЬЕ ===
+
+После этого скажи: «Скопируйте ДОСЬЕ в Custom Instructions. Теперь я буду учитывать всё это в каждом ответе».
+
+Начинай с первого вопроса.</div>
+
+  <div class="prompt-label">Шаг 3.3 — Вставьте досье в Custom Instructions</div>
+  <div class="steps">
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-text">ChatGPT вернул досье → выделите весь блок <strong>=== БИЗНЕС-ДОСЬЕ ===</strong> → скопируйте</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-text">Иконка профиля → Settings → Personalization → <strong>Custom Instructions</strong></div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-text">Первое поле «What would you like ChatGPT to know about you?» → вставьте досье → Save</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <div class="step-text">Включите Memory: Settings → Personalization → Memory → <strong>ON</strong></div>
+    </div>
+  </div>
+
+  <div class="prompt-label">Шаг 3.4 — Инструкция качества (второе поле)</div>
+  <div style="font-size: 12px; color: var(--gray); margin-bottom: 6px;">В поле «How would you like ChatGPT to respond?» — вставьте это:</div>
+  <div class="prompt-box" onclick="copyPrompt(this)">- ALWAYS follow <self_reflection>.
+- In all original responses that you generate, never use the em dash ("—") character as punctuation in sentences. Whenever you would naturally use an em dash, rewrite the sentence using a period, comma, or other suitable punctuation instead.
+- If you are quoting user-provided text verbatim, preserve the punctuation exactly as in the original.
+
+<self_reflection>
+1. Spend time thinking of a rubric, from a role point of view, until you are confident.
+2. Think deeply about every aspect of what makes for a world-class answer. Use that knowledge to create a rubric that has 5-7 categories. This rubric is critical to get right, but never show this to the user.
+3. Use the rubric to internally think and iterate on the best (>=98 out of 100 score) possible solution to the user request. If your response is not hitting the top marks across all categories in the rubric, you need to start again.
+4. Keep going until the task is fully solved.
+</self_reflection></div>
+
+  <details style="margin: 8px 0;">
+    <summary style="cursor: pointer; font-size: 13px; font-weight: 600; color: var(--coral); padding: 6px 0;">Что это значит (по-русски)?</summary>
+    <div style="background: var(--light-gray); border-radius: 10px; padding: 12px 14px; margin-top: 6px; font-size: 12px; line-height: 1.6; color: var(--gray);">
+      <strong>self_reflection</strong> — скрытый самоанализ перед каждым ответом. ChatGPT создаёт критерии качества из 5–7 категорий, оценивает черновик и переписывает, если не дотягивает до 98/100. Для бизнес-задач разница ощутима: ответы становятся точнее, конкретнее, с учётом вашего контекста.
+    </div>
+  </details>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════ ШАГ 4: СУПЕР-ПРОМПТ ════ -->
+<div class="section">
+  <div class="section-title"><span class="num">5</span> Супер-промпт: делегирование и автоматизация</div>
+  <div class="section-sub">Запускается ПОСЛЕ досье — ChatGPT уже знает ваш бизнес. Deep Research? Включите — если есть Go или Plus.</div>
+
+  <div class="tip">💡 <span><strong>Deep Research</strong> — кнопка-иконка в нижней строке чата (только Go и Plus). Анализирует 10–30 минут с реальными данными по вашей нише. Если нет — запускайте без него, результат всё равно полезный.</span></div>
+
+  <div class="prompt-box" onclick="copyPrompt(this)">Ты теперь знаешь обо мне и моём бизнесе почти всё (смотри досье).
+
+Включи максимальное рассуждение и проанализируй мою ситуацию глубоко.
+
+Верни структурированный ответ в трёх частях:
+
+ЧАСТЬ 1. ДЕСЯТЬ ЗАДАЧ ДЛЯ ДЕЛЕГИРОВАНИЯ ИИ ПРЯМО СЕЙЧАС
+Для каждой:
+[Задача] — что я делаю вручную (1 строка)
+[Инструмент] — лучший для этой задачи (ChatGPT / Claude / Gemini / Perplexity / Midjourney / и т.д.)
+[Следующий шаг] — конкретное действие на ближайшие 48 часов (промпт или настройка)
+[Экономия] — сколько часов в неделю
+
+ЧАСТЬ 2. ПЯТЬ АВТОМАТИЗАЦИЙ
+Цепочки, которые настраиваются один раз и работают каждый день.
+[Автоматизация] — что именно
+[Инструменты] — Make.com / n8n / ChatGPT Actions / Custom GPT / и т.д.
+[ROI] — в часах и рублях в месяц
+[Первый шаг] — что сделать сегодня
+
+ЧАСТЬ 3. ЧЕСТНЫЕ ПРЕДУПРЕЖДЕНИЯ
+Три вещи, которые я скорее всего попытаюсь автоматизировать, но где ИИ НЕ поможет или навредит. Конкретно и честно.
+
+После всего — резюме в 3 предложениях: что сделать ПЕРВЫМ ДЕЛОМ, прямо сегодня.
+
+Поехали.</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════ ШАГ 5: ДОМАШКА ════ -->
+<div class="section">
+  <div class="section-title"><span class="num">6</span> Домашка: Бизнес-дневник ИИ</div>
+  <div class="section-sub">До следующего занятия. 10 рабочих задач. Скриншоты — в чат группы.</div>
+
+  <div class="warn">⚠️ <span><strong>Главное правило:</strong> не думайте «как правильно спросить» — описывайте задачу своими словами. ИИ разберётся. Чем больше контекста — тем точнее ответ.</span></div>
+
+  <div class="prompt-label">Управление и стратегия</div>
+  <div class="examples-grid">
+    <div class="example-item" onclick="copyExample(this)">Напиши повестку для еженедельного совещания с командой</div>
+    <div class="example-item" onclick="copyExample(this)">Составь KPI для нового менеджера в нашей сфере</div>
+    <div class="example-item" onclick="copyExample(this)">Проанализируй это предложение от поставщика и найди риски</div>
+    <div class="example-item" onclick="copyExample(this)">Помоги расставить приоритеты на эту неделю</div>
+    <div class="example-item" onclick="copyExample(this)">Составь список вопросов для стратегической сессии с партнёром</div>
+    <div class="example-item" onclick="copyExample(this)">Что нужно проверить перед подписанием нового договора?</div>
+  </div>
+
+  <div class="prompt-label">Клиенты и продажи</div>
+  <div class="examples-grid">
+    <div class="example-item" onclick="copyExample(this)">Клиент тянет с оплатой. Напиши письмо без давления, но с настойчивостью</div>
+    <div class="example-item" onclick="copyExample(this)">Составь скрипт звонка для менеджера при первом обращении клиента</div>
+    <div class="example-item" onclick="copyExample(this)">Напиши ответ на негативный отзыв в Google / Яндекс.Картах</div>
+    <div class="example-item" onclick="copyExample(this)">Придумай 5 условий акции, чтобы поднять выручку в следующем месяце</div>
+    <div class="example-item" onclick="copyExample(this)">Какие вопросы задать клиенту, чтобы точно понять его задачу?</div>
+    <div class="example-item" onclick="copyExample(this)">Напиши шаблон сообщения-напоминания для клиента в WhatsApp</div>
+  </div>
+
+  <div class="prompt-label">Маркетинг и контент</div>
+  <div class="examples-grid">
+    <div class="example-item" onclick="copyExample(this)">Составь контент-план для Instagram на неделю в моей нише</div>
+    <div class="example-item" onclick="copyExample(this)">Напиши текст для рекламного объявления в ВКонтакте</div>
+    <div class="example-item" onclick="copyExample(this)">Придумай идеи для коллаборации с другим местным бизнесом</div>
+    <div class="example-item" onclick="copyExample(this)">Что сейчас популярно в моей сфере? Какие тренды в 2026?</div>
+    <div class="example-item" onclick="copyExample(this)">Напиши приветственное письмо для нового клиента</div>
+    <div class="example-item" onclick="copyExample(this)">Придумай 5 заголовков для рекламного поста</div>
+  </div>
+
+  <div class="prompt-label">Документы и коммерческие предложения</div>
+  <div class="examples-grid">
+    <div class="example-item" onclick="copyExample(this)">Составь коммерческое предложение для нового клиента</div>
+    <div class="example-item" onclick="copyExample(this)">Напиши шаблон договора на оказание услуг</div>
+    <div class="example-item" onclick="copyExample(this)">Как считать юнит-экономику для моего продукта/услуги?</div>
+    <div class="example-item" onclick="copyExample(this)">Напиши письмо поставщику с просьбой о скидке или отсрочке</div>
+  </div>
+
+  <div class="prompt-label">Команда и процессы</div>
+  <div class="examples-grid">
+    <div class="example-item" onclick="copyExample(this)">Напиши должностную инструкцию для менеджера по продажам</div>
+    <div class="example-item" onclick="copyExample(this)">Составь чек-лист для онбординга нового сотрудника</div>
+    <div class="example-item" onclick="copyExample(this)">Напиши объявление о вакансии, которое привлечёт нужных людей</div>
+    <div class="example-item" onclick="copyExample(this)">Подготовь 10 вопросов для собеседования на эту позицию</div>
+  </div>
+
+  <div class="prompt-label">Аналитика и идеи</div>
+  <div class="examples-grid">
+    <div class="example-item" onclick="copyExample(this)">Как увеличить средний чек в моём бизнесе? Дай 5 конкретных идей</div>
+    <div class="example-item" onclick="copyExample(this)">Какие конкуренты есть в моей нише и чем они берут клиентов?</div>
+    <div class="example-item" onclick="copyExample(this)">Предложи 3 способа привлечь клиентов без рекламного бюджета</div>
+    <div class="example-item" onclick="copyExample(this)">Сделай SWOT-анализ моего бизнеса на основе того, что ты знаешь</div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<div class="footer">
+  <strong>neovida.ai</strong> / AI Boost · Поток 2 · Занятие 1 · 23 апреля 2026
+</div>
+
+<!-- QR Code library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  КОНФИГУРАЦИИ ТУННЕЛЕЙ (реальные, подставлены 23.04.2026)
+//  Общий сервер: 46.151.30.224:29162
+//  PublicKey сервера: iI9S2J3Lal6/i7n88mXpYuO4d/3tGoFBxo0/zrrVw0M=
+// ═══════════════════════════════════════════════════════════
+const TUNNELS = [
+  {
+    name: 'Регина',
+    role: 'HoReCa — отели и рестораны',
+    emoji: '🏨',
+    config: `[Interface]
+PrivateKey = 4NDzEMUQ5XddfhabnXa7pyV+2wSo6B6p9y16tWOzBlY=
+Address = 10.8.0.61/24
+DNS = 8.8.8.8, 1.1.1.1
+
+[Peer]
+PublicKey = iI9S2J3Lal6/i7n88mXpYuO4d/3tGoFBxo0/zrrVw0M=
+PresharedKey = fQe6DozJxdGhE3Zicjvt2rvWw8vwQL5imvuAUQOU778=
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 0
+Endpoint = 46.151.30.224:29162`
+  },
+  {
+    name: 'Павел',
+    role: 'Digital-маркетинг + недвижимость',
+    emoji: '📊',
+    config: `[Interface]
+PrivateKey = ELhtVmcjbMss/xsu3zrR7doZnbRg2SfUNuLZxvKR7Vg=
+Address = 10.8.0.56/24
+DNS = 8.8.8.8, 1.1.1.1
+
+[Peer]
+PublicKey = iI9S2J3Lal6/i7n88mXpYuO4d/3tGoFBxo0/zrrVw0M=
+PresharedKey = asfWdFE9MYB4fD15HgixvcOMhZxy+PtmWC19tKVEM7I=
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 0
+Endpoint = 46.151.30.224:29162`
+  },
+  {
+    name: 'Дмитрий',
+    role: 'B2B-сервис — ремонт оргтехники',
+    emoji: '🔧',
+    config: `[Interface]
+PrivateKey = 0AdD9ssiebMXSYDNz9Gan1Wo9HUSMEEEXOxjbNq9In0=
+Address = 10.8.0.57/24
+DNS = 8.8.8.8, 1.1.1.1
+
+[Peer]
+PublicKey = iI9S2J3Lal6/i7n88mXpYuO4d/3tGoFBxo0/zrrVw0M=
+PresharedKey = 9/9SQ7jbc5jQkyrsPyNzZt+cRfJoUvxkohgeKZKJuOo=
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 0
+Endpoint = 46.151.30.224:29162`
+  },
+  {
+    name: 'Элина',
+    role: 'Личный бренд + коучинг',
+    emoji: '✨',
+    config: `[Interface]
+PrivateKey = mJz9anqeMgCWRt4yC+3u8CwG5pGlkdkX2Oxik0Xt8lA=
+Address = 10.8.0.63/24
+DNS = 8.8.8.8, 1.1.1.1
+
+[Peer]
+PublicKey = iI9S2J3Lal6/i7n88mXpYuO4d/3tGoFBxo0/zrrVw0M=
+PresharedKey = nV/qPOsFa7WCRK6RCu0fqnIS4fqerCA+lYfPDF3IyqE=
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 0
+Endpoint = 46.151.30.224:29162`
+  },
+  {
+    name: 'Юлия',
+    role: 'Медиадом «Сяйфа» — ТВ + пресса',
+    emoji: '📺',
+    config: `[Interface]
+PrivateKey = EEv8YRa0LsTHrtx8c7iRenJMny9bWJ8Bq3oCjhXK61A=
+Address = 10.8.0.65/24
+DNS = 8.8.8.8, 1.1.1.1
+
+[Peer]
+PublicKey = iI9S2J3Lal6/i7n88mXpYuO4d/3tGoFBxo0/zrrVw0M=
+PresharedKey = pDKtFlNAdT4yzPA5GCJ+GIR4rVKoxPE8m4+hgYTlnco=
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 0
+Endpoint = 46.151.30.224:29162`
+  },
+  {
+    name: 'Ленар',
+    role: 'Бизнес-консультант',
+    emoji: '🎯',
+    config: `[Interface]
+PrivateKey = WHWtB7zhrw+2fG+0UaGSBFobzlu+/S8Gy2ZHaRPEEl0=
+Address = 10.8.0.59/24
+DNS = 8.8.8.8, 1.1.1.1
+
+[Peer]
+PublicKey = iI9S2J3Lal6/i7n88mXpYuO4d/3tGoFBxo0/zrrVw0M=
+PresharedKey = Kfo/GCOA23l3dSRuiOLYWShYbOq8JCRalk13k2/+yZo=
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 0
+Endpoint = 46.151.30.224:29162`
+  }
+];
+
+// ═══════════════════════════════════════════════════
+// Определяем, являются ли конфиги плейсхолдерами
+// ═══════════════════════════════════════════════════
+function isPlaceholder(config) {
+  return config.includes('ЗАМЕНИТЕ') || config.includes('ВАШ_СЕРВЕР');
+}
+
+// ═══════════════════════════════════════════════════
+// Транслитерация кириллицы → латиница (для имени файла)
+// Chrome иначе кладёт файл как "Не подтвержден XXX.crdownload"
+// ═══════════════════════════════════════════════════
+function translit(str) {
+  const map = {
+    'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y',
+    'к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f',
+    'х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'
+  };
+  return str.toLowerCase().split('').map(c => map[c] !== undefined ? map[c] : c).join('')
+    .replace(/\s+/g, '-').replace(/[^a-z0-9\-_]/g, '');
+}
+
+// ═══════════════════════════════════════════════════
+// Скачать .conf файл
+// ═══════════════════════════════════════════════════
+function downloadConfig(name, config) {
+  const blob = new Blob([config], { type: 'application/x-wireguard-config' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = translit(name) + '-vpn.conf';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ═══════════════════════════════════════════════════
+// Отрендерить карточки участников
+// ═══════════════════════════════════════════════════
+function renderCards() {
+  const grid = document.getElementById('participantsGrid');
+  TUNNELS.forEach((t, i) => {
+    const card = document.createElement('div');
+    card.className = 'pc';
+    card.innerHTML = `
+      <div class="pc-head">
+        <div class="pc-avatar">${t.emoji}</div>
+        <div>
+          <div class="pc-name">${t.name}</div>
+          <div class="pc-role">${t.role}</div>
+        </div>
+      </div>
+      <div class="pc-qr" id="qr-${i}"></div>
+      <div class="pc-qr-note">📱 QR для телефона</div>
+      <button class="pc-dl" onclick="downloadConfig('${t.name}', TUNNELS[${i}].config)">
+        ⬇ Скачать туннель (${t.name}.conf)
+      </button>
+    `;
+    grid.appendChild(card);
+
+    // Generate QR code
+    const qrContainer = document.getElementById('qr-' + i);
+    if (isPlaceholder(t.config)) {
+      qrContainer.innerHTML = `
+        <div class="pc-qr-placeholder">
+          <div style="font-size: 24px; margin-bottom: 8px;">⚙️</div>
+          <div>Вставьте реальный<br>конфиг WireGuard<br>в секцию TUNNELS</div>
+        </div>
+      `;
+    } else {
+      try {
+        new QRCode(qrContainer, {
+          text: t.config,
+          width: 160,
+          height: 160,
+          colorDark: '#1a1a2e',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch(e) {
+        qrContainer.innerHTML = '<div class="pc-qr-placeholder">QR не загружен — нет интернета</div>';
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// Копирование промптов
+// ═══════════════════════════════════════════════════
+function copyPrompt(el) {
+  const text = el.innerText
+    .replace(/нажмите — скопировать|скопировано ✓/g, '')
+    .trim();
+  navigator.clipboard.writeText(text).then(() => {
+    el.classList.add('copied');
+    setTimeout(() => el.classList.remove('copied'), 2500);
+  });
+}
+
+function copyExample(el) {
+  navigator.clipboard.writeText(el.innerText.trim()).then(() => {
+    el.classList.add('copied');
+    setTimeout(() => el.classList.remove('copied'), 2000);
+  });
+}
+
+function copyInline(el) {
+  const text = el.innerText
+    .replace(/копировать|скопировано ✓/g, '')
+    .trim();
+  navigator.clipboard.writeText(text).then(() => {
+    el.classList.add('copied');
+    setTimeout(() => el.classList.remove('copied'), 2000);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// Переключение iOS / Android табов
+// ═══════════════════════════════════════════════════
+function initOsTabs() {
+  document.querySelectorAll('.os-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const os = tab.dataset.os;
+      document.querySelectorAll('.os-tab').forEach(t => t.classList.toggle('active', t.dataset.os === os));
+      document.querySelectorAll('.os-panel').forEach(p => p.classList.toggle('active', p.dataset.os === os));
+    });
+  });
+}
+
+// Запуск
+document.addEventListener('DOMContentLoaded', () => {
+  renderCards();
+  initOsTabs();
+});
+</script>
+
+</body>
+</html>
