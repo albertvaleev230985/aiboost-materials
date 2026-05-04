@@ -873,6 +873,15 @@
 
 <script>
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGRbaNKnI3S2bipd6BRopuzOrZjjOOLpyJ5Kgfo1MvBCdCxjqepz1fy6jScc_k0L4/exec';
+  const ANNA_INTAKE_URL = 'https://23-95-220-165.nip.io/anna/questionnaire';
+  const COURSE_META = {
+    course_id: 'nova-realnost-online',
+    course_title: 'ИИ. Новая реальность онлайн',
+    cohort_id: 'nova-realnost-online-2026-05-04',
+    cohort_title: 'ИИ. Новая реальность онлайн — старт 04.05',
+    flow_type: 'online',
+    source: 'aiboost-materials/anketa-online-2.html'
+  };
 
   const state = {
     source: 'Онлайн Поток 2',
@@ -1085,6 +1094,28 @@
   }
 
   // ═══ Submit ═══
+  function buildAnnaPayload() {
+    return {
+      ...state,
+      ...COURSE_META,
+      client_submitted_at: new Date().toISOString()
+    };
+  }
+
+  async function submitToAnnaIntake(payload) {
+    if (!ANNA_INTAKE_URL) return;
+    const response = await fetch(ANNA_INTAKE_URL, {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.status === 'error') {
+      throw new Error(result.error || 'anna_intake_failed');
+    }
+  }
+
   async function submitForm() {
     if (!validateStep(4)) return;
     const btn = document.getElementById('submitBtn');
@@ -1092,6 +1123,8 @@
     btn.style.opacity = '0.5';
 
     try {
+      const annaPayload = buildAnnaPayload();
+      await submitToAnnaIntake(annaPayload);
       if (SCRIPT_URL) {
         await fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(state) });
       }
