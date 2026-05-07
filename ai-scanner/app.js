@@ -249,10 +249,69 @@ const elements = {
 };
 
 function init() {
+  renderHumanFigures();
   renderToolCloud();
   renderStages();
   renderQuestion();
   bindEvents();
+}
+
+function renderHumanFigures() {
+  document.querySelectorAll(".human").forEach((node, index) => {
+    const id = `humanFigure${index}`;
+    node.innerHTML = createHumanFigure(id);
+  });
+}
+
+function createHumanFigure(id) {
+  return `
+    <svg class="human-figure" viewBox="0 0 240 420" role="img" aria-label="Силуэт человека с цифровым экзоскелетом">
+      <defs>
+        <linearGradient id="${id}-core" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e8fff9" stop-opacity=".94"/>
+          <stop offset="48%" stop-color="#61f2d8" stop-opacity=".58"/>
+          <stop offset="100%" stop-color="#102629" stop-opacity=".96"/>
+        </linearGradient>
+        <linearGradient id="${id}-shade" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#0f2528"/>
+          <stop offset="100%" stop-color="#020607"/>
+        </linearGradient>
+        <filter id="${id}-glow" x="-40%" y="-30%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      <g class="aura-lines" fill="none" stroke-linecap="round">
+        <path d="M48 154 C72 126 168 126 192 154"/>
+        <path d="M36 218 C72 194 168 194 204 218"/>
+        <path d="M56 300 C86 318 154 318 184 300"/>
+      </g>
+      <g class="exo-spine" fill="none" stroke-linecap="round">
+        <path d="M120 88 L120 330"/>
+        <path d="M93 145 H147"/>
+        <path d="M82 205 H158"/>
+        <path d="M96 268 H144"/>
+      </g>
+      <g class="figure-body" filter="url(#${id}-glow)">
+        <path class="figure-shadow" fill="url(#${id}-shade)" d="M74 392 C82 312 84 250 89 202 C92 174 104 154 120 154 C136 154 148 174 151 202 C156 250 158 312 166 392 Z"/>
+        <path class="figure-core" fill="url(#${id}-core)" d="M120 34 C149 34 172 58 172 88 C172 118 149 142 120 142 C91 142 68 118 68 88 C68 58 91 34 120 34 Z"/>
+        <path class="figure-core" fill="url(#${id}-core)" d="M104 134 H136 V166 C136 176 129 184 120 184 C111 184 104 176 104 166 Z"/>
+        <path class="figure-core" fill="url(#${id}-core)" d="M92 154 C79 164 68 188 66 220 C62 270 52 322 44 382 C43 391 49 398 58 398 C66 398 72 392 74 384 L91 250 L94 394 C94 403 101 410 110 410 L130 410 C139 410 146 403 146 394 L149 250 L166 384 C168 392 174 398 182 398 C191 398 197 391 196 382 C188 322 178 270 174 220 C172 188 161 164 148 154 Z"/>
+      </g>
+      <g class="exo-joints">
+        <circle cx="120" cy="88" r="5"/>
+        <circle cx="93" cy="145" r="4"/>
+        <circle cx="147" cy="145" r="4"/>
+        <circle cx="82" cy="205" r="4"/>
+        <circle cx="158" cy="205" r="4"/>
+        <circle cx="96" cy="268" r="4"/>
+        <circle cx="144" cy="268" r="4"/>
+      </g>
+    </svg>
+  `;
 }
 
 function bindEvents() {
