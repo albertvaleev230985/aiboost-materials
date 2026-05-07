@@ -1,11 +1,39 @@
-const tools = [
-  "ChatGPT", "Claude", "Gemini", "DeepSeek", "Qwen", "Kimi", "GigaChat", "Perplexity",
-  "NotebookLM", "Gamma", "Canva", "Midjourney", "Runway", "Suno", "ElevenLabs",
-  "Napkin", "Glide", "Make", "n8n", "Zapier", "Recraft", "Ideogram", "Cursor",
-  "Manus", "Genspark", "Lindy", "Relevance", "Google AI Studio", "Mistral", "You.com",
-  "Figma AI", "HeyGen", "CapCut", "Tome", "Beautiful.ai", "Fireflies", "Otter",
-  "Lovable", "v0", "Bolt", "OpenAI", "Meta AI", "Grok"
+const aiTools = [
+  { id: "chatgpt", name: "ChatGPT", category: "модель", logo: "assets/logos/chatgpt.png" },
+  { id: "gemini", name: "Gemini", category: "модель", logo: "assets/logos/gemini.svg" },
+  { id: "claude", name: "Claude", category: "модель", logo: "assets/logos/claude.svg" },
+  { id: "deepseek", name: "DeepSeek", category: "модель", logo: "assets/logos/deepseek.svg" },
+  { id: "qwen", name: "Qwen", category: "модель", logo: "assets/logos/qwen.svg" },
+  { id: "kimi", name: "Kimi", category: "модель", logo: "assets/logos/kimi.png" },
+  { id: "zai", name: "Z.ai", category: "модель", logo: "assets/logos/zai.png" },
+  { id: "perplexity", name: "Perplexity", category: "поиск", logo: "assets/logos/perplexity.svg" },
+  { id: "notebooklm", name: "NotebookLM", category: "знания", logo: "assets/logos/notebooklm.svg" },
+  { id: "ai-studio", name: "AI Studio", category: "модели", logo: "assets/logos/google-ai-studio.png" },
+  { id: "gamma", name: "Gamma", category: "презентации", logo: "assets/logos/gamma.png" },
+  { id: "canva", name: "Canva", category: "дизайн", logo: "assets/logos/canva.png" },
+  { id: "figma", name: "Figma", category: "дизайн", logo: "assets/logos/figma.svg" },
+  { id: "napkin", name: "Napkin", category: "схемы", logo: "assets/logos/napkin.png" },
+  { id: "recraft", name: "Recraft", category: "визуал", logo: "assets/logos/recraft.png" },
+  { id: "ideogram", name: "Ideogram", category: "визуал", logo: "assets/logos/ideogram.png" },
+  { id: "midjourney", name: "Midjourney", category: "визуал", logo: "assets/logos/midjourney.png" },
+  { id: "runway", name: "Runway", category: "видео", logo: "assets/logos/runway.png" },
+  { id: "suno", name: "Suno", category: "музыка", logo: "assets/logos/suno.svg" },
+  { id: "elevenlabs", name: "ElevenLabs", category: "голос", logo: "assets/logos/elevenlabs.svg" },
+  { id: "heygen", name: "HeyGen", category: "видео", logo: "assets/logos/heygen.png" },
+  { id: "capcut", name: "CapCut", category: "монтаж", logo: "assets/logos/capcut.png" },
+  { id: "cursor", name: "Cursor", category: "код", logo: "assets/logos/cursor.svg" },
+  { id: "lovable", name: "Lovable", category: "сайты", logo: "assets/logos/lovable.png" },
+  { id: "bolt", name: "Bolt.new", category: "сайты", logo: "assets/logos/bolt.png" },
+  { id: "v0", name: "v0", category: "интерфейсы", logo: "assets/logos/v0.svg" },
+  { id: "replit", name: "Replit", category: "код", logo: "assets/logos/replit.svg" },
+  { id: "manus", name: "Manus", category: "агенты", logo: "assets/logos/manus.png" },
+  { id: "genspark", name: "Genspark", category: "агенты", logo: "assets/logos/genspark.png" },
+  { id: "n8n", name: "n8n", category: "автоматизация", logo: "assets/logos/n8n.svg" },
+  { id: "make", name: "Make", category: "автоматизация", logo: "assets/logos/make.svg" },
+  { id: "zapier", name: "Zapier", category: "автоматизация", logo: "assets/logos/zapier.svg" }
 ];
+
+const tools = aiTools.map((tool) => tool.name);
 
 const stages = [
   "Сканируем отношение к ИИ",
@@ -204,7 +232,8 @@ const state = {
     about: "",
     routine: [],
     outcome: [],
-    level: null
+    level: null,
+    knownTools: []
   },
   analysisTimer: null
 };
@@ -212,6 +241,9 @@ const state = {
 const elements = {
   app: document.getElementById("app"),
   toolCloud: document.getElementById("toolCloud"),
+  toolWall: document.getElementById("toolWall"),
+  knownCount: document.getElementById("knownCount"),
+  knownInsight: document.getElementById("knownInsight"),
   startBtn: document.getElementById("startBtn"),
   previewResultBtn: document.getElementById("previewResultBtn"),
   scanner: document.getElementById("scanner"),
@@ -251,8 +283,10 @@ const elements = {
 function init() {
   renderHumanFigures();
   renderToolCloud();
+  renderToolWall();
   renderStages();
   renderQuestion();
+  elements.topbarStatus.textContent = "Готов к сканированию";
   bindEvents();
 }
 
@@ -265,50 +299,58 @@ function renderHumanFigures() {
 
 function createHumanFigure(id) {
   return `
-    <svg class="human-figure" viewBox="0 0 240 420" role="img" aria-label="Силуэт человека с цифровым экзоскелетом">
+    <svg class="human-figure" viewBox="0 0 240 420" role="img" aria-label="Скан-силуэт человека с цифровым экзоскелетом">
       <defs>
-        <linearGradient id="${id}-core" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#e8fff9" stop-opacity=".94"/>
-          <stop offset="48%" stop-color="#61f2d8" stop-opacity=".58"/>
-          <stop offset="100%" stop-color="#102629" stop-opacity=".96"/>
+        <linearGradient id="${id}-glass" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#dffff8" stop-opacity=".24"/>
+          <stop offset="48%" stop-color="#56f0d3" stop-opacity=".15"/>
+          <stop offset="100%" stop-color="#041011" stop-opacity=".72"/>
         </linearGradient>
-        <linearGradient id="${id}-shade" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#0f2528"/>
-          <stop offset="100%" stop-color="#020607"/>
+        <linearGradient id="${id}-edge" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".86"/>
+          <stop offset="45%" stop-color="#53f2d2" stop-opacity=".74"/>
+          <stop offset="100%" stop-color="#ffbf5a" stop-opacity=".5"/>
         </linearGradient>
         <filter id="${id}-glow" x="-40%" y="-30%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feGaussianBlur stdDeviation="3.4" result="blur"/>
           <feMerge>
             <feMergeNode in="blur"/>
             <feMergeNode in="SourceGraphic"/>
           </feMerge>
         </filter>
       </defs>
-      <g class="aura-lines" fill="none" stroke-linecap="round">
-        <path d="M48 154 C72 126 168 126 192 154"/>
-        <path d="M36 218 C72 194 168 194 204 218"/>
-        <path d="M56 300 C86 318 154 318 184 300"/>
+      <g class="figure-grid" fill="none">
+        <path d="M38 120 H202"/>
+        <path d="M30 210 H210"/>
+        <path d="M44 300 H196"/>
+        <path d="M82 38 V386"/>
+        <path d="M158 38 V386"/>
       </g>
-      <g class="exo-spine" fill="none" stroke-linecap="round">
-        <path d="M120 88 L120 330"/>
-        <path d="M93 145 H147"/>
-        <path d="M82 205 H158"/>
-        <path d="M96 268 H144"/>
+      <g class="aura-lines" fill="none" stroke-linecap="round">
+        <path d="M54 136 C86 116 154 116 186 136"/>
+        <path d="M38 214 C80 188 160 188 202 214"/>
+        <path d="M60 308 C92 326 148 326 180 308"/>
       </g>
       <g class="figure-body" filter="url(#${id}-glow)">
-        <path class="figure-shadow" fill="url(#${id}-shade)" d="M74 392 C82 312 84 250 89 202 C92 174 104 154 120 154 C136 154 148 174 151 202 C156 250 158 312 166 392 Z"/>
-        <path class="figure-core" fill="url(#${id}-core)" d="M120 34 C149 34 172 58 172 88 C172 118 149 142 120 142 C91 142 68 118 68 88 C68 58 91 34 120 34 Z"/>
-        <path class="figure-core" fill="url(#${id}-core)" d="M104 134 H136 V166 C136 176 129 184 120 184 C111 184 104 176 104 166 Z"/>
-        <path class="figure-core" fill="url(#${id}-core)" d="M92 154 C79 164 68 188 66 220 C62 270 52 322 44 382 C43 391 49 398 58 398 C66 398 72 392 74 384 L91 250 L94 394 C94 403 101 410 110 410 L130 410 C139 410 146 403 146 394 L149 250 L166 384 C168 392 174 398 182 398 C191 398 197 391 196 382 C188 322 178 270 174 220 C172 188 161 164 148 154 Z"/>
+        <path class="figure-glass" fill="url(#${id}-glass)" d="M120 36 C145 36 164 56 164 82 C164 109 145 130 120 130 C95 130 76 109 76 82 C76 56 95 36 120 36 Z M104 142 H136 L145 178 L168 199 L154 222 L144 204 L150 326 L166 382 H144 L124 274 H116 L96 382 H74 L90 326 L96 204 L86 222 L72 199 L95 178 Z"/>
+        <path class="figure-edge" stroke="url(#${id}-edge)" d="M120 36 C145 36 164 56 164 82 C164 109 145 130 120 130 C95 130 76 109 76 82 C76 56 95 36 120 36 Z"/>
+        <path class="figure-edge" stroke="url(#${id}-edge)" d="M104 142 H136 L145 178 L168 199 L154 222 L144 204 L150 326 L166 382 H144 L124 274 H116 L96 382 H74 L90 326 L96 204 L86 222 L72 199 L95 178 Z"/>
+      </g>
+      <g class="exo-spine" fill="none" stroke-linecap="round">
+        <path d="M120 146 V318"/>
+        <path d="M94 176 H146"/>
+        <path d="M96 222 H144"/>
+        <path d="M102 270 H138"/>
+        <path d="M96 204 L120 222 L144 204"/>
       </g>
       <g class="exo-joints">
-        <circle cx="120" cy="88" r="5"/>
-        <circle cx="93" cy="145" r="4"/>
-        <circle cx="147" cy="145" r="4"/>
-        <circle cx="82" cy="205" r="4"/>
-        <circle cx="158" cy="205" r="4"/>
-        <circle cx="96" cy="268" r="4"/>
-        <circle cx="144" cy="268" r="4"/>
+        <circle cx="120" cy="82" r="4"/>
+        <circle cx="120" cy="146" r="4"/>
+        <circle cx="94" cy="176" r="3.5"/>
+        <circle cx="146" cy="176" r="3.5"/>
+        <circle cx="96" cy="222" r="3.5"/>
+        <circle cx="144" cy="222" r="3.5"/>
+        <circle cx="120" cy="270" r="3.5"/>
       </g>
     </svg>
   `;
@@ -371,12 +413,12 @@ function bindEvents() {
 
 function renderToolCloud() {
   const fragment = document.createDocumentFragment();
-  tools.forEach((tool, index) => {
+  aiTools.forEach((tool, index) => {
     const chip = document.createElement("span");
     chip.className = "tool-chip";
     if (index % 7 === 0) chip.classList.add("is-hot");
     if (index % 9 === 0) chip.classList.add("is-warm");
-    chip.textContent = tool;
+    chip.textContent = tool.name;
     chip.style.setProperty("--left", `${(index * 23) % 96}%`);
     chip.style.setProperty("--top", `${(index * 37) % 94}%`);
     chip.style.setProperty("--speed", `${18 + (index % 9) * 3}s`);
@@ -384,6 +426,62 @@ function renderToolCloud() {
     fragment.appendChild(chip);
   });
   elements.toolCloud.appendChild(fragment);
+}
+
+function renderToolWall() {
+  const fragment = document.createDocumentFragment();
+  aiTools.forEach((tool) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "tool-logo-card";
+    button.dataset.tool = tool.id;
+    button.innerHTML = `
+      <span class="tool-logo-mark">
+        <img src="${tool.logo}" alt="" loading="eager">
+      </span>
+      <span class="tool-logo-name">${tool.name}</span>
+      <span class="tool-logo-category">${tool.category}</span>
+    `;
+    button.addEventListener("click", () => toggleKnownTool(tool.id));
+    fragment.appendChild(button);
+  });
+  elements.toolWall.appendChild(fragment);
+  updateKnownToolsSummary();
+}
+
+function toggleKnownTool(toolId) {
+  const selected = new Set(state.answers.knownTools || []);
+  if (selected.has(toolId)) {
+    selected.delete(toolId);
+  } else {
+    selected.add(toolId);
+  }
+  state.answers.knownTools = Array.from(selected);
+  updateKnownToolsSummary();
+}
+
+function updateKnownToolsSummary() {
+  const count = state.answers.knownTools.length;
+  document.querySelectorAll(".tool-logo-card").forEach((card) => {
+    card.classList.toggle("is-selected", state.answers.knownTools.includes(card.dataset.tool));
+  });
+  elements.knownCount.textContent = `${count} ${pluralize(count, ["знакомый инструмент", "знакомых инструмента", "знакомых инструментов"])}`;
+  elements.knownInsight.textContent = getKnownInsight(count);
+}
+
+function getKnownInsight(count) {
+  if (count === 0) return "Нормально, если пока ничего не знакомо. Сканер начнет с самого простого маршрута.";
+  if (count <= 3) return "Хорошая стартовая точка: дальше отделим полезное от шума и не перегрузим тебя сервисами.";
+  if (count <= 9) return "У тебя уже есть база. Теперь важно понять, какие инструменты действительно нужны под твои задачи.";
+  return "Ты уже видел много инструментов. Следующий шаг - собрать из них систему, а не расширять хаос.";
+}
+
+function pluralize(count, forms) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return forms[0];
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return forms[1];
+  return forms[2];
 }
 
 function renderStages() {
@@ -641,6 +739,7 @@ function getLevel(answers) {
   }[answers.level] || { score: 28, label: "Старт" };
 
   let bonus = Math.min(10, answers.routine.length + answers.areas.length);
+  bonus += Math.min(8, (answers.knownTools || []).length);
   if (answers.attitude === "unsystem") bonus += 6;
   if (answers.attitude === "skeptic") bonus -= 4;
   return {
@@ -798,8 +897,10 @@ function seedDemoAnswers() {
     about: "Веду клиентов, отвечаю в чатах, готовлю документы, иногда делаю презентации и планирую задачи.",
     routine: ["messages", "docs", "sales", "planning", "visuals"],
     outcome: ["time", "money", "order"],
-    level: "basic"
+    level: "basic",
+    knownTools: ["chatgpt", "gemini", "perplexity", "notebooklm", "canva", "gamma"]
   };
+  updateKnownToolsSummary();
 }
 
 function reset() {
@@ -811,8 +912,10 @@ function reset() {
     about: "",
     routine: [],
     outcome: [],
-    level: null
+    level: null,
+    knownTools: []
   };
+  updateKnownToolsSummary();
 }
 
 function normalize(value) {
