@@ -80,8 +80,8 @@ const questions = [
     id: "about",
     type: "text",
     stage: stages[2],
-    title: "Расскажи коротко о себе и своих задачах",
-    hint: "Чем занимаешься, что часто делаешь за компьютером или телефоном, что у тебя забирает время? Можно написать обычными словами."
+    title: "Опиши контекст без личных данных",
+    hint: "Нужны не секреты и не анкета, а типы задач: чем занимаешься, что повторяется, где устаешь и что хочется усилить с помощью ИИ."
   },
   {
     id: "routine",
@@ -224,6 +224,23 @@ const keywordToHelper = [
   { helper: "planning", words: ["план", "задач", "распис", "проект"] }
 ];
 
+const contextTemplates = {
+  work: "Деятельность: ",
+  routine: "Повторяющаяся рутина: ",
+  life: "Жизнь вне работы: ",
+  friction: "Где тяжело: "
+};
+
+const contextSignals = [
+  { id: "work", words: ["работ", "занима", "клиент", "продаж", "документ", "управ", "бизнес", "проект", "услуг", "команд"] },
+  { id: "routine", words: ["кажд", "часто", "регуляр", "повтор", "недел", "письм", "чат", "отчет", "план", "таблиц"] },
+  { id: "life", words: ["дом", "сем", "быт", "спорт", "хобби", "здоров", "обуч", "личн", "путеше", "дет"] },
+  { id: "friction", words: ["хаос", "устал", "долго", "сложно", "тормоз", "не успева", "рутин", "раздраж", "отклады"] },
+  { id: "goal", words: ["хочу", "цель", "важно", "нужно", "помог", "сэконом", "усил", "разобрат", "навести"] }
+];
+
+const ABOUT_MIN_SCORE = 45;
+
 const state = {
   current: 0,
   answers: {
@@ -258,6 +275,11 @@ const elements = {
   optionsGrid: document.getElementById("optionsGrid"),
   textCapture: document.getElementById("textCapture"),
   aboutText: document.getElementById("aboutText"),
+  contextScore: document.getElementById("contextScore"),
+  contextMeterFill: document.getElementById("contextMeterFill"),
+  contextMeterNote: document.getElementById("contextMeterNote"),
+  contextPrompts: document.getElementById("contextPrompts"),
+  contextChecklist: document.getElementById("contextChecklist"),
   backBtn: document.getElementById("backBtn"),
   nextBtn: document.getElementById("nextBtn"),
   scanStages: document.getElementById("scanStages"),
@@ -396,7 +418,14 @@ function bindEvents() {
 
   elements.aboutText.addEventListener("input", () => {
     state.answers.about = elements.aboutText.value.trim();
+    updateContextMeter();
     updateNextState();
+  });
+
+  elements.contextPrompts.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-context-template]");
+    if (!button) return;
+    addContextTemplate(button.dataset.contextTemplate);
   });
 
   elements.restartBtn.addEventListener("click", () => {
@@ -511,6 +540,7 @@ function renderQuestion() {
   elements.optionsGrid.hidden = question.type === "text";
   elements.textCapture.hidden = question.type !== "text";
   elements.aboutText.value = state.answers.about || "";
+  updateContextMeter();
 
   if (question.options) {
     const selected = getAnswerArray(question);
@@ -566,7 +596,7 @@ function getAnswerArray(question) {
 function isAnswered(question) {
   const value = state.answers[question.id];
   if (question.type === "text") {
-    return Boolean((value || "").trim());
+    return getContextScore(value).score >= ABOUT_MIN_SCORE;
   }
   if (Array.isArray(value)) {
     return value.length > 0;
@@ -576,6 +606,71 @@ function isAnswered(question) {
 
 function updateNextState() {
   elements.nextBtn.disabled = !isAnswered(questions[state.current]);
+}
+
+function addContextTemplate(templateId) {
+  const template = contextTemplates[templateId];
+  if (!template) return;
+  const current = elements.aboutText.value.trim();
+  const next = current ? `${current}\n\n${template}` : template;
+  elements.aboutText.value = next;
+  state.answers.about = next.trim();
+  elements.aboutText.focus();
+  elements.aboutText.setSelectionRange(elements.aboutText.value.length, elements.aboutText.value.length);
+  updateContextMeter();
+  updateNextState();
+}
+
+function updateContextMeter() {
+  if (!elements.contextScore) return;
+  const { score, hits } = getContextScore(elements.aboutText.value);
+  elements.contextScore.textContent = `${score}%`;
+  elements.contextMeterFill.style.width = `${score}%`;
+  elements.contextMeterNote.textContent = getContextMeterNote(score, hits);
+  elements.contextChecklist.querySelectorAll("[data-context-signal]").forEach((item) => {
+    item.classList.toggle("is-done", hits.includes(item.dataset.contextSignal));
+  });
+  elements.contextPrompts.querySelectorAll("[data-context-template]").forEach((button) => {
+    button.classList.toggle("is-used", hits.includes(button.dataset.contextTemplate));
+  });
+}
+
+function getContextScore(value) {
+  const text = normalize(value);
+  const meaningfulText = text
+    .replace(/деятельность:/g, "")
+    .replace(/повторяющаяся рутина:/g, "")
+    .replace(/жизнь вне работы:/g, "")
+    .replace(/где тяжело:/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const cleanLength = meaningfulText.length;
+  const hits = contextSignals
+    .filter((signal) => signal.words.some((word) => meaningfulText.includes(word)))
+    .map((signal) => signal.id);
+  const lengthScore = Math.min(36, Math.floor(cleanLength / 4));
+  const signalScore = hits.length * 13;
+  const structureScore = cleanLength >= 80 && (text.match(/[.!?\n:;]/g) || []).length >= 3 ? 8 : 0;
+  return {
+    score: Math.min(100, lengthScore + signalScore + structureScore),
+    hits
+  };
+}
+
+function getContextMeterNote(score, hits) {
+  const missing = contextSignals
+    .filter((signal) => !hits.includes(signal.id))
+    .map((signal) => ({
+      work: "чем ты занимаешься в целом",
+      routine: "что повторяется каждую неделю",
+      life: "что есть кроме работы",
+      friction: "что забирает время и силы",
+      goal: "какого результата хочешь"
+    })[signal.id]);
+  if (score >= 86) return "Отлично: контекста достаточно для очень персонального маршрута.";
+  if (score >= ABOUT_MIN_SCORE) return `Уже можно продолжать. Для точности можно добавить: ${missing.slice(0, 2).join(", ")}.`;
+  if (missing.length) return `Контекста пока мало. Добавь без личных данных: ${missing.slice(0, 2).join(", ")}.`;
+  return "Добавь еще пару общих деталей о задачах и целях.";
 }
 
 function showScreen(screenId) {
