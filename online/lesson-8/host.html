@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body class="app">
@@ -32,7 +33,6 @@ import { QUESTIONS, HOST_KEY } from './questions.js';
 import { runTimer } from './app.js';
 import { subscribeSession, subscribeUsers, setSession, resetAll } from './firebase.js';
 
-// Защита по ключу
 const params = new URLSearchParams(location.search);
 const key = params.get('key');
 const content = document.getElementById('content');
@@ -46,7 +46,7 @@ if (key !== HOST_KEY) {
 }
 
 let session = { phase: 'lobby', currentQuestion: -1, timerStartedAt: null, timerDurationSec: 30, showCorrect: false };
-let users = {}; // { slug: { name, answers, score, card } }
+let users = {};
 let stopTimer = null;
 let lastSnapshot = '';
 
@@ -76,7 +76,7 @@ function render() {
       <div class="host-controls">
         <span class="host-phase">${phaseLabel(session.phase)}</span>
         <div id="current-q-block">${currentQBlock(q)}</div>
-        <div class="host-timer-display ${timerClass()}" id="big-timer">${session.timerStartedAt ? '' : (session.phase === 'card' ? '⏱' : '—')}</div>
+        <div class="host-timer-display ${timerClass()}" id="big-timer">${session.timerStartedAt ? '' : (session.phase === 'card' ? '<i class="ph ph-timer"></i>' : '—')}</div>
         <div class="host-action-row" id="actions">${actionsBlock()}</div>
         <div class="muted small mt-2 ta-c">${list.length} ${plural(list.length,'участник','участника','участников')} в&nbsp;сессии</div>
       </div>
@@ -84,7 +84,7 @@ function render() {
       <div>
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:12px;">
           <h2 class="h2">Участники</h2>
-          <button id="reset-btn" class="btn btn-ghost" style="font-size:13px; padding:8px 14px;">🧹 Сбросить сессию</button>
+          <button id="reset-btn" class="btn btn-ghost" style="font-size:13px; padding:8px 14px;"><i class="ph ph-broom"></i> Сбросить сессию</button>
         </div>
         <div class="host-grid" id="grid">${gridBlock(list, q)}</div>
 
@@ -92,13 +92,12 @@ function render() {
         <div class="muted small">Зелёное — правильный, красное — ошибка, серое — нет ответа. Клик на&nbsp;номер вопроса — разбор.</div>
         <div class="heatmap" id="heatmap">${heatmapBlock(list)}</div>
 
-        <h2 class="h2 mt-6">🎬 Манифесты</h2>
+        <h2 class="h2 mt-6"><i class="ph ph-megaphone-simple icon-violet"></i> Манифесты</h2>
         <div id="manifests">${manifestsBlock(list)}</div>
       </div>
     </div>
   `;
 
-  // event handlers
   document.getElementById('reset-btn').addEventListener('click', async () => {
     if (!confirm('Удалить ВСЕ данные сессии (всех участников, ответы, карты)? Это нельзя отменить.')) return;
     try {
@@ -111,7 +110,6 @@ function render() {
   bindActions();
   bindHeatmap(list);
 
-  // Таймер
   if (stopTimer) { stopTimer(); stopTimer = null; }
   if (session.timerStartedAt) {
     const dur = session.timerDurationSec || 30;
@@ -127,7 +125,14 @@ function render() {
 }
 
 function phaseLabel(phase) {
-  return ({lobby:'⏳ Лобби', test:'🎯 Тест', discussion:'💬 Разбор', card:'🗺 Карта', done:'✅ Финал'}[phase]) || phase;
+  const labels = {
+    lobby: '<i class="ph ph-hourglass"></i> Лобби',
+    test: '<i class="ph ph-target"></i> Тест',
+    discussion: '<i class="ph ph-chat-circle"></i> Разбор',
+    card: '<i class="ph ph-map-trifold"></i> Карта',
+    done: '<i class="ph ph-check-circle"></i> Финал',
+  };
+  return labels[phase] || phase;
 }
 
 function currentQBlock(q) {
@@ -136,7 +141,7 @@ function currentQBlock(q) {
     <div class="host-current-q">
       <span class="num">Вопрос ${session.currentQuestion + 1} из ${QUESTIONS.length} · ${q.theme}</span>
       ${q.text}
-      <div class="correct">✅ Правильный: <strong>${String.fromCharCode(65 + q.correct)}</strong> — ${q.options[q.correct]}</div>
+      <div class="correct"><i class="ph ph-check-circle icon-green"></i> Правильный: <strong>${String.fromCharCode(65 + q.correct)}</strong> — ${q.options[q.correct]}</div>
     </div>
   `;
 }
@@ -160,7 +165,7 @@ function formatTime(sec, asMinutes) {
 
 function actionsBlock() {
   if (session.phase === 'lobby') {
-    return `<button class="btn btn-primary btn-big" data-act="start-test">🎯 Запустить тест</button>`;
+    return `<button class="btn btn-primary btn-big" data-act="start-test"><i class="ph ph-target"></i> Запустить тест</button>`;
   }
   if (session.phase === 'test') {
     const isLast = session.currentQuestion >= QUESTIONS.length - 1;
@@ -168,26 +173,26 @@ function actionsBlock() {
     const correctVisible = session.showCorrect;
     const buttons = [];
     if (noQ) {
-      buttons.push(`<button class="btn btn-primary btn-big" data-act="next-q">▶ Первый вопрос</button>`);
+      buttons.push(`<button class="btn btn-primary btn-big" data-act="next-q"><i class="ph ph-play"></i> Первый вопрос</button>`);
     } else {
-      if (!correctVisible) buttons.push(`<button class="btn btn-ghost" data-act="reveal">👁 Показать правильный</button>`);
-      if (!isLast) buttons.push(`<button class="btn btn-primary btn-big" data-act="next-q">${correctVisible ? '▶ Следующий' : '⏭ Следующий (скрыть, не показав)'}</button>`);
-      else buttons.push(`<button class="btn btn-primary btn-big" data-act="discussion">💬 К&nbsp;разбору heatmap</button>`);
+      if (!correctVisible) buttons.push(`<button class="btn btn-ghost" data-act="reveal"><i class="ph ph-eye"></i> Показать правильный</button>`);
+      if (!isLast) buttons.push(`<button class="btn btn-primary btn-big" data-act="next-q">${correctVisible ? '<i class="ph ph-play"></i> Следующий' : '<i class="ph ph-skip-forward"></i> Следующий (скрыть, не показав)'}</button>`);
+      else buttons.push(`<button class="btn btn-primary btn-big" data-act="discussion"><i class="ph ph-chat-circle"></i> К&nbsp;разбору heatmap</button>`);
     }
-    buttons.push(`<button class="btn btn-ghost" data-act="discussion">⏸ Пауза → разбор</button>`);
+    buttons.push(`<button class="btn btn-ghost" data-act="discussion"><i class="ph ph-pause"></i> Пауза → разбор</button>`);
     return buttons.join('');
   }
   if (session.phase === 'discussion') {
     return `
-      <button class="btn btn-primary" data-act="resume-test">▶ Вернуться к тесту</button>
-      <button class="btn btn-primary btn-big" data-act="start-card">🗺 Запустить карту (5 мин)</button>
+      <button class="btn btn-primary" data-act="resume-test"><i class="ph ph-play"></i> Вернуться к тесту</button>
+      <button class="btn btn-primary btn-big" data-act="start-card"><i class="ph ph-map-trifold"></i> Запустить карту (5 мин)</button>
     `;
   }
   if (session.phase === 'card') {
-    return `<button class="btn btn-primary btn-big" data-act="end">✅ Завершить урок</button>`;
+    return `<button class="btn btn-primary btn-big" data-act="end"><i class="ph ph-check-circle"></i> Завершить урок</button>`;
   }
   if (session.phase === 'done') {
-    return `<button class="btn btn-ghost" data-act="back-lobby">↺ Вернуть в&nbsp;лобби</button>`;
+    return `<button class="btn btn-ghost" data-act="back-lobby"><i class="ph ph-arrow-counter-clockwise"></i> Вернуть в&nbsp;лобби</button>`;
   }
   return '';
 }
@@ -245,7 +250,7 @@ function gridBlock(list, q) {
       const ok = my === q.correct;
       return `<div class="host-cell answered ${ok ? 'correct' : 'wrong'}">
         <div class="name">${escapeHtml(u.name)}</div>
-        <div class="status">${ok ? '✓ верно' : '✗ ошибка'}</div>
+        <div class="status">${ok ? '<i class="ph ph-check"></i> верно' : '<i class="ph ph-x"></i> ошибка'}</div>
         <div class="ans-letter">${String.fromCharCode(65 + my)}</div>
       </div>`;
     }
@@ -261,9 +266,10 @@ function gridBlock(list, q) {
       const c = u.card || {};
       const fc = c.filledCount || 0;
       const cls = fc === 3 ? 'done' : fc > 0 ? 'thinking' : '';
+      const status = fc === 3 ? '<i class="ph ph-check-circle icon-green"></i> готово' : fc > 0 ? 'пишет' : 'не начал';
       return `<div class="host-cell ${cls}">
         <div class="name">${escapeHtml(u.name)}</div>
-        <div class="status">${fc === 3 ? '✅ готово' : fc > 0 ? 'пишет' : 'не начал'}</div>
+        <div class="status">${status}</div>
         <div class="ans-letter">${fc}/3</div>
       </div>`;
     }
@@ -292,7 +298,7 @@ function heatmapBlock(list) {
           ${QUESTIONS.map((q, i) => {
             const my = u.answers[i];
             if (my == null) return `<td class="pending">—</td>`;
-            return my === q.correct ? `<td class="ok">✓</td>` : `<td class="bad">✗</td>`;
+            return my === q.correct ? `<td class="ok"><i class="ph ph-check"></i></td>` : `<td class="bad"><i class="ph ph-x"></i></td>`;
           }).join('')}
           <td style="font-weight:800; color:var(--violet);">${computeScore(u)}</td>
         </tr>
@@ -331,7 +337,7 @@ function showQuestionDetail(qIdx, list) {
         <div style="padding:10px 14px; background:${isC?'rgba(94,196,122,0.12)':'rgba(255,255,255,0.04)'}; border:1px solid ${isC?'rgba(94,196,122,0.45)':'var(--white-20)'}; border-radius:12px; margin-bottom:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
             <div style="font-size:15px; line-height:1.4; color:var(--white); flex:1;">
-              <span style="color:${isC?'var(--green)':'var(--white-60)'}; font-weight:800;">${String.fromCharCode(65+i)}${isC?' ✅':''}</span> ${opt}
+              <span style="color:${isC?'var(--green)':'var(--white-60)'}; font-weight:800;">${String.fromCharCode(65+i)}${isC?' <i class="ph ph-check-circle"></i>':''}</span> ${opt}
             </div>
             <div style="font-weight:800; color:var(--violet);">${counts[i]}/${total}</div>
           </div>

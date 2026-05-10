@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body class="app">
@@ -37,15 +38,13 @@ if (!me) {
 
 const content = document.getElementById('content');
 
-// Локальное состояние
 let session = { phase: 'lobby', currentQuestion: -1, timerStartedAt: null, timerDurationSec: 30, showCorrect: false };
-let myAnswers = {}; // { '0': 1, '1': 3, ... }
+let myAnswers = {};
 let stopTimer = null;
 
 subscribeSession((s) => {
   const prev = session;
   session = s || session;
-  // если перешли к новому вопросу — ререндер
   if (prev.currentQuestion !== session.currentQuestion || prev.phase !== session.phase || prev.timerStartedAt !== session.timerStartedAt || prev.showCorrect !== session.showCorrect) {
     if (stopTimer) { stopTimer(); stopTimer = null; }
     render();
@@ -53,13 +52,11 @@ subscribeSession((s) => {
 });
 
 function render() {
-  // если фаза не test — показываем плашку
   if (session.phase === 'lobby') return renderLobby();
   if (session.phase === 'discussion') return renderDiscussion();
   if (session.phase === 'card') return renderGoToCard();
   if (session.phase === 'done') return renderFinalReport();
 
-  // фаза = test
   const qIdx = session.currentQuestion;
   if (qIdx < 0 || qIdx >= QUESTIONS.length) return renderTestWaiting();
 
@@ -81,7 +78,7 @@ function render() {
     <div class="q-counter">Вопрос ${qIdx + 1} из ${QUESTIONS.length}</div>
     <div class="q-text">${q.text}</div>
     <div id="opts"></div>
-    <div class="muted small mt-2" id="status">${locked ? (showCorrect ? '✅ Альберт раскрыл правильный ответ' : '✅ Ответ зафиксирован — ждём Альберта') : '👉 Выбери вариант. Можно один раз.'}</div>
+    <div class="muted small mt-2" id="status">${locked ? (showCorrect ? '<i class="ph ph-eye icon-violet"></i> Альберт раскрыл правильный ответ' : '<i class="ph ph-check-circle icon-green"></i> Ответ зафиксирован — ждём Альберта') : '<i class="ph ph-arrow-down icon-violet"></i> Выбери вариант. Можно один раз.'}</div>
   `;
 
   const opts = document.getElementById('opts');
@@ -100,14 +97,12 @@ function render() {
       if (locked) return;
       myAnswers[qIdx] = i;
       pushAnswer(me.slug, qIdx, i).catch(e => console.warn('push answer failed', e));
-      // обновим score
       setUserScore(me.slug, scoreFor(myAnswers)).catch(()=>{});
       render();
     });
     opts.appendChild(btn);
   });
 
-  // запускаем таймер если он идёт
   if (session.timerStartedAt) {
     const fill = document.getElementById('timer-fill');
     const left = document.getElementById('timer-left');
@@ -116,9 +111,8 @@ function render() {
       left.textContent = Math.ceil(rem) + ' сек';
       fill.className = 'fill' + (rem < 5 ? ' danger' : rem < 10 ? ' warn' : '');
     }, () => {
-      // время вышло — лочим UI без раскрытия правильного (это сделает хост через showCorrect)
       const status = document.getElementById('status');
-      if (status && myAnswers[qIdx] == null) status.innerHTML = '⏰ Время вышло — ждём Альберта.';
+      if (status && myAnswers[qIdx] == null) status.innerHTML = '<i class="ph ph-alarm icon-coral"></i> Время вышло — ждём Альберта.';
       opts.querySelectorAll('button').forEach(b => b.disabled = true);
     });
   }
@@ -127,9 +121,10 @@ function render() {
 function renderLobby() {
   content.innerHTML = `
     <div class="card outline-violet ta-c" style="padding:48px 32px;">
-      <div class="card-title" style="font-size:24px;">⏳ Ждём Альберта</div>
+      <div style="font-size:48px; color:var(--violet); margin-bottom:8px;"><i class="ph ph-hourglass"></i></div>
+      <div class="card-title" style="font-size:24px;">Ждём Альберта</div>
       <div class="card-body">Альберт скоро запустит первый вопрос. Закладку не&nbsp;закрывай — вопрос появится автоматически.</div>
-      <div class="muted small mt-4">Привет, ${escapeHtml(me.name)} 👋</div>
+      <div class="muted small mt-4">Привет, ${escapeHtml(me.name)} <i class="ph ph-hand-waving icon-coral"></i></div>
     </div>
   `;
 }
@@ -137,7 +132,8 @@ function renderLobby() {
 function renderDiscussion() {
   content.innerHTML = `
     <div class="card outline-violet ta-c" style="padding:36px 32px;">
-      <div class="card-title">💬 Разбор теста</div>
+      <div style="font-size:42px; color:var(--violet); margin-bottom:8px;"><i class="ph ph-chat-circle"></i></div>
+      <div class="card-title">Разбор теста</div>
       <div class="card-body">Альберт сейчас разбирает ваши ответы по&nbsp;heatmap. Слушай в&nbsp;Zoom — следующий вопрос/блок появится автоматически.</div>
       <div class="muted small mt-4">Уже ответил на: ${Object.keys(myAnswers).length} из&nbsp;${QUESTIONS.length}</div>
     </div>
@@ -147,7 +143,8 @@ function renderDiscussion() {
 function renderTestWaiting() {
   content.innerHTML = `
     <div class="card outline-violet ta-c" style="padding:36px 32px;">
-      <div class="card-title">🎯 Тест запущен</div>
+      <div style="font-size:42px; color:var(--violet); margin-bottom:8px;"><i class="ph ph-target"></i></div>
+      <div class="card-title">Тест запущен</div>
       <div class="card-body">Альберт вот-вот покажет первый вопрос. Никуда не&nbsp;уходи.</div>
     </div>
   `;
@@ -156,38 +153,39 @@ function renderTestWaiting() {
 function renderGoToCard() {
   content.innerHTML = `
     <div class="card outline-coral ta-c" style="padding:36px 32px;">
-      <div class="card-title">🗺 Время заполнить карту</div>
+      <div style="font-size:42px; color:var(--coral); margin-bottom:8px;"><i class="ph ph-map-trifold"></i></div>
+      <div class="card-title">Время заполнить карту</div>
       <div class="card-body">Открой карту и&nbsp;заполни 3 поля. У&nbsp;тебя 5&nbsp;минут.</div>
-      <a href="card.html" class="btn btn-primary mt-4">Открыть карту &rarr;</a>
+      <a href="card.html" class="btn btn-primary mt-4">Открыть карту <i class="ph ph-arrow-right"></i></a>
     </div>
   `;
 }
 
 function renderFinalReport() {
-  // подгружаем все мои ответы из локального стейта
   const ansArr = QUESTIONS.map((_, i) => myAnswers[i] ?? null);
   const report = strengthReport(ansArr);
   const s = report.score;
-  const tag = s >= 17 ? '🌟 Уверенный пользователь ИИ'
-            : s >= 14 ? '🔥 Крепкая база — почти всё знаешь'
-            : s >= 10 ? '👌 Освоил ядро курса'
-            :           '🎯 Есть что освежить — и&nbsp;это нормально';
+  const tagText = s >= 17 ? 'Уверенный пользователь ИИ'
+                : s >= 14 ? 'Крепкая база — почти всё знаешь'
+                : s >= 10 ? 'Освоил ядро курса'
+                :           'Есть что освежить — и&nbsp;это нормально';
+  const tagIcon = s >= 17 ? 'ph-star' : s >= 14 ? 'ph-fire' : s >= 10 ? 'ph-thumbs-up' : 'ph-target';
 
   content.innerHTML = `
     <div class="score-hero">
       <div class="score-small">Твой результат</div>
       <div class="score-big">${s}<span style="font-size:48px; opacity:0.45;">/${report.total}</span></div>
-      <div class="score-label">${tag}</div>
+      <div class="score-label"><i class="ph ${tagIcon}"></i> ${tagText}</div>
     </div>
 
     <div class="card outline-green">
-      <div class="card-tag green">✅ Уже в&nbsp;арсенале</div>
+      <div class="card-tag green"><i class="ph ph-check-circle"></i> Уже в&nbsp;арсенале</div>
       <div class="card-title">${report.known.length} ${plural(report.known.length, 'тема','темы','тем')} знаешь уверенно</div>
     </div>
 
     ${report.toRefresh.length ? `
       <div class="card outline-gold">
-        <div class="card-tag gold">🔁 Стоит освежить</div>
+        <div class="card-tag gold"><i class="ph ph-arrow-clockwise"></i> Стоит освежить</div>
         <div class="card-title">${report.toRefresh.length} ${plural(report.toRefresh.length, 'тема','темы','тем')} — в&nbsp;супер-шпаргалке курса (придёт в&nbsp;личку)</div>
       </div>` : ''}
 

@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body class="app">
@@ -53,6 +54,10 @@ function render() {
     phase === 'done' ? `<div class="card-tag green">Спасибо</div><div class="card-body">Урок завершён. Карта сохранена.</div>` :
     `<div class="card-tag gold">Можно начать заранее</div><div class="card-body">Альберт включит таймер на&nbsp;карту во&nbsp;второй половине урока. Можно подумать сейчас и&nbsp;уточнить позже.</div>`;
 
+  const filledStatus = filledCount === 3
+    ? '<i class="ph ph-check-circle icon-green"></i> Все три поля заполнены — сохранено'
+    : `Заполнено: ${filledCount}/3`;
+
   content.innerHTML = `
     <div class="h1">Моя карта на&nbsp;30 дней</div>
     <div class="lead">Три коротких поля. Заполняй своими словами. Манифест прочтут вслух — пиши коротко и&nbsp;ярко.</div>
@@ -85,8 +90,8 @@ function render() {
     </div>
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:18px; flex-wrap:wrap; gap:10px;">
-      <div class="muted small" id="save-hint">${filledCount === 3 ? '✅ Все три поля заполнены — сохранено' : `Заполнено: ${filledCount}/3`}</div>
-      <a href="test.html" class="btn btn-ghost">← Назад к тесту</a>
+      <div class="muted small" id="save-hint">${filledStatus}</div>
+      <a href="test.html" class="btn btn-ghost"><i class="ph ph-arrow-left"></i> Назад к тесту</a>
     </div>
   `;
 
@@ -101,7 +106,7 @@ function render() {
       card[key] = el.value;
       localStorage.setItem('aiboost_l8_online:' + me.slug + ':card:' + key, el.value);
       const hint = document.getElementById('save-hint');
-      if (hint) hint.textContent = '⏳ Сохраняем…';
+      if (hint) hint.innerHTML = '<i class="ph ph-cloud-arrow-up icon-violet"></i> Сохраняем…';
       onInput();
     });
   });
@@ -117,7 +122,7 @@ function render() {
         fill.className = 'fill' + (rem < 30 ? ' danger' : rem < 60 ? ' warn' : '');
       }, () => {
         const hint = document.getElementById('save-hint');
-        if (hint) hint.textContent = '⏰ Время вышло — карта сохранена.';
+        if (hint) hint.innerHTML = '<i class="ph ph-alarm icon-coral"></i> Время вышло — карта сохранена.';
         persist();
       });
     }
@@ -133,11 +138,13 @@ function persist() {
     ts: Date.now(),
   }).then(() => {
     const hint = document.getElementById('save-hint');
-    if (hint) hint.textContent = filledCount === 3 ? '✅ Все три поля заполнены — сохранено' : `Заполнено: ${filledCount}/3 — сохранено`;
+    if (hint) hint.innerHTML = filledCount === 3
+      ? '<i class="ph ph-check-circle icon-green"></i> Все три поля заполнены — сохранено'
+      : `Заполнено: ${filledCount}/3 — сохранено`;
   }).catch(e => {
     console.warn('push card failed', e);
     const hint = document.getElementById('save-hint');
-    if (hint) hint.textContent = '⚠ Сетевая ошибка — данные в браузере, попробуем ещё раз через 5 сек.';
+    if (hint) hint.innerHTML = '<i class="ph ph-warning icon-coral"></i> Сетевая ошибка — данные в браузере, попробуем ещё раз через 5 сек.';
     setTimeout(persist, 5000);
   });
 }
