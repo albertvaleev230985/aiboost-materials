@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность · Занятие 8 — Стратегия (онлайн, финал)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0f0f1e;
+  --bg-2: #1a1a2e;
+  --accent: #A78BFA;
+  --accent-dark: #7C3AED;
+  --accent-glow: rgba(167,139,250,0.35);
+  --coral: #E07461;
+  --coral-glow: rgba(224,116,97,0.32);
+  --white: #ffffff;
+  --white-80: rgba(255,255,255,0.8);
+  --white-60: rgba(255,255,255,0.6);
+  --white-40: rgba(255,255,255,0.4);
+  --white-20: rgba(255,255,255,0.2);
+  --white-10: rgba(255,255,255,0.1);
+  --yellow: #f0c040;
+  --orange: #e8944a;
+  --red: #e05555;
+  --green: #5ec47a;
+  --blue: #4285f4;
+}
+html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--white); -webkit-font-smoothing: antialiased; }
+a { color: var(--accent); text-decoration: underline; cursor: pointer; }
+a:hover { color: var(--coral); }
+
+.deck { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+.slide {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 48px 72px; opacity: 0; visibility: hidden;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translateX(40px); overflow-y: auto;
+}
+.slide.active { opacity: 1; visibility: visible; transform: translateX(0); }
+.slide.prev { transform: translateX(-40px); }
+
+.slide-title { font-size: 44px; font-weight: 800; line-height: 1.15; margin-bottom: 22px; }
+.slide-title .accent { color: var(--accent); }
+.slide-title .coral { color: var(--coral); }
+.slide-subtitle { font-size: 22px; font-weight: 400; color: var(--white-80); margin-bottom: 28px; line-height: 1.4; }
+
+.point { margin-bottom: 12px; padding-left: 8px; font-size: 20px; line-height: 1.5; color: var(--white-80); }
+.point strong { color: var(--white); font-weight: 600; }
+.point .accent { color: var(--accent); font-weight: 700; }
+.point .coral { color: var(--coral); font-weight: 700; }
+
+.quote { margin-top: 16px; padding: 22px 30px; border-left: 4px solid var(--accent); background: var(--white-10); border-radius: 0 12px 12px 0; font-size: 22px; font-weight: 500; line-height: 1.5; font-style: italic; }
+.quote.coral { border-left-color: var(--coral); }
+.quote .src { display: block; margin-top: 8px; font-size: 14px; color: var(--white-40); font-style: normal; }
+
+.card { background: var(--white-10); border-radius: 16px; padding: 22px; margin-bottom: 14px; }
+.card-title { font-size: 19px; font-weight: 700; margin-bottom: 8px; }
+.card-body { font-size: 17px; color: var(--white-80); line-height: 1.5; }
+.cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px; }
+.cards-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 10px; }
+
+.slide-counter { position: fixed; bottom: 20px; right: 28px; font-size: 14px; font-weight: 600; color: var(--white-40); z-index: 100; pointer-events: none; }
+.fullscreen-btn { position: fixed; top: 18px; right: 22px; z-index: 100; background: var(--white-10); border: 1px solid var(--white-20); color: var(--white-60); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.fullscreen-btn:hover { background: var(--white-20); color: var(--white); }
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(to right, var(--accent), var(--coral)); z-index: 100; transition: width 0.4s ease; box-shadow: 0 0 10px var(--accent-glow); }
+
+/* TITLE */
+.slide.title-slide { text-align: center; justify-content: center; align-items: center; background: radial-gradient(ellipse at 50% 40%, rgba(167,139,250,0.22) 0%, transparent 60%), radial-gradient(ellipse at 50% 80%, rgba(224,116,97,0.12) 0%, transparent 60%); }
+.title-big { font-size: 86px; font-weight: 900; letter-spacing: -2.5px; margin-bottom: 18px; line-height: 1.05; background: linear-gradient(135deg, var(--accent), var(--coral)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.title-sub { font-size: 30px; font-weight: 500; color: var(--white-80); margin-bottom: 36px; line-height: 1.3; max-width: 800px; }
+.title-meta { font-size: 18px; color: var(--white-40); }
+.title-finale { display: inline-block; padding: 6px 18px; border-radius: 100px; background: rgba(167,139,250,0.18); color: var(--accent); font-size: 14px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px; }
+
+/* TIMELINE — путь курса */
+.lesson-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
+.lesson-card { background: var(--white-10); border-radius: 14px; padding: 16px 14px; border-left: 4px solid var(--white-20); }
+.lesson-card.done { opacity: 0.55; }
+.lesson-card.today { background: linear-gradient(135deg, rgba(167,139,250,0.22) 0%, rgba(167,139,250,0.06) 100%); border-left-color: var(--accent); border: 2px solid rgba(167,139,250,0.4); box-shadow: 0 8px 30px rgba(167,139,250,0.18); }
+.lesson-card .l-num { font-size: 12px; font-weight: 700; color: var(--white-40); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+.lesson-card.today .l-num { color: var(--accent); }
+.lesson-card .l-name { font-size: 16px; font-weight: 700; color: var(--white); margin-bottom: 3px; }
+.lesson-card .l-desc { font-size: 12px; color: var(--white-60); line-height: 1.35; }
+.lesson-card.today .l-name { color: var(--accent); }
+
+/* AGENDA — 4 blocks for today */
+.agenda-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+.agenda-card { background: linear-gradient(135deg, rgba(167,139,250,0.12) 0%, rgba(167,139,250,0.02) 100%); border: 1.5px solid rgba(167,139,250,0.3); border-radius: 18px; padding: 22px; }
+.agenda-num { display: inline-block; width: 32px; height: 32px; line-height: 32px; text-align: center; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--coral)); color: var(--bg); font-weight: 900; margin-bottom: 10px; }
+.agenda-name { font-size: 22px; font-weight: 800; color: var(--white); margin-bottom: 4px; }
+.agenda-desc { font-size: 16px; color: var(--white-60); line-height: 1.5; }
+.agenda-time { font-size: 13px; color: var(--accent); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-top: 10px; }
+
+/* BIG CTA — для слайда «вход в тест» */
+.cta-box { background: linear-gradient(135deg, rgba(167,139,250,0.2) 0%, rgba(224,116,97,0.1) 100%); border: 2px solid rgba(167,139,250,0.4); border-radius: 24px; padding: 36px 44px; margin-top: 20px; text-align: center; }
+.cta-url { font-size: 36px; font-weight: 800; color: var(--accent); padding: 14px 28px; background: rgba(0,0,0,0.3); border-radius: 14px; display: inline-block; margin: 12px 0; font-family: 'SF Mono', Monaco, monospace; letter-spacing: -0.5px; }
+.cta-step { display: flex; gap: 14px; align-items: center; justify-content: center; padding: 8px; }
+.cta-step-num { width: 32px; height: 32px; line-height: 32px; text-align: center; border-radius: 50%; background: var(--coral); color: var(--bg); font-weight: 900; flex-shrink: 0; }
+.cta-step-text { font-size: 18px; color: var(--white-80); }
+
+/* GALAXY — облако сервисов */
+.galaxy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 8px; }
+.galaxy-zone { background: var(--white-10); border-radius: 16px; padding: 18px 22px; }
+.galaxy-zone .gz-flag { font-size: 24px; margin-bottom: 4px; }
+.galaxy-zone .gz-name { font-size: 16px; font-weight: 800; margin-bottom: 8px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+.galaxy-zone.us { border-left: 3px solid var(--blue); }
+.galaxy-zone.cn { border-left: 3px solid var(--red); }
+.galaxy-zone.ru { border-left: 3px solid var(--green); }
+.galaxy-zone.ext { border-left: 3px solid var(--coral); }
+.galaxy-zone.cn .gz-name, .galaxy-zone.us .gz-name, .galaxy-zone.ru .gz-name, .galaxy-zone.ext .gz-name { color: inherit; }
+.galaxy-zone.us .gz-name { color: var(--blue); }
+.galaxy-zone.cn .gz-name { color: var(--red); }
+.galaxy-zone.ru .gz-name { color: var(--green); }
+.galaxy-zone.ext .gz-name { color: var(--coral); }
+.galaxy-tools { display: flex; flex-wrap: wrap; gap: 6px; }
+.galaxy-tool { font-size: 13px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 100px; color: var(--white-80); }
+
+/* PARADIGMS — 10 карточек 5x2 */
+.paradigm-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 8px; }
+.paradigm-card { background: var(--white-10); border-radius: 12px; padding: 14px 12px; border-top: 3px solid var(--accent); }
+.paradigm-emoji { font-size: 24px; margin-bottom: 6px; }
+.paradigm-title { font-size: 14px; font-weight: 800; color: var(--white); margin-bottom: 4px; line-height: 1.2; }
+.paradigm-desc { font-size: 11px; color: var(--white-60); line-height: 1.4; }
+
+/* STACK — типовой стек */
+.stack-card { background: linear-gradient(135deg, rgba(167,139,250,0.15) 0%, rgba(167,139,250,0.04) 100%); border: 2px solid rgba(167,139,250,0.35); border-radius: 18px; padding: 26px 30px; margin-top: 8px; }
+.stack-role { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); font-weight: 800; margin-bottom: 6px; }
+.stack-title { font-size: 28px; font-weight: 800; color: var(--white); margin-bottom: 18px; }
+.stack-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+.stack-tool { display: flex; gap: 12px; align-items: flex-start; padding: 10px 14px; background: rgba(0,0,0,0.2); border-radius: 10px; }
+.stack-tool-icon { font-size: 20px; flex-shrink: 0; }
+.stack-tool-name { font-weight: 700; color: var(--white); font-size: 15px; }
+.stack-tool-desc { font-size: 13px; color: var(--white-60); line-height: 1.3; }
+.stack-win { background: rgba(94,196,122,0.12); border: 1px solid rgba(94,196,122,0.35); border-radius: 12px; padding: 14px 18px; }
+.stack-win-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--green); font-weight: 800; margin-bottom: 4px; }
+.stack-win-body { font-size: 16px; color: var(--white); line-height: 1.4; }
+
+/* EVO — Bot/Assistant/Agent */
+.evo-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-top: 12px; }
+.evo-card { background: var(--white-10); border-radius: 18px; padding: 24px; border: 2px solid var(--white-10); }
+.evo-card.bot { border-color: rgba(96,165,250,0.4); }
+.evo-card.assistant { border-color: rgba(224,116,97,0.4); }
+.evo-card.agent { border-color: rgba(167,139,250,0.5); background: linear-gradient(145deg, rgba(167,139,250,0.15) 0%, rgba(167,139,250,0.04) 100%); }
+.evo-emoji { font-size: 40px; margin-bottom: 8px; }
+.evo-name { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+.evo-card.bot .evo-name { color: #60A5FA; }
+.evo-card.assistant .evo-name { color: var(--coral); }
+.evo-card.agent .evo-name { color: var(--accent); }
+.evo-tagline { font-size: 13px; color: var(--white-60); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+.evo-body { font-size: 15px; color: var(--white-80); line-height: 1.5; }
+.evo-body strong { color: var(--white); font-weight: 600; }
+
+/* RED LINES — 6 cells */
+.danger-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 10px; }
+.danger-card { background: linear-gradient(135deg, rgba(224,85,85,0.12) 0%, rgba(224,85,85,0.02) 100%); border: 1.5px solid rgba(224,85,85,0.35); border-radius: 16px; padding: 18px; }
+.danger-num { display: inline-block; padding: 2px 10px; border-radius: 100px; background: rgba(224,85,85,0.25); color: var(--red); font-size: 12px; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 8px; }
+.danger-title { font-size: 18px; font-weight: 800; color: var(--white); margin-bottom: 6px; line-height: 1.3; }
+.danger-body { font-size: 14px; color: var(--white-60); line-height: 1.4; }
+
+/* PRINCIPLE — главное правило */
+.principle-box {
+  background: linear-gradient(135deg, rgba(94,196,122,0.18) 0%, rgba(94,196,122,0.04) 100%);
+  border: 2px solid rgba(94,196,122,0.4);
+  border-radius: 24px;
+  padding: 44px 52px;
+  margin: 16px auto;
+  max-width: 920px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.principle-label { font-size: 13px; text-transform: uppercase; letter-spacing: 3px; color: var(--green); font-weight: 800; margin-bottom: 18px; }
+.principle-text { font-size: 32px; line-height: 1.45; color: var(--white); font-weight: 600; }
+.principle-text strong { color: var(--green); font-weight: 800; }
+.principle-text em { color: var(--coral); font-style: normal; font-weight: 700; }
+
+/* ROADMAP — 3 fields preview */
+.field-preview { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 8px; }
+.fp-card { background: var(--white-10); border-left: 4px solid var(--accent); border-radius: 12px; padding: 16px 22px; }
+.fp-num { font-size: 12px; font-weight: 800; color: var(--accent); letter-spacing: 2px; }
+.fp-title { font-size: 19px; font-weight: 700; color: var(--white); margin: 4px 0; }
+.fp-example { font-size: 14px; color: var(--white-60); font-style: italic; line-height: 1.4; }
+
+/* PATHS — 3 way cards */
+.paths-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 12px; }
+.path-card { background: var(--white-10); border-radius: 18px; padding: 24px; border-top: 4px solid var(--accent); }
+.path-card.middle { border-top-color: var(--coral); background: linear-gradient(135deg, rgba(224,116,97,0.1) 0%, rgba(224,116,97,0.02) 100%); }
+.path-card.right { border-top-color: var(--green); }
+.path-emoji { font-size: 36px; margin-bottom: 10px; }
+.path-name { font-size: 20px; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+.path-desc { font-size: 14px; color: var(--white-60); line-height: 1.5; }
+
+/* NEXT COURSE — анонс */
+.next-hero { background: linear-gradient(135deg, rgba(167,139,250,0.22) 0%, rgba(224,116,97,0.12) 100%); border: 2px solid rgba(167,139,250,0.4); border-radius: 26px; padding: 40px 48px; margin-top: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+.next-tag { display: inline-block; padding: 5px 16px; border-radius: 100px; background: var(--accent); color: var(--bg); font-size: 12px; font-weight: 900; letter-spacing: 2px; margin-bottom: 16px; }
+.next-name { font-size: 48px; font-weight: 900; line-height: 1.1; margin-bottom: 12px; background: linear-gradient(135deg, var(--accent), var(--coral)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.next-promise { font-size: 22px; color: var(--white); line-height: 1.4; margin-bottom: 18px; }
+.next-meta { display: flex; gap: 24px; flex-wrap: wrap; font-size: 15px; color: var(--white-60); }
+.next-meta strong { color: var(--accent); font-weight: 700; }
+
+/* MODULES list */
+.modules-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.module-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: var(--white-10); border-radius: 12px; }
+.module-num { width: 28px; height: 28px; line-height: 28px; text-align: center; border-radius: 50%; background: var(--accent); color: var(--bg); font-weight: 800; flex-shrink: 0; font-size: 14px; }
+.module-name { font-weight: 700; color: var(--white); font-size: 16px; line-height: 1.3; }
+.module-desc { font-size: 13px; color: var(--white-60); line-height: 1.3; }
+
+/* BONUSES — list */
+.bonus-list { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 10px; max-width: 760px; }
+.bonus-item { display: flex; gap: 16px; align-items: center; padding: 14px 22px; background: linear-gradient(135deg, rgba(94,196,122,0.1) 0%, rgba(94,196,122,0.02) 100%); border: 1.5px solid rgba(94,196,122,0.3); border-radius: 14px; }
+.bonus-emoji { font-size: 28px; flex-shrink: 0; }
+.bonus-name { font-weight: 800; color: var(--white); font-size: 18px; }
+.bonus-desc { font-size: 14px; color: var(--white-60); }
+
+/* THANKS slide */
+.thanks-slide { text-align: center; justify-content: center; align-items: center; background: radial-gradient(ellipse at 50% 50%, rgba(167,139,250,0.2) 0%, transparent 60%), radial-gradient(ellipse at 30% 80%, rgba(224,116,97,0.12) 0%, transparent 50%); }
+.thanks-big { font-size: 100px; font-weight: 900; line-height: 1; margin-bottom: 18px; background: linear-gradient(135deg, var(--accent), var(--coral)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.thanks-sub { font-size: 28px; color: var(--white-80); margin-bottom: 30px; max-width: 720px; }
+
+@media (max-height: 800px) {
+  .slide { padding: 36px 56px; }
+  .slide-title { font-size: 36px; margin-bottom: 16px; }
+  .slide-subtitle { font-size: 18px; margin-bottom: 20px; }
+  .point { font-size: 17px; margin-bottom: 8px; }
+  .title-big { font-size: 64px; }
+  .next-name { font-size: 38px; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress-bar"></div>
+<button class="fullscreen-btn" id="fs-btn" title="На весь экран">⛶</button>
+<div class="slide-counter" id="counter">1 / 25</div>
+
+<div class="deck">
+
+<!-- 1. TITLE -->
+<section class="slide title-slide active">
+  <span class="title-finale">Финал курса · Занятие 8</span>
+  <h1 class="title-big">Стратегия</h1>
+  <div class="title-sub">Что вы реально освоили за&nbsp;7&nbsp;занятий и&nbsp;куда идти дальше</div>
+  <div class="title-meta">ИИ. Новая реальность · Поток&nbsp;1 · Онлайн · 11&nbsp;мая&nbsp;2026</div>
+</section>
+
+<!-- 2. AGENDA -->
+<section class="slide">
+  <h2 class="slide-title">Что мы&nbsp;сделаем за&nbsp;<span class="accent">~105&nbsp;минут</span></h2>
+  <div class="agenda-grid">
+    <div class="agenda-card">
+      <span class="agenda-num">1</span>
+      <div class="agenda-name">Живой тест</div>
+      <div class="agenda-desc">20 вопросов по&nbsp;всему курсу. Темп задаю я, у&nbsp;каждого 30&nbsp;секунд.</div>
+      <div class="agenda-time">~25&nbsp;мин</div>
+    </div>
+    <div class="agenda-card">
+      <span class="agenda-num">2</span>
+      <div class="agenda-name">Ретроспектива</div>
+      <div class="agenda-desc">Карта инструментов, 10&nbsp;парадигм работы с&nbsp;ИИ и&nbsp;типовые стеки.</div>
+      <div class="agenda-time">~20&nbsp;мин</div>
+    </div>
+    <div class="agenda-card">
+      <span class="agenda-num">3</span>
+      <div class="agenda-name">Красные линии и&nbsp;карта</div>
+      <div class="agenda-desc">6&nbsp;«нельзя» + ваш план на&nbsp;30&nbsp;дней (3&nbsp;поля, 5&nbsp;минут).</div>
+      <div class="agenda-time">~22&nbsp;мин</div>
+    </div>
+    <div class="agenda-card">
+      <span class="agenda-num">4</span>
+      <div class="agenda-name">Куда дальше</div>
+      <div class="agenda-desc">Стратегия, AI-консалтинг и&nbsp;анонс следующего потока: вайбкодинг + AI-агенты.</div>
+      <div class="agenda-time">~28&nbsp;мин</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. PATH -->
+<section class="slide">
+  <h2 class="slide-title">Путь, который вы&nbsp;уже прошли</h2>
+  <div class="slide-subtitle">Семь занятий, которые большинство в&nbsp;стране не&nbsp;проходит вообще.</div>
+  <div class="lesson-grid">
+    <div class="lesson-card done"><div class="l-num">Занятие 1</div><div class="l-name">Погружение</div><div class="l-desc">VPN, навигатор, базовые сервисы</div></div>
+    <div class="lesson-card done"><div class="l-num">Занятие 2</div><div class="l-name">Промпт-инженерия</div><div class="l-desc">РКЗФО, контекст, память</div></div>
+    <div class="lesson-card done"><div class="l-num">Занятие 3</div><div class="l-name">Ассистенты</div><div class="l-desc">Gems, NotebookLM, базы знаний</div></div>
+    <div class="lesson-card done"><div class="l-num">Занятие 4</div><div class="l-name">Google Workspace</div><div class="l-desc">Canvas, Deep Research</div></div>
+    <div class="lesson-card done"><div class="l-num">Занятие 5</div><div class="l-name">Визуал</div><div class="l-desc">Шедеврум, Kandinsky, генерация</div></div>
+    <div class="lesson-card done"><div class="l-num">Занятие 6</div><div class="l-name">Упаковка</div><div class="l-desc">КП, презентации, лендинги</div></div>
+    <div class="lesson-card done"><div class="l-num">Занятие 7</div><div class="l-name">Агенты</div><div class="l-desc">Manus, Suvvy, Comet, Lovable</div></div>
+    <div class="lesson-card today"><div class="l-num">Занятие 8 · сегодня</div><div class="l-name">Стратегия</div><div class="l-desc">Финал. Куда дальше.</div></div>
+  </div>
+</section>
+
+<!-- 4. CTA — вход в тест -->
+<section class="slide">
+  <h2 class="slide-title">Достаём ноутбук или&nbsp;телефон</h2>
+  <div class="slide-subtitle">Сейчас откроем живой тест. Вы&nbsp;увидите вопрос — выбираете ответ. Я&nbsp;вижу всех в&nbsp;одном окне.</div>
+  <div class="cta-box">
+    <div style="font-size:14px; color:var(--white-60); letter-spacing:2px; text-transform:uppercase; font-weight:700;">Открой в&nbsp;браузере</div>
+    <div class="cta-url">materials.neovida.ai/online/lesson-8/</div>
+    <div class="cta-step"><span class="cta-step-num">1</span><span class="cta-step-text">Введи имя и&nbsp;фамилию — точно как&nbsp;на&nbsp;сертификате</span></div>
+    <div class="cta-step"><span class="cta-step-num">2</span><span class="cta-step-text">Откроется страница — нажми «Открыть тест»</span></div>
+    <div class="cta-step"><span class="cta-step-num">3</span><span class="cta-step-text">Жди вопрос — я&nbsp;запущу</span></div>
+  </div>
+</section>
+
+<!-- 5. LIVE индикатор -->
+<section class="slide" style="text-align:center; justify-content:center;">
+  <div style="font-size:13px; color:var(--coral); letter-spacing:6px; font-weight:800; margin-bottom:12px;">⬤ LIVE</div>
+  <h2 style="font-size:64px; font-weight:900; line-height:1.1;">Тест идёт</h2>
+  <div style="font-size:24px; color:var(--white-60); margin-top:18px;">20 вопросов · 30 сек&nbsp;на&nbsp;каждый · ~10 мин</div>
+  <div style="font-size:18px; color:var(--white-40); margin-top:36px;">Не&nbsp;экзамен. Это <span class="accent">зеркало</span> того, что&nbsp;вы&nbsp;знаете.</div>
+</section>
+
+<!-- 6. HEATMAP intro -->
+<section class="slide">
+  <h2 class="slide-title">Разбираем по&nbsp;<span class="accent">heatmap</span></h2>
+  <div class="slide-subtitle">У&nbsp;меня на&nbsp;экране — таблица: ваши ответы по&nbsp;каждому вопросу.</div>
+  <div class="cards-grid-3">
+    <div class="card" style="border-left:4px solid var(--green);">
+      <div class="card-title">🟩 Зелёное</div>
+      <div class="card-body">Правильно. Уверенно идём дальше.</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--red);">
+      <div class="card-title">🟥 Красное</div>
+      <div class="card-body">Ошибка. Разберём вместе — за&nbsp;1-2&nbsp;минуты освежим.</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--white-40);">
+      <div class="card-title">⬜ Серое</div>
+      <div class="card-body">Не&nbsp;успел ответить. Тоже разберём.</div>
+    </div>
+  </div>
+  <div class="quote coral">
+    Это не&nbsp;«ошибки» — это <strong>темы для&nbsp;быстрого освежения</strong>. Целевой результат курса: 14-16 из&nbsp;20.
+  </div>
+</section>
+
+<!-- 7. GALAXY -->
+<section class="slide">
+  <h2 class="slide-title"><span class="accent">Галактика</span> инструментов, которые вы&nbsp;трогали</h2>
+  <div class="slide-subtitle">30+ сервисов за&nbsp;7&nbsp;занятий. 95% профессионалов знают 2-3 из&nbsp;этого списка.</div>
+  <div class="galaxy-grid">
+    <div class="galaxy-zone us">
+      <div class="gz-flag">🇺🇸</div>
+      <div class="gz-name">США · с&nbsp;VPN</div>
+      <div class="galaxy-tools">
+        <span class="galaxy-tool">ChatGPT</span><span class="galaxy-tool">Claude</span><span class="galaxy-tool">Gemini</span>
+        <span class="galaxy-tool">NotebookLM</span><span class="galaxy-tool">Canvas</span><span class="galaxy-tool">Deep Research</span>
+        <span class="galaxy-tool">Manus</span><span class="galaxy-tool">v0</span><span class="galaxy-tool">Lovable</span>
+        <span class="galaxy-tool">Comet</span><span class="galaxy-tool">Midjourney</span><span class="galaxy-tool">DALL-E</span>
+      </div>
+    </div>
+    <div class="galaxy-zone cn">
+      <div class="gz-flag">🇨🇳</div>
+      <div class="gz-name">Китай · без&nbsp;VPN</div>
+      <div class="galaxy-tools">
+        <span class="galaxy-tool">Qwen</span><span class="galaxy-tool">Kimi</span><span class="galaxy-tool">Manus</span>
+        <span class="galaxy-tool">DeepSeek</span>
+      </div>
+    </div>
+    <div class="galaxy-zone ru">
+      <div class="gz-flag">🇷🇺</div>
+      <div class="gz-name">Россия · без&nbsp;VPN</div>
+      <div class="galaxy-tools">
+        <span class="galaxy-tool">Шедеврум</span><span class="galaxy-tool">Kandinsky</span><span class="galaxy-tool">YandexGPT</span>
+        <span class="galaxy-tool">GigaChat</span><span class="galaxy-tool">Suvvy</span>
+      </div>
+    </div>
+    <div class="galaxy-zone ext">
+      <div class="gz-flag">🧰</div>
+      <div class="gz-name">Специализированные</div>
+      <div class="galaxy-tools">
+        <span class="galaxy-tool">Gamma</span><span class="galaxy-tool">Kimi Slides</span><span class="galaxy-tool">Pictory</span>
+        <span class="galaxy-tool">HeyGen</span><span class="galaxy-tool">ElevenLabs</span><span class="galaxy-tool">Suno</span>
+        <span class="galaxy-tool">Perplexity</span><span class="galaxy-tool">Replicate</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. 10 PARADIGMS -->
+<section class="slide">
+  <h2 class="slide-title">10 парадигм, которые останутся с&nbsp;вами</h2>
+  <div class="slide-subtitle">Инструменты меняются каждые полгода. Эти подходы — нет.</div>
+  <div class="paradigm-grid">
+    <div class="paradigm-card"><div class="paradigm-emoji">🎯</div><div class="paradigm-title">Роль + Задача + Формат</div><div class="paradigm-desc">Был хаотичный запрос — стала формула</div></div>
+    <div class="paradigm-card"><div class="paradigm-emoji">📚</div><div class="paradigm-title">Ассистент с&nbsp;ролью</div><div class="paradigm-desc">Был «новый чат» — стал Gem с&nbsp;памятью</div></div>
+    <div class="paradigm-card"><div class="paradigm-emoji">🗂</div><div class="paradigm-title">База знаний</div><div class="paradigm-desc">Были разрозненные файлы — стал NotebookLM</div></div>
+    <div class="paradigm-card"><div class="paradigm-emoji">🔬</div><div class="paradigm-title">Глубокое исследование</div><div class="paradigm-desc">Был Гугл по&nbsp;30 вкладок — стал Deep Research</div></div>
+    <div class="paradigm-card"><div class="paradigm-emoji">🎨</div><div class="paradigm-title">Описание визуала</div><div class="paradigm-desc">Был «нарисуй красиво» — стал стиль+ракурс+свет</div></div>
+    <div class="paradigm-card"><div class="paradigm-emoji">📊</div><div class="paradigm-title">Слайды по&nbsp;данным</div><div class="paradigm-desc">Был PowerPoint вручную — стал NotebookLM Studio</div></div>
+    <div class="paradigm-card"><div class="paradigm-emoji">🏗</div><div class="paradigm-title">Лендинг словами</div><div class="paradigm-desc">Был Тильда 3&nbsp;дня — стал v0 за&nbsp;15&nbsp;минут</div></div>
+    <div class="paradigm-card"><div class="paradigm-emoji">🤖</div><div class="paradigm-title">Агент с&nbsp;руками</div><div class="paradigm-desc">Был чат — стал Manus, который сам делает</div></div>
+    <div class="paradigm-card"><div class="paradigm-emoji">🌐</div><div class="paradigm-title">AI-браузер</div><div class="paradigm-desc">Был Хром — стал Comet с&nbsp;агентом в&nbsp;каждой вкладке</div></div>
+    <div class="paradigm-card"><div class="paradigm-emoji">🔗</div><div class="paradigm-title">Связки инструментов</div><div class="paradigm-desc">Был один сервис — стал стек NotebookLM+Gem+Lovable</div></div>
+  </div>
+</section>
+
+<!-- 9. STACK ENTREPRENEUR -->
+<section class="slide">
+  <h2 class="slide-title">Типовой стек: <span class="accent">предприниматель</span></h2>
+  <div class="stack-card">
+    <div class="stack-role">Малый бизнес · 1-30 человек</div>
+    <div class="stack-title">5 инструментов, которые делают 80% работы</div>
+    <div class="stack-tools">
+      <div class="stack-tool"><div class="stack-tool-icon">🧠</div><div><div class="stack-tool-name">NotebookLM</div><div class="stack-tool-desc">База FAQ, прайс, кейсы — отвечает по&nbsp;вашим документам</div></div></div>
+      <div class="stack-tool"><div class="stack-tool-icon">💎</div><div><div class="stack-tool-name">Gem-продажник в&nbsp;Gemini</div><div class="stack-tool-desc">Готовит КП, ответы клиентам, пост в&nbsp;соцсети</div></div></div>
+      <div class="stack-tool"><div class="stack-tool-icon">🔍</div><div><div class="stack-tool-name">Deep Research</div><div class="stack-tool-desc">Анализ конкурентов, отзывов, ниши</div></div></div>
+      <div class="stack-tool"><div class="stack-tool-icon">🎨</div><div><div class="stack-tool-name">Шедеврум&nbsp;/&nbsp;Kandinsky</div><div class="stack-tool-desc">Картинки для&nbsp;соцсетей и&nbsp;маркетинга — без&nbsp;VPN</div></div></div>
+      <div class="stack-tool"><div class="stack-tool-icon">🤖</div><div><div class="stack-tool-name">Suvvy&nbsp;/&nbsp;Manus</div><div class="stack-tool-desc">Агент-продавец в&nbsp;TG&nbsp;и&nbsp;автоматизация рутин</div></div></div>
+      <div class="stack-tool"><div class="stack-tool-icon">📑</div><div><div class="stack-tool-name">Gamma&nbsp;/&nbsp;Kimi Slides</div><div class="stack-tool-desc">Презентации за&nbsp;15&nbsp;минут</div></div></div>
+    </div>
+    <div class="stack-win">
+      <div class="stack-win-label">Главный выигрыш</div>
+      <div class="stack-win-body">Освобождает 10-20&nbsp;часов в&nbsp;неделю на&nbsp;то, что&nbsp;реально приносит деньги — переговоры, стратегия, новые продукты.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. STACK SPECIALIST -->
+<section class="slide">
+  <h2 class="slide-title">Типовой стек: <span class="coral">специалист&nbsp;/&nbsp;сотрудник</span></h2>
+  <div class="stack-card" style="border-color:rgba(224,116,97,0.4); background:linear-gradient(135deg, rgba(224,116,97,0.1) 0%, rgba(224,116,97,0.02) 100%);">
+    <div class="stack-role" style="color:var(--coral);">В&nbsp;найме · фрилансер · эксперт</div>
+    <div class="stack-title">Стек, который делает вас в&nbsp;3-5 раз быстрее коллег</div>
+    <div class="stack-tools">
+      <div class="stack-tool"><div class="stack-tool-icon">📝</div><div><div class="stack-tool-name">ChatGPT&nbsp;/&nbsp;Claude</div><div class="stack-tool-desc">Тексты, переписка, анализ задач, brainstorm</div></div></div>
+      <div class="stack-tool"><div class="stack-tool-icon">💎</div><div><div class="stack-tool-name">Gem с&nbsp;вашей ролью</div><div class="stack-tool-desc">Один раз настроил под&nbsp;свою профессию — дальше быстро</div></div></div>
+      <div class="stack-tool"><div class="stack-tool-icon">🧠</div><div><div class="stack-tool-name">NotebookLM</div><div class="stack-tool-desc">Закидывайте все&nbsp;PDF&nbsp;по&nbsp;проекту — ищет за&nbsp;5&nbsp;сек</div></div></div>
+      <div class="stack-tool"><div class="stack-tool-icon">🔍</div><div><div class="stack-tool-name">Deep Research</div><div class="stack-tool-desc">Готовит обзоры рынка, методичек, источников</div></div></div>
+      <div class="stack-tool"><div class="stack-tool-icon">🎨</div><div><div class="stack-tool-name">Canvas</div><div class="stack-tool-desc">Мини-приложения и&nbsp;документы внутри чата</div></div></div>
+      <div class="stack-tool"><div class="stack-tool-icon">🌐</div><div><div class="stack-tool-name">Comet</div><div class="stack-tool-desc">AI-браузер с&nbsp;агентом в&nbsp;каждой вкладке</div></div></div>
+    </div>
+    <div class="stack-win">
+      <div class="stack-win-label">Главный выигрыш</div>
+      <div class="stack-win-body">Перестаёте быть «тем, кто медленно делает» — становитесь «тем, кто закрывает в&nbsp;день недельную задачу команды».</div>
+    </div>
+  </div>
+</section>
+
+<!-- 11. EVO -->
+<section class="slide">
+  <h2 class="slide-title">Бот → Ассистент → <span class="accent">Агент</span></h2>
+  <div class="slide-subtitle">Три слова, которые путают 95% людей. Вы&nbsp;— не&nbsp;путаете.</div>
+  <div class="evo-grid">
+    <div class="evo-card bot">
+      <div class="evo-emoji">🤖</div>
+      <div class="evo-name">Бот</div>
+      <div class="evo-tagline">Кнопочки</div>
+      <div class="evo-body">Сценарий из&nbsp;5-10 шагов. <strong>Не&nbsp;понимает</strong> — выполняет. Хорош для&nbsp;FAQ&nbsp;и&nbsp;записи.</div>
+    </div>
+    <div class="evo-card assistant">
+      <div class="evo-emoji">💎</div>
+      <div class="evo-name">Ассистент</div>
+      <div class="evo-tagline">Умный собеседник</div>
+      <div class="evo-body">Понимает контекст и&nbsp;роль. <strong>Отвечает в&nbsp;чате</strong>. Gem, GPT, NotebookLM.</div>
+    </div>
+    <div class="evo-card agent">
+      <div class="evo-emoji">🦾</div>
+      <div class="evo-name">Агент</div>
+      <div class="evo-tagline">Исполнитель с&nbsp;руками</div>
+      <div class="evo-body"><strong>Сам действует</strong>: лазит по&nbsp;сайтам, пишет в&nbsp;Telegram, заполняет формы, строит лендинг. Manus, Suvvy, Comet.</div>
+    </div>
+  </div>
+  <div class="quote" style="margin-top:18px;">
+    Вы&nbsp;ушли с&nbsp;7-го урока <strong>оркестраторами</strong>: знаете, кому&nbsp;что&nbsp;поручить.
+  </div>
+</section>
+
+<!-- 12. RED LINES intro -->
+<section class="slide">
+  <h2 class="slide-title">А&nbsp;теперь — <span style="color:var(--red);">красные линии</span></h2>
+  <div class="slide-subtitle">Вы знаете, что&nbsp;ИИ может. Теперь — что&nbsp;ему нельзя.</div>
+  <div class="quote coral">
+    «Большинство провалов с&nbsp;ИИ — не&nbsp;потому, что&nbsp;технология плохая. А&nbsp;потому, что&nbsp;ей&nbsp;поручили то, что&nbsp;не&nbsp;надо было.»
+  </div>
+</section>
+
+<!-- 13. 6 NELZYA -->
+<section class="slide">
+  <h2 class="slide-title">6&nbsp;«нельзя» работы с&nbsp;ИИ</h2>
+  <div class="danger-grid">
+    <div class="danger-card">
+      <span class="danger-num">№ 1</span>
+      <div class="danger-title">Автоматизировать хаос</div>
+      <div class="danger-body">Если в&nbsp;процессе бардак — ИИ его усилит. Сначала&nbsp;порядок.</div>
+    </div>
+    <div class="danger-card">
+      <span class="danger-num">№ 2</span>
+      <div class="danger-title">Доверять цифрам без&nbsp;проверки</div>
+      <div class="danger-body">Галлюцинации. Цифры, даты, имена, ГОСТы, законы — всегда сверять.</div>
+    </div>
+    <div class="danger-card">
+      <span class="danger-num">№ 3</span>
+      <div class="danger-title">Сливать чужие данные</div>
+      <div class="danger-body">Персональные данные, NDA, медкарты — не&nbsp;в&nbsp;публичный чат.</div>
+    </div>
+    <div class="danger-card">
+      <span class="danger-num">№ 4</span>
+      <div class="danger-title">Отдавать финал</div>
+      <div class="danger-body">Найм, увольнения, крупные сделки, юридические документы — решает человек.</div>
+    </div>
+    <div class="danger-card">
+      <span class="danger-num">№ 5</span>
+      <div class="danger-title">Строить на&nbsp;одном сервисе</div>
+      <div class="danger-body">Если бизнес стоит на&nbsp;ChatGPT и&nbsp;он&nbsp;«лёг» — у&nbsp;вас всё стоит. Дублируйте.</div>
+    </div>
+    <div class="danger-card">
+      <span class="danger-num">№ 6</span>
+      <div class="danger-title">Отключать свой мозг</div>
+      <div class="danger-body">ИИ хорош, но&nbsp;экспертиза остаётся за&nbsp;вами. Иначе вы — пересказчик.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 14. PRINCIPLE -->
+<section class="slide" style="text-align:center;">
+  <h2 class="slide-title">Главное правило финала курса</h2>
+  <div class="principle-box">
+    <div class="principle-label">Принцип</div>
+    <div class="principle-text">
+      <strong>Человек с&nbsp;ИИ</strong> заменит человека без&nbsp;ИИ.<br>
+      Но&nbsp;<em>ИИ сам по&nbsp;себе</em> никого не&nbsp;заменяет — он&nbsp;работает там, где&nbsp;его направляет профессионал.
+    </div>
+  </div>
+</section>
+
+<!-- 15. ROADMAP intro -->
+<section class="slide">
+  <h2 class="slide-title">Ваша <span class="accent">карта на&nbsp;30&nbsp;дней</span></h2>
+  <div class="slide-subtitle">3&nbsp;коротких поля. 5&nbsp;минут тихой работы. Я&nbsp;в&nbsp;это время вижу прогресс у&nbsp;всех.</div>
+  <div class="cta-box">
+    <div style="font-size:14px; color:var(--white-60); letter-spacing:2px; text-transform:uppercase; font-weight:700;">Откройте на&nbsp;своём ноутбуке</div>
+    <div class="cta-url">materials.neovida.ai/online/lesson-8/</div>
+    <div style="font-size:18px; color:var(--white-80); margin-top:14px;">→ нажмите кнопку <strong>«Открыть карту»</strong></div>
+  </div>
+</section>
+
+<!-- 16. ROADMAP fields -->
+<section class="slide">
+  <h2 class="slide-title">3 поля карты</h2>
+  <div class="field-preview">
+    <div class="fp-card">
+      <div class="fp-num">ПОЛЕ 1</div>
+      <div class="fp-title">Мой рабочий ИИ-стек</div>
+      <div class="fp-example">«Gem-продажник + NotebookLM (FAQ + прайс) + Шедеврум для&nbsp;соцсетей + Manus раз&nbsp;в&nbsp;неделю на&nbsp;конкурентов»</div>
+    </div>
+    <div class="fp-card">
+      <div class="fp-num">ПОЛЕ 2</div>
+      <div class="fp-title">Главный процесс на&nbsp;автоматизацию в&nbsp;30&nbsp;дней</div>
+      <div class="fp-example">«Анализ 10&nbsp;отзывов конкурентов раз&nbsp;в&nbsp;неделю → Deep Research + Gem-аналитик → Excel»</div>
+    </div>
+    <div class="fp-card">
+      <div class="fp-num">ПОЛЕ 3 · Манифест</div>
+      <div class="fp-title">Что я&nbsp;унесу с&nbsp;курса навсегда</div>
+      <div class="fp-example">«Я больше не&nbsp;делаю руками то, что&nbsp;ИИ делает за&nbsp;минуту»</div>
+    </div>
+  </div>
+  <div class="quote" style="margin-top:14px;">
+    Манифест я&nbsp;<strong>прочитаю вслух</strong>: 2-3 человека по&nbsp;желанию.
+  </div>
+</section>
+
+<!-- 17. WHERE NEXT -->
+<section class="slide">
+  <h2 class="slide-title">Куда дальше — <span class="accent">3 пути</span></h2>
+  <div class="paths-grid">
+    <div class="path-card">
+      <div class="path-emoji">🛠</div>
+      <div class="path-name">Применять</div>
+      <div class="path-desc">Берёте свой стек, внедряете в&nbsp;свои задачи. Через 30&nbsp;дней — отчёт самому&nbsp;себе.</div>
+    </div>
+    <div class="path-card middle">
+      <div class="path-emoji">📈</div>
+      <div class="path-name">Углубиться</div>
+      <div class="path-desc">Идёте на&nbsp;следующий поток курса — вайбкодинг и&nbsp;агенты. Делаете полноценные продукты.</div>
+    </div>
+    <div class="path-card right">
+      <div class="path-emoji">💼</div>
+      <div class="path-name">Стать AI-консультантом</div>
+      <div class="path-desc">Ваше преимущество — вы&nbsp;уже всё это видели. Помогаете компаниям внедрять. Это рынок.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 18. AI CONSULTING -->
+<section class="slide">
+  <h2 class="slide-title">AI-консалтинг — <span class="coral">самая недооценённая</span> профессия</h2>
+  <div class="point">Компании уже понимают: «надо что-то с&nbsp;ИИ». Но&nbsp;<strong>внутри почти никто не&nbsp;может ответить</strong> — что внедрять, где будет эффект, как это посчитать.</div>
+  <div class="point">Больше всего в&nbsp;ближайшие годы будут нужны не&nbsp;те, кто&nbsp;лучше всех пишет промпты, и&nbsp;не&nbsp;программисты на&nbsp;Python. А&nbsp;те, кто:</div>
+  <div class="cards-grid" style="margin-top:14px;">
+    <div class="card" style="border-left:3px solid var(--accent);">
+      <div class="card-title">Видит бизнес-процессы</div>
+      <div class="card-body">Понимает, где у&nbsp;компании реально утекает время и&nbsp;деньги.</div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--coral);">
+      <div class="card-title">Знает, где ИИ даёт эффект</div>
+      <div class="card-body">А&nbsp;где даёт «вау-эффект» без&nbsp;возврата.</div>
+    </div>
+  </div>
+  <div class="quote coral" style="margin-top:14px;">
+    Это и&nbsp;есть AI-консалтинг. И&nbsp;этот рынок только начинается — большинство компаний даже не&nbsp;знают, что&nbsp;такая помощь им&nbsp;нужна.
+  </div>
+</section>
+
+<!-- 19. NEXT COURSE — анонс -->
+<section class="slide">
+  <h2 class="slide-title">Следующий поток курса</h2>
+  <div class="next-hero">
+    <span class="next-tag">Скоро · уровень PRO</span>
+    <div class="next-name">Вайбкодинг + AI-агенты</div>
+    <div class="next-promise">Полноценные продукты и&nbsp;автоматизации, которые приносят деньги. Не&nbsp;просто «использовать ИИ» — <strong>создавать на&nbsp;нём свои сервисы</strong>.</div>
+    <div class="next-meta">
+      <span><strong>Формат:</strong> онлайн, 8&nbsp;занятий</span>
+      <span><strong>Старт:</strong> [дата уточняется]</span>
+      <span><strong>Цена:</strong> [для&nbsp;выпускников этого потока — со&nbsp;скидкой]</span>
+    </div>
+  </div>
+</section>
+
+<!-- 20. NEXT COURSE program (placeholder) -->
+<section class="slide">
+  <h2 class="slide-title">Что будем проходить</h2>
+  <div class="slide-subtitle">8 занятий — от&nbsp;инструментов до&nbsp;собственного AI-сервиса.</div>
+  <div class="modules-list">
+    <div class="module-item"><div class="module-num">1</div><div><div class="module-name">Вайбкодинг — введение</div><div class="module-desc">Как создавать приложения «на&nbsp;ощущениях», без&nbsp;программирования</div></div></div>
+    <div class="module-item"><div class="module-num">2</div><div><div class="module-name">Lovable / v0 / Bolt</div><div class="module-desc">Полноценные веб-приложения за&nbsp;пару вечеров</div></div></div>
+    <div class="module-item"><div class="module-num">3</div><div><div class="module-name">База данных + бекенд</div><div class="module-desc">Supabase, авторизация, хранение данных</div></div></div>
+    <div class="module-item"><div class="module-num">4</div><div><div class="module-name">AI-агенты в&nbsp;деталях</div><div class="module-desc">Manus, Suvvy, Comet — собираем своих</div></div></div>
+    <div class="module-item"><div class="module-num">5</div><div><div class="module-name">Свой Telegram-бот с&nbsp;ИИ</div><div class="module-desc">От&nbsp;нуля до&nbsp;продаж за&nbsp;один вечер</div></div></div>
+    <div class="module-item"><div class="module-num">6</div><div><div class="module-name">Связки и&nbsp;интеграции</div><div class="module-desc">n8n, Zapier, Make — автоматизация рутины</div></div></div>
+    <div class="module-item"><div class="module-num">7</div><div><div class="module-name">Свой первый AI-продукт</div><div class="module-desc">От&nbsp;идеи до&nbsp;живого сервиса с&nbsp;первыми клиентами</div></div></div>
+    <div class="module-item"><div class="module-num">8</div><div><div class="module-name">Стратегия запуска</div><div class="module-desc">Как продавать, упаковать, монетизировать</div></div></div>
+  </div>
+</section>
+
+<!-- 21. FOR WHOM -->
+<section class="slide">
+  <h2 class="slide-title">Для кого / не&nbsp;для кого</h2>
+  <div class="cards-grid">
+    <div class="card" style="border-left:4px solid var(--green); background:linear-gradient(135deg, rgba(94,196,122,0.08) 0%, rgba(94,196,122,0.02) 100%);">
+      <div class="card-title" style="color:var(--green);">✅ Для тебя если…</div>
+      <div class="card-body">
+        <div class="point" style="font-size:16px; margin-bottom:8px;">→ Прошёл этот курс и&nbsp;хочешь следующий уровень</div>
+        <div class="point" style="font-size:16px; margin-bottom:8px;">→ Хочешь делать <strong>свои продукты</strong>, а&nbsp;не&nbsp;только пользоваться чужими</div>
+        <div class="point" style="font-size:16px; margin-bottom:8px;">→ Видишь себя AI-консультантом или&nbsp;продуктологом</div>
+        <div class="point" style="font-size:16px;">→ Готов вложиться: время + деньги + усилия</div>
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--red); background:linear-gradient(135deg, rgba(224,85,85,0.08) 0%, rgba(224,85,85,0.02) 100%);">
+      <div class="card-title" style="color:var(--red);">❌ Не&nbsp;для тебя если…</div>
+      <div class="card-body">
+        <div class="point" style="font-size:16px; margin-bottom:8px;">→ Ещё не&nbsp;до&nbsp;конца освоил базовые инструменты</div>
+        <div class="point" style="font-size:16px; margin-bottom:8px;">→ Хочешь «волшебную таблетку»</div>
+        <div class="point" style="font-size:16px; margin-bottom:8px;">→ Не&nbsp;готов делать домашки 4-6&nbsp;часов в&nbsp;неделю</div>
+        <div class="point" style="font-size:16px;">→ Ищешь только теорию, не&nbsp;практику</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 22. BONUSES for graduates -->
+<section class="slide">
+  <h2 class="slide-title">Что&nbsp;вы&nbsp;получите как&nbsp;<span class="accent">выпускник</span> этого потока</h2>
+  <div class="slide-subtitle">Выпускникам — особые условия. Не&nbsp;надо собирать «новую группу».</div>
+  <div class="bonus-list">
+    <div class="bonus-item"><div class="bonus-emoji">💸</div><div><div class="bonus-name">Скидка раннего бронирования</div><div class="bonus-desc">До&nbsp;[дата] — особая цена для&nbsp;тех, кто&nbsp;уже прошёл этот поток</div></div></div>
+    <div class="bonus-item"><div class="bonus-emoji">🎫</div><div><div class="bonus-name">Гарантия места</div><div class="bonus-desc">Бронь до&nbsp;[дата] — без&nbsp;конкурса с&nbsp;новенькими</div></div></div>
+    <div class="bonus-item"><div class="bonus-emoji">🚀</div><div><div class="bonus-name">Приоритет в&nbsp;разборах</div><div class="bonus-desc">На&nbsp;каждом занятии — выпускники этого потока разбираются первыми</div></div></div>
+    <div class="bonus-item"><div class="bonus-emoji">💬</div><div><div class="bonus-name">Закрытый чат с&nbsp;Альбертом</div><div class="bonus-desc">Прямая линия для&nbsp;вопросов между уроками</div></div></div>
+  </div>
+</section>
+
+<!-- 23. WHAT YOU GET TODAY -->
+<section class="slide">
+  <h2 class="slide-title">Что&nbsp;придёт вам в&nbsp;личку сегодня</h2>
+  <div class="slide-subtitle">После урока — каждому персональное сообщение от&nbsp;меня.</div>
+  <div class="bonus-list">
+    <div class="bonus-item" style="background:linear-gradient(135deg, rgba(167,139,250,0.12) 0%, rgba(167,139,250,0.02) 100%); border-color:rgba(167,139,250,0.3);"><div class="bonus-emoji">🎓</div><div><div class="bonus-name">Сертификат</div><div class="bonus-desc">PDF с&nbsp;вашим именем — можно показывать клиентам и&nbsp;партнёрам</div></div></div>
+    <div class="bonus-item" style="background:linear-gradient(135deg, rgba(167,139,250,0.12) 0%, rgba(167,139,250,0.02) 100%); border-color:rgba(167,139,250,0.3);"><div class="bonus-emoji">📚</div><div><div class="bonus-name">Супер-шпаргалка курса</div><div class="bonus-desc">Все 8&nbsp;презентаций, все шпаргалки, 5&nbsp;дополнительных инструкций — в&nbsp;одной ссылке</div></div></div>
+    <div class="bonus-item" style="background:linear-gradient(135deg, rgba(167,139,250,0.12) 0%, rgba(167,139,250,0.02) 100%); border-color:rgba(167,139,250,0.3);"><div class="bonus-emoji">🌐</div><div><div class="bonus-name">VPN бесплатно до&nbsp;конца года</div><div class="bonus-desc">Хотя по&nbsp;правилам — только на&nbsp;время курса. Вам — продлеваю до&nbsp;31&nbsp;декабря</div></div></div>
+  </div>
+  <div class="quote coral" style="margin-top:14px;">
+    Взамен — попрошу записать <strong>видеоотзыв 30+ секунд</strong>: что было до, что&nbsp;дало, как&nbsp;всё прошло. Пришлю инструкцию в&nbsp;личку.
+  </div>
+</section>
+
+<!-- 24. Q&A buffer -->
+<section class="slide" style="text-align:center; justify-content:center;">
+  <h2 style="font-size:80px; font-weight:900;">Q&amp;A</h2>
+  <div style="font-size:24px; color:var(--white-60); margin-top:20px;">5&nbsp;минут на&nbsp;вопросы — техника, инструменты, следующий поток.</div>
+</section>
+
+<!-- 25. THANKS -->
+<section class="slide thanks-slide">
+  <div class="thanks-big">Спасибо</div>
+  <div class="thanks-sub">Вы&nbsp;прошли курс, который большинство в&nbsp;стране не&nbsp;проходит вообще.<br>Дальше — за&nbsp;вами.</div>
+  <div style="font-size:18px; color:var(--white-40); letter-spacing:1px;">neovida.ai · ИИ. Новая реальность · Поток&nbsp;1 · Финал</div>
+</section>
+
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+const counter = document.getElementById('counter');
+const progressBar = document.getElementById('progress-bar');
+let current = 0;
+
+function show(i) {
+  if (i < 0 || i >= total) return;
+  slides[current].classList.remove('active');
+  if (i < current) slides[current].classList.add('prev');
+  else slides[current].classList.remove('prev');
+  current = i;
+  slides[current].classList.add('active');
+  slides[current].classList.remove('prev');
+  counter.textContent = `${current + 1} / ${total}`;
+  progressBar.style.width = `${((current + 1) / total) * 100}%`;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { show(current + 1); e.preventDefault(); }
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') { show(current - 1); e.preventDefault(); }
+  if (e.key === 'Home') show(0);
+  if (e.key === 'End') show(total - 1);
+});
+
+document.addEventListener('click', (e) => {
+  if (e.target.closest('a') || e.target.closest('button')) return;
+  if (e.clientX > window.innerWidth / 2) show(current + 1);
+  else show(current - 1);
+});
+
+document.getElementById('fs-btn').addEventListener('click', () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+
+counter.textContent = `1 / ${total}`;
+progressBar.style.width = `${(1 / total) * 100}%`;
+</script>
+
+</body>
+</html>

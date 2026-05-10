@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Boost · занятие 8 · дашборд ведущего</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="app">
+
+<header class="app-header">
+  <div class="brand"><span class="brand-dot"></span>neovida · AI Boost · занятие 8 · ведущий</div>
+  <div class="user-chip"><div class="user-ava">А</div>Альберт · host</div>
+</header>
+
+<main class="wrap wide">
+  <div id="content"></div>
+</main>
+
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <button class="close" id="modal-close">×</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script type="module">
+import { QUESTIONS, HOST_KEY } from './questions.js';
+import { runTimer } from './app.js';
+import { subscribeSession, subscribeUsers, setSession, resetAll } from './firebase.js';
+
+// Защита по ключу
+const params = new URLSearchParams(location.search);
+const key = params.get('key');
+const content = document.getElementById('content');
+if (key !== HOST_KEY) {
+  content.innerHTML = `
+    <div class="card outline-coral"><div class="card-tag coral">Доступ</div>
+      <div class="card-title">Нужен ключ ведущего</div>
+      <div class="card-body">Добавь в&nbsp;URL параметр <code style="background:var(--white-10); padding:2px 8px; border-radius:4px;">?key=albert2026</code></div>
+    </div>`;
+  throw new Error('no key');
+}
+
+let session = { phase: 'lobby', currentQuestion: -1, timerStartedAt: null, timerDurationSec: 30, showCorrect: false };
+let users = {}; // { slug: { name, answers, score, card } }
+let stopTimer = null;
+let lastSnapshot = '';
+
+subscribeSession((s) => { session = s || session; rerender(); });
+subscribeUsers((u) => { users = u || {}; rerender(); });
+
+function rerender() {
+  const snap = JSON.stringify({ session, users });
+  if (snap === lastSnapshot) return;
+  lastSnapshot = snap;
+  render();
+}
+
+function userList() {
+  return Object.entries(users).map(([slug, u]) => ({ slug, ...u, answers: u.answers || {} })).sort((a,b) => (a.joinedAt || 0) - (b.joinedAt || 0));
+}
+
+function render() {
+  const list = userList();
+  const q = session.currentQuestion >= 0 && session.currentQuestion < QUESTIONS.length ? QUESTIONS[session.currentQuestion] : null;
+
+  content.innerHTML = `
+    <div class="h1">Дашборд занятия&nbsp;8</div>
+    <div class="lead">Один экран. Кнопка «Следующий вопрос» — двигает всех. Таймер — синхронен у&nbsp;всех.</div>
+
+    <div class="host-shell">
+      <div class="host-controls">
+        <span class="host-phase">${phaseLabel(session.phase)}</span>
+        <div id="current-q-block">${currentQBlock(q)}</div>
+        <div class="host-timer-display ${timerClass()}" id="big-timer">${session.timerStartedAt ? '' : (session.phase === 'card' ? '⏱' : '—')}</div>
+        <div class="host-action-row" id="actions">${actionsBlock()}</div>
+        <div class="muted small mt-2 ta-c">${list.length} ${plural(list.length,'участник','участника','участников')} в&nbsp;сессии</div>
+      </div>
+
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:12px;">
+          <h2 class="h2">Участники</h2>
+          <button id="reset-btn" class="btn btn-ghost" style="font-size:13px; padding:8px 14px;">🧹 Сбросить сессию</button>
+        </div>
+        <div class="host-grid" id="grid">${gridBlock(list, q)}</div>
+
+        <h2 class="h2 mt-6">Heatmap · ${QUESTIONS.length} вопросов × ${list.length} ${plural(list.length,'участник','участника','участников')}</h2>
+        <div class="muted small">Зелёное — правильный, красное — ошибка, серое — нет ответа. Клик на&nbsp;номер вопроса — разбор.</div>
+        <div class="heatmap" id="heatmap">${heatmapBlock(list)}</div>
+
+        <h2 class="h2 mt-6">🎬 Манифесты</h2>
+        <div id="manifests">${manifestsBlock(list)}</div>
+      </div>
+    </div>
+  `;
+
+  // event handlers
+  document.getElementById('reset-btn').addEventListener('click', async () => {
+    if (!confirm('Удалить ВСЕ данные сессии (всех участников, ответы, карты)? Это нельзя отменить.')) return;
+    try {
+      await resetAll();
+      Object.keys(localStorage).forEach(k => { if (k.startsWith('aiboost_l8_online:')) localStorage.removeItem(k); });
+      alert('Сессия очищена.');
+    } catch (e) { alert('Ошибка: ' + e.message); }
+  });
+
+  bindActions();
+  bindHeatmap(list);
+
+  // Таймер
+  if (stopTimer) { stopTimer(); stopTimer = null; }
+  if (session.timerStartedAt) {
+    const dur = session.timerDurationSec || 30;
+    const display = document.getElementById('big-timer');
+    stopTimer = runTimer(session.timerStartedAt, dur, (rem) => {
+      display.textContent = formatTime(rem, session.phase === 'card');
+      display.className = 'host-timer-display ' + timerClassFor(rem);
+    }, () => {
+      const display2 = document.getElementById('big-timer');
+      if (display2) { display2.textContent = '0'; display2.className = 'host-timer-display danger'; }
+    });
+  }
+}
+
+function phaseLabel(phase) {
+  return ({lobby:'⏳ Лобби', test:'🎯 Тест', discussion:'💬 Разбор', card:'🗺 Карта', done:'✅ Финал'}[phase]) || phase;
+}
+
+function currentQBlock(q) {
+  if (!q) return `<div class="host-current-q"><span class="num">Текущий вопрос</span>—</div>`;
+  return `
+    <div class="host-current-q">
+      <span class="num">Вопрос ${session.currentQuestion + 1} из ${QUESTIONS.length} · ${q.theme}</span>
+      ${q.text}
+      <div class="correct">✅ Правильный: <strong>${String.fromCharCode(65 + q.correct)}</strong> — ${q.options[q.correct]}</div>
+    </div>
+  `;
+}
+
+function timerClass() {
+  if (!session.timerStartedAt) return 'idle';
+  return '';
+}
+function timerClassFor(rem) {
+  if (rem <= 5) return 'danger';
+  if (rem <= 10) return 'warn';
+  return '';
+}
+function formatTime(sec, asMinutes) {
+  if (asMinutes) {
+    const m = Math.floor(sec / 60); const s = Math.floor(sec % 60);
+    return `${m}:${s.toString().padStart(2,'0')}`;
+  }
+  return Math.ceil(sec).toString();
+}
+
+function actionsBlock() {
+  if (session.phase === 'lobby') {
+    return `<button class="btn btn-primary btn-big" data-act="start-test">🎯 Запустить тест</button>`;
+  }
+  if (session.phase === 'test') {
+    const isLast = session.currentQuestion >= QUESTIONS.length - 1;
+    const noQ = session.currentQuestion < 0;
+    const correctVisible = session.showCorrect;
+    const buttons = [];
+    if (noQ) {
+      buttons.push(`<button class="btn btn-primary btn-big" data-act="next-q">▶ Первый вопрос</button>`);
+    } else {
+      if (!correctVisible) buttons.push(`<button class="btn btn-ghost" data-act="reveal">👁 Показать правильный</button>`);
+      if (!isLast) buttons.push(`<button class="btn btn-primary btn-big" data-act="next-q">${correctVisible ? '▶ Следующий' : '⏭ Следующий (скрыть, не показав)'}</button>`);
+      else buttons.push(`<button class="btn btn-primary btn-big" data-act="discussion">💬 К&nbsp;разбору heatmap</button>`);
+    }
+    buttons.push(`<button class="btn btn-ghost" data-act="discussion">⏸ Пауза → разбор</button>`);
+    return buttons.join('');
+  }
+  if (session.phase === 'discussion') {
+    return `
+      <button class="btn btn-primary" data-act="resume-test">▶ Вернуться к тесту</button>
+      <button class="btn btn-primary btn-big" data-act="start-card">🗺 Запустить карту (5 мин)</button>
+    `;
+  }
+  if (session.phase === 'card') {
+    return `<button class="btn btn-primary btn-big" data-act="end">✅ Завершить урок</button>`;
+  }
+  if (session.phase === 'done') {
+    return `<button class="btn btn-ghost" data-act="back-lobby">↺ Вернуть в&nbsp;лобби</button>`;
+  }
+  return '';
+}
+
+function bindActions() {
+  document.querySelectorAll('[data-act]').forEach(btn => {
+    btn.addEventListener('click', () => doAction(btn.dataset.act));
+  });
+}
+
+async function doAction(act) {
+  switch (act) {
+    case 'start-test':
+      await setSession({ phase: 'test', currentQuestion: -1, timerStartedAt: null, showCorrect: false });
+      break;
+    case 'next-q': {
+      const next = (session.currentQuestion ?? -1) + 1;
+      if (next >= QUESTIONS.length) {
+        await setSession({ phase: 'discussion', timerStartedAt: null, showCorrect: false });
+      } else {
+        await setSession({ currentQuestion: next, timerStartedAt: Date.now(), timerDurationSec: 30, showCorrect: false });
+      }
+      break;
+    }
+    case 'reveal':
+      await setSession({ showCorrect: true, timerStartedAt: null });
+      break;
+    case 'discussion':
+      await setSession({ phase: 'discussion', timerStartedAt: null, showCorrect: false });
+      break;
+    case 'resume-test':
+      await setSession({ phase: 'test' });
+      break;
+    case 'start-card':
+      await setSession({ phase: 'card', timerStartedAt: Date.now(), timerDurationSec: 300, currentQuestion: -1, showCorrect: false });
+      break;
+    case 'end':
+      await setSession({ phase: 'done', timerStartedAt: null });
+      break;
+    case 'back-lobby':
+      await setSession({ phase: 'lobby', currentQuestion: -1, timerStartedAt: null, showCorrect: false });
+      break;
+  }
+}
+
+function gridBlock(list, q) {
+  if (!list.length) return `<div class="card"><div class="muted">Пока никто не зарегистрировался. Дай ссылку <code>materials.neovida.ai/online/lesson-8/</code> в Zoom-чат.</div></div>`;
+  return list.map(u => {
+    if (session.phase === 'lobby') {
+      return `<div class="host-cell"><div class="name">${escapeHtml(u.name)}</div><div class="status">в лобби</div></div>`;
+    }
+    if (session.phase === 'test' && q) {
+      const my = u.answers[session.currentQuestion];
+      if (my == null) return `<div class="host-cell thinking"><div class="name">${escapeHtml(u.name)}</div><div class="status">думает</div></div>`;
+      const ok = my === q.correct;
+      return `<div class="host-cell answered ${ok ? 'correct' : 'wrong'}">
+        <div class="name">${escapeHtml(u.name)}</div>
+        <div class="status">${ok ? '✓ верно' : '✗ ошибка'}</div>
+        <div class="ans-letter">${String.fromCharCode(65 + my)}</div>
+      </div>`;
+    }
+    if (session.phase === 'discussion' || session.phase === 'done') {
+      const score = computeScore(u);
+      return `<div class="host-cell done">
+        <div class="name">${escapeHtml(u.name)}</div>
+        <div class="status">результат</div>
+        <div class="score-mini">${score}<span style="font-size:14px; opacity:0.5;">/${QUESTIONS.length}</span></div>
+      </div>`;
+    }
+    if (session.phase === 'card') {
+      const c = u.card || {};
+      const fc = c.filledCount || 0;
+      const cls = fc === 3 ? 'done' : fc > 0 ? 'thinking' : '';
+      return `<div class="host-cell ${cls}">
+        <div class="name">${escapeHtml(u.name)}</div>
+        <div class="status">${fc === 3 ? '✅ готово' : fc > 0 ? 'пишет' : 'не начал'}</div>
+        <div class="ans-letter">${fc}/3</div>
+      </div>`;
+    }
+    return '';
+  }).join('');
+}
+
+function computeScore(u) {
+  let score = 0;
+  QUESTIONS.forEach((q, i) => { if (u.answers[i] === q.correct) score++; });
+  return score;
+}
+
+function heatmapBlock(list) {
+  if (!list.length) return '<div class="muted">Нет участников.</div>';
+  return `
+    <table>
+      <tr>
+        <th class="name">Участник</th>
+        ${QUESTIONS.map((_, i) => `<th class="qcol ${i === session.currentQuestion ? 'current' : ''}" data-q="${i}">${i + 1}</th>`).join('')}
+        <th>Σ</th>
+      </tr>
+      ${list.map(u => `
+        <tr>
+          <td class="name">${escapeHtml(u.name)}</td>
+          ${QUESTIONS.map((q, i) => {
+            const my = u.answers[i];
+            if (my == null) return `<td class="pending">—</td>`;
+            return my === q.correct ? `<td class="ok">✓</td>` : `<td class="bad">✗</td>`;
+          }).join('')}
+          <td style="font-weight:800; color:var(--violet);">${computeScore(u)}</td>
+        </tr>
+      `).join('')}
+    </table>
+  `;
+}
+
+function bindHeatmap(list) {
+  document.querySelectorAll('.qcol').forEach(el => {
+    el.addEventListener('click', () => showQuestionDetail(parseInt(el.dataset.q), list));
+  });
+}
+
+function showQuestionDetail(qIdx, list) {
+  const q = QUESTIONS[qIdx];
+  const counts = [0,0,0,0];
+  const byWho = {};
+  list.forEach(u => {
+    const my = u.answers[qIdx];
+    if (my != null) {
+      counts[my]++;
+      byWho[my] = byWho[my] || [];
+      byWho[my].push(u.name);
+    }
+  });
+  const total = counts.reduce((a,b)=>a+b,0);
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `
+    <div class="card-tag violet">Вопрос ${qIdx+1} · ${q.theme}</div>
+    <h3>${q.text}</h3>
+    ${q.options.map((opt, i) => {
+      const isC = i === q.correct;
+      const who = byWho[i] || [];
+      return `
+        <div style="padding:10px 14px; background:${isC?'rgba(94,196,122,0.12)':'rgba(255,255,255,0.04)'}; border:1px solid ${isC?'rgba(94,196,122,0.45)':'var(--white-20)'}; border-radius:12px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <div style="font-size:15px; line-height:1.4; color:var(--white); flex:1;">
+              <span style="color:${isC?'var(--green)':'var(--white-60)'}; font-weight:800;">${String.fromCharCode(65+i)}${isC?' ✅':''}</span> ${opt}
+            </div>
+            <div style="font-weight:800; color:var(--violet);">${counts[i]}/${total}</div>
+          </div>
+          ${who.length?`<div class="muted small" style="margin-top:6px;">${who.map(escapeHtml).join(', ')}</div>`:''}
+        </div>
+      `;
+    }).join('')}
+    <div class="card outline-violet" style="margin-top:14px;">
+      <div class="card-tag violet">Для разбора</div>
+      <div class="card-body">${q.explanation}</div>
+      <div class="muted small mt-2"><strong>Подсказка ведущему:</strong> ${q.hostNote}</div>
+    </div>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+function manifestsBlock(list) {
+  const withManifests = list.filter(u => u.card?.manifest?.trim());
+  if (!withManifests.length) return `<div class="muted">Манифестов пока нет — заполнят на блоке «Карта».</div>`;
+  return withManifests.map(u => `
+    <div class="card outline-violet manifest-card">
+      <div class="user-chip" style="margin-bottom:8px;"><div class="user-ava">${(u.name[0]||'?').toUpperCase()}</div><strong>${escapeHtml(u.name)}</strong></div>
+      <div class="manifest-text">${escapeHtml(u.card.manifest)}</div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('modal-close').addEventListener('click', () => document.getElementById('modal').classList.remove('open'));
+document.getElementById('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') e.currentTarget.classList.remove('open'); });
+
+function plural(n,o,f,m){const a=n%10,h=n%100;if(a===1&&h!==11)return o;if(a>=2&&a<=4&&(h<10||h>=20))return f;return m;}
+function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+render();
+</script>
+
+</body>
+</html>

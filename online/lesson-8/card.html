@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Boost · занятие 8 · моя карта</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="app">
+
+<header class="app-header" id="app-header"></header>
+
+<main class="wrap">
+  <div id="content"></div>
+</main>
+
+<script type="module">
+import { renderHeader, getMe, debounce, runTimer } from './app.js';
+import { subscribeSession, pushCard } from './firebase.js';
+
+const me = getMe();
+renderHeader(me, { showLogout: true });
+if (!me) {
+  document.querySelector('.wrap').innerHTML = `
+    <div class="card outline-coral">
+      <div class="card-tag coral">Нужно войти</div>
+      <div class="card-title">Сначала введи имя и&nbsp;фамилию</div>
+      <div class="card-body">Открой <a href="index.html" class="highlight-violet">страницу входа</a>.</div>
+    </div>`;
+  throw new Error('no me');
+}
+
+const content = document.getElementById('content');
+let session = { phase: 'lobby' };
+let stopTimer = null;
+
+const card = {
+  stack: localStorage.getItem('aiboost_l8_online:' + me.slug + ':card:stack') || '',
+  process: localStorage.getItem('aiboost_l8_online:' + me.slug + ':card:process') || '',
+  manifest: localStorage.getItem('aiboost_l8_online:' + me.slug + ':card:manifest') || '',
+};
+
+subscribeSession((s) => { session = s || session; render(); });
+
+function render() {
+  const filledCount = ['stack','process','manifest'].filter(k => card[k].trim()).length;
+  const phase = session.phase;
+  const phaseHint =
+    phase === 'card' ? `<div class="card-tag violet">Сейчас</div><div class="card-body">Альберт даёт <strong>5 минут</strong> на&nbsp;заполнение. Потом он&nbsp;прочитает 2-3 манифеста вслух.</div>` :
+    phase === 'done' ? `<div class="card-tag green">Спасибо</div><div class="card-body">Урок завершён. Карта сохранена.</div>` :
+    `<div class="card-tag gold">Можно начать заранее</div><div class="card-body">Альберт включит таймер на&nbsp;карту во&nbsp;второй половине урока. Можно подумать сейчас и&nbsp;уточнить позже.</div>`;
+
+  content.innerHTML = `
+    <div class="h1">Моя карта на&nbsp;30 дней</div>
+    <div class="lead">Три коротких поля. Заполняй своими словами. Манифест прочтут вслух — пиши коротко и&nbsp;ярко.</div>
+
+    <div class="card" style="margin-bottom:18px;">${phaseHint}</div>
+
+    ${phase === 'card' && session.timerStartedAt ? `
+      <div class="timer-text"><span>До&nbsp;конца тихой работы</span><span class="left" id="timer-left">${session.timerDurationSec || 300} сек</span></div>
+      <div class="timer-bar"><div class="fill" id="timer-fill"></div></div>
+    ` : ''}
+
+    <div class="card outline-violet">
+      <div class="field">
+        <label class="field-label" for="f-stack"><span class="field-num">1</span> Мой рабочий ИИ-стек</label>
+        <div class="field-hint">3-5 инструментов, к которым ты возвращаешься чаще всего. Например: Gemini Gem «продажник», NotebookLM (база FAQ), Шедеврум (визуал), Manus (анализ конкурентов).</div>
+        <textarea id="f-stack" placeholder="Перечисли через запятую…">${escapeHtml(card.stack)}</textarea>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="f-process"><span class="field-num">2</span> Главный процесс на&nbsp;автоматизацию</label>
+        <div class="field-hint">Один процесс, который ты автоматизируешь в ближайшие 30 дней. Конкретно: что и каким инструментом.</div>
+        <textarea id="f-process" placeholder="Например: «Анализ 10 отзывов конкурентов раз в неделю → Deep Research + Gem-аналитик → Excel»">${escapeHtml(card.process)}</textarea>
+      </div>
+
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label" for="f-manifest"><span class="field-num">3</span> Мой манифест</label>
+        <div class="field-hint">Одна-две строки. Что ты унесёшь с курса навсегда. Альберт прочитает 2-3 манифеста вслух.</div>
+        <textarea id="f-manifest" placeholder="Например: «Я больше не делаю руками то, что ИИ делает за минуту»">${escapeHtml(card.manifest)}</textarea>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:18px; flex-wrap:wrap; gap:10px;">
+      <div class="muted small" id="save-hint">${filledCount === 3 ? '✅ Все три поля заполнены — сохранено' : `Заполнено: ${filledCount}/3`}</div>
+      <a href="test.html" class="btn btn-ghost">← Назад к тесту</a>
+    </div>
+  `;
+
+  const inputs = {
+    stack: document.getElementById('f-stack'),
+    process: document.getElementById('f-process'),
+    manifest: document.getElementById('f-manifest'),
+  };
+  const onInput = debounce(() => persist(), 500);
+  Object.entries(inputs).forEach(([key, el]) => {
+    el.addEventListener('input', () => {
+      card[key] = el.value;
+      localStorage.setItem('aiboost_l8_online:' + me.slug + ':card:' + key, el.value);
+      const hint = document.getElementById('save-hint');
+      if (hint) hint.textContent = '⏳ Сохраняем…';
+      onInput();
+    });
+  });
+
+  if (stopTimer) { stopTimer(); stopTimer = null; }
+  if (phase === 'card' && session.timerStartedAt) {
+    const fill = document.getElementById('timer-fill');
+    const left = document.getElementById('timer-left');
+    if (fill && left) {
+      stopTimer = runTimer(session.timerStartedAt, session.timerDurationSec || 300, (rem, frac) => {
+        fill.style.width = (frac * 100) + '%';
+        left.textContent = formatTime(rem);
+        fill.className = 'fill' + (rem < 30 ? ' danger' : rem < 60 ? ' warn' : '');
+      }, () => {
+        const hint = document.getElementById('save-hint');
+        if (hint) hint.textContent = '⏰ Время вышло — карта сохранена.';
+        persist();
+      });
+    }
+  }
+}
+
+function persist() {
+  const filledCount = ['stack','process','manifest'].filter(k => card[k].trim()).length;
+  pushCard(me.slug, {
+    ...card,
+    filledCount,
+    done: filledCount === 3,
+    ts: Date.now(),
+  }).then(() => {
+    const hint = document.getElementById('save-hint');
+    if (hint) hint.textContent = filledCount === 3 ? '✅ Все три поля заполнены — сохранено' : `Заполнено: ${filledCount}/3 — сохранено`;
+  }).catch(e => {
+    console.warn('push card failed', e);
+    const hint = document.getElementById('save-hint');
+    if (hint) hint.textContent = '⚠ Сетевая ошибка — данные в браузере, попробуем ещё раз через 5 сек.';
+    setTimeout(persist, 5000);
+  });
+}
+
+function formatTime(sec) {
+  const m = Math.floor(sec / 60); const s = Math.floor(sec % 60);
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
+function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+
+</body>
+</html>

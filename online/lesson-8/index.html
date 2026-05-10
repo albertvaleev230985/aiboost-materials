@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Boost · занятие 8 · вход</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="app">
+
+<header class="app-header" id="app-header"></header>
+
+<main class="wrap">
+  <div id="content"></div>
+</main>
+
+<script type="module">
+import { renderHeader, getMe, setMe, isValidFullName, nameToSlug } from './app.js';
+import { registerUser, subscribeSession } from './firebase.js';
+
+const me = getMe();
+renderHeader(me);
+
+const content = document.getElementById('content');
+
+if (me) {
+  // уже зарегистрирован — показываем «привет» и кнопки перехода
+  renderWelcome(me);
+} else {
+  renderRegistration();
+}
+
+function renderWelcome(me) {
+  content.innerHTML = `
+    <div class="h1">Привет, ${escapeHtml(me.name)}!</div>
+    <div class="lead">Это финал курса. Сегодня — живой тест на 20 вопросов, ретроспектива всего пути и твой манифест.</div>
+
+    <div class="card outline-violet">
+      <div class="card-tag violet">🎯 Шаг 1</div>
+      <div class="card-title">Живой тест — 20 вопросов</div>
+      <div class="card-body">
+        Темп задаёт Альберт. У&nbsp;каждого вопроса 30&nbsp;секунд. Не&nbsp;экзамен — зеркало того, сколько ты&nbsp;уже знаешь после 7&nbsp;занятий.
+        <div style="margin-top:16px;">
+          <a href="test.html" class="btn btn-primary">Открыть тест &rarr;</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card outline-coral">
+      <div class="card-tag coral">🗺 Шаг 2</div>
+      <div class="card-title">Моя карта на 30&nbsp;дней</div>
+      <div class="card-body">
+        3 коротких поля: твой стек, главный процесс на&nbsp;автоматизацию, личный манифест. Альберт прочитает 2-3 манифеста вслух в&nbsp;Zoom.
+        <div style="margin-top:16px;">
+          <a href="card.html" class="btn btn-ghost">Открыть карту &rarr;</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="status-card">
+      <div class="muted small">Загружаем состояние сессии…</div>
+    </div>
+
+    <div style="text-align:center; margin-top:30px;">
+      <button id="logout-btn" class="btn btn-ghost" style="font-size:13px; padding:8px 16px;">сменить имя</button>
+    </div>
+  `;
+
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    if (confirm('Сменить имя? Текущие ответы привязаны к этому имени.')) {
+      localStorage.removeItem('aiboost_l8_online:__me');
+      location.reload();
+    }
+  });
+
+  subscribeSession((session) => {
+    const phase = session.phase;
+    const phaseText = {
+      lobby: '⏳ Альберт ещё не начал. Можешь зайти в тест и&nbsp;карту заранее.',
+      test: '🎯 Идёт живой тест. Открой <strong>тест</strong> и&nbsp;следи за&nbsp;вопросами от&nbsp;Альберта.',
+      discussion: '💬 Разбор теста — слушай Альберта в&nbsp;Zoom.',
+      card: '🗺 Заполняем карту — открой <strong>карту</strong>, у&nbsp;тебя 5 минут.',
+      done: '✅ Урок завершён. Сертификат придёт в&nbsp;личку в&nbsp;Telegram.',
+    }[phase] || '';
+    document.getElementById('status-card').innerHTML = `
+      <div class="card-tag violet">Сейчас</div>
+      <div class="card-body">${phaseText}</div>
+    `;
+  });
+}
+
+function renderRegistration() {
+  content.innerHTML = `
+    <div class="h1">Финальное занятие</div>
+    <div class="lead">Сегодня в&nbsp;Zoom — финал курса. Введи своё <strong>имя и&nbsp;фамилию</strong> — точно так, как&nbsp;хочешь увидеть на&nbsp;сертификате.</div>
+
+    <div class="card outline-violet">
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label" for="full-name">Имя и&nbsp;фамилия</label>
+        <div class="field-hint">Например: Иван Иванов. Без эмодзи и&nbsp;никнеймов — это пойдёт прямо в&nbsp;сертификат курса.</div>
+        <input type="text" id="full-name" placeholder="Иван Иванов" autocomplete="name" autofocus>
+        <div id="hint" class="field-hint" style="margin-top:8px; min-height:18px;"></div>
+      </div>
+      <button id="enter-btn" class="btn btn-primary btn-wide btn-big mt-2" disabled>Войти &rarr;</button>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div class="muted small">
+        После входа откроются две страницы: <strong>тест</strong> (20 вопросов, темп задаёт Альберт) и&nbsp;<strong>карта</strong> (3 поля, заполняешь когда скажет Альберт).
+      </div>
+    </div>
+  `;
+
+  const input = document.getElementById('full-name');
+  const btn = document.getElementById('enter-btn');
+  const hint = document.getElementById('hint');
+
+  function validate() {
+    const v = input.value;
+    const ok = isValidFullName(v);
+    btn.disabled = !ok;
+    if (v.trim() && !ok) {
+      hint.style.color = 'var(--coral)';
+      hint.textContent = '↑ Нужно имя И фамилия. Например: «Иван Иванов»';
+    } else if (ok) {
+      hint.style.color = 'var(--violet)';
+      hint.textContent = `На сертификате будет: «${v.trim()}»`;
+    } else {
+      hint.textContent = '';
+    }
+  }
+  input.addEventListener('input', validate);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !btn.disabled) btn.click(); });
+
+  btn.addEventListener('click', async () => {
+    const name = input.value.trim().replace(/\s+/g, ' ');
+    if (!isValidFullName(name)) return;
+    btn.disabled = true; btn.textContent = 'Сохраняем…';
+    const slug = nameToSlug(name);
+    try {
+      await registerUser(slug, name);
+      setMe({ slug, name });
+      location.reload();
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Войти →';
+      hint.style.color = 'var(--coral)';
+      hint.textContent = 'Ошибка сохранения. Попробуй ещё раз: ' + e.message;
+    }
+  });
+}
+
+function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+
+</body>
+</html>
