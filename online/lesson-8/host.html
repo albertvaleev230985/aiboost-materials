@@ -82,9 +82,13 @@ function render() {
       </div>
 
       <div>
-        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:12px;">
-          <h2 class="h2">Участники</h2>
-          <button id="reset-btn" class="btn btn-ghost" style="font-size:13px; padding:8px 14px;"><i class="ph ph-broom"></i> Сбросить сессию</button>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:12px; gap:10px; flex-wrap:wrap;">
+          <h2 class="h2" style="margin:0;">Участники <span class="muted small" style="font-weight:500;">(${list.length})</span></h2>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="copy-names-btn" class="btn btn-primary" style="font-size:13px; padding:8px 14px;" ${list.length === 0 ? 'disabled' : ''}><i class="ph ph-clipboard-text"></i> Скопировать имена</button>
+            <button id="download-json-btn" class="btn btn-ghost" style="font-size:13px; padding:8px 14px;" ${list.length === 0 ? 'disabled' : ''}><i class="ph ph-download-simple"></i> Скачать JSON</button>
+            <button id="reset-btn" class="btn btn-ghost" style="font-size:13px; padding:8px 14px; border-color:rgba(224,85,85,0.3); color:rgba(224,85,85,0.8);" title="Опасно — требует подтверждения вводом слова"><i class="ph ph-broom"></i> Сбросить</button>
+          </div>
         </div>
         <div class="host-grid" id="grid">${gridBlock(list, q)}</div>
 
@@ -102,14 +106,68 @@ function render() {
     </div>
   `;
 
+  // Опасная кнопка — требует ввести слово СБРОСИТЬ заглавными
   document.getElementById('reset-btn').addEventListener('click', async () => {
-    if (!confirm('Удалить ВСЕ данные сессии (всех участников, ответы, карты)? Это нельзя отменить.')) return;
+    const word = prompt(
+      'ОПАСНО — это удалит ВСЕХ участников, их ответы, карты и манифесты. Без возможности восстановить.\n\n' +
+      'Если уверен — введи слово  СБРОСИТЬ  заглавными буквами:'
+    );
+    if (word !== 'СБРОСИТЬ') {
+      if (word !== null) alert('Слово не совпало — ничего не удалено.');
+      return;
+    }
     try {
       await resetAll();
       Object.keys(localStorage).forEach(k => { if (k.startsWith('aiboost_l8_online:')) localStorage.removeItem(k); });
       alert('Сессия очищена.');
     } catch (e) { alert('Ошибка: ' + e.message); }
   });
+
+  // Скопировать имена в буфер — быстрый путь к сертификатам
+  const copyBtn = document.getElementById('copy-names-btn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      const names = list.map(u => u.name).join('\n');
+      try {
+        await navigator.clipboard.writeText(names);
+        const orig = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="ph ph-check"></i> Скопировано — ' + list.length + ' имён';
+        copyBtn.style.background = 'linear-gradient(135deg, var(--green), var(--violet))';
+        setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.style.background = ''; }, 2500);
+      } catch (e) {
+        // фолбэк — показать в prompt чтобы вручную скопировать
+        prompt('Скопируй эти имена (Cmd+C / Ctrl+C):', names);
+      }
+    });
+  }
+
+  // Скачать всё в JSON — резервная копия данных
+  const dlBtn = document.getElementById('download-json-btn');
+  if (dlBtn) {
+    dlBtn.addEventListener('click', () => {
+      const data = {
+        exportedAt: new Date().toISOString(),
+        session,
+        participants: list.map(u => ({
+          name: u.name,
+          slug: u.slug,
+          score: computeScore(u),
+          answers: u.answers,
+          card: u.card || null,
+        })),
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      a.href = url;
+      a.download = `aiboost-l8-${stamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }
 
   bindActions();
   bindHeatmap(list);
