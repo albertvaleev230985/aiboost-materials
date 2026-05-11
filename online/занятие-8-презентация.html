@@ -944,53 +944,134 @@ function runFinaleEffects() {
     });
   }, 220);
 
-  // Звук — серия из 3 «хлопков», имитирующих залпы фейерверка
-  playFireworkBurst(0);
-  setTimeout(() => playFireworkBurst(0.05), 600);
-  setTimeout(() => playFireworkBurst(0.04), 1300);
+  // Серия из 4 фейерверков (свист + взрыв) + торжественный аккорд после первого
+  ensureAudio();
+  playFirework({ delayMs: 0,    pitchUp: 1800,  burstFreq: 70, withChord: true,  volume: 0.35 });
+  playFirework({ delayMs: 700,  pitchUp: 2400,  burstFreq: 90, withChord: false, volume: 0.32 });
+  playFirework({ delayMs: 1500, pitchUp: 1600,  burstFreq: 60, withChord: false, volume: 0.34 });
+  playFirework({ delayMs: 2400, pitchUp: 2800,  burstFreq: 100, withChord: true, volume: 0.40 }); // финальный двойной
 }
 
-// Web Audio: синтез "хлопка фейерверка" — низкий бас + всплеск шума + затухание
-function playFireworkBurst(volumeBoost = 0) {
+function ensureAudio() {
   try {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const ctx = audioCtx;
-    const now = ctx.currentTime;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) { console.log('audio ctx fail', e.message); }
+}
 
-    // 1) Низкочастотный «удар» (бас, 60 Hz, быстро затухающий)
-    const bass = ctx.createOscillator();
-    const bassGain = ctx.createGain();
-    bass.type = 'sine';
-    bass.frequency.setValueAtTime(80, now);
-    bass.frequency.exponentialRampToValueAtTime(40, now + 0.15);
-    bassGain.gain.setValueAtTime(0.45 + volumeBoost, now);
-    bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-    bass.connect(bassGain).connect(ctx.destination);
-    bass.start(now);
-    bass.stop(now + 0.2);
+// === Реалистичный фейерверк: WHOOSH (взлёт ракеты) → BANG (взрыв) → опц. CHORD (фанфары) ===
+function playFirework(opts) {
+  const { delayMs = 0, pitchUp = 2000, burstFreq = 80, withChord = false, volume = 0.35 } = opts;
+  const sec = delayMs / 1000;
+  setTimeout(() => {
+    try {
+      if (!audioCtx) ensureAudio();
+      const ctx = audioCtx;
+      const t0 = ctx.currentTime;
 
-    // 2) Шумовой «всплеск» — имитирует разлёт искр (200ms)
-    const bufferSize = ctx.sampleRate * 0.6;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.15));
+      // 1) WHOOSH — свист взлетающей ракеты, 0.45 сек, восходящий sine 200→pitchUp Hz
+      const whooshOsc = ctx.createOscillator();
+      const whooshFilt = ctx.createBiquadFilter();
+      const whooshGain = ctx.createGain();
+      whooshOsc.type = 'sine';
+      whooshOsc.frequency.setValueAtTime(200, t0);
+      whooshOsc.frequency.exponentialRampToValueAtTime(pitchUp, t0 + 0.45);
+      whooshFilt.type = 'lowpass';
+      whooshFilt.frequency.value = 3000;
+      // Шумовая подмешка чтобы свист был «шипящим»
+      const whooshNoise = makeNoiseBuffer(ctx, 0.45);
+      const whooshNoiseSrc = ctx.createBufferSource();
+      whooshNoiseSrc.buffer = whooshNoise;
+      const whooshNoiseFilt = ctx.createBiquadFilter();
+      whooshNoiseFilt.type = 'bandpass';
+      whooshNoiseFilt.frequency.setValueAtTime(800, t0);
+      whooshNoiseFilt.frequency.exponentialRampToValueAtTime(4000, t0 + 0.45);
+      whooshNoiseFilt.Q.value = 2;
+      const whooshNoiseGain = ctx.createGain();
+      whooshNoiseGain.gain.setValueAtTime(0.15 * volume, t0);
+      whooshNoiseGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.45);
+
+      whooshGain.gain.setValueAtTime(0.001, t0);
+      whooshGain.gain.exponentialRampToValueAtTime(0.18 * volume, t0 + 0.05);
+      whooshGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.45);
+      whooshOsc.connect(whooshFilt).connect(whooshGain).connect(ctx.destination);
+      whooshNoiseSrc.connect(whooshNoiseFilt).connect(whooshNoiseGain).connect(ctx.destination);
+      whooshOsc.start(t0); whooshOsc.stop(t0 + 0.45);
+      whooshNoiseSrc.start(t0); whooshNoiseSrc.stop(t0 + 0.45);
+
+      // 2) BANG — взрыв в момент достижения пика (0.45 сек после старта свиста)
+      const bangAt = t0 + 0.45;
+
+      // Низкий бас удара
+      const bass = ctx.createOscillator();
+      const bassGain = ctx.createGain();
+      bass.type = 'sine';
+      bass.frequency.setValueAtTime(burstFreq, bangAt);
+      bass.frequency.exponentialRampToValueAtTime(burstFreq * 0.4, bangAt + 0.18);
+      bassGain.gain.setValueAtTime(volume * 1.2, bangAt);
+      bassGain.gain.exponentialRampToValueAtTime(0.001, bangAt + 0.25);
+      bass.connect(bassGain).connect(ctx.destination);
+      bass.start(bangAt); bass.stop(bangAt + 0.25);
+
+      // Шумовой всплеск — разлёт искр, 0.7 сек с медленным затуханием
+      const burstNoise = makeNoiseBuffer(ctx, 0.7);
+      const burstSrc = ctx.createBufferSource();
+      burstSrc.buffer = burstNoise;
+      const burstFilt = ctx.createBiquadFilter();
+      burstFilt.type = 'highpass';
+      burstFilt.frequency.value = 1500;
+      const burstGain = ctx.createGain();
+      burstGain.gain.setValueAtTime(volume * 0.6, bangAt);
+      burstGain.gain.exponentialRampToValueAtTime(0.001, bangAt + 0.7);
+      burstSrc.connect(burstFilt).connect(burstGain).connect(ctx.destination);
+      burstSrc.start(bangAt); burstSrc.stop(bangAt + 0.7);
+
+      // Потрескивание искр — короткие импульсы шума с затуханием
+      for (let i = 0; i < 8; i++) {
+        const crackleAt = bangAt + 0.2 + Math.random() * 0.5;
+        const crackleBuf = makeNoiseBuffer(ctx, 0.04);
+        const crackleSrc = ctx.createBufferSource();
+        crackleSrc.buffer = crackleBuf;
+        const crackleGain = ctx.createGain();
+        crackleGain.gain.setValueAtTime(volume * 0.25, crackleAt);
+        crackleGain.gain.exponentialRampToValueAtTime(0.001, crackleAt + 0.04);
+        const crackleFilt = ctx.createBiquadFilter();
+        crackleFilt.type = 'highpass';
+        crackleFilt.frequency.value = 3000 + Math.random() * 4000;
+        crackleSrc.connect(crackleFilt).connect(crackleGain).connect(ctx.destination);
+        crackleSrc.start(crackleAt); crackleSrc.stop(crackleAt + 0.04);
+      }
+
+      // 3) CHORD — торжественный мажорный аккорд (До-Ми-Соль-До) после взрыва
+      if (withChord) {
+        const chordAt = bangAt + 0.25;
+        // C5=523.25, E5=659.25, G5=783.99, C6=1046.50
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = 'triangle';
+          o.frequency.value = freq;
+          // Лёгкий вибрато
+          g.gain.setValueAtTime(0.001, chordAt);
+          g.gain.exponentialRampToValueAtTime(volume * 0.18, chordAt + 0.05 + idx * 0.04);
+          g.gain.exponentialRampToValueAtTime(0.001, chordAt + 1.6);
+          o.connect(g).connect(ctx.destination);
+          o.start(chordAt); o.stop(chordAt + 1.7);
+        });
+      }
+    } catch (e) {
+      console.log('audio play fail', e.message);
     }
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-    const noiseFilter = ctx.createBiquadFilter();
-    noiseFilter.type = 'highpass';
-    noiseFilter.frequency.value = 1200;
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.25 + volumeBoost, now + 0.05);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-    noise.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
-    noise.start(now + 0.05);
-    noise.stop(now + 0.65);
-  } catch (e) {
-    // Браузер заблокировал autoplay — это нормально, просто без звука
-    console.log('audio blocked', e.message);
-  }
+  }, delayMs);
+}
+
+function makeNoiseBuffer(ctx, durationSec) {
+  const len = Math.floor(ctx.sampleRate * durationSec);
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+  return buf;
 }
 
 document.addEventListener('keydown', (e) => {
