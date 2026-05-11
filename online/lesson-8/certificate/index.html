@@ -45,13 +45,14 @@
     font-family: inherit; cursor: pointer; background: #fff; min-width: 220px;
   }
   .controls select:focus { outline: none; border-color: var(--accent); }
-  .controls button {
+  .controls button, .controls .dl-btn {
     padding: 9px 18px; border-radius: 8px; border: none;
     background: linear-gradient(135deg, var(--accent), var(--gold));
     color: #fff; font-weight: 700; font-size: 14px; cursor: pointer;
     transition: transform 0.15s, box-shadow 0.2s;
+    text-decoration: none; display: inline-block;
   }
-  .controls button:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(224,116,97,0.4); }
+  .controls button:hover, .controls .dl-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(224,116,97,0.4); color: #fff; }
 
   /* Сам сертификат — A4 landscape */
   .cert {
@@ -190,7 +191,7 @@
 <div class="controls" id="controls">
   <label for="userSel">Имя:</label>
   <select id="userSel"></select>
-  <button onclick="window.print()">📥 Скачать PDF</button>
+  <a id="downloadLink" href="#" download class="dl-btn">📥 Скачать PDF</a>
 </div>
 
 <div class="cert" id="cert">
@@ -248,24 +249,24 @@
 <script>
 // 11 выпускников онлайн-курса Поток 1 (Альберт Валеев — ведущий, не получает)
 const PARTICIPANTS = [
-  'Бондаренко Иван',
-  'Михаил Колган',
-  'Наталия Назарова',
-  'Анастасия Назарова',
-  'Ирина Гронь',
-  'Челышев Сергей',
-  'Башкова Наталья',
-  'Алия Борнякова',
-  'Андрей Сычугов',
-  'Дониёр Абдумаликов',
-  'Насыров Никита',
+  { name: 'Бондаренко Иван',      pdf: '01-Бондаренко-Иван.pdf' },
+  { name: 'Михаил Колган',        pdf: '02-Михаил-Колган.pdf' },
+  { name: 'Наталия Назарова',     pdf: '03-Наталия-Назарова.pdf' },
+  { name: 'Анастасия Назарова',   pdf: '04-Анастасия-Назарова.pdf' },
+  { name: 'Ирина Гронь',          pdf: '05-Ирина-Гронь.pdf' },
+  { name: 'Челышев Сергей',       pdf: '06-Челышев-Сергей.pdf' },
+  { name: 'Башкова Наталья',      pdf: '07-Башкова-Наталья.pdf' },
+  { name: 'Алия Борнякова',       pdf: '08-Алия-Борнякова.pdf' },
+  { name: 'Андрей Сычугов',       pdf: '09-Андрей-Сычугов.pdf' },
+  { name: 'Дониёр Абдумаликов',   pdf: '10-Дониёр-Абдумаликов.pdf' },
+  { name: 'Насыров Никита',       pdf: '11-Насыров-Никита.pdf' },
 ];
 
 const sel = document.getElementById('userSel');
-PARTICIPANTS.forEach((name, idx) => {
+PARTICIPANTS.forEach((p, idx) => {
   const opt = document.createElement('option');
   opt.value = idx;
-  opt.textContent = `${String(idx + 1).padStart(2, '0')} · ${name}`;
+  opt.textContent = `${String(idx + 1).padStart(2, '0')} · ${p.name}`;
   sel.appendChild(opt);
 });
 
@@ -275,16 +276,23 @@ sel.value = Math.max(0, Math.min(PARTICIPANTS.length - 1, initialIdx));
 
 function render() {
   const idx = parseInt(sel.value, 10);
-  const name = PARTICIPANTS[idx];
+  const p = PARTICIPANTS[idx];
   const nameEl = document.getElementById('nameText');
-  nameEl.textContent = name;
+  nameEl.textContent = p.name;
   // Динамический размер шрифта если имя длинное
-  const len = name.length;
+  const len = p.name.length;
   if (len > 22) nameEl.style.fontSize = '40pt';
   else if (len > 18) nameEl.style.fontSize = '46pt';
   else nameEl.style.fontSize = '54pt';
 
   document.getElementById('serialText').textContent = `NV · AIB · 2026 · ONLINE-1 · ${String(idx + 1).padStart(3, '0')}`;
+
+  // Кнопка «Скачать PDF» — ссылка на готовый файл
+  const dl = document.getElementById('downloadLink');
+  if (dl) {
+    dl.href = `pdf/${p.pdf}`;
+    dl.setAttribute('download', `Сертификат_${p.pdf}`);
+  }
 
   const url = new URL(location.href);
   url.searchParams.set('n', idx);
