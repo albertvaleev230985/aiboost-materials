@@ -11,10 +11,10 @@ export const QUESTIONS = [
     id: 1, lesson: 1, difficulty: 'easy',
     theme: 'Карта сервисов без VPN',
     text: 'Какие ИИ-сервисы работают из России БЕЗ VPN?',
-    options: ['ChatGPT и Claude', 'Qwen (Alibaba) и Gemini (Google)', 'Только ChatGPT', 'Никакие'],
+    options: ['ChatGPT и Claude', 'Qwen, Kimi и Kimi K2', 'Только Gemini', 'Никакие'],
     correct: 1,
-    explanation: 'Qwen и Gemini доступны из РФ напрямую. ChatGPT и Claude требуют VPN. На 1-м уроке VPN ставили именно под ChatGPT.',
-    hostNote: 'Если кто ошибся — напомни, что Qwen и Gemini открывали без VPN, VPN был только для ChatGPT.',
+    explanation: 'Без VPN из РФ работают китайские модели — Qwen (Alibaba), Kimi и Kimi K2 (Moonshot). ChatGPT, Claude, Gemini — все требуют VPN.',
+    hostNote: 'Частая путаница: Gemini тоже требует VPN из РФ — даже не со всеми VPN включается. Без VPN работают только китайские.',
   },
   {
     id: 2, lesson: 1, difficulty: 'mid',
