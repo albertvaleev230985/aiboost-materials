@@ -88,8 +88,12 @@ function render() {
         </div>
         <div class="host-grid" id="grid">${gridBlock(list, q)}</div>
 
+        <h2 class="h2 mt-6"><i class="ph ph-warning icon-coral"></i> Топ ошибок — что разбирать первым</h2>
+        <div class="muted small">Вопросы, на&nbsp;которых ошиблось больше всего участников. Клик на&nbsp;строку — открыть разбор с&nbsp;распределением ответов.</div>
+        <div class="top-mistakes" id="top-mistakes">${topMistakesBlock(list)}</div>
+
         <h2 class="h2 mt-6">Heatmap · ${QUESTIONS.length} вопросов × ${list.length} ${plural(list.length,'участник','участника','участников')}</h2>
-        <div class="muted small">Зелёное — правильный, красное — ошибка, серое — нет ответа. Клик на&nbsp;номер вопроса — разбор.</div>
+        <div class="muted small">Зелёное — правильный, красное — ошибка, серое — нет ответа. Над&nbsp;номером — счётчик ошибок. Клик на&nbsp;номер — разбор.</div>
         <div class="heatmap" id="heatmap">${heatmapBlock(list)}</div>
 
         <h2 class="h2 mt-6"><i class="ph ph-megaphone-simple icon-violet"></i> Манифесты</h2>
@@ -283,13 +287,54 @@ function computeScore(u) {
   return score;
 }
 
+function questionStats(list) {
+  // массив { idx, theme, wrong, answered, q }
+  return QUESTIONS.map((q, idx) => {
+    let answered = 0, wrong = 0;
+    list.forEach(u => {
+      const a = u.answers[idx];
+      if (a != null) {
+        answered++;
+        if (a !== q.correct) wrong++;
+      }
+    });
+    return { idx, theme: q.theme, wrong, answered, q };
+  });
+}
+
+function topMistakesBlock(list) {
+  if (!list.length) return '<div class="top-mistakes-empty">Нет участников — ничего разбирать ещё нельзя.</div>';
+  const stats = questionStats(list);
+  const totalAnswered = stats.reduce((s, x) => s + x.answered, 0);
+  if (totalAnswered === 0) return '<div class="top-mistakes-empty">Никто ещё не ответил — топ ошибок появится после первых ответов.</div>';
+  const mistakes = stats.filter(s => s.wrong > 0).sort((a,b) => b.wrong - a.wrong || a.idx - b.idx).slice(0, 5);
+  if (!mistakes.length) return '<div class="top-mistakes-empty"><i class="ph ph-check-circle icon-green"></i> Все ответы правильные — разбирать нечего, идём дальше.</div>';
+  return mistakes.map(m => `
+    <div class="mistake-row" data-q="${m.idx}">
+      <div class="m-num">${m.idx + 1}</div>
+      <div class="m-info">
+        <div class="m-theme">${escapeHtml(m.theme)}</div>
+        <div class="m-stats"><strong style="color:var(--red);">${m.wrong}</strong> из ${m.answered} ${plural(m.answered,'ответил','ответили','ответили')} неверно</div>
+      </div>
+      <div class="m-action">разбор &rarr;</div>
+    </div>
+  `).join('');
+}
+
 function heatmapBlock(list) {
   if (!list.length) return '<div class="muted">Нет участников.</div>';
+  const stats = questionStats(list);
   return `
     <table>
       <tr>
         <th class="name">Участник</th>
-        ${QUESTIONS.map((_, i) => `<th class="qcol ${i === session.currentQuestion ? 'current' : ''}" data-q="${i}">${i + 1}</th>`).join('')}
+        ${QUESTIONS.map((_, i) => {
+          const cur = i === session.currentQuestion ? 'current' : '';
+          const errs = stats[i].wrong;
+          const errCls = errs > 0 ? 'has-errors' : '';
+          const badge = errs > 0 ? `<span class="err-badge">${errs}</span>` : '';
+          return `<th class="qcol ${cur} ${errCls}" data-q="${i}">${i + 1}${badge}</th>`;
+        }).join('')}
         <th>Σ</th>
       </tr>
       ${list.map(u => `
@@ -309,6 +354,9 @@ function heatmapBlock(list) {
 
 function bindHeatmap(list) {
   document.querySelectorAll('.qcol').forEach(el => {
+    el.addEventListener('click', () => showQuestionDetail(parseInt(el.dataset.q), list));
+  });
+  document.querySelectorAll('.mistake-row').forEach(el => {
     el.addEventListener('click', () => showQuestionDetail(parseInt(el.dataset.q), list));
   });
 }

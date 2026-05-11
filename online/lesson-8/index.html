@@ -38,27 +38,7 @@ function renderWelcome(me) {
     <div class="h1">Привет, ${escapeHtml(me.name)}!</div>
     <div class="lead">Это финал курса. Сегодня — живой тест на 24 вопроса, ретроспектива всего пути и твой манифест.</div>
 
-    <div class="card outline-violet">
-      <div class="card-tag violet"><i class="ph ph-target"></i> Шаг 1</div>
-      <div class="card-title">Живой тест — 24 вопроса</div>
-      <div class="card-body">
-        Темп задаёт Альберт. У&nbsp;каждого вопроса 30&nbsp;секунд. Не&nbsp;экзамен — зеркало того, сколько ты&nbsp;уже знаешь после 7&nbsp;занятий.
-        <div style="margin-top:16px;">
-          <a href="test.html" class="btn btn-primary">Открыть тест <i class="ph ph-arrow-right"></i></a>
-        </div>
-      </div>
-    </div>
-
-    <div class="card outline-coral">
-      <div class="card-tag coral"><i class="ph ph-map-trifold"></i> Шаг 2</div>
-      <div class="card-title">Моя карта на 30&nbsp;дней</div>
-      <div class="card-body">
-        3 коротких поля: твой стек, главный процесс на&nbsp;автоматизацию, личный манифест. Альберт прочитает 2-3 манифеста вслух в&nbsp;Zoom.
-        <div style="margin-top:16px;">
-          <a href="card.html" class="btn btn-ghost">Открыть карту <i class="ph ph-arrow-right"></i></a>
-        </div>
-      </div>
-    </div>
+    <div id="active-action"></div>
 
     <div class="card" id="status-card">
       <div class="muted small">Загружаем состояние сессии…</div>
@@ -78,15 +58,59 @@ function renderWelcome(me) {
 
   subscribeSession((session) => {
     const phase = session.phase;
+    const action = document.getElementById('active-action');
+    const status = document.getElementById('status-card');
+
+    // Карта показывается ТОЛЬКО когда Альберт запустил фазу card.
+    // До этого — только тест (или ожидание).
+    if (phase === 'card') {
+      action.innerHTML = `
+        <div class="card outline-coral">
+          <div class="card-tag coral"><i class="ph ph-map-trifold"></i> Сейчас — карта</div>
+          <div class="card-title">Моя карта на 30&nbsp;дней</div>
+          <div class="card-body">
+            3 коротких поля: твой стек, главный процесс на&nbsp;автоматизацию, личный манифест. У&nbsp;тебя 5&nbsp;минут.
+            <div style="margin-top:16px;">
+              <a href="card.html" class="btn btn-primary">Открыть карту <i class="ph ph-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (phase === 'done') {
+      action.innerHTML = `
+        <div class="card outline-violet">
+          <div class="card-tag violet"><i class="ph ph-check-circle"></i> Урок завершён</div>
+          <div class="card-title">Спасибо!</div>
+          <div class="card-body">
+            Сертификат, супер-шпаргалка курса и&nbsp;бонус по&nbsp;VPN придут тебе в&nbsp;личку в&nbsp;Telegram сегодня вечером.
+          </div>
+        </div>
+      `;
+    } else {
+      // lobby, test, discussion — показываем только тест
+      action.innerHTML = `
+        <div class="card outline-violet">
+          <div class="card-tag violet"><i class="ph ph-target"></i> ${phase === 'test' ? 'Сейчас — тест' : 'Шаг 1 · Тест'}</div>
+          <div class="card-title">Живой тест — 24 вопроса</div>
+          <div class="card-body">
+            Темп задаёт Альберт. У&nbsp;каждого вопроса 30&nbsp;секунд. Не&nbsp;экзамен — зеркало того, сколько ты&nbsp;уже знаешь после 7&nbsp;занятий.
+            <div style="margin-top:16px;">
+              <a href="test.html" class="btn btn-primary">Открыть тест <i class="ph ph-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     const phaseText = {
-      lobby: '<i class="ph ph-hourglass icon-violet"></i> Альберт ещё не начал. Можешь зайти в&nbsp;тест и&nbsp;карту заранее.',
+      lobby: '<i class="ph ph-hourglass icon-violet"></i> Альберт ещё не начал. Можешь зайти в&nbsp;тест заранее — вопрос появится автоматически.',
       test: '<i class="ph ph-target icon-violet"></i> Идёт живой тест. Открой <strong>тест</strong> и&nbsp;следи за&nbsp;вопросами от&nbsp;Альберта.',
-      discussion: '<i class="ph ph-chat-circle icon-violet"></i> Разбор теста — слушай Альберта в&nbsp;Zoom.',
+      discussion: '<i class="ph ph-chat-circle icon-violet"></i> Разбор теста — слушай Альберта в&nbsp;Zoom. Карта откроется чуть позже.',
       card: '<i class="ph ph-map-trifold icon-violet"></i> Заполняем карту — открой <strong>карту</strong>, у&nbsp;тебя 5&nbsp;минут.',
       done: '<i class="ph ph-check-circle icon-green"></i> Урок завершён. Сертификат придёт в&nbsp;личку в&nbsp;Telegram.',
     }[phase] || '';
-    document.getElementById('status-card').innerHTML = `
-      <div class="card-tag violet">Сейчас</div>
+    status.innerHTML = `
+      <div class="card-tag violet">Что сейчас</div>
       <div class="card-body">${phaseText}</div>
     `;
   });
