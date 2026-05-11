@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность | Занятие 2 — Промпт-инженерия</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #1a1a2e;
+  --bg-light: #1e3a2e;
+  --accent: #10b981;
+  --accent-dark: #059669;
+  --accent-glow: rgba(16,185,129,0.15);
+  --coral: #E07461;
+  --white: #ffffff;
+  --white-80: rgba(255,255,255,0.8);
+  --white-60: rgba(255,255,255,0.6);
+  --white-40: rgba(255,255,255,0.4);
+  --white-20: rgba(255,255,255,0.2);
+  --white-10: rgba(255,255,255,0.1);
+  --yellow: #f0c040;
+  --orange: #e8944a;
+  --red: #e05555;
+  --green: #5ec47a;
+  --purple: #8B6EB5;
+  --blue: #4285f4;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--white);
+  -webkit-font-smoothing: antialiased;
+}
+
+.deck { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+
+.slide {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 60px 80px;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translateX(40px);
+  overflow-y: auto;
+}
+.slide.active { opacity: 1; visibility: visible; transform: translateX(0); }
+.slide.prev { transform: translateX(-40px); }
+
+/* TYPOGRAPHY */
+.slide-title { font-size: 46px; font-weight: 800; line-height: 1.15; margin-bottom: 32px; color: var(--white); }
+.slide-title .accent { color: var(--accent); }
+.slide-title .coral { color: var(--coral); }
+
+.slide-subtitle { font-size: 26px; font-weight: 400; color: var(--white-80); margin-bottom: 40px; line-height: 1.4; }
+.slide-body { font-size: 24px; line-height: 1.6; color: var(--white-80); }
+
+.point { margin-bottom: 18px; padding-left: 8px; font-size: 24px; line-height: 1.5; color: var(--white-80); }
+.point strong { color: var(--white); font-weight: 600; }
+.point .emoji { margin-right: 10px; font-style: normal; }
+
+/* QUOTE */
+.quote {
+  margin-top: 40px; padding: 24px 32px;
+  border-left: 4px solid var(--accent);
+  background: var(--white-10);
+  border-radius: 0 12px 12px 0;
+  font-size: 22px; font-weight: 500; line-height: 1.5;
+  color: var(--white); font-style: italic;
+}
+
+/* BIG STATEMENT */
+.big-statement { font-size: 36px; font-weight: 700; line-height: 1.4; text-align: center; max-width: 900px; margin: 0 auto; color: var(--white); }
+.big-statement .accent { color: var(--accent); }
+.big-statement-sub { font-size: 24px; font-weight: 400; color: var(--white-60); text-align: center; margin-top: 24px; max-width: 800px; margin-left: auto; margin-right: auto; line-height: 1.5; }
+
+/* CARDS */
+.card { background: var(--white-10); border-radius: 16px; padding: 28px; margin-bottom: 20px; }
+.card-title { font-size: 22px; font-weight: 700; margin-bottom: 10px; color: var(--white); }
+.card-body { font-size: 20px; color: var(--white-80); line-height: 1.5; }
+.cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px; }
+.cards-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 16px; }
+.cards-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-top: 16px; }
+
+/* TABLE */
+.tbl { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 16px; font-size: 20px; }
+.tbl th { text-align: left; padding: 14px 20px; background: var(--white-10); color: var(--accent); font-weight: 700; border-bottom: 2px solid var(--white-20); }
+.tbl td { padding: 12px 20px; border-bottom: 1px solid var(--white-10); color: var(--white-80); }
+.tbl th:first-child { border-radius: 10px 0 0 0; }
+.tbl th:last-child { border-radius: 0 10px 0 0; }
+
+/* COMPARISON */
+.vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 16px; }
+.vs-card { border-radius: 16px; padding: 28px; }
+.vs-card.bad { background: rgba(224,85,85,0.15); border: 1px solid rgba(224,85,85,0.3); }
+.vs-card.good { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); }
+
+/* STEPS */
+.step { display: flex; align-items: flex-start; margin-bottom: 18px; font-size: 22px; line-height: 1.5; color: var(--white-80); }
+.step-num {
+  flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+  background: var(--accent); color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 18px; margin-right: 16px; margin-top: 2px;
+}
+
+/* WARNING */
+.warning-card { background: rgba(240,192,64,0.1); border: 2px solid rgba(240,192,64,0.4); border-radius: 16px; padding: 32px; margin-top: 16px; }
+
+/* PRACTICE */
+.practice-card { background: rgba(16,185,129,0.12); border: 2px solid rgba(16,185,129,0.4); border-radius: 16px; padding: 32px; margin-top: 16px; }
+
+/* PROMPT BLOCK */
+.prompt-block {
+  background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3);
+  border-radius: 12px; padding: 24px 28px; margin-top: 16px;
+  font-size: 20px; line-height: 1.7; color: var(--white-80);
+  font-family: 'Inter', sans-serif; white-space: pre-wrap;
+}
+.prompt-block-sm {
+  background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3);
+  border-radius: 12px; padding: 18px 22px; margin-top: 12px;
+  font-size: 17px; line-height: 1.6; color: var(--white-80);
+  font-family: 'Inter', sans-serif; white-space: pre-wrap;
+}
+
+/* CONTROLS */
+.slide-counter { position: fixed; bottom: 24px; right: 32px; font-size: 16px; font-weight: 600; color: var(--white-40); z-index: 100; pointer-events: none; }
+.fullscreen-btn {
+  position: fixed; top: 20px; right: 24px; z-index: 100;
+  background: var(--white-10); border: 1px solid var(--white-20);
+  color: var(--white-60); width: 40px; height: 40px; border-radius: 8px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; transition: background 0.2s;
+}
+.fullscreen-btn:hover { background: var(--white-20); color: var(--white); }
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 100; transition: width 0.4s ease; }
+
+/* TITLE SLIDE */
+.slide.title-slide {
+  text-align: center; justify-content: center; align-items: center;
+  background: radial-gradient(ellipse at 50% 40%, rgba(16,185,129,0.15) 0%, transparent 60%);
+}
+.title-big { font-size: 68px; font-weight: 900; letter-spacing: -2px; color: var(--accent); margin-bottom: 24px; }
+.title-sub { font-size: 32px; font-weight: 500; color: var(--white-80); margin-bottom: 48px; line-height: 1.3; }
+.title-meta { font-size: 20px; color: var(--white-40); font-weight: 400; }
+
+/* BREAK SLIDE */
+.slide.break-slide { text-align: center; align-items: center; background: radial-gradient(ellipse at 50% 50%, rgba(16,185,129,0.1) 0%, transparent 60%); }
+
+/* PRACTICE SLIDE — белый фон, единый стиль с курсом */
+.slide.practice-slide { background: #ffffff !important; }
+.slide.practice-slide .big-statement,
+.slide.practice-slide .slide-title { color: #1a1a2e; }
+.slide.practice-slide .big-statement .accent,
+.slide.practice-slide .slide-title .accent { color: #059669; }
+.slide.practice-slide .big-statement-sub { color: rgba(26,26,46,0.7); }
+.slide.practice-slide .slide-subtitle { color: rgba(26,26,46,0.7); }
+.slide.practice-slide .practice-card { background: rgba(16,185,129,0.08); border: 2px solid rgba(16,185,129,0.3); }
+.slide.practice-slide .point { color: rgba(26,26,46,0.85); }
+.slide.practice-slide .point strong { color: #1a1a2e; }
+.slide.practice-slide .small-text { color: rgba(26,26,46,0.5); }
+.slide.practice-slide .prompt-block {
+  background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.25); color: rgba(26,26,46,0.85);
+}
+.slide.practice-slide .tbl th { background: rgba(16,185,129,0.12); color: #059669; border-bottom: 2px solid rgba(16,185,129,0.3); }
+.slide.practice-slide .tbl td { color: rgba(26,26,46,0.85); border-bottom: 1px solid rgba(26,26,46,0.08); }
+
+.small-text { font-size: 18px; color: var(--white-40); margin-top: 24px; }
+.centered { text-align: center; align-items: center; }
+.highlight { background: rgba(16,185,129,0.2); padding: 2px 8px; border-radius: 6px; }
+
+/* FLOW */
+.flow { display: flex; align-items: stretch; gap: 0; margin-top: 16px; }
+.flow-step { flex: 1; background: var(--white-10); border-radius: 12px; padding: 20px; text-align: center; }
+.flow-step .flow-label { font-size: 14px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.flow-step .flow-body { font-size: 18px; color: var(--white-80); line-height: 1.5; }
+.flow-arrow { display: flex; align-items: center; font-size: 28px; color: var(--accent); padding: 0 8px; }
+
+/* BADGE */
+.badge { display: inline-block; padding: 4px 12px; border-radius: 8px; font-size: 14px; font-weight: 700; }
+.badge-free { background: rgba(94,196,122,0.2); color: var(--green); }
+.badge-paid { background: rgba(224,85,85,0.2); color: var(--red); }
+
+/* RKZFO FORMULA */
+.formula-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+.formula-item {
+  background: var(--white-10);
+  border: 2px solid var(--white-20);
+  border-radius: 16px;
+  padding: 24px 16px;
+  text-align: center;
+}
+.formula-item .letter {
+  font-size: 48px;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.formula-item .name {
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  opacity: 0.9;
+}
+.formula-item .desc {
+  font-size: 14px;
+  opacity: 0.6;
+  line-height: 1.4;
+}
+.fi-r { border-color: var(--coral); }
+.fi-r .letter { color: var(--coral); }
+.fi-k { border-color: var(--blue); }
+.fi-k .letter { color: #93c5fd; }
+.fi-z { border-color: #10b981; }
+.fi-z .letter { color: #6ee7b7; }
+.fi-f { border-color: var(--purple); }
+.fi-f .letter { color: #c4b5fd; }
+.fi-o { border-color: var(--yellow); }
+.fi-o .letter { color: #fcd34d; }
+
+/* HIGHLIGHT COLORS */
+.hl { color: var(--coral); }
+.hl-blue { color: #93c5fd; }
+.hl-green { color: #6ee7b7; }
+.hl-purple { color: #c4b5fd; }
+.hl-amber { color: #fcd34d; }
+
+/* PHRASE CARDS */
+.phrase-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+.phrase-card {
+  background: var(--white-10);
+  border: 1px solid var(--white-20);
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-size: 20px;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="slide-counter" id="slideCounter"></div>
+<button class="fullscreen-btn" id="fsBtn" title="Полный экран">&#x26F6;</button>
+
+<div class="deck">
+
+<!-- СЛАЙД 1: ТИТУЛ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;">neovida.ai / ИИ. Новая реальность</div>
+  <div class="title-big">Промпт-инженерия</div>
+  <div class="title-sub">от А до Я</div>
+  <div class="title-meta">Занятие 2 &middot; онлайн-группа &middot; 11 мая 2026</div>
+</div>
+
+<!-- СЛАЙД 2: ПЛАН ЗАНЯТИЯ -->
+<div class="slide" style="flex-direction:row; gap:24px; align-items:center; padding:40px 50px;">
+  <div style="flex:0 0 40%; min-width:0;">
+    <div class="slide-title" style="font-size:40px; margin-bottom:24px;">Сегодня вы <span class="accent">научитесь</span></div>
+    <div class="step"><div class="step-num" style="background:var(--coral);">1</div><div>Писать промпты по формуле <strong style="color:var(--coral);">РКЗФО</strong></div></div>
+    <div class="step"><div class="step-num" style="background:#4285f4;">2</div><div>Использовать <strong>6 мощных техник</strong></div></div>
+    <div class="step"><div class="step-num" style="background:#10b981;">3</div><div>Понимать <strong>«память» ИИ</strong> и работать с ней</div></div>
+    <div class="step"><div class="step-num" style="background:#8B6EB5;">4</div><div>Создавать промпты <strong>голосом</strong></div></div>
+    <div class="step"><div class="step-num" style="background:#f0c040;">5</div><div>Готовить фундамент для <strong>ИИ-ассистента</strong></div></div>
+  </div>
+  <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+    <img src="plan-image.png" alt="План занятия" style="width:100%; max-height:85vh; object-fit:contain; border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+  </div>
+</div>
+
+<!-- СЛАЙД: ЧТО ТАКОЕ ПРОМПТ -->
+<div class="slide">
+  <div class="slide-title" style="text-align:center; font-size:52px; margin-bottom:32px;">Что такое <span class="accent">промпт?</span></div>
+  <div class="cards-grid" style="grid-template-columns:1fr 1fr; gap:20px;">
+    <div class="card" style="border-left:4px solid var(--accent); padding:28px;">
+      <div class="card-title" style="font-size:20px;">📝 Простыми словами</div>
+      <div class="card-body" style="font-size:18px; line-height:1.7;">Промпт — это <strong>инструкция для ИИ</strong>. Текст, который вы пишете или говорите нейросети. Как задание для сотрудника — только сотрудник искусственный.</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--yellow); padding:28px;">
+      <div class="card-title" style="font-size:20px;">🔑 Почему это важно</div>
+      <div class="card-body" style="font-size:18px; line-height:1.7;">ИИ не читает мысли. Он делает <strong>ровно то, что вы написали</strong>. Плохая инструкция → плохой результат. Хорошая инструкция → отличный результат. Всё решает промпт.</div>
+    </div>
+  </div>
+  <div style="display:flex; justify-content:center; gap:24px; margin-top:28px;">
+    <div style="text-align:center; padding:20px 32px; background:var(--white-10); border-radius:12px;">
+      <div style="font-size:32px; margin-bottom:6px;">💬</div>
+      <div style="font-size:15px; color:var(--white-80);"><strong>Текст</strong><br>напечатали</div>
+    </div>
+    <div style="text-align:center; padding:20px 32px; background:var(--white-10); border-radius:12px;">
+      <div style="font-size:32px; margin-bottom:6px;">🎤</div>
+      <div style="font-size:15px; color:var(--white-80);"><strong>Голос</strong><br>наговорили</div>
+    </div>
+    <div style="text-align:center; padding:20px 32px; background:var(--white-10); border-radius:12px;">
+      <div style="font-size:32px; margin-bottom:6px;">📷</div>
+      <div style="font-size:15px; color:var(--white-80);"><strong>Фото</strong><br>показали</div>
+    </div>
+    <div style="text-align:center; padding:20px 32px; background:var(--white-10); border-radius:12px;">
+      <div style="font-size:32px; margin-bottom:6px;">📄</div>
+      <div style="font-size:15px; color:var(--white-80);"><strong>Файл</strong><br>загрузили</div>
+    </div>
+  </div>
+  <div class="quote" style="margin-top:20px; text-align:center;">Промпт = ваш единственный способ общения с ИИ. Научитесь формулировать — и ИИ станет в 10 раз полезнее.</div>
+</div>
+
+<!-- СЛАЙД 3: БЕЗ ТЗ = РЕЗУЛЬТАТ ХЗ -->
+<div class="slide">
+  <div class="slide-title">Без ТЗ = результат <span class="accent">ХЗ</span></div>
+  <div class="vs-grid">
+    <div class="vs-card bad">
+      <div style="font-weight:700; color:var(--red); margin-bottom:12px; font-size:22px;">Плохой промпт</div>
+      <div class="prompt-block" style="background:rgba(224,85,85,0.08); border-color:rgba(224,85,85,0.3); font-size:20px;">Напиши текст про мои услуги</div>
+    </div>
+    <div class="vs-card good">
+      <div style="font-weight:700; color:var(--accent); margin-bottom:12px; font-size:22px;">Хороший промпт</div>
+      <div class="prompt-block" style="font-size:16px;">Ты маркетолог. Описание услуги онлайн-консультации для сайта. Цена от 3 000 руб. Аудитория: предприниматели. Структура: заголовок, боли, выгоды, призыв. 200 слов. Тон экспертный.</div>
+    </div>
+  </div>
+  <div class="quote">Как вы ставите задачу сотруднику, так и ставите задачу ИИ</div>
+</div>
+
+<!-- СЛАЙД 4: СЕКЦИЯ РКЗФО -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;">Формула</div>
+  <div class="title-big">Р К З Ф О</div>
+  <div class="title-sub">5 элементов идеального промпта</div>
+</div>
+
+<!-- СЛАЙД 5: ФОРМУЛА РКЗФО -->
+<div class="slide">
+  <div class="slide-title">Формула <span class="accent">РКЗФО</span></div>
+  <div class="formula-grid">
+    <div class="formula-item fi-r">
+      <div class="letter">Р</div>
+      <div class="name">Роль</div>
+      <div class="desc">Кем должен быть ИИ</div>
+    </div>
+    <div class="formula-item fi-k">
+      <div class="letter">К</div>
+      <div class="name">Контекст</div>
+      <div class="desc">Фон, ситуация</div>
+    </div>
+    <div class="formula-item fi-z">
+      <div class="letter">З</div>
+      <div class="name">Задача</div>
+      <div class="desc">Что сделать</div>
+    </div>
+    <div class="formula-item fi-f">
+      <div class="letter">Ф</div>
+      <div class="name">Формат</div>
+      <div class="desc">В каком виде ответ</div>
+    </div>
+    <div class="formula-item fi-o">
+      <div class="letter">О</div>
+      <div class="name">Ограничения</div>
+      <div class="desc">Чего НЕ делать</div>
+    </div>
+  </div>
+  <div class="slide-subtitle" style="margin-top:32px; margin-bottom:0;">Минимум: <span style="color:var(--coral);">Роль</span> + <span style="color:#6ee7b7;">Задача</span> + <span style="color:#c4b5fd;">Формат</span></div>
+</div>
+
+<!-- СЛАЙД 6: ПОЧЕМУ РОЛЬ РЕШАЕТ ВСЁ -->
+<div class="slide">
+  <div class="slide-title">Почему <span class="accent">Роль</span> решает всё</div>
+  <div class="vs-grid">
+    <div class="vs-card bad">
+      <div style="font-weight:700; color:var(--red); margin-bottom:12px; font-size:22px;">Без роли</div>
+      <div class="point"><strong>ИИ даёт «ответ из Википедии»</strong></div>
+      <div class="point" style="font-size:18px; opacity:0.7;">Общий, поверхностный, без нюансов</div>
+    </div>
+    <div class="vs-card good">
+      <div style="font-weight:700; color:var(--accent); margin-bottom:12px; font-size:22px;">С ролью</div>
+      <div class="point"><strong>ИИ даёт «консультацию эксперта»</strong></div>
+      <div class="point" style="font-size:18px; opacity:0.7;">Терминология, нюансы, структура профи</div>
+    </div>
+  </div>
+  <div class="prompt-block" style="text-align:center; margin-top:24px; font-size:22px;">«Ты [профессия] с [X]-летним опытом в [область]»</div>
+</div>
+
+<!-- СЛАЙД 7: РОЛИ И ЗАПРОСЫ ДЛЯ ПРАКТИКИ -->
+<div class="slide practice-slide">
+  <div class="slide-title"><span class="accent">Роли</span> и <span class="accent">запросы</span> для практики</div>
+  <div class="slide-subtitle"><strong>Шаг 1:</strong> отправьте запрос БЕЗ роли · <strong>Шаг 2:</strong> добавьте роль в начало · <strong>Шаг 3:</strong> сравните ответы</div>
+  <table class="tbl" style="font-size:15px;">
+    <tr><th style="width:150px;">Сценарий</th><th style="width:42%;">Пример запроса (Шаг 1)</th><th>+ Роль (Шаг 2)</th></tr>
+    <tr><td><strong>Предприниматель</strong><br><span style="opacity:0.6;font-weight:400;font-size:13px;">рост и запуск</span></td><td>«Составь план запуска новой услуги за 30 дней»</td><td>Ты бизнес-консультант по малому бизнесу в РФ с 10-летним опытом</td></tr>
+    <tr><td><strong>Руководитель</strong><br><span style="opacity:0.6;font-weight:400;font-size:13px;">команда и процессы</span></td><td>«Как сократить ручную операционку в команде без потери качества?»</td><td>Ты операционный директор, который выстраивает процессы в командах 10-50 человек</td></tr>
+    <tr><td><strong>Маркетолог</strong><br><span style="opacity:0.6;font-weight:400;font-size:13px;">контент и лиды</span></td><td>«Собери контент-план для Telegram и VK на месяц»</td><td>Ты digital-маркетолог с опытом продвижения экспертных продуктов</td></tr>
+    <tr><td><strong>Эксперт</strong><br><span style="opacity:0.6;font-weight:400;font-size:13px;">знания и продукт</span></td><td>«Помоги упаковать консультацию в понятный мини-продукт»</td><td>Ты методолог онлайн-обучения и продуктовый редактор</td></tr>
+    <tr><td><strong>Продажи</strong><br><span style="opacity:0.6;font-weight:400;font-size:13px;">скрипты и КП</span></td><td>«Напиши скрипт первого касания для тёплого клиента»</td><td>Ты руководитель продаж в B2B/B2C с сильной переговорной практикой</td></tr>
+    <tr><td><strong>Операционка</strong><br><span style="opacity:0.6;font-weight:400;font-size:13px;">автоматизация</span></td><td>«Разложи повторяющийся процесс и найди, что можно поручить ИИ»</td><td>Ты бизнес-аналитик и архитектор автоматизации процессов</td></tr>
+  </table>
+  <div class="small-text" style="margin-top:14px;">Лайфхак: сначала отправьте только запрос → получите общий ответ. Потом скопируйте тот же запрос, в начале добавьте роль → сравните глубину</div>
+</div>
+
+<!-- СЛАЙД 8: СЕКЦИЯ 4 ТЕХНИКИ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;">Блок 2</div>
+  <div class="title-big">6 техник</div>
+  <div class="title-sub">Которые делают промпты мощнее</div>
+</div>
+
+<!-- ТЕХНИКА 1: ОБРАТНЫЙ ПРОМПТИНГ — ЗАГОЛОВОК -->
+<div class="slide centered" style="padding:0; justify-content:center;">
+  <div style="position:relative; width:100%; height:100%;">
+    <img src="reverse-bg.png" alt="Обратный промптинг" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0;">
+    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(26,26,46,0.65);"></div>
+    <div style="position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center;">
+      <div style="background:rgba(0,0,0,0.25); backdrop-filter:blur(6px); border-radius:20px; padding:40px 60px;">
+        <div style="font-size:18px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:16px; font-weight:700;">Техника 1</div>
+        <div class="big-statement" style="color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);">Обратный промптинг <span class='accent'>(покажи пример)</span></div>
+        <div class="big-statement-sub" style="color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);">Нашли что-то, что вам нравится? Попросите ИИ извлечь из этого промпт. Картинку, текст, стиль письма — ИИ разберёт на составляющие и соберёт промпт, который воспроизведёт это.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ТЕХНИКА 1: 5 СПОСОБОВ ОБРАТНОГО ПРОМПТИНГА -->
+<div class="slide">
+  <div class="slide-title">5 способов <span class="accent">обратного промптинга</span></div>
+  <div class="cards-grid" style="grid-template-columns: 1fr 1fr; gap:14px;">
+    <div class="card" style="border-left:4px solid var(--accent);">
+      <div class="card-title">&#x1F4F8; Картинка &#x2192; промпт</div>
+      <div class="card-body">Нашли красивое фото? Скиньте ИИ: «Опиши это изображение максимально подробно, сделай из описания промпт для генерации похожего»</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--green);">
+      <div class="card-title">&#x1F4DD; Стиль блогера &#x2192; ваши посты</div>
+      <div class="card-body">Скопируйте 3-5 постов человека, который вам нравится: «Проанализируй стиль этих текстов. Извлеки тон, структуру, приёмы. Теперь напиши пост о [моя тема] в этом стиле»</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--yellow);">
+      <div class="card-title">&#x1F4E7; Удачное письмо &#x2192; шаблон</div>
+      <div class="card-body">Нашли письмо, которое сработало? «Разбери это письмо: тон, структура, приёмы убеждения. Сделай из этого шаблон для моих писем клиентам»</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--purple);">
+      <div class="card-title">&#x1F310; Сайт конкурента &#x2192; свой</div>
+      <div class="card-body">Скриншот сайта конкурента: «Опиши дизайн, структуру, тексты этого сайта. Сделай промпт для создания похожего, но для моего бизнеса»</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--coral);">
+      <div class="card-title">&#x1F4C4; Хорошее КП &#x2192; формула</div>
+      <div class="card-body">Вставьте удачное коммерческое предложение: «Извлеки структуру, логику убеждения, формат. Сделай шаблон, чтобы я мог делать такие же КП для других клиентов»</div>
+    </div>
+  </div>
+</div>
+
+<!-- ТЕХНИКА 1: ПРАКТИКА ОБРАТНОГО ПРОМПТИНГА -->
+<div class="slide practice-slide">
+  <div class="slide-title">&#x26A1; Практика: <span class="accent">Обратный промптинг</span></div>
+  <div class="slide-subtitle">5 минут — попробуйте один из вариантов</div>
+  <div class="practice-card">
+    <div class="point"><em class="emoji">1&#xFE0F;&#x20E3;</em> Найдите в телефоне <strong>пост, фото или текст</strong>, который вам нравится</div>
+    <div class="point"><em class="emoji">2&#xFE0F;&#x20E3;</em> Отправьте его в ChatGPT или Gemini</div>
+    <div class="point"><em class="emoji">3&#xFE0F;&#x20E3;</em> Напишите: <strong>«Проанализируй это. Извлеки стиль, структуру, приёмы. Сделай промпт, чтобы я мог создавать такое же для своей работы»</strong></div>
+    <div class="point"><em class="emoji">4&#xFE0F;&#x20E3;</em> Используйте полученный промпт — <strong>создайте что-то своё в этом стиле</strong></div>
+  </div>
+  <div class="small-text">Это работает с чем угодно: фото, тексты, письма, дизайн, презентации, даже голосовые</div>
+</div>
+
+<!-- СЛАЙД 14: ТЕХНИКА 2 — ЗАГОЛОВОК -->
+<div class="slide centered" style="padding:0; justify-content:center;">
+  <div style="position:relative; width:100%; height:100%;">
+    <img src="cot-bg.png" alt="Пошагово" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0;">
+    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(26,26,46,0.65);"></div>
+    <div style="position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center;">
+      <div style="background:rgba(0,0,0,0.25); backdrop-filter:blur(6px); border-radius:20px; padding:40px 60px;">
+        <div style="font-size:18px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:16px; font-weight:700;">Техника 2</div>
+        <div class="big-statement" style="color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);">Рассуждай <span class="accent">пошагово</span></div>
+        <div class="big-statement-sub" style="color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);">Волшебная фраза: «Рассуждай пошагово». ИИ показывает ход мысли. Как бухгалтер, который показывает расчёт.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 15: COT ПРИМЕРЫ — наша группа -->
+<div class="slide">
+  <div class="slide-title">Пошаговое мышление <span class="accent">для каждого</span></div>
+  <div class="prompt-block" style="font-size:14px;">Предприниматель: Стоит ли запускать новую услугу в текущем бизнесе?
+         Пошагово: спрос, аудитория, ресурсы, экономика, риски.
+
+Руководитель: Как высвободить 5 часов в неделю за счёт ИИ?
+         Пошагово: задачи, частота, цена ошибки, инструменты, контроль.
+
+Маркетолог: Какой контент-канал выбрать при бюджете 50 000 руб./мес?
+         Пошагово: аудитория, каналы, гипотезы, тесты, метрики.
+
+Эксперт: Как поднять чек за консультацию и не потерять спрос?
+         Пошагово: ценность, упаковка, доказательства, оффер, продажи.
+
+Продажи: Как увеличить конверсию из заявки в оплату?
+         Пошагово: путь клиента, возражения, скрипт, follow-up, замер.
+
+Операционка: Как автоматизировать повторяющиеся заявки и отчёты?
+         Пошагово: процесс сейчас, данные, триггеры, роли, контроль качества.</div>
+</div>
+
+<!-- СЛАЙД 16: COT ПРАКТИКА -->
+<div class="slide practice-slide">
+  <div class="slide-title">⚡ Практика: <span class="accent">Пошагово</span></div>
+  <div class="slide-subtitle">3 минуты — попробуйте прямо сейчас</div>
+  <div class="practice-card">
+    <div class="point"><em class="emoji">1️⃣</em> Возьмите <strong>любой рабочий вопрос</strong>, где нужен развёрнутый ответ</div>
+    <div class="point"><em class="emoji">2️⃣</em> Добавьте: <strong>«Рассуждай пошагово»</strong></div>
+    <div class="point"><em class="emoji">3️⃣</em> Перечислите <strong>3-5 шагов</strong>, по которым нужно пройти</div>
+    <div class="point"><em class="emoji">4️⃣</em> Оцените — <strong>ответ стал глубже?</strong></div>
+  </div>
+  <div class="small-text">Примеры шагов: закупка → конкуренты → расходы → маржа → итог</div>
+</div>
+
+<!-- ТЕХНИКА 3: УСИЛЬ ОТВЕТ — ЗАГОЛОВОК -->
+<div class="slide centered" style="padding:0; justify-content:center;">
+  <div style="position:relative; width:100%; height:100%;">
+    <img src="enhance-bg.png" alt="Усиль ответ" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0;">
+    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(26,26,46,0.65);"></div>
+    <div style="position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center;">
+      <div style="background:rgba(0,0,0,0.25); backdrop-filter:blur(6px); border-radius:20px; padding:40px 60px;">
+        <div style="font-size:18px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:16px; font-weight:700;">Техника 3</div>
+        <div class="big-statement" style="color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);"><span class="accent">Усиль</span> ответ</div>
+        <div class="big-statement-sub" style="color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);">Получили результат? Не останавливайтесь. Три приёма, чтобы сделать любой ответ ИИ в разы лучше.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ТЕХНИКА 3: ТРИ ПРИЁМА УСИЛЕНИЯ -->
+<div class="slide">
+  <div class="slide-title">Три приёма <span class="accent">усиления</span></div>
+  <div class="cards-grid" style="grid-template-columns: 1fr 1fr 1fr; gap:16px;">
+    <div class="card" style="border-left:4px solid var(--accent);">
+      <div class="card-title">👥 Три эксперта</div>
+      <div class="card-body" style="font-size:17px;">«Ответь на этот вопрос от лица трёх специалистов: маркетолога, финансиста и практика с опытом. Пусть каждый даст свою оценку и они обсудят между собой.»</div>
+      <div style="margin-top:12px; font-size:14px; color:var(--white-50);">Когда: принимаете решение, выбираете стратегию, оцениваете идею</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--red);">
+      <div class="card-title">😈 Адвокат дьявола</div>
+      <div class="card-body" style="font-size:17px;">«Теперь раскритикуй свой же ответ. Найди 5 слабых мест, рисков и причин, почему это может не сработать. Будь максимально жёстким.»</div>
+      <div style="margin-top:12px; font-size:14px; color:var(--white-50);">Когда: проверяете план, ищете слепые зоны, готовитесь к возражениям</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--yellow);">
+      <div class="card-title">🎯 Адаптируй</div>
+      <div class="card-body" style="font-size:17px;">«Перепиши этот же текст для трёх аудиторий: для клиента, для инвестора и для сотрудника-новичка. Сохрани суть, измени подачу.»</div>
+      <div style="margin-top:12px; font-size:14px; color:var(--white-50);">Когда: один контент для разных людей, презентации, письма, посты</div>
+    </div>
+  </div>
+  <div class="quote" style="margin-top:16px;">Один запрос → три приёма → результат, который не стыдно показать.</div>
+</div>
+
+<!-- ТЕХНИКА 3: ПРАКТИКА УСИЛЕНИЯ -->
+<div class="slide practice-slide">
+  <div class="slide-title">⚡ Практика: <span class="accent">Усиль ответ</span></div>
+  <div class="slide-subtitle">5 минут — возьмите любой предыдущий ответ ИИ</div>
+  <div class="practice-card">
+    <div class="point"><em class="emoji">1️⃣</em> Откройте <strong>любой чат</strong>, где ИИ уже дал вам ответ</div>
+    <div class="point"><em class="emoji">2️⃣</em> Напишите: <strong>«Ответь на это от лица 3 экспертов: [кто, кто, кто]»</strong></div>
+    <div class="point"><em class="emoji">3️⃣</em> Потом: <strong>«Теперь раскритикуй — найди 5 слабых мест»</strong></div>
+    <div class="point"><em class="emoji">4️⃣</em> Потом: <strong>«Перепиши для [другая аудитория]»</strong></div>
+  </div>
+  <div class="small-text">Каждый приём можно использовать отдельно — не обязательно все три сразу</div>
+</div>
+
+<!-- СЛАЙД 17a: ТЕХНИКА 4 — ЗАГОЛОВОК -->
+<div class="slide centered" style="padding:0; justify-content:center;">
+  <div style="position:relative; width:100%; height:100%;">
+    <img src="iterations-bg.png" alt="Итерации" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0;">
+    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(26,26,46,0.65);"></div>
+    <div style="position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center;">
+      <div style="background:rgba(0,0,0,0.25); backdrop-filter:blur(6px); border-radius:20px; padding:40px 60px;">
+        <div style="font-size:18px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:16px; font-weight:700;">Техника 4</div>
+        <div class="big-statement" style="color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);"><span class="accent">Итерации</span> + Запреты</div>
+        <div class="big-statement-sub" style="color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);">Первый ответ — это черновик. Дальше правите в диалоге.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 17b: ИТЕРАЦИИ — ФРАЗЫ -->
+<div class="slide">
+  <div class="slide-title">Фразы для <span class="accent">итераций</span></div>
+  <div class="phrase-grid">
+    <div class="phrase-card">Хорошо, но <span style="color:var(--coral); font-weight:600;">сделай короче</span></div>
+    <div class="phrase-card">Измени тон на <span style="color:var(--coral); font-weight:600;">более дружелюбный</span></div>
+    <div class="phrase-card">Это не то. <span style="color:var(--coral); font-weight:600;">Я имел в виду...</span></div>
+    <div class="phrase-card">Дай <span style="color:var(--coral); font-weight:600;">3 варианта</span> с разным тоном</div>
+    <div class="phrase-card"><span style="color:#fcd34d; font-weight:600;">НЕ</span> используй канцеляризмы</div>
+    <div class="phrase-card"><span style="color:#fcd34d; font-weight:600;">НЕ</span> используй слово «уникальный»</div>
+  </div>
+</div>
+
+<!-- СЛАЙД 18a: ТЕХНИКА 4 — ЗАГОЛОВОК -->
+<div class="slide centered" style="padding:0; justify-content:center;">
+  <div style="position:relative; width:100%; height:100%;">
+    <img src="questions-bg.png" alt="Задай вопросы" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0;">
+    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(26,26,46,0.65);"></div>
+    <div style="position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center;">
+      <div style="background:rgba(0,0,0,0.25); backdrop-filter:blur(6px); border-radius:20px; padding:40px 60px;">
+        <div style="font-size:18px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:16px; font-weight:700;">Техника 5</div>
+        <div class="big-statement" style="color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);">«Задай мне <span class="accent">вопросы</span>»</div>
+        <div class="big-statement-sub" style="color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);">ИИ спросит про бюджет, аудиторию, сроки — о чём вы сами не подумали.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 18b: ЗАДАЙ МНЕ ВОПРОСЫ — ПРОМПТ -->
+<div class="slide">
+  <div class="slide-title">Как это <span class="accent">работает</span></div>
+  <div class="prompt-block" style="font-size:24px; text-align:center;">Я хочу [задача].
+Задай мне 10 уточняющих вопросов,
+прежде чем начинать.</div>
+  <div class="quote" style="margin-top:24px;">ИИ задаёт вопросы → вы отвечаете → ИИ сам строит идеальный промпт из ваших ответов.</div>
+</div>
+
+<!-- СЛАЙД 19: ПРИМЕРЫ «ЗАДАЙ ВОПРОСЫ» — наша группа -->
+<div class="slide">
+  <div class="slide-title">«Задай мне вопросы» <span class="accent">для каждого</span></div>
+  <div class="prompt-block" style="font-size:15px;">Предприниматель: Хочу запустить новую услугу и быстро проверить спрос.
+          Задай мне 10 уточняющих вопросов, прежде чем составлять план.
+
+Руководитель: Хочу понять, какие задачи команды можно передать ИИ.
+          Задай мне уточняющие вопросы.
+
+Маркетолог: Хочу собрать контент-план для Telegram и VK на месяц.
+          Задай мне вопросы, чтобы сделать план точнее.
+
+Эксперт: Хочу превратить свои знания в платный мини-продукт.
+          Задай мне 10 вопросов прежде чем писать программу.
+
+Продажи: Хочу улучшить первый контакт с клиентом и follow-up.
+          Задай мне вопросы.
+
+Операционка: Хочу описать повторяющийся процесс и найти точки автоматизации.
+          Задай мне вопросы.</div>
+</div>
+
+<!-- СЛАЙД 20: ПРАКТИКА «ЗАДАЙ ВОПРОСЫ» -->
+<div class="slide practice-slide">
+  <div class="slide-title">⚡ Практика: <span class="accent">Задай вопросы</span></div>
+  <div class="slide-subtitle">3 минуты — самая мощная техника</div>
+  <div class="practice-card">
+    <div class="point"><em class="emoji">1️⃣</em> Напишите: <strong>«Я хочу [ваша реальная задача]»</strong></div>
+    <div class="point"><em class="emoji">2️⃣</em> Добавьте: <strong>«Задай мне уточняющие вопросы, прежде чем начинать»</strong></div>
+    <div class="point"><em class="emoji">3️⃣</em> <strong>Ответьте</strong> на вопросы ИИ</div>
+    <div class="point"><em class="emoji">4️⃣</em> Оцените результат — <strong>стал ли ответ точнее?</strong></div>
+  </div>
+  <div class="small-text">ИИ сам спросит про бюджет, аудиторию, сроки — о чём вы бы не подумали</div>
+</div>
+
+<!-- СЛАЙД 24: ПЕРЕРЫВ -->
+<div class="slide break-slide">
+  <div class="big-statement" style="font-size:72px;">Перерыв</div>
+  <div class="big-statement-sub" style="font-size:28px;">10 минут</div>
+</div>
+
+<!-- СЛАЙД 22: СЕКЦИЯ ПАМЯТЬ ИИ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;">Блок 3</div>
+  <div class="title-big">Память ИИ</div>
+  <div class="title-sub">Почему ИИ «тупеет» в длинных чатах</div>
+</div>
+
+<!-- СЛАЙД 23: КОНТЕКСТНОЕ ОКНО -->
+<div class="slide">
+  <div class="slide-title">Контекстное <span class="accent">окно</span></div>
+  <div class="slide-subtitle">У ИИ есть «стол», на который он раскладывает ваш разговор. Стол конечный.</div>
+  <div class="cards-grid" style="margin-top:16px;">
+    <div class="card" style="text-align:center; padding:32px; border-left:4px solid var(--accent);">
+      <div style="font-size:18px; color:var(--white-60); margin-bottom:8px;">Бесплатный ChatGPT</div>
+      <div style="font-size:48px; font-weight:900; color:var(--accent);">~100 страниц</div>
+      <div style="font-size:16px; color:var(--white-50); margin-top:8px;">контекстного окна</div>
+    </div>
+    <div class="card" style="text-align:center; padding:32px; border-left:4px solid var(--yellow);">
+      <div style="font-size:18px; color:var(--white-60); margin-bottom:8px;">ChatGPT Plus / Gemini Pro</div>
+      <div style="font-size:48px; font-weight:900; color:var(--yellow);">~500 страниц</div>
+      <div style="font-size:16px; color:var(--white-50); margin-top:8px;">контекстного окна</div>
+    </div>
+  </div>
+  <div class="warning-card" style="margin-top:20px;">
+    <div class="point"><em class="emoji">⚠️</em> Когда «стол» заполняется, ИИ начинает сбрасывать старые «листки» и забывать. Поэтому в длинных чатах он «тупеет».</div>
+  </div>
+</div>
+
+<!-- СЛАЙД 24: ГНИЕНИЕ ПОСЕРЕДИНЕ -->
+<div class="slide">
+  <div class="slide-title">«Гниение <span class="accent">посередине</span>»</div>
+  <div class="slide-subtitle">Исследование Стэнфорда</div>
+  <div style="display:flex; gap:0; margin-top:16px;">
+    <div style="flex:1; background:rgba(16,185,129,0.2); border-radius:16px 0 0 16px; padding:32px; text-align:center;">
+      <div style="font-size:36px; font-weight:800; color:#6ee7b7;">Начало</div>
+      <div style="font-size:18px; color:var(--white-60); margin-top:8px;">Помнит хорошо</div>
+    </div>
+    <div style="flex:1; background:rgba(224,85,85,0.15); padding:32px; text-align:center;">
+      <div style="font-size:36px; font-weight:800; color:#fca5a5;">Середина</div>
+      <div style="font-size:18px; color:var(--white-60); margin-top:8px;">Теряет</div>
+    </div>
+    <div style="flex:1; background:rgba(16,185,129,0.2); border-radius:0 16px 16px 0; padding:32px; text-align:center;">
+      <div style="font-size:36px; font-weight:800; color:#6ee7b7;">Конец</div>
+      <div style="font-size:18px; color:var(--white-60); margin-top:8px;">Помнит хорошо</div>
+    </div>
+  </div>
+  <div class="quote">ИИ лучше всего помнит начало и конец. Середину теряет.</div>
+</div>
+
+<!-- СЛАЙД 25: ПРАВИЛО 1 -->
+<div class="slide">
+  <div class="slide-title">Правило 1: <span class="accent">Ключевое в начало и конец</span></div>
+  <div class="slide-subtitle">Для длинных промптов (10+ строк)</div>
+  <div class="vs-grid">
+    <div class="vs-card bad">
+      <div style="font-weight:700; color:var(--red); margin-bottom:12px; font-size:22px;">Неправильно</div>
+      <div class="prompt-block" style="background:rgba(224,85,85,0.08); border-color:rgba(224,85,85,0.3); font-size:15px;">Ты маркетолог.
+Мой бизнес — консалтинг...
+5 сотрудников, офис...
+<span style="color:#fca5a5; font-weight:700;">ЦЕНЫ ТОЛЬКО В РУБЛЯХ</span>
+Клиенты — малый бизнес...
+Напиши текст.</div>
+    </div>
+    <div class="vs-card good">
+      <div style="font-weight:700; color:var(--accent); margin-bottom:12px; font-size:22px;">Правильно</div>
+      <div class="prompt-block" style="font-size:15px;"><span style="color:#6ee7b7; font-weight:700;">ЦЕНЫ ТОЛЬКО В РУБЛЯХ</span>
+Ты маркетолог.
+Консалтинг, 5 лет на рынке...
+5 сотрудников, офис...
+Напиши текст.
+<span style="color:#6ee7b7; font-weight:700;">Напоминаю: РУБЛИ</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 26: ПРАВИЛО 2 -->
+<div class="slide">
+  <div class="slide-title">Правило 2: <span class="accent">Структурируйте — нумеруйте</span></div>
+  <div class="vs-grid">
+    <div class="vs-card bad">
+      <div style="font-weight:700; color:var(--red); margin-bottom:12px; font-size:22px;">Стена текста</div>
+      <div class="prompt-block" style="background:rgba(224,85,85,0.08); border-color:rgba(224,85,85,0.3); font-size:15px;">Мне нужен пост для Telegram про мои услуги он должен быть не длинный примерно 100 слов с призывом записаться тон дружелюбный...</div>
+    </div>
+    <div class="vs-card good">
+      <div style="font-weight:700; color:var(--accent); margin-bottom:12px; font-size:22px;">Нумерованный список</div>
+      <div class="prompt-block" style="font-size:15px;">1. Длина: ~100 слов
+2. Эмодзи: да, умеренно
+3. Тон: дружелюбный
+4. Упомянуть:
+   - Первое занятие бесплатно
+   - Группы до 6 человек
+5. Призыв записаться</div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 27: ПРАВИЛО 3 -->
+<div class="slide">
+  <div class="slide-title">Правило 3: <span class="accent">Новый чат = чистая память</span></div>
+  <div class="vs-grid">
+    <div class="vs-card good">
+      <div style="font-weight:700; color:var(--accent); margin-bottom:12px; font-size:22px;">Когда новый чат</div>
+      <div class="point"><em class="emoji">&#x2713;</em> Сменили тему</div>
+      <div class="point"><em class="emoji">&#x2713;</em> Чат длиннее 15-20 сообщений</div>
+      <div class="point"><em class="emoji">&#x2713;</em> ИИ начал «тупить»</div>
+      <div class="point"><em class="emoji">&#x2713;</em> Хотите новую задачу</div>
+    </div>
+    <div class="vs-card bad">
+      <div style="font-weight:700; color:var(--red); margin-bottom:12px; font-size:22px;">Когда НЕ надо</div>
+      <div class="point"><em class="emoji">&#x2717;</em> Правите один и тот же текст</div>
+      <div class="point"><em class="emoji">&#x2717;</em> В середине пошаговой задачи</div>
+      <div class="point"><em class="emoji">&#x2717;</em> ИИ задал вам вопросы</div>
+    </div>
+  </div>
+  <div class="quote">Одна задача = один чат</div>
+</div>
+
+<!-- СЛАЙД 28: ПРАВИЛО 4 -->
+<div class="slide">
+  <div class="slide-title">Правило 4: <span class="accent">Резюмируйте в длинных диалогах</span></div>
+  <div class="prompt-block" style="font-size:19px;">Давай подведём итог:
+1. Мы составляем контент-план для Telegram-канала
+2. Остановились на 3 рубриках: «Кейс недели»,
+   «Совет дня», «Закулисье»
+3. Бюджет на продвижение до 15 000 руб/мес
+
+Теперь сделай макет поста для «Кейс недели».</div>
+  <div class="quote">Напоминаете ИИ всё важное. Как после обеда: «Так, мы остановились на том, что...»</div>
+</div>
+
+<!-- СЛАЙД 29: СЕКЦИЯ ПРАКТИКА -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;">Блок 4</div>
+  <div class="title-big">Практика</div>
+  <div class="title-sub">Пишем промпт для своей работы по формуле РКЗФО</div>
+</div>
+
+<!-- СЛАЙД 30: ПОЛНЫЙ ПРИМЕР -->
+<div class="slide">
+  <div class="slide-title">Полный пример: <span class="accent">РКЗФО</span></div>
+  <div class="prompt-block" style="font-size:16px;"><span style="color:var(--coral); font-weight:700;">Р:</span> Ты маркетолог-стратег с 10-летним опытом в digital.
+
+<span style="color:#93c5fd; font-weight:700;">К:</span> У меня онлайн-школа по фитнесу. 500 подписчиков в Telegram,
+   средний чек 3 000 руб. Запуск нового курса через месяц.
+
+<span style="color:#6ee7b7; font-weight:700;">З:</span> Предложи 5 идей для прогрева аудитории перед запуском.
+
+<span style="color:#c4b5fd; font-weight:700;">Ф:</span> Таблица: идея, канал, бюджет, срок, ожидаемый охват.
+
+<span style="color:#fcd34d; font-weight:700;">О:</span> Бюджет до 30 000 руб. Без спам-рассылок.
+   Только Telegram и VK.</div>
+</div>
+
+<!-- СЛАЙД 31: ПРАКТИКА — ПИШЕМ -->
+<div class="slide practice-slide">
+  <div class="slide-title">⚡ Практика: пишем <span class="accent">свой промпт</span></div>
+  <div class="slide-subtitle">7 минут — главное упражнение урока</div>
+  <div class="practice-card">
+    <div class="point"><em class="emoji">1️⃣</em> Возьмите <strong>реальную рабочую задачу</strong> — то, что вам нужно сделать на этой неделе</div>
+    <div class="point"><em class="emoji">2️⃣</em> Напишите промпт по формуле: <strong style="color:var(--coral);">Роль</strong> + <strong style="color:#4285f4;">Контекст</strong> + <strong style="color:#10b981;">Задача</strong></div>
+    <div class="point"><em class="emoji">3️⃣</em> Добавьте <strong>Формат</strong> (таблица, список, текст) и <strong>Ограничения</strong></div>
+    <div class="point"><em class="emoji">4️⃣</em> Отправьте в ChatGPT или Gemini → оцените результат</div>
+    <div class="point"><em class="emoji">5️⃣</em> Не нравится? <strong>Итерируйте!</strong> «Сделай короче», «Измени тон», «Добавь...»</div>
+  </div>
+  <div class="small-text">Если затрудняетесь — поднимите руку, поможем</div>
+</div>
+
+<!-- СЛАЙД: МЕТА-ПРОМПТ — ТЕХНИКА 6 -->
+<div class="slide centered" style="padding:0; justify-content:center;">
+  <div style="position:relative; width:100%; height:100%;">
+    <img src="metaprompt-bg.png" alt="Мета-промпт" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0;">
+    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(26,26,46,0.65);"></div>
+    <div style="position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center;">
+      <div style="background:rgba(0,0,0,0.25); backdrop-filter:blur(6px); border-radius:20px; padding:40px 60px;">
+        <div style="font-size:18px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:16px; font-weight:700;">Техника 6</div>
+        <div class="big-statement" style="color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);"><span class="accent">Мета</span>-промпт</div>
+        <div class="big-statement-sub" style="color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);">Приём, при котором вы даёте ИИ сырую идею или задачу в свободной форме, а затем просите его самостоятельно превратить это в структурированный, грамотный промпт, готовый к использованию.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД: МЕТА-ПРОМПТ — АНАЛОГИЯ И КАК РАБОТАЕТ -->
+<div class="slide">
+  <div class="slide-title">Мета-промпт: <span class="accent">как это работает</span></div>
+  <div class="slide-subtitle">Вы не пишете промпт сами. Вы просите ИИ написать его за вас.</div>
+  <div class="cards-grid">
+    <div class="card" style="border-left:4px solid var(--accent); padding:24px;">
+      <div class="card-title" style="font-size:20px;">🍳 Аналогия</div>
+      <div class="card-body" style="font-size:18px; line-height:1.7;">Вы не готовите блюдо сами — вы объясняете повару, какой рецепт написать. Повар пишет рецепт, вы проверяете, и говорите: «Теперь готовь по нему.»</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--yellow); padding:24px;">
+      <div class="card-title" style="font-size:20px;">🔄 Как это выглядит</div>
+      <div class="card-body" style="font-size:18px; line-height:1.7;">Описываете задачу своими словами — хоть голосом, хоть набросками. Потом говорите: <strong>«Собери из этого правильный промпт с ролью, контекстом, задачей и форматом.»</strong> ИИ сам выстраивает структуру и выдаёт готовый промпт.</div>
+    </div>
+  </div>
+  <div class="step" style="margin-top:20px;"><div class="step-num">1</div><div>Вы наговорили задачу <strong>как получится</strong> — хоть 3 предложения, хоть абзац</div></div>
+  <div class="step"><div class="step-num">2</div><div>Попросили: <strong>«Сделай из этого промпт по РКЗФО»</strong></div></div>
+  <div class="step"><div class="step-num">3</div><div>ИИ выдал <strong>готовый промпт</strong> — проверили, отправили</div></div>
+  <div class="quote">Мета-промпт — это промпт для создания промпта. Вы думаете о задаче, а ИИ думает о формулировке.</div>
+</div>
+
+<!-- СЛАЙД 32: СУПЕРТЕХНИКА — ЗАГОЛОВОК -->
+<div class="slide centered" style="padding:0; justify-content:center;">
+  <div style="position:relative; width:100%; height:100%;">
+    <img src="supertechnique-bg.png" alt="Супертехника" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0;">
+    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(26,26,46,0.65);"></div>
+    <div style="position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center;">
+      <div style="background:rgba(0,0,0,0.25); backdrop-filter:blur(6px); border-radius:20px; padding:40px 60px;">
+        <div style="font-size:18px; letter-spacing:3px; text-transform:uppercase; color:var(--yellow); margin-bottom:16px; font-weight:700;">⭐ Супертехника</div>
+        <div class="big-statement" style="font-size:52px; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);"><span class="accent">Наговори голосом</span></div>
+        <div class="big-statement-sub" style="font-size:24px; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);">Формула РКЗФО — это база. Вы должны понимать, что входит в хороший промпт. Но запоминать и писать вручную не обязательно — просто расскажите ИИ голосом что нужно, а он сам упакует это в идеальный промпт.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 33: СУПЕРТЕХНИКА — КАК РАБОТАЕТ -->
+<div class="slide">
+  <div class="slide-title">Как это <span class="accent">работает</span></div>
+  <div class="slide-subtitle">Два шага — и готово</div>
+  <div class="cards-grid">
+    <div class="card" style="border-left:4px solid var(--accent);">
+      <div class="card-title">🎤 Шаг 1: наговорите голосом</div>
+      <div class="card-body" style="font-size:18px; font-style:italic;">Просто расскажите что вам нужно. Как другу. 3-4 предложения. Не думайте про формулу — просто говорите.</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--green);">
+      <div class="card-title">🤖 Шаг 2: скажите ИИ</div>
+      <div class="card-body" style="font-size:18px;">«Упакуй мою мысль в промпт по формуле РКЗФО. Примени все правила промпт-инженерии. Выполни получившийся промпт.»</div>
+    </div>
+  </div>
+  <div class="warning-card" style="margin-top:20px;">
+    <div class="point"><em class="emoji">💡</em> <strong>Почему это супертехника:</strong> вам не нужно помнить формулу, не нужно думать про роль и формат — ИИ сам всё определит из вашего рассказа. Вы просто говорите — он делает.</div>
+  </div>
+</div>
+
+<!-- СЛАЙД 34: ЧТО ИИ СДЕЛАЛ -->
+<div class="slide" style="flex-direction:row; gap:40px; align-items:center; padding:50px 60px;">
+  <div style="flex:1; min-width:0;">
+    <div class="slide-title">Что ИИ <span class="accent">сделал сам</span></div>
+    <div class="slide-subtitle">Из вашего рассказа голосом он автоматически:</div>
+    <div class="step"><div class="step-num" style="background:var(--coral);">Р</div><div><strong>Определил роль</strong> — понял, какой специалист нужен</div></div>
+    <div class="step"><div class="step-num" style="background:#4285f4;">К</div><div><strong>Вытащил контекст</strong> — ваш бизнес, город, ситуацию</div></div>
+    <div class="step"><div class="step-num" style="background:#10b981;">З</div><div><strong>Сформулировал задачу</strong> — чётко, конкретно</div></div>
+    <div class="step"><div class="step-num" style="background:#8B6EB5;">Ф</div><div><strong>Выбрал формат</strong> — таблица, список или текст</div></div>
+    <div class="step"><div class="step-num" style="background:#f0c040;">О</div><div><strong>Добавил ограничения</strong> — и сразу выполнил!</div></div>
+    <div class="quote">Вся формула РКЗФО — автоматически. Вы просто поговорили.</div>
+  </div>
+  <div style="flex:0 0 auto; display:flex; align-items:center;">
+    <img src="rkzfo-auto.png" alt="ИИ сам создал промпт" style="width:625px; height:auto; border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+  </div>
+</div>
+
+<!-- СЛАЙД: УСИЛИТЕЛИ ПРОМПТА — ЗАГОЛОВОК -->
+<div class="slide centered" style="padding:0; justify-content:center;">
+  <div style="position:relative; width:100%; height:100%;">
+    <img src="enhancers-bg.png" alt="Фразы-усилители" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0;">
+    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(26,26,46,0.65);"></div>
+    <div style="position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center;">
+      <div style="background:rgba(0,0,0,0.25); backdrop-filter:blur(6px); border-radius:20px; padding:40px 60px;">
+        <div class="big-statement" style="color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);">Фразы-<span class="accent">усилители</span></div>
+        <div class="big-statement-sub" style="color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.8);">Добавляйте эти инструкции в любой промпт, чтобы получить результат лучше. Не обязательно все сразу — выбирайте те, которые подходят к задаче.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД: УСИЛИТЕЛИ — СПИСОК -->
+<div class="slide">
+  <div class="slide-title">15 фраз, которые <span class="accent">усиливают</span> промпт</div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:16px;">
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--accent);">
+      <strong style="color:var(--accent);">1.</strong> «Если не знаешь ответа — скажи прямо, не выдумывай»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--accent);">
+      <strong style="color:var(--accent);">2.</strong> «Если не уверен — перепроверь, не давай ответ наугад»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--accent);">
+      <strong style="color:var(--accent);">3.</strong> «Отвечай развёрнуто, не сокращай ради краткости»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--accent);">
+      <strong style="color:var(--accent);">4.</strong> «Если мало контекста — сначала задай вопросы, потом делай»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--accent);">
+      <strong style="color:var(--accent);">5.</strong> «Не додумывай за меня — если чего-то не хватает, спроси»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--accent);">
+      <strong style="color:var(--accent);">6.</strong> «Если я указал на ошибку — не спорь, исправь»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--accent);">
+      <strong style="color:var(--accent);">7.</strong> «Не уходи в сторону, делай ровно то, что просят»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--accent);">
+      <strong style="color:var(--accent);">8.</strong> «Учитывай всё, что я уже сказал выше в диалоге»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--yellow);">
+      <strong style="color:var(--yellow);">9.</strong> «Если моя идея слабая — скажи честно, будь критичным»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--yellow);">
+      <strong style="color:var(--yellow);">10.</strong> «Если видишь, как сделать лучше — предложи свой вариант»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--yellow);">
+      <strong style="color:var(--yellow);">11.</strong> «Качество важнее скорости, если я не сказал иначе»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--yellow);">
+      <strong style="color:var(--yellow);">12.</strong> «Не повторяй одну мысль разными словами ради объёма»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--coral);">
+      <strong style="color:var(--coral);">13.</strong> «Разделяй факты и мнения — обозначай, где рекомендация»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--coral);">
+      <strong style="color:var(--coral);">14.</strong> «Один ответ — одна задача. Не мешай в кучу»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--coral);">
+      <strong style="color:var(--coral);">15.</strong> «Начинай с главного вывода, потом объясняй»
+    </div>
+    <div class="card" style="padding:10px 14px; border-left:3px solid var(--purple); grid-column:1/-1; text-align:center;">
+      <strong style="color:var(--purple);">🎨 Температура:</strong> Хочешь креатив — «будь смелее, предложи нестандартное». Хочешь точность — «строго по фактам, без фантазий».
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 34: АССИСТЕНТНЫЙ ПОДХОД -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;">Следующий уровень</div>
+  <div class="title-big" style="font-size:60px;">Ассистентный<br>подход</div>
+  <div class="title-sub">От разовых промптов к постоянному помощнику</div>
+</div>
+
+<!-- СЛАЙД 35: СЕГОДНЯ VS СЛЕДУЮЩИЙ УРОВЕНЬ -->
+<div class="slide">
+  <div class="slide-title">Сегодня vs <span class="accent">Следующий уровень</span></div>
+  <div class="vs-grid">
+    <div class="vs-card bad">
+      <div style="font-weight:700; color:var(--red); margin-bottom:12px; font-size:22px;">Сегодня: разовый промпт</div>
+      <div class="point">Каждый раз пишете:<br>Роль + Контекст + Задача</div>
+      <div class="point">Каждый раз объясняете<br>кто вы и чем занимаетесь</div>
+    </div>
+    <div class="vs-card good">
+      <div style="font-weight:700; color:var(--accent); margin-bottom:12px; font-size:22px;">Следующий уровень: ассистент</div>
+      <div class="point">Один раз настроили.</div>
+      <div class="point">ИИ уже знает вас, ваш бизнес,<br>ваших клиентов.</div>
+      <div class="point"><strong>Просто пишете задачу.</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- СЛАЙД 36: ВАШИ БУДУЩИЕ АССИСТЕНТЫ — наша группа -->
+<div class="slide">
+  <div class="slide-title">Ваши будущие <span class="accent">ассистенты</span></div>
+  <table class="tbl" style="font-size:18px;">
+    <tr><th style="width:180px;">Сценарий</th><th>Ассистент</th></tr>
+    <tr><td><strong>Предприниматель</strong></td><td>Стратег: идеи роста, расчёты, гипотезы, планы запусков</td></tr>
+    <tr><td><strong>Руководитель</strong></td><td>Операционный помощник: регламенты, встречи, контроль задач</td></tr>
+    <tr><td><strong>Маркетолог</strong></td><td>Контент-фабрика: темы, посты, офферы, разбор конкурентов</td></tr>
+    <tr><td><strong>Эксперт</strong></td><td>Методист: программы, уроки, чек-листы, упаковка знаний</td></tr>
+    <tr><td><strong>Продажи</strong></td><td>Коммерческий помощник: скрипты, КП, возражения, follow-up</td></tr>
+    <tr><td><strong>Операционка</strong></td><td>Аналитик процессов: инструкции, базы знаний, автоматизация рутины</td></tr>
+  </table>
+  <div class="quote">На следующем занятии создадим каждому</div>
+</div>
+
+<!-- СЛАЙД 37: 5 ГЛАВНЫХ ОШИБОК -->
+<div class="slide">
+  <div class="slide-title">5 главных <span class="accent">ошибок</span> новичков</div>
+  <table class="tbl" style="font-size:17px;">
+    <tr><th style="width:25%;">Ошибка</th><th style="width:35%;">Плохо</th><th>Хорошо</th></tr>
+    <tr><td>Размытый запрос</td><td style="color:#fca5a5;">«Напиши текст про мои услуги»</td><td style="color:#6ee7b7;">«Описание услуги консультации, 150 слов»</td></tr>
+    <tr><td>Всё в одном</td><td style="color:#fca5a5;">«Бизнес-план + окупаемость + презентация»</td><td style="color:#6ee7b7;">Разбить на 3 запроса</td></tr>
+    <tr><td>Нет контекста</td><td style="color:#fca5a5;">«Какую цену поставить?»</td><td style="color:#6ee7b7;">«Закупка 450, конкуренты 700-900»</td></tr>
+    <tr><td>Первый = финальный</td><td style="color:#fca5a5;">Скопировал, использовал</td><td style="color:#6ee7b7;">Оценил, улучшил, проверил</td></tr>
+    <tr><td>Не проверяет факты</td><td style="color:#fca5a5;">«ИИ написал = правда»</td><td style="color:#6ee7b7;">Цифры, законы, даты проверять</td></tr>
+  </table>
+</div>
+
+<!-- СЛАЙД: СЛЕДУЮЩЕЕ ЗАНЯТИЕ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;">Следующее занятие &mdash; суббота</div>
+  <div class="title-big" style="font-size:48px;">Ассистентный<br>подход</div>
+  <div class="title-sub">Gems, NotebookLM, персональные ИИ-ассистенты<br>из ваших рабочих процессов.</div>
+</div>
+
+<!-- СЛАЙД 41: ФИНАЛ -->
+<div class="slide title-slide">
+  <div style="font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--white-40); margin-bottom:32px;">neovida.ai / ИИ. Новая реальность</div>
+  <div class="title-big" style="font-size:56px;">Спасибо!</div>
+  <div class="title-sub">В понедельник ждите первое домашнее задание.<br>Вопросы? Пишите в чат 💪</div>
+</div>
+
+</div>
+
+<script>
+(function() {
+  const slides = document.querySelectorAll('.slide');
+  const counter = document.getElementById('slideCounter');
+  const progress = document.getElementById('progressBar');
+  const fsBtn = document.getElementById('fsBtn');
+  const total = slides.length;
+  let current = 0;
+
+  function show(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[current].classList.remove('active');
+    slides[current].classList.add('prev');
+    current = idx;
+    slides.forEach(function(s, i) {
+      s.classList.remove('active', 'prev');
+      if (i < current) s.classList.add('prev');
+    });
+    slides[current].classList.add('active');
+    counter.textContent = (current + 1) + ' / ' + total;
+    progress.style.width = ((current + 1) / total * 100) + '%';
+    slides[current].scrollTop = 0;
+  }
+
+  function next() { show(current + 1); }
+  function prev() { show(current - 1); }
+
+  slides[0].classList.add('active');
+  counter.textContent = '1 / ' + total;
+  progress.style.width = (1 / total * 100) + '%';
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+    if (e.key === 'Home') { e.preventDefault(); show(0); }
+    if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+  });
+
+  var touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].screenX - touchStartX;
+    var dy = e.changedTouches[0].screenY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0) next(); else prev();
+    }
+  }, { passive: true });
+
+  fsBtn.addEventListener('click', function() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(function(){});
+    } else {
+      document.exitFullscreen();
+    }
+  });
+})();
+</script>
+</body>
+</html>
