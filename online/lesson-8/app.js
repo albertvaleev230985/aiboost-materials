@@ -83,6 +83,7 @@ export function debounce(fn, ms) {
 // onTick(remainingSec, fraction) — каждые 100мс. onEnd() — один раз при достижении 0.
 export function runTimer(startedAtMs, durationSec, onTick, onEnd) {
   let endedFired = false;
+  let handle = null; // объявляем ДО tick() чтобы избежать TDZ если remaining=0 сразу
   const tick = () => {
     const elapsed = (Date.now() - startedAtMs) / 1000;
     const remaining = Math.max(0, durationSec - elapsed);
@@ -91,10 +92,11 @@ export function runTimer(startedAtMs, durationSec, onTick, onEnd) {
     if (remaining <= 0 && !endedFired) {
       endedFired = true;
       onEnd && onEnd();
-      clearInterval(handle);
+      if (handle !== null) clearInterval(handle);
     }
   };
   tick();
-  const handle = setInterval(tick, 100);
-  return () => clearInterval(handle);
+  // Если таймер уже истёк при первом tick() — не запускаем интервал вовсе
+  if (!endedFired) handle = setInterval(tick, 100);
+  return () => { if (handle !== null) clearInterval(handle); };
 }
