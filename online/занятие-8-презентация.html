@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
@@ -288,7 +289,9 @@ a:hover { color: var(--coral); }
 /* THANKS */
 .thanks-slide { text-align: center; justify-content: center; align-items: center; background: radial-gradient(ellipse at 50% 50%, rgba(167,139,250,0.2) 0%, transparent 60%), radial-gradient(ellipse at 30% 80%, rgba(224,116,97,0.12) 0%, transparent 50%); }
 .thanks-big { font-size: 100px; font-weight: 900; line-height: 1; margin-bottom: 18px; background: linear-gradient(135deg, var(--accent), var(--coral)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.thanks-sub { font-size: 28px; color: var(--white-80); margin-bottom: 30px; max-width: 720px; }
+.thanks-sub { font-size: 26px; color: var(--white-80); margin-bottom: 24px; max-width: 760px; line-height: 1.4; }
+.highlight-coral { color: var(--coral); font-weight: 700; }
+.highlight-violet { color: var(--accent); font-weight: 700; }
 
 /* LIVE indicator */
 .live-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 14px var(--coral-glow); animation: livepulse 1.5s infinite ease-in-out; vertical-align: middle; margin-right: 10px; }
@@ -856,10 +859,16 @@ a:hover { color: var(--coral); }
   <div style="font-size:24px; color:var(--white-60); margin-top:20px;">5&nbsp;минут на&nbsp;вопросы — техника, инструменты, следующий поток.</div>
 </section>
 
-<!-- 25. THANKS -->
-<section class="slide thanks-slide">
+<!-- 27. THANKS -->
+<section class="slide thanks-slide" id="thanks-slide">
   <div class="thanks-big">Спасибо</div>
-  <div class="thanks-sub">Вы&nbsp;прошли курс, который большинство в&nbsp;стране не&nbsp;проходит вообще.<br>Дальше — за&nbsp;вами.</div>
+  <div class="thanks-sub">
+    Вы&nbsp;уже не&nbsp;те, кем были 8&nbsp;недель назад.<br>
+    У&nbsp;вас теперь свой&nbsp;стек, свой&nbsp;манифест и&nbsp;навык,<br>которого нет у&nbsp;95% коллег.
+  </div>
+  <div style="font-size:24px; color:var(--white); margin-bottom:18px; font-weight:600;">
+    Вы — большие молодцы. <span class="highlight-coral">Идите и&nbsp;применяйте.</span>
+  </div>
   <div style="font-size:18px; color:var(--white-40); letter-spacing:1px;">neovida.ai · ИИ. Новая реальность · Поток&nbsp;1 · Финал</div>
 </section>
 
@@ -882,6 +891,106 @@ function show(i) {
   slides[current].classList.remove('prev');
   counter.textContent = `${current + 1} / ${total}`;
   progressBar.style.width = `${((current + 1) / total) * 100}%`;
+
+  // Финальный слайд — конфетти + звук фейерверка
+  if (current === total - 1) runFinaleEffects();
+}
+
+// ===== Финальные эффекты =====
+let lastFinaleAt = 0;
+let audioCtx = null;
+
+function runFinaleEffects() {
+  // Не повторять чаще раза в 3 секунды (защита от спама стрелками)
+  const now = Date.now();
+  if (now - lastFinaleAt < 3000) return;
+  lastFinaleAt = now;
+
+  // Серия залпов конфетти из 3-х точек
+  const colors = ['#A78BFA', '#E07461', '#f0c040', '#5ec47a', '#ffffff'];
+  const duration = 4000;
+  const animationEnd = Date.now() + duration;
+
+  // Большой залп по центру сразу
+  if (window.confetti) {
+    confetti({
+      particleCount: 120,
+      spread: 100,
+      origin: { y: 0.55 },
+      colors,
+      startVelocity: 45,
+      gravity: 0.9,
+      ticks: 220,
+    });
+  }
+
+  // Серия маленьких залпов с краёв 4 секунды
+  const interval = setInterval(() => {
+    if (Date.now() > animationEnd) { clearInterval(interval); return; }
+    if (!window.confetti) return;
+    confetti({
+      particleCount: 4,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0, y: 0.7 },
+      colors,
+    });
+    confetti({
+      particleCount: 4,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1, y: 0.7 },
+      colors,
+    });
+  }, 220);
+
+  // Звук — серия из 3 «хлопков», имитирующих залпы фейерверка
+  playFireworkBurst(0);
+  setTimeout(() => playFireworkBurst(0.05), 600);
+  setTimeout(() => playFireworkBurst(0.04), 1300);
+}
+
+// Web Audio: синтез "хлопка фейерверка" — низкий бас + всплеск шума + затухание
+function playFireworkBurst(volumeBoost = 0) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = audioCtx;
+    const now = ctx.currentTime;
+
+    // 1) Низкочастотный «удар» (бас, 60 Hz, быстро затухающий)
+    const bass = ctx.createOscillator();
+    const bassGain = ctx.createGain();
+    bass.type = 'sine';
+    bass.frequency.setValueAtTime(80, now);
+    bass.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+    bassGain.gain.setValueAtTime(0.45 + volumeBoost, now);
+    bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    bass.connect(bassGain).connect(ctx.destination);
+    bass.start(now);
+    bass.stop(now + 0.2);
+
+    // 2) Шумовой «всплеск» — имитирует разлёт искр (200ms)
+    const bufferSize = ctx.sampleRate * 0.6;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.15));
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const noiseFilter = ctx.createBiquadFilter();
+    noiseFilter.type = 'highpass';
+    noiseFilter.frequency.value = 1200;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.25 + volumeBoost, now + 0.05);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+    noise.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
+    noise.start(now + 0.05);
+    noise.stop(now + 0.65);
+  } catch (e) {
+    // Браузер заблокировал autoplay — это нормально, просто без звука
+    console.log('audio blocked', e.message);
+  }
 }
 
 document.addEventListener('keydown', (e) => {
