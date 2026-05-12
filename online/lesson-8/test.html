@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </head>
 <body class="app">
 
@@ -19,7 +20,7 @@
 </main>
 
 <script type="module">
-import { renderHeader, getMe, runTimer } from './app.js';
+import { renderHeader, getMe, runTimer, triggerCelebration, certificateScreenHTML } from './app.js';
 import { QUESTIONS, scoreFor, strengthReport } from './questions.js';
 import { subscribeSession, pushAnswer, setUserScore } from './firebase.js';
 
@@ -60,6 +61,7 @@ function render() {
   if (session.phase === 'lobby') return renderLobby();
   if (session.phase === 'discussion') return renderDiscussion();
   if (session.phase === 'card') return renderGoToCard();
+  if (session.phase === 'certificate') return renderCertificate();
   if (session.phase === 'done') return renderFinalReport();
 
   const qIdx = session.currentQuestion;
@@ -164,6 +166,13 @@ function renderGoToCard() {
       <a href="card.html" class="btn btn-primary mt-4">Открыть карту <i class="ph ph-arrow-right"></i></a>
     </div>
   `;
+}
+
+function renderCertificate() {
+  content.innerHTML = `<div class="card outline-violet">${certificateScreenHTML(me.name)}</div>`;
+  // Запускаем салюты и звук фейерверка
+  // requestAnimationFrame чтобы DOM успел отрисоваться до анимации
+  requestAnimationFrame(() => triggerCelebration());
 }
 
 function renderFinalReport() {

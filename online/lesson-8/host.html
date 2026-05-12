@@ -192,6 +192,7 @@ function phaseLabel(phase) {
     test: '<i class="ph ph-target"></i> Тест',
     discussion: '<i class="ph ph-chat-circle"></i> Разбор',
     card: '<i class="ph ph-map-trifold"></i> Карта',
+    certificate: '<i class="ph ph-graduation-cap"></i> Выдача сертификатов',
     done: '<i class="ph ph-check-circle"></i> Финал',
   };
   return labels[phase] || phase;
@@ -251,7 +252,17 @@ function actionsBlock() {
     `;
   }
   if (session.phase === 'card') {
-    return `<button class="btn btn-primary btn-big" data-act="end"><i class="ph ph-check-circle"></i> Завершить урок</button>`;
+    return `
+      <button class="btn btn-primary btn-big" data-act="certificate"><i class="ph ph-graduation-cap"></i> Выдать сертификаты</button>
+      <button class="btn btn-ghost" data-act="end"><i class="ph ph-check-circle"></i> Завершить без сертификатов</button>
+    `;
+  }
+  if (session.phase === 'certificate') {
+    return `
+      <div class="muted small ta-c" style="padding:8px 0;">Все участники сейчас видят поздравление и&nbsp;могут скачать свой сертификат.</div>
+      <button class="btn btn-primary btn-big" data-act="end"><i class="ph ph-check-circle"></i> Завершить урок</button>
+      <button class="btn btn-ghost" data-act="start-card"><i class="ph ph-arrow-left"></i> Вернуться к&nbsp;карте</button>
+    `;
   }
   if (session.phase === 'done') {
     return `<button class="btn btn-ghost" data-act="back-lobby"><i class="ph ph-arrow-counter-clockwise"></i> Вернуть в&nbsp;лобби</button>`;
@@ -290,6 +301,9 @@ async function doAction(act) {
       break;
     case 'start-card':
       await setSession({ phase: 'card', timerStartedAt: Date.now(), timerDurationSec: 300, currentQuestion: -1, showCorrect: false });
+      break;
+    case 'certificate':
+      await setSession({ phase: 'certificate', timerStartedAt: null });
       break;
     case 'end':
       await setSession({ phase: 'done', timerStartedAt: null });

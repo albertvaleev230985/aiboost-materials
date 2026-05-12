@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </head>
 <body class="app">
 
@@ -19,7 +20,7 @@
 </main>
 
 <script type="module">
-import { renderHeader, getMe, setMe, isValidFullName, nameToSlug } from './app.js';
+import { renderHeader, getMe, setMe, isValidFullName, nameToSlug, triggerCelebration, certificateScreenHTML } from './app.js';
 import { registerUser, subscribeSession } from './firebase.js';
 
 const me = getMe();
@@ -56,10 +57,24 @@ function renderWelcome(me) {
     }
   });
 
+  let lastCelebratePhase = null;
   subscribeSession((session) => {
     const phase = session.phase;
     const action = document.getElementById('active-action');
     const status = document.getElementById('status-card');
+    if (!action || !status) return; // DOM ещё не готов / был заменён — пропускаем
+
+    // Альберт нажал «Выдать сертификаты» — финал с салютами в блоке active-action.
+    if (phase === 'certificate') {
+      action.innerHTML = `<div class="card outline-violet">${certificateScreenHTML(me.name)}</div>`;
+      status.innerHTML = `<div class="card-tag violet"><i class="ph ph-graduation-cap"></i> Финал курса</div><div class="card-body">Альберт вручает сертификаты. Скачай свой выше — и&nbsp;до&nbsp;встречи на&nbsp;следующем потоке.</div>`;
+      if (lastCelebratePhase !== 'certificate') {
+        lastCelebratePhase = 'certificate';
+        requestAnimationFrame(() => triggerCelebration());
+      }
+      return;
+    }
+    lastCelebratePhase = phase;
 
     // Карта показывается ТОЛЬКО когда Альберт запустил фазу card.
     // До этого — только тест (или ожидание).
