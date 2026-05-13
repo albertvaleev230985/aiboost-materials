@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Boost PrintMaster | Модуль 3 — Gem, база знаний, Canvas и агенты</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  --ink: #15171d;
+  --ink-2: #242832;
+  --paper: #fbf7f0;
+  --paper-2: #f3ecdf;
+  --white: #ffffff;
+  --muted: #7a818e;
+  --line: rgba(21, 23, 29, 0.12);
+  --copper: #c46a4a;
+  --copper-2: #9f4c36;
+  --sage: #7e9878;
+  --sage-2: #516a55;
+  --steel: #49616d;
+  --sand: #ddc7a5;
+  --yellow: #d7aa4d;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--ink);
+  color: var(--paper);
+  letter-spacing: 0;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 64px 64px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.deck {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 54px 72px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(28px);
+  transition: opacity 0.28s ease, transform 0.28s ease, visibility 0.28s ease;
+  background: var(--ink);
+}
+
+.slide { overflow: hidden; }
+
+.slide.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+  z-index: 2;
+}
+
+.slide.prev { transform: translateX(-28px); }
+
+.slide.light {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.slide.light .eyebrow,
+.slide.light .subtitle,
+.slide.light .caption,
+.slide.light .small,
+.slide.light .muted { color: rgba(21,23,29,0.64); }
+
+.slide.light .card,
+.slide.light .panel,
+.slide.light .timeline-row,
+.slide.light .matrix td,
+.slide.light .matrix th {
+  background: rgba(255,255,255,0.68);
+  border-color: rgba(21,23,29,0.12);
+  color: var(--ink);
+}
+
+.slide.light .prompt,
+.slide.light .script {
+  background: #14171d;
+  color: #f9f4ec;
+}
+
+.title-slide {
+  background:
+    linear-gradient(135deg, #15171d 0%, #20232b 46%, #2d251f 100%);
+  overflow: hidden;
+}
+
+.title-slide::after {
+  content: "";
+  position: absolute;
+  right: -10%;
+  top: -20%;
+  width: 58%;
+  height: 140%;
+  background:
+    linear-gradient(120deg, rgba(196,106,74,0.28), rgba(126,152,120,0.18)),
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.12) 0, rgba(255,255,255,0.12) 1px, transparent 1px, transparent 18px);
+  transform: skewX(-12deg);
+  opacity: 0.85;
+}
+
+.title-content { position: relative; z-index: 2; max-width: 900px; }
+.eyebrow {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(251,247,240,0.52);
+  margin-bottom: 18px;
+}
+
+h1, .h1 {
+  font-size: 76px;
+  line-height: 0.98;
+  font-weight: 900;
+  max-width: 980px;
+  letter-spacing: 0;
+}
+
+h2, .slide-title {
+  font-size: 46px;
+  line-height: 1.08;
+  font-weight: 900;
+  max-width: 1030px;
+  letter-spacing: 0;
+}
+
+.subtitle {
+  font-size: 24px;
+  line-height: 1.42;
+  color: rgba(251,247,240,0.72);
+  max-width: 980px;
+  margin-top: 22px;
+}
+
+.accent { color: var(--copper); }
+.sage { color: var(--sage); }
+.steel { color: #7fa0ad; }
+.sand { color: var(--sand); }
+
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; width: 100%; margin-top: 34px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; width: 100%; margin-top: 30px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; width: 100%; margin-top: 28px; }
+
+.card, .panel {
+  border: 1px solid rgba(251,247,240,0.12);
+  background: rgba(251,247,240,0.055);
+  border-radius: 8px;
+  padding: 22px;
+  min-height: 150px;
+}
+
+.card-title {
+  font-size: 19px;
+  line-height: 1.25;
+  font-weight: 850;
+  margin-bottom: 10px;
+  color: var(--paper);
+}
+
+.light .card-title { color: var(--ink); }
+.card-text {
+  font-size: 17px;
+  line-height: 1.43;
+  color: rgba(251,247,240,0.68);
+}
+.light .card-text { color: rgba(21,23,29,0.68); }
+
+.big-number {
+  font-size: 72px;
+  line-height: 0.9;
+  font-weight: 900;
+  color: var(--copper);
+  margin-bottom: 18px;
+}
+
+.timeline {
+  width: 100%;
+  margin-top: 30px;
+  display: grid;
+  gap: 11px;
+}
+
+.timeline-row {
+  display: grid;
+  grid-template-columns: 126px 1fr 160px;
+  align-items: center;
+  gap: 18px;
+  border: 1px solid rgba(251,247,240,0.12);
+  background: rgba(251,247,240,0.05);
+  border-radius: 8px;
+  padding: 15px 18px;
+}
+
+.time {
+  font-size: 16px;
+  font-weight: 850;
+  color: var(--sand);
+}
+
+.timeline-title {
+  font-size: 22px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.timeline-note {
+  font-size: 15px;
+  line-height: 1.3;
+  color: rgba(251,247,240,0.58);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid rgba(251,247,240,0.15);
+  color: rgba(251,247,240,0.72);
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 18px;
+}
+
+.light .tag {
+  color: rgba(21,23,29,0.62);
+  border-color: rgba(21,23,29,0.14);
+}
+
+.flow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 36px;
+  width: 100%;
+}
+
+.flow-step {
+  position: relative;
+  min-height: 188px;
+  border-radius: 8px;
+  border: 1px solid rgba(251,247,240,0.12);
+  background: rgba(251,247,240,0.055);
+  padding: 20px;
+}
+
+.flow-step::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -13px;
+  width: 12px;
+  height: 2px;
+  background: rgba(251,247,240,0.22);
+}
+
+.flow-step:last-child::after { display: none; }
+.light .flow-step {
+  background: rgba(255,255,255,0.72);
+  border-color: rgba(21,23,29,0.12);
+}
+.light .flow-step::after { background: rgba(21,23,29,0.22); }
+
+.step-kicker {
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 900;
+  color: var(--copper);
+  margin-bottom: 16px;
+}
+
+.step-title {
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 850;
+  margin-bottom: 10px;
+}
+
+.step-text {
+  font-size: 15px;
+  line-height: 1.42;
+  color: rgba(251,247,240,0.62);
+}
+.light .step-text { color: rgba(21,23,29,0.64); }
+
+.matrix {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  margin-top: 28px;
+  font-size: 17px;
+}
+
+.matrix th {
+  text-align: left;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--sand);
+  padding: 0 16px 7px;
+}
+
+.matrix td {
+  border-top: 1px solid rgba(251,247,240,0.12);
+  border-bottom: 1px solid rgba(251,247,240,0.12);
+  background: rgba(251,247,240,0.045);
+  padding: 14px 16px;
+  line-height: 1.34;
+  vertical-align: top;
+}
+
+.matrix td:first-child {
+  border-left: 1px solid rgba(251,247,240,0.12);
+  border-radius: 8px 0 0 8px;
+  font-weight: 850;
+}
+
+.matrix td:last-child {
+  border-right: 1px solid rgba(251,247,240,0.12);
+  border-radius: 0 8px 8px 0;
+}
+
+.prompt, .script {
+  border-radius: 8px;
+  background: rgba(0,0,0,0.32);
+  border: 1px solid rgba(251,247,240,0.14);
+  padding: 24px 26px;
+  font-size: 17px;
+  line-height: 1.48;
+  color: rgba(251,247,240,0.92);
+  white-space: pre-wrap;
+  overflow: hidden;
+}
+
+.prompt.small {
+  font-size: 14px;
+  line-height: 1.38;
+  max-height: 425px;
+}
+
+.caption {
+  margin-top: 18px;
+  color: rgba(251,247,240,0.52);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 26px;
+  flex-wrap: wrap;
+}
+
+.logo-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  border: 1px solid rgba(251,247,240,0.14);
+  background: rgba(251,247,240,0.07);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 16px;
+  font-weight: 850;
+}
+
+.light .logo-pill {
+  background: rgba(255,255,255,0.72);
+  border-color: rgba(21,23,29,0.12);
+}
+
+.logo-pill img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
+  background: #fbf7f0;
+  border-radius: 6px;
+  padding: 3px;
+}
+
+.kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9em;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(251,247,240,0.12);
+  border: 1px solid rgba(251,247,240,0.12);
+}
+
+.light .kbd {
+  background: rgba(21,23,29,0.07);
+  border-color: rgba(21,23,29,0.12);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 34px;
+  align-items: center;
+  width: 100%;
+}
+
+.quote {
+  font-size: 42px;
+  line-height: 1.15;
+  font-weight: 900;
+  max-width: 1000px;
+}
+
+.footer-note {
+  position: absolute;
+  left: 72px;
+  bottom: 30px;
+  font-size: 13px;
+  color: rgba(251,247,240,0.42);
+  z-index: 4;
+}
+
+.counter {
+  position: fixed;
+  right: 30px;
+  bottom: 24px;
+  z-index: 10;
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(251,247,240,0.46);
+}
+
+.progress {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--copper);
+  width: 0;
+  z-index: 12;
+  transition: width 0.25s ease;
+}
+
+.source {
+  font-size: 13px;
+  color: rgba(251,247,240,0.46);
+  margin-top: 18px;
+  line-height: 1.45;
+}
+
+.light .source { color: rgba(21,23,29,0.52); }
+
+.small { font-size: 15px; line-height: 1.42; color: rgba(251,247,240,0.56); }
+
+@media (max-width: 900px) {
+  .slide { padding: 34px 24px 52px; overflow-y: auto; justify-content: flex-start; }
+  h1, .h1 { font-size: 42px; line-height: 1.03; }
+  h2, .slide-title { font-size: 32px; }
+  .subtitle { font-size: 18px; }
+  .grid-2, .grid-3, .grid-4, .split, .flow { grid-template-columns: 1fr; }
+  .timeline-row { grid-template-columns: 1fr; gap: 6px; }
+  .flow-step::after { display: none; }
+  .matrix { font-size: 14px; }
+  .matrix th { display: none; }
+  .matrix tr { display: grid; gap: 0; margin-bottom: 12px; }
+  .matrix td { border-radius: 0 !important; border-left: 1px solid rgba(21,23,29,0.12); border-right: 1px solid rgba(21,23,29,0.12); }
+  .footer-note { left: 24px; }
+}
+</style>
+</head>
+<body>
+<div class="deck">
+  <section class="slide title-slide active">
+    <div class="title-content">
+      <div class="eyebrow">neovida.ai / AI Boost для PrintMaster</div>
+      <h1>Gem-бот, база знаний и мини-приложения</h1>
+      <div class="subtitle">Модуль 3. За 3 часа собираем рабочий контур: ассистент по процессу, NotebookLM как база, Canvas-приложение и аккуратный заход в агентов.</div>
+      <div class="logo-row">
+        <div class="logo-pill"><img src="logo-gemini.svg" alt="Gemini">Gemini / Gems</div>
+        <div class="logo-pill"><img src="logo-notebooklm.svg" alt="NotebookLM">NotebookLM</div>
+        <div class="logo-pill"><img src="logo-manus.svg" alt="Manus">Manus</div>
+      </div>
+    </div>
+    <div class="footer-note">13 мая 2026 · очно · 3 часа</div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Старт</div>
+    <h2>Сегодня не изучаем инструменты. Сегодня собираем <span class="accent">рабочую систему</span>.</h2>
+    <div class="grid-3">
+      <div class="card"><div class="big-number">1</div><div class="card-title">Gem-бот</div><div class="card-text">Берём процесс из домашки и превращаем его в ассистента с инструкцией, файлами и тестами.</div></div>
+      <div class="card"><div class="big-number">2</div><div class="card-title">База знаний</div><div class="card-text">Собираем источники в NotebookLM, задаём вопросы, делаем отчёты, аудио, видео и справочник.</div></div>
+      <div class="card"><div class="big-number">3</div><div class="card-title">Мини-приложение</div><div class="card-text">Через Canvas делаем простой инструмент: калькулятор, чек-лист, радар рисков или конструктор КП.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Мостик из домашки</div>
+    <h2>У вас уже есть заготовка. Осталось <span class="accent">доупаковать</span>.</h2>
+    <div class="flow">
+      <div class="flow-step"><div class="step-kicker">01</div><div class="step-title">Процесс</div><div class="step-text">Одна повторяемая задача, не весь отдел и не вся работа.</div></div>
+      <div class="flow-step"><div class="step-kicker">02</div><div class="step-title">Промпт-пакет</div><div class="step-text">Главный промпт и, если нужно, цепочка из 2-3 действий.</div></div>
+      <div class="flow-step"><div class="step-kicker">03</div><div class="step-title">Материалы</div><div class="step-text">Прайсы, FAQ, шаблоны, регламенты, примеры, чек-листы.</div></div>
+      <div class="flow-step"><div class="step-kicker">04</div><div class="step-title">Gem</div><div class="step-text">Инструкция плюс безопасные знания под конкретный сценарий.</div></div>
+      <div class="flow-step"><div class="step-kicker">05</div><div class="step-title">Тест</div><div class="step-text">Три задачи: обычная, сложная, с нехваткой данных.</div></div>
+    </div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Тайминг</div>
+    <h2>Плотный маршрут на <span class="accent">3 часа</span></h2>
+    <div class="timeline">
+      <div class="timeline-row"><div class="time">0:00-0:15</div><div class="timeline-title">Разгон и проверка домашки</div><div class="timeline-note">Процесс, материалы, VPN</div></div>
+      <div class="timeline-row"><div class="time">0:15-1:00</div><div class="timeline-title">Gem-бот из процесса</div><div class="timeline-note">Инструкция, знания, тесты</div></div>
+      <div class="timeline-row"><div class="time">1:00-1:40</div><div class="timeline-title">NotebookLM как база знаний</div><div class="timeline-note">Источники, цитаты, Studio</div></div>
+      <div class="timeline-row"><div class="time">1:40-1:50</div><div class="timeline-title">Перерыв</div><div class="timeline-note">Техпауза</div></div>
+      <div class="timeline-row"><div class="time">1:50-2:35</div><div class="timeline-title">Gemini Canvas: мини-приложения</div><div class="timeline-note">Рабочий HTML-инструмент</div></div>
+      <div class="timeline-row"><div class="time">2:35-2:55</div><div class="timeline-title">Manus и агентный режим</div><div class="timeline-note">Демо без чувствительных данных</div></div>
+      <div class="timeline-row"><div class="time">2:55-3:00</div><div class="timeline-title">Deep Research и финальный чек</div><div class="timeline-note">Где применять и где не надо</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Логика</div>
+    <h2>Ассистент — это не чат. Это <span class="accent">контур качества</span>.</h2>
+    <div class="grid-4">
+      <div class="card"><div class="card-title">Инструкция</div><div class="card-text">Кто он, какую задачу решает, как отвечает и что запрещено.</div></div>
+      <div class="card"><div class="card-title">Источники</div><div class="card-text">Документы, по которым он имеет право отвечать точнее.</div></div>
+      <div class="card"><div class="card-title">Проверка</div><div class="card-text">Человек видит, что надо перепроверить перед отправкой.</div></div>
+      <div class="card"><div class="card-title">Повторяемость</div><div class="card-text">Один и тот же вход даёт похожий формат результата.</div></div>
+    </div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Практика 1</div>
+    <h2>Быстрый аудит домашней заготовки</h2>
+    <table class="matrix">
+      <thead><tr><th>Проверяем</th><th>Хорошо</th><th>Слабо</th><th>Что правим</th></tr></thead>
+      <tbody>
+        <tr><td>Процесс</td><td>Один повторяемый сценарий</td><td>«Помощник по всему»</td><td>Сужаем до одной задачи</td></tr>
+        <tr><td>Входные данные</td><td>Понятно, что вставлять</td><td>Нет структуры ввода</td><td>Делаем форму из 5-7 полей</td></tr>
+        <tr><td>Результат</td><td>Есть конкретный формат</td><td>«Ответь красиво»</td><td>Задаём таблицу, письмо, чек-лист, план</td></tr>
+        <tr><td>Контроль</td><td>ИИ пишет, что проверить</td><td>Звучит как финальное решение</td><td>Добавляем человеческую проверку</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Gem</div>
+    <h2>Создаём Gem-бота: <span class="accent">не общего, а прикладного</span></h2>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="card-title">Плохой Gem</div>
+        <div class="card-text">«Помощник PrintMaster». Будет отвечать обо всём, путать отделы, додумывать и быстро станет мусорным чатом.</div>
+      </div>
+      <div class="panel">
+        <div class="card-title">Сильный Gem</div>
+        <div class="card-text">«Тендерный радар ТМЦ», «Контроль звонка», «Сборщик КП», «Помощник ЭДО». Один процесс, один результат, понятные ограничения.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Gem · инструкция</div>
+    <h2>Промпт для сборки инструкции</h2>
+    <div class="prompt small">Я хочу создать Gem-бота для работы в PrintMaster.
+
+Моя роль: [роль].
+Процесс: [название процесса].
+Что запускает процесс: [когда это нужно].
+Входные данные: [что я буду вставлять].
+Материалы для базы знаний: [какие файлы есть].
+Результат, который нужен: [письмо, чек-лист, таблица, КП, вопросы, анализ].
+
+Составь инструкцию для Gem:
+1. Роль и зона ответственности.
+2. Контекст PrintMaster.
+3. Пошаговая логика работы.
+4. Какие вопросы задавать, если данных мало.
+5. Какой формат результата выдавать.
+6. Что запрещено выдумывать.
+7. Что человек обязан проверить.
+8. Три тестовых запроса для проверки Gem.
+
+Пиши так, чтобы я мог сразу вставить текст в поле Instructions.</div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Gem · знания</div>
+    <h2>Что добавлять в Knowledge, а что держать за пределами</h2>
+    <table class="matrix">
+      <thead><tr><th>Можно</th><th>Осторожно</th><th>Нельзя в учебной практике</th></tr></thead>
+      <tbody>
+        <tr><td>FAQ по услугам, обезличенные шаблоны КП, чек-листы, регламенты, публичные описания услуг</td><td>Прайсы, внутренние инструкции, примеры заявок после очистки</td><td>ФИО, телефоны, договоры с реквизитами, выгрузки 1С/CRM/ЭДО, банковские данные</td></tr>
+        <tr><td>Типовые возражения, скрипты, шаблоны писем, перечень полей для КП</td><td>Юридические и финансовые документы только как обезличенный фрагмент</td><td>Персональные данные клиентов и сотрудников без разрешения</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Gem · тест</div>
+    <h2>Проверяем не красоту, а <span class="accent">управляемость</span></h2>
+    <div class="grid-3">
+      <div class="card"><div class="card-title">Обычная задача</div><div class="card-text">Данные полные. Gem должен быстро отдать результат в нужном формате.</div></div>
+      <div class="card"><div class="card-title">Сложная задача</div><div class="card-text">Есть противоречие, риск, спорная формулировка. Gem должен подсветить это.</div></div>
+      <div class="card"><div class="card-title">Неполные данные</div><div class="card-text">Не хватает вводных. Gem не отвечает вслепую, а задаёт вопросы.</div></div>
+    </div>
+    <div class="caption">Если Gem уверенно выдумывает цены, сроки, законы или технические характеристики — это не «почти готово». Это надо чинить в инструкции.</div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">NotebookLM</div>
+    <h2>NotebookLM — это не чат. Это <span class="accent">рабочая комната источников</span>.</h2>
+    <div class="split">
+      <div>
+        <div class="subtitle">Загружаем документы по одной теме, задаём вопросы, получаем ответы с опорой на источники, вытаскиваем справочники, таблицы, аудио, видео и слайды.</div>
+        <div class="source">По справке Google: NotebookLM работает с источниками как со статическими копиями документов; веб-страницы, Drive-файлы и другие источники нужно обновлять вручную при изменениях.</div>
+      </div>
+      <div class="panel">
+        <div class="card-title">Главное правило</div>
+        <div class="card-text">Один блокнот — одна тема. Не мешаем в одном месте прайс, HR, договоры, SMM и ремонт. Иначе база становится шумной.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">NotebookLM · источники</div>
+    <h2>Что можно загрузить</h2>
+    <table class="matrix">
+      <thead><tr><th>Тип</th><th>Подходит для PrintMaster</th><th>Ограничение</th></tr></thead>
+      <tbody>
+        <tr><td>PDF, Word, Markdown, текст</td><td>Регламент, FAQ, шаблон КП, памятка менеджера</td><td>До 500 000 слов или 200 МБ на источник</td></tr>
+        <tr><td>Google Docs, Slides, Sheets</td><td>Прайс, инструкция, презентация отдела, таблица услуг</td><td>Google Slides до 100 слайдов, Sheets ограничены по токенам</td></tr>
+        <tr><td>Web URL</td><td>Публичная страница услуги, сайт поставщика, справочник</td><td>Берётся текст страницы, не вложенные видео и не платный контент</td></tr>
+        <tr><td>YouTube URL, аудио</td><td>Обучающее видео, вебинар, запись инструкции</td><td>Нужна речь и доступная расшифровка</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="slide">
+    <div class="tag">NotebookLM · практика</div>
+    <h2>Сборка блокнота за 12 минут</h2>
+    <div class="flow">
+      <div class="flow-step"><div class="step-kicker">01</div><div class="step-title">Создать</div><div class="step-text">Новый блокнот: «КП сервис», «Тендеры», «ЭДО», «Звонки».</div></div>
+      <div class="flow-step"><div class="step-kicker">02</div><div class="step-title">Загрузить</div><div class="step-text">3-5 безопасных источников одной темы.</div></div>
+      <div class="flow-step"><div class="step-kicker">03</div><div class="step-title">Проверить</div><div class="step-text">Задать 2 вопроса и посмотреть цитаты.</div></div>
+      <div class="flow-step"><div class="step-kicker">04</div><div class="step-title">Сжать</div><div class="step-text">Попросить справочник: правила, FAQ, поля, запреты.</div></div>
+      <div class="flow-step"><div class="step-kicker">05</div><div class="step-title">Передать</div><div class="step-text">Использовать выводы для Gem или отдельной рабочей памятки.</div></div>
+    </div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">NotebookLM · вопросы</div>
+    <h2>Первые вопросы к базе</h2>
+    <div class="prompt">На основе загруженных источников сделай:
+1. краткий справочник по этому процессу;
+2. список типовых вопросов клиента или сотрудника;
+3. таблицу: вопрос → где в источниках ответ → как отвечать;
+4. список пробелов: чего в источниках не хватает;
+5. материал, который можно вставить в инструкцию Gem.</div>
+    <div class="caption">Для финансовых, юридических и тендерных выводов: NotebookLM даёт черновик и цитаты, финальную проверку делает профильный сотрудник.</div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Studio</div>
+    <h2>NotebookLM Studio: быстро показываем, не закапываемся</h2>
+    <div class="grid-3">
+      <div class="card"><div class="card-title">Reports</div><div class="card-text">FAQ, briefing document, study guide, свой тип отчёта.</div></div>
+      <div class="card"><div class="card-title">Data Tables</div><div class="card-text">Таблица по источникам с экспортом в Google Sheets.</div></div>
+      <div class="card"><div class="card-title">Audio Overview</div><div class="card-text">Аудиообзор по источникам, можно настроить формат и язык.</div></div>
+      <div class="card"><div class="card-title">Video Overview</div><div class="card-text">Видео из источников: слайды, цитаты, числа, визуальный разбор.</div></div>
+      <div class="card"><div class="card-title">Slide Deck</div><div class="card-text">Детальная колода или Presenter Slides по материалам.</div></div>
+      <div class="card"><div class="card-title">Quiz / Flashcards</div><div class="card-text">Быстрая проверка знаний для команды или новичка.</div></div>
+    </div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Gem + NotebookLM</div>
+    <h2>Как связать базу и ассистента без магии</h2>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Вариант A</div><div class="card-text">Если в Gemini доступен выбор NotebookLM/Notebook как источник или Knowledge — подключаем блокнот и проверяем, видит ли Gem документы.</div></div>
+      <div class="card"><div class="card-title">Вариант B</div><div class="card-text">Если прямого подключения нет или оно нестабильно — в NotebookLM делаем справочник по источникам и добавляем его в Knowledge Gem как файл.</div></div>
+    </div>
+    <div class="caption">Рабочая позиция: не верим интерфейсу на слово. После подключения просим Gem назвать источники и ответить на вопрос, который есть только в документах.</div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Canvas</div>
+    <h2>Canvas — когда нужен не текст, а <span class="accent">инструмент</span></h2>
+    <div class="split">
+      <div class="quote">Мини-приложение должно заменить табличку, памятку или вечное «а как это считать?»</div>
+      <div class="panel">
+        <div class="card-title">Правило для урока</div>
+        <div class="card-text">Один экран, 3-7 полей ввода, понятный результат, кнопка «сформировать», мобильная адаптация. Не делаем CRM, портал и космический корабль.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Canvas · идеи PrintMaster</div>
+    <h2>Что участники могут сделать прямо на уроке</h2>
+    <table class="matrix">
+      <thead><tr><th>Роль</th><th>Мини-приложение</th><th>Результат</th></tr></thead>
+      <tbody>
+        <tr><td>Продажи / сервис</td><td>Конструктор КП по заявке</td><td>Структура предложения, вопросы, следующий шаг</td></tr>
+        <tr><td>ТМЦ / тендеры</td><td>Радар рисков позиции</td><td>Флаги, вопросы поставщику, чек-лист маржи</td></tr>
+        <tr><td>Колл-центр</td><td>Оценка звонка</td><td>Сильные места, провалы, что уточнить</td></tr>
+        <tr><td>ЭДО / документы</td><td>Чек-лист комплектности</td><td>Что есть, чего не хватает, кому написать</td></tr>
+        <tr><td>SMM</td><td>Планировщик поста из кейса</td><td>Telegram-пост, короткий сценарий, заголовки</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Canvas · промпт</div>
+    <h2>Универсальный промпт для мини-приложения</h2>
+    <div class="prompt small">Создай в Gemini Canvas мини-приложение для PrintMaster.
+
+Роль: ты senior frontend-разработчик и продуктовый дизайнер B2B-инструментов.
+Контекст: PrintMaster обслуживает офисную технику, ремонтирует принтеры, заправляет картриджи, работает с корпоративными клиентами, тендерами, документами и прямыми договорами.
+
+Задача: сделать одностраничное приложение «[название]» для [роль/отдел].
+Пользователь вводит: [3-7 полей].
+Приложение выдаёт: [таблица, чек-лист, письмо, оценка, план].
+
+Требования:
+- один HTML-файл без сервера;
+- современный спокойный дизайн, без кислотных цветов;
+- адаптация под телефон;
+- кнопка «Сформировать»;
+- блок «Что проверить человеку»;
+- не выдумывать цены, сроки, законы и технические характеристики;
+- если данных мало, показывать список недостающих вводных.
+
+Сначала создай рабочую версию, затем предложи 5 улучшений.</div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Canvas · готовые сценарии</div>
+    <h2>Три приложения, которые точно зайдут</h2>
+    <div class="grid-3">
+      <div class="card"><div class="card-title">Радар тендера</div><div class="card-text">Поля: позиция, срок, бюджет, аналоги, поставщик. На выходе: риски, вопросы, что проверить.</div></div>
+      <div class="card"><div class="card-title">КП-конструктор</div><div class="card-text">Поля: запрос клиента, парк техники, проблема, ограничения. На выходе: структура КП и письмо.</div></div>
+      <div class="card"><div class="card-title">Звонок под контролем</div><div class="card-text">Поля: цель звонка, что спросили, что ответил клиент. На выходе: оценка и следующий шаг.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Canvas · отладка</div>
+    <h2>Как чинить приложение в Canvas</h2>
+    <div class="grid-2">
+      <div class="prompt">Сделай интерфейс плотнее: меньше воздуха, больше рабочей информации на первом экране, но без перегруза.</div>
+      <div class="prompt">Добавь блок проверки: что человек обязан сверить перед отправкой клиенту или руководителю.</div>
+      <div class="prompt">Перепиши тексты интерфейса короче и деловее. Убери объяснения, оставь только рабочие подписи.</div>
+      <div class="prompt">Проверь приложение на телефоне: поля не должны налезать друг на друга, кнопки должны быть удобными.</div>
+    </div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Manus</div>
+    <h2>Manus: показываем агента, но не отдаём ему внутреннюю кухню</h2>
+    <div class="split">
+      <div>
+        <div class="logo-row" style="margin-top:0"><div class="logo-pill"><img src="logo-manus.svg" alt="Manus">manus.im</div></div>
+        <div class="subtitle">Chat mode — для быстрых ответов. Agent mode — для сложных задач: сайт, слайды, видео, исследование, файлы, многошаговая работа. Агентный режим расходует кредиты.</div>
+        <div class="source">Официальная справка Manus 1.6: Agent Mode автономно планирует и выполняет сложные задачи; Chat Mode не расходует кредиты и подходит для обсуждений.</div>
+      </div>
+      <div class="panel">
+        <div class="card-title">Партнёрская ссылка</div>
+        <div class="card-text">https://manus.im/invitation/I28CAQTOUMYPRGU?utm_source=invitation&amp;utm_medium=social&amp;utm_campaign=copy_link</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Manus · демо</div>
+    <h2>Безопасное задание для показа</h2>
+    <div class="prompt">Собери публичное исследование: как компании по обслуживанию офисной техники в России описывают сервис, ремонт, заправку картриджей и корпоративное обслуживание.
+
+Нужно:
+1. найти 8-10 публичных сайтов;
+2. выделить типовые услуги и офферы;
+3. собрать таблицу: компания, услуги, сильные формулировки, что можно улучшить;
+4. предложить 10 идей контента для PrintMaster;
+5. оформить результат как короткий отчёт и таблицу.
+
+Не используй внутренние документы PrintMaster. Работай только с публичными источниками.</div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Deep Research</div>
+    <h2>Deep Research нужен не всем задачам. И это нормально.</h2>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Да</div><div class="card-text">Конкуренты, рынок, поставщики, тренды, сравнение решений, обзор практик, подготовка к стратегическому решению.</div></div>
+      <div class="card"><div class="card-title">Нет</div><div class="card-text">Быстрое письмо клиенту, разбор внутреннего документа, срочный ответ, задача с закрытыми данными, простая формулировка.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Deep Research · промпт</div>
+    <h2>Исследование для PrintMaster</h2>
+    <div class="prompt small">Роль: B2B-аналитик рынка сервисного обслуживания оргтехники в России.
+
+Контекст: PrintMaster работает с корпоративными клиентами, ремонтом принтеров, обслуживанием офисной техники, картриджами, тендерами и документами.
+
+Задача: исследуй, как в 2025-2026 годах компании в России продвигают сервис оргтехники для B2B. Найди рабочие формулировки, офферы, услуги, каналы продвижения и слабые места конкурентов.
+
+Формат отчёта:
+1. карта рынка;
+2. таблица 10 публичных примеров;
+3. что у них хорошо;
+4. где слабые места;
+5. 10 идей для PrintMaster;
+6. что можно внедрить за 2 недели;
+7. ссылки на источники.
+
+Ограничения: только публичные источники, даты 2025-2026, не выдумывать цены и факты.</div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Финальная сборка</div>
+    <h2>К концу урока у участника должно быть</h2>
+    <div class="grid-4">
+      <div class="card"><div class="card-title">Gem</div><div class="card-text">Работает на одном процессе и прошёл 3 теста.</div></div>
+      <div class="card"><div class="card-title">NotebookLM</div><div class="card-text">Есть блокнот с 3-5 источниками и первым справочником.</div></div>
+      <div class="card"><div class="card-title">Canvas</div><div class="card-text">Есть мини-приложение или точный промпт для него.</div></div>
+      <div class="card"><div class="card-title">Понимание</div><div class="card-text">Где нужен агент/исследование, а где хватит обычного запроса.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Финал</div>
+    <h2>Домашка после урока</h2>
+    <div class="timeline">
+      <div class="timeline-row"><div class="time">1</div><div class="timeline-title">Довести Gem</div><div class="timeline-note">Улучшить инструкцию после 3 тестов</div></div>
+      <div class="timeline-row"><div class="time">2</div><div class="timeline-title">Дособрать базу</div><div class="timeline-note">Добавить недостающие безопасные источники</div></div>
+      <div class="timeline-row"><div class="time">3</div><div class="timeline-title">Показать результат</div><div class="timeline-note">Скрин Gem, ссылка/скрин Canvas, вывод</div></div>
+    </div>
+    <div class="caption">Главная цель: не «поиграться с ИИ», а получить один инструмент, который можно открыть завтра на работе.</div>
+  </section>
+
+  <section class="slide title-slide">
+    <div class="title-content">
+      <div class="eyebrow">AI Boost для PrintMaster</div>
+      <h1>Один процесс. Один ассистент. Одна база. Один инструмент.</h1>
+      <div class="subtitle">Когда это собрано — ИИ перестаёт быть игрушкой и становится рабочей инфраструктурой отдела.</div>
+    </div>
+  </section>
+</div>
+
+<div class="counter" id="counter"></div>
+<div class="progress" id="progress"></div>
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+const counter = document.getElementById('counter');
+const progress = document.getElementById('progress');
+let current = 0;
+
+function show(index) {
+  if (index < 0 || index >= slides.length) return;
+  slides[current].classList.remove('active');
+  slides[current].classList.add('prev');
+  slides.forEach((slide, i) => {
+    if (i !== current) slide.classList.remove('prev');
+  });
+  current = index;
+  slides[current].classList.add('active');
+  counter.textContent = `${current + 1} / ${slides.length}`;
+  progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+}
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowRight' || event.key === ' ' || event.key === 'PageDown') show(current + 1);
+  if (event.key === 'ArrowLeft' || event.key === 'PageUp') show(current - 1);
+});
+
+document.addEventListener('click', (event) => {
+  if (event.target.closest('a')) return;
+  if (event.clientX > window.innerWidth * 0.66) show(current + 1);
+  if (event.clientX < window.innerWidth * 0.34) show(current - 1);
+});
+
+show(0);
+</script>
+</body>
+</html>
