@@ -1123,6 +1123,9 @@ document.querySelectorAll('.t img,.tool img').forEach(img=>{
 
 
 
+
+
+
 <!-- lesson-modal:start -->
 <style id="lesson-modal-css">
 :root { --lm-coral: #e85b3e; --lm-coral-2: #ff7159; --lm-card: #1c1c1c; --lm-border: rgba(255,255,255,.08); --lm-text: #f3eee8; --lm-muted: #a39d95; }
@@ -1251,40 +1254,36 @@ body.lm-locked { overflow: hidden !important; }
   }
 
   function attachToCards() {
-    // Ищем 8 элементов, каждый из которых содержит "№ N" (N=1..8) И упоминание месяца расписания.
-    // Затем по очереди берём по одному элементу на каждый номер, выбирая САМЫЙ КОМПАКТНЫЙ (наименьший по textContent),
-    // но с непустой площадью и непустым окружением (rect ≥ 40×30).
-    const all = Array.from(document.querySelectorAll('*'));
-    const cards = [];
-    const taken = new Set();
-    for (let n = 1; n <= 8; n++) {
-      const numRe = new RegExp('(^|[^0-9])№\\s*' + n + '(?![0-9])');
-      let best = null;
+    // Карточки расписания у iiskra.html — .schedule .day. Порядок в DOM = номер урока.
+    let cards = Array.from(document.querySelectorAll('.schedule .day'));
+    // фолбэк: если структура изменится — ищем по тексту "№ N" с захватом N
+    if (cards.length < 1) {
+      const all = Array.from(document.querySelectorAll('div, li, article, a, section'));
+      const byNum = {};
       for (const el of all) {
-        if (taken.has(el)) continue;
         const t = (el.textContent || '').replace(/\s+/g, ' ').trim();
-        if (!numRe.test(t)) continue;
-        if (t.length > 60) continue;
+        if (t.length > 80) continue;
+        const m = t.match(/№\s*([0-9])/);
+        if (!m) continue;
         if (!/(мая|июня|июля)/i.test(t)) continue;
         const r = el.getBoundingClientRect();
-        if (r.width < 40 || r.height < 30) continue;
-        if (r.width > 400) continue;
-        if (!best || t.length < best.text.length) best = { el, text: t, rect: r };
+        if (r.width < 40 || r.height < 30 || r.width > 400) continue;
+        const n = +m[1];
+        if (n < 1 || n > 8) continue;
+        if (!byNum[n] || t.length < byNum[n].text.length) byNum[n] = { el, text: t };
       }
-      if (best) {
-        taken.add(best.el);
-        cards.push({ n, el: best.el });
-      }
+      cards = [];
+      for (let n = 1; n <= 8; n++) if (byNum[n]) cards[n - 1] = byNum[n].el;
     }
-
-    cards.forEach(({ n, el }) => {
-      el.dataset.lesson = n;
+    let found = 0;
+    cards.forEach((el, i) => {
+      if (!el) return;
+      el.dataset.lesson = i + 1;
       el.setAttribute('role', 'button');
       el.setAttribute('tabindex', '0');
       el.style.cursor = 'pointer';
+      found++;
     });
-
-    const found = cards.length;
     try { history.replaceState(null, '', '#lm-' + found); } catch (e) {}
     window.__lm_found = found;
   }
