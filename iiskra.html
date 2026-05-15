@@ -1120,6 +1120,9 @@ document.querySelectorAll('.t img,.tool img').forEach(img=>{
 
 
 
+
+
+
 <!-- lesson-modal:start -->
 <style id="lesson-modal-css">
 :root { --lm-coral: #e85b3e; --lm-coral-2: #ff7159; --lm-card: #1c1c1c; --lm-border: rgba(255,255,255,.08); --lm-text: #f3eee8; --lm-muted: #a39d95; }
@@ -1248,44 +1251,40 @@ body.lm-locked { overflow: hidden !important; }
   }
 
   function attachToCards() {
-    // Стратегия: найти контейнер с ровно 8 одинаковыми по размеру детьми и в каждом — упоминание месяца.
-    let cards = null;
-    const containers = Array.from(document.querySelectorAll('div, ul, ol, section'));
-    for (const cont of containers) {
-      const kids = Array.from(cont.children).filter(c =>
-        c.nodeType === 1 && ['DIV','LI','ARTICLE','A'].includes(c.tagName)
-      );
-      if (kids.length !== 8) continue;
-
-      const r0 = kids[0].getBoundingClientRect();
-      if (r0.width < 50 || r0.height < 40) continue;
-      // все дети ~ одинаковой высоты
-      const sameSize = kids.every(c => {
-        const r = c.getBoundingClientRect();
-        return Math.abs(r.height - r0.height) < 12 && Math.abs(r.width - r0.width) < 40;
-      });
-      if (!sameSize) continue;
-      // содержат месяцы расписания
-      const hasMonths = kids.every(c =>
-        /(мая|июня|июля|чт|вт|пн|ср|пт|сб|вс)/i.test(c.textContent || '')
-      );
-      if (!hasMonths) continue;
-
-      cards = kids;
-      break;
+    // Ищем 8 элементов, каждый из которых содержит "№ N" (N=1..8) И упоминание месяца расписания.
+    // Затем по очереди берём по одному элементу на каждый номер, выбирая САМЫЙ КОМПАКТНЫЙ (наименьший по textContent),
+    // но с непустой площадью и непустым окружением (rect ≥ 40×30).
+    const all = Array.from(document.querySelectorAll('*'));
+    const cards = [];
+    const taken = new Set();
+    for (let n = 1; n <= 8; n++) {
+      const numRe = new RegExp('(^|[^0-9])№\\s*' + n + '(?![0-9])');
+      let best = null;
+      for (const el of all) {
+        if (taken.has(el)) continue;
+        const t = (el.textContent || '').replace(/\s+/g, ' ').trim();
+        if (!numRe.test(t)) continue;
+        if (t.length > 60) continue;
+        if (!/(мая|июня|июля)/i.test(t)) continue;
+        const r = el.getBoundingClientRect();
+        if (r.width < 40 || r.height < 30) continue;
+        if (r.width > 400) continue;
+        if (!best || t.length < best.text.length) best = { el, text: t, rect: r };
+      }
+      if (best) {
+        taken.add(best.el);
+        cards.push({ n, el: best.el });
+      }
     }
 
-    let found = 0;
-    if (cards) {
-      cards.forEach((card, i) => {
-        card.dataset.lesson = i + 1;
-        card.setAttribute('role', 'button');
-        card.setAttribute('tabindex', '0');
-        card.style.cursor = 'pointer';
-        found++;
-      });
-    }
+    cards.forEach(({ n, el }) => {
+      el.dataset.lesson = n;
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.style.cursor = 'pointer';
+    });
 
+    const found = cards.length;
     try { history.replaceState(null, '', '#lm-' + found); } catch (e) {}
     window.__lm_found = found;
   }
