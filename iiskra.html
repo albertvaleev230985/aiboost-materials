@@ -1117,6 +1117,9 @@ document.querySelectorAll('.t img,.tool img').forEach(img=>{
 
 
 
+
+
+
 <!-- lesson-modal:start -->
 <style id="lesson-modal-css">
 :root { --lm-coral: #e85b3e; --lm-coral-2: #ff7159; --lm-card: #1c1c1c; --lm-border: rgba(255,255,255,.08); --lm-text: #f3eee8; --lm-muted: #a39d95; }
@@ -1245,47 +1248,44 @@ body.lm-locked { overflow: hidden !important; }
   }
 
   function attachToCards() {
-    // Якорим карточки по датам — это в DOM точно есть как текст
-    const dates = [
-      ['21','мая'], ['26','мая'], ['28','мая'], ['02','июня'],
-      ['04','июня'], ['09','июня'], ['11','июня'], ['16','июня']
-    ];
-    const candidates = Array.from(document.querySelectorAll('div, li, article, section, a'));
-    const taken = new Set();
-    let found = 0;
-    for (let i = 0; i < 8; i++) {
-      const [d, m] = dates[i];
-      let best = null;
-      for (const el of candidates) {
-        if (taken.has(el)) continue;
-        if (el.closest('[data-lesson]')) continue;
-        const t = (el.textContent || '').replace(/\s+/g, ' ').trim();
-        if (!t.includes(d) || !t.toLowerCase().includes(m)) continue;
-        if (t.length > 120) continue; // длинный текст — это родитель сетки, не карточка
-        if (!best || t.length < best.text.length) best = { el, text: t };
-      }
-      if (best) {
-        // поднимаемся до элемента с реальной площадью карточки
-        let card = best.el;
-        let safety = 6;
-        while (card.parentElement && safety-- > 0) {
-          const r = card.getBoundingClientRect();
-          if (r.width >= 70 && r.height >= 60) break;
-          card = card.parentElement;
-        }
-        // если ушли вверх слишком далеко (захватили всю сетку) — откатываемся
-        const rect = card.getBoundingClientRect();
-        if (rect.width > 600) card = best.el.parentElement || best.el;
+    // Стратегия: найти контейнер с ровно 8 одинаковыми по размеру детьми и в каждом — упоминание месяца.
+    let cards = null;
+    const containers = Array.from(document.querySelectorAll('div, ul, ol, section'));
+    for (const cont of containers) {
+      const kids = Array.from(cont.children).filter(c =>
+        c.nodeType === 1 && ['DIV','LI','ARTICLE','A'].includes(c.tagName)
+      );
+      if (kids.length !== 8) continue;
 
+      const r0 = kids[0].getBoundingClientRect();
+      if (r0.width < 50 || r0.height < 40) continue;
+      // все дети ~ одинаковой высоты
+      const sameSize = kids.every(c => {
+        const r = c.getBoundingClientRect();
+        return Math.abs(r.height - r0.height) < 12 && Math.abs(r.width - r0.width) < 40;
+      });
+      if (!sameSize) continue;
+      // содержат месяцы расписания
+      const hasMonths = kids.every(c =>
+        /(мая|июня|июля|чт|вт|пн|ср|пт|сб|вс)/i.test(c.textContent || '')
+      );
+      if (!hasMonths) continue;
+
+      cards = kids;
+      break;
+    }
+
+    let found = 0;
+    if (cards) {
+      cards.forEach((card, i) => {
         card.dataset.lesson = i + 1;
         card.setAttribute('role', 'button');
         card.setAttribute('tabindex', '0');
         card.style.cursor = 'pointer';
-        taken.add(card);
         found++;
-      }
+      });
     }
-    // Диагностика — через hash в URL (видно в list_tabs)
+
     try { history.replaceState(null, '', '#lm-' + found); } catch (e) {}
     window.__lm_found = found;
   }
