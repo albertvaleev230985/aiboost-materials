@@ -6,62 +6,24 @@
 <iframe id="ifr" src="iiskra.html?inspect=1" style="position:fixed;top:0;left:-9999px;width:1200px;height:8000px;border:0"></iframe>
 <script>
 document.getElementById('ifr').addEventListener('load', () => {
-  const doc = document.getElementById('ifr').contentDocument;
-  const out = document.getElementById('out');
-  const parts = [];
-  const all = Array.from(doc.querySelectorAll('*'));
+  setTimeout(() => {
+    const doc = document.getElementById('ifr').contentDocument;
+    const out = document.getElementById('out');
+    const parts = [];
+    function rectOf(el) { const r = el.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height) }; }
+    function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  function rectOf(el) { const r = el.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height) }; }
-  function pathOf(el) {
-    const parts = []; let cur = el;
-    while (cur && cur.tagName && parts.length < 6) {
-      let s = cur.tagName.toLowerCase();
-      if (cur.id) s += '#' + cur.id;
-      else if (cur.className && typeof cur.className === 'string') s += '.' + cur.className.split(/\s+/).filter(Boolean).slice(0, 2).join('.');
-      parts.unshift(s);
-      cur = cur.parentElement;
-    }
-    return parts.join(' > ');
-  }
-  function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    const cards = Array.from(doc.querySelectorAll('[data-lesson]'));
+    parts.push('<h2>cards with data-lesson: ' + cards.length + '</h2>');
+    cards.forEach(c => {
+      const back = c.querySelector('.lm-back') ? 'YES' : 'NO';
+      const style = doc.defaultView.getComputedStyle(c);
+      parts.push('<pre>lesson=' + c.dataset.lesson + ' rect=' + JSON.stringify(rectOf(c)) + ' back=' + back + '\nborder=' + style.borderColor + ' animation=' + style.animationName + '\nhtml: ' + esc(c.outerHTML.replace(/\s+/g,' ').slice(0, 300)) + '</pre>');
+    });
 
-  // 1. Все короткие элементы с "21 мая"
-  const m21 = all.filter(el => {
-    const t = (el.textContent || '').replace(/\s+/g,' ').trim();
-    return t.length > 2 && t.length < 60 && t.includes('21') && /мая/i.test(t);
-  });
-  parts.push('<h2>"21 мая" коротких: ' + m21.length + '</h2>');
-  m21.slice(0, 6).forEach((el, i) => {
-    parts.push('<pre>[' + i + '] "' + esc((el.textContent || '').replace(/\s+/g,' ').trim()) + '"\nrect: ' + JSON.stringify(rectOf(el)) + '\npath: ' + esc(pathOf(el)) + '\nhtml: ' + esc(el.outerHTML.replace(/\s+/g,' ').slice(0, 300)) + '</pre>');
-  });
-
-  // 2. Все элементы с № в коротком тексте
-  const mN = all.filter(el => {
-    const t = (el.textContent || '').replace(/\s+/g,' ').trim();
-    return t.length > 0 && t.length < 30 && /№/.test(t);
-  });
-  parts.push('<h2>"№..." коротких: ' + mN.length + '</h2>');
-  mN.slice(0, 8).forEach((el, i) => {
-    parts.push('<pre>[' + i + '] "' + esc((el.textContent || '').replace(/\s+/g,' ').trim()) + '" rect=' + JSON.stringify(rectOf(el)) + ' path=' + esc(pathOf(el)) + '</pre>');
-  });
-
-  // 3. Контейнеры с 4-10 детьми, использующие grid/flex
-  const grids = all.filter(el => {
-    const kids = Array.from(el.children).filter(c => c.nodeType === 1);
-    if (kids.length < 4 || kids.length > 10) return false;
-    const cs = document.getElementById('ifr').contentWindow.getComputedStyle(el);
-    return cs.display.includes('grid') || cs.display.includes('flex');
-  });
-  parts.push('<h2>grid/flex (4–10 детей): ' + grids.length + '</h2>');
-  grids.slice(0, 10).forEach((el, i) => {
-    const kids = Array.from(el.children);
-    const samples = kids.slice(0,2).map(k => (k.textContent || '').replace(/\s+/g,' ').trim().slice(0,50));
-    const cs = document.getElementById('ifr').contentWindow.getComputedStyle(el);
-    parts.push('<pre>[' + i + '] display=' + cs.display + ' cols=' + cs.gridTemplateColumns.slice(0,80) + ' kids=' + kids.length + '\npath: ' + esc(pathOf(el)) + '\nsamples: ' + esc(JSON.stringify(samples)) + '</pre>');
-  });
-
-  out.innerHTML = parts.join('');
-  document.title = 'INSPECT_DONE';
+    out.innerHTML = parts.join('');
+    document.title = 'INSPECT_DONE_' + cards.length;
+  }, 2000);
 });
 </script>
 </body></html>
