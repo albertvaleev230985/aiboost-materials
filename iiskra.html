@@ -1144,6 +1144,9 @@ document.querySelectorAll('.t img,.tool img').forEach(img=>{
 
 
 
+
+
+
 <!-- lesson-modal:start -->
 <style id="lesson-modal-css">
 :root { --lm-coral: #e85b3e; --lm-coral-2: #ff7159; --lm-card: #1c1c1c; --lm-border: rgba(255,255,255,.08); --lm-text: #f3eee8; --lm-muted: #a39d95; }
@@ -1156,7 +1159,7 @@ document.querySelectorAll('.t img,.tool img').forEach(img=>{
   transition: transform .55s cubic-bezier(.4,0,.2,1), border-color .18s ease;
   will-change: transform;
 }
-[data-lesson]:hover { transform: perspective(1200px) rotateY(180deg) !important; border-color: var(--lm-coral) !important; }
+[data-lesson].lm-hover { transform: perspective(1200px) rotateY(180deg) !important; border-color: var(--lm-coral) !important; }
 [data-lesson]:focus, [data-lesson]:focus-visible { outline: none !important; }
 [data-lesson] > * { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 [data-lesson] .lm-back {
@@ -1175,7 +1178,7 @@ document.querySelectorAll('.t img,.tool img').forEach(img=>{
 [data-lesson="1"]:not(.lm-auto-off) {
   animation: lm-flip-pulse 4s ease-in-out .8s infinite;
 }
-[data-lesson="1"]:hover { animation: none; }
+[data-lesson="1"].lm-hover { animation: none; }
 @keyframes lm-flip-pulse {
   0%, 30%, 100% { transform: perspective(1200px) rotateY(0deg); }
   50%, 80% { transform: perspective(1200px) rotateY(180deg); }
@@ -1379,14 +1382,23 @@ body.lm-locked { overflow: hidden !important; }
     });
   }
 
-  function setupAutoOffOnHover() {
-    let off = false;
-    const turnOff = () => {
-      if (off) return; off = true;
-      const first = document.querySelector('[data-lesson="1"]');
-      if (first) first.classList.add('lm-auto-off');
-    };
-    document.querySelectorAll('[data-lesson]').forEach(c => c.addEventListener('mouseenter', turnOff, { once: false }));
+  function setupHoverHandlers() {
+    let autoOff = false;
+    document.querySelectorAll('[data-lesson]').forEach(card => {
+      if (card.dataset.lmHoverBound) return;
+      card.dataset.lmHoverBound = '1';
+      card.addEventListener('mouseenter', () => {
+        if (!autoOff) {
+          autoOff = true;
+          const first = document.querySelector('[data-lesson="1"]');
+          if (first) first.classList.add('lm-auto-off');
+        }
+        card.classList.add('lm-hover');
+      });
+      card.addEventListener('mouseleave', () => {
+        card.classList.remove('lm-hover');
+      });
+    });
   }
 
   function bind() {
@@ -1441,11 +1453,10 @@ body.lm-locked { overflow: hidden !important; }
     ensureTopLevel();
     attachToCards();
     setupFlipBacks();
-    setupAutoOffOnHover();
+    setupHoverHandlers();
     bind();
     maybeAutoOpen();
-    // повторно через 1.5с — на случай анимаций / поздней разметки
-    setTimeout(() => { attachToCards(); setupFlipBacks(); setupAutoOffOnHover(); }, 1500);
+    setTimeout(() => { attachToCards(); setupFlipBacks(); setupHoverHandlers(); }, 1500);
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
