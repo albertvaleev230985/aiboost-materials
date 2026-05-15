@@ -1132,23 +1132,24 @@ document.querySelectorAll('.t img,.tool img').forEach(img=>{
 
 
 
+
+
+
 <!-- lesson-modal:start -->
 <style id="lesson-modal-css">
 :root { --lm-coral: #e85b3e; --lm-coral-2: #ff7159; --lm-card: #1c1c1c; --lm-border: rgba(255,255,255,.08); --lm-text: #f3eee8; --lm-muted: #a39d95; }
-[data-lesson] { cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
-[data-lesson]:hover { transform: translateY(-2px); border-color: var(--lm-coral) !important; }
-[data-lesson]:focus, [data-lesson]:focus-visible { outline: none !important; }
-/* 1-я карточка всегда подсвечена + flip-приглашение */
-[data-lesson="1"] {
-  border-color: var(--lm-coral) !important;
+[data-lesson] {
+  cursor: pointer;
   position: relative;
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;
-  animation: lm-flip-pulse 4s ease-in-out .8s infinite;
+  transition: transform .55s cubic-bezier(.4,0,.2,1), border-color .18s ease;
   will-change: transform;
 }
-[data-lesson="1"] > * { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-[data-lesson="1"] .lm-back {
+[data-lesson]:hover { transform: rotateY(180deg); border-color: var(--lm-coral) !important; }
+[data-lesson]:focus, [data-lesson]:focus-visible { outline: none !important; }
+[data-lesson] > * { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+[data-lesson] .lm-back {
   position: absolute; inset: 0; display: flex; flex-direction: column;
   align-items: center; justify-content: center; padding: 8px; text-align: center;
   background: inherit; border-radius: inherit;
@@ -1156,9 +1157,15 @@ document.querySelectorAll('.t img,.tool img').forEach(img=>{
   backface-visibility: hidden; -webkit-backface-visibility: hidden;
   color: var(--lm-coral);
 }
-[data-lesson="1"] .lm-back .lm-back-cap { font-size: 9px; text-transform: uppercase; letter-spacing: .14em; opacity: .75; margin-bottom: 6px; }
-[data-lesson="1"] .lm-back .lm-back-ttl { font-size: 11px; font-weight: 700; line-height: 1.15; }
-[data-lesson="1"] .lm-back .lm-back-cta { font-size: 10px; opacity: .8; margin-top: 8px; letter-spacing: .04em; }
+[data-lesson] .lm-back .lm-back-cap { font-size: 9px; text-transform: uppercase; letter-spacing: .14em; opacity: .75; margin-bottom: 6px; }
+[data-lesson] .lm-back .lm-back-ttl { font-size: 11px; font-weight: 700; line-height: 1.15; }
+[data-lesson] .lm-back .lm-back-cta { font-size: 10px; opacity: .8; margin-top: 8px; letter-spacing: .04em; }
+/* 1-я карточка: постоянная обводка + auto-flip до первого hover на любой карточке */
+[data-lesson="1"] { border-color: var(--lm-coral) !important; }
+[data-lesson="1"]:not(.lm-auto-off) {
+  animation: lm-flip-pulse 4s ease-in-out .8s infinite;
+}
+[data-lesson="1"]:hover { animation: none; }
 @keyframes lm-flip-pulse {
   0%, 30%, 100% { transform: rotateY(0deg); }
   50%, 80% { transform: rotateY(180deg); }
@@ -1346,18 +1353,30 @@ body.lm-locked { overflow: hidden !important; }
     try { if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur(); } catch (e) {}
   }
 
-  function setupFlipPreview() {
-    const card = document.querySelector('[data-lesson="1"]');
-    if (!card || card.querySelector('.lm-back')) return;
-    const L = lessons.find(l => l.num === 1);
-    if (!L) return;
-    const back = document.createElement('div');
-    back.className = 'lm-back';
-    const cap = document.createElement('div'); cap.className = 'lm-back-cap'; cap.textContent = 'занятие 1';
-    const ttl = document.createElement('div'); ttl.className = 'lm-back-ttl'; ttl.textContent = L.title;
-    const cta = document.createElement('div'); cta.className = 'lm-back-cta'; cta.textContent = 'тап →';
-    back.appendChild(cap); back.appendChild(ttl); back.appendChild(cta);
-    card.appendChild(back);
+  function setupFlipBacks() {
+    document.querySelectorAll('[data-lesson]').forEach(card => {
+      const n = +card.dataset.lesson;
+      if (!n || card.querySelector('.lm-back')) return;
+      const L = lessons.find(l => l.num === n);
+      if (!L) return;
+      const back = document.createElement('div');
+      back.className = 'lm-back';
+      const cap = document.createElement('div'); cap.className = 'lm-back-cap'; cap.textContent = 'занятие ' + n;
+      const ttl = document.createElement('div'); ttl.className = 'lm-back-ttl'; ttl.textContent = L.title;
+      const cta = document.createElement('div'); cta.className = 'lm-back-cta'; cta.textContent = 'тап →';
+      back.appendChild(cap); back.appendChild(ttl); back.appendChild(cta);
+      card.appendChild(back);
+    });
+  }
+
+  function setupAutoOffOnHover() {
+    let off = false;
+    const turnOff = () => {
+      if (off) return; off = true;
+      const first = document.querySelector('[data-lesson="1"]');
+      if (first) first.classList.add('lm-auto-off');
+    };
+    document.querySelectorAll('[data-lesson]').forEach(c => c.addEventListener('mouseenter', turnOff, { once: false }));
   }
 
   function bind() {
@@ -1411,11 +1430,12 @@ body.lm-locked { overflow: hidden !important; }
   function init() {
     ensureTopLevel();
     attachToCards();
-    setupFlipPreview();
+    setupFlipBacks();
+    setupAutoOffOnHover();
     bind();
     maybeAutoOpen();
     // повторно через 1.5с — на случай анимаций / поздней разметки
-    setTimeout(() => { attachToCards(); setupFlipPreview(); }, 1500);
+    setTimeout(() => { attachToCards(); setupFlipBacks(); setupAutoOffOnHover(); }, 1500);
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
