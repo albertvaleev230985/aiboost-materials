@@ -1105,6 +1105,9 @@ document.querySelectorAll('.t img,.tool img').forEach(img=>{
 
 
 
+
+
+
 <!-- lesson-modal:start -->
 <style id="lesson-modal-css">
 :root { --lm-coral: #e85b3e; --lm-coral-2: #ff7159; --lm-card: #1c1c1c; --lm-border: rgba(255,255,255,.08); --lm-text: #f3eee8; --lm-muted: #a39d95; }
@@ -1233,35 +1236,48 @@ body.lm-locked { overflow: hidden !important; }
   }
 
   function attachToCards() {
+    // Якорим карточки по датам — это в DOM точно есть как текст
+    const dates = [
+      ['21','мая'], ['26','мая'], ['28','мая'], ['02','июня'],
+      ['04','июня'], ['09','июня'], ['11','июня'], ['16','июня']
+    ];
     const candidates = Array.from(document.querySelectorAll('div, li, article, section, a'));
     const taken = new Set();
-    for (let n = 1; n <= 8; n++) {
-      const re = new RegExp('№\\s*' + n + '(?!\\d)');
+    let found = 0;
+    for (let i = 0; i < 8; i++) {
+      const [d, m] = dates[i];
       let best = null;
       for (const el of candidates) {
         if (taken.has(el)) continue;
-        const t = (el.textContent || '').trim();
-        if (!re.test(t)) continue;
-        if (t.length > 80) continue;
-        if (!/(мая|июня|июля|чт|вт|пн|ср|пт|сб|вс)/i.test(t)) continue;
+        if (el.closest('[data-lesson]')) continue;
+        const t = (el.textContent || '').replace(/\s+/g, ' ').trim();
+        if (!t.includes(d) || !t.toLowerCase().includes(m)) continue;
+        if (t.length > 120) continue; // длинный текст — это родитель сетки, не карточка
         if (!best || t.length < best.text.length) best = { el, text: t };
       }
       if (best) {
-        // поднимаемся до элемента с реальной площадью карточки (≥80×60px)
+        // поднимаемся до элемента с реальной площадью карточки
         let card = best.el;
         let safety = 6;
         while (card.parentElement && safety-- > 0) {
           const r = card.getBoundingClientRect();
-          if (r.width >= 80 && r.height >= 60) break;
+          if (r.width >= 70 && r.height >= 60) break;
           card = card.parentElement;
         }
-        card.dataset.lesson = n;
+        // если ушли вверх слишком далеко (захватили всю сетку) — откатываемся
+        const rect = card.getBoundingClientRect();
+        if (rect.width > 600) card = best.el.parentElement || best.el;
+
+        card.dataset.lesson = i + 1;
         card.setAttribute('role', 'button');
         card.setAttribute('tabindex', '0');
         card.style.cursor = 'pointer';
         taken.add(card);
+        found++;
       }
     }
+    // Диагностика в title — чтобы я могла проверить через list_tabs
+    try { document.title = '[lm:' + found + '/8] ' + (document.title || '').replace(/^\[lm:[^\]]+\]\s*/, ''); } catch (e) {}
   }
 
   function open(n) {
