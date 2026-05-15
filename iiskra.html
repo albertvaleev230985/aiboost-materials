@@ -1098,5 +1098,253 @@ document.querySelectorAll('.t img,.tool img').forEach(img=>{
 });
 </script>
 
+
+<!-- lesson-modal:start -->
+<style id="lesson-modal-css">
+:root { --lm-coral: #e85b3e; --lm-coral-2: #ff7159; --lm-bg: #141414; --lm-card: #1c1c1c; --lm-border: rgba(255,255,255,.08); --lm-text: #f3eee8; --lm-muted: #a39d95; }
+[data-lesson] { cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+[data-lesson]:hover { transform: translateY(-2px); border-color: var(--lm-coral) !important; }
+.lm-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); opacity: 0; transition: opacity .25s ease; z-index: 9998; pointer-events: none; }
+.lm-backdrop.lm-open { opacity: 1; pointer-events: auto; }
+.lm-modal { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -46%) scale(.96); width: min(560px, calc(100vw - 32px)); max-height: 86vh; background: var(--lm-card); color: var(--lm-text); border: 1px solid var(--lm-border); border-radius: 22px; padding: 36px 36px 32px; overflow-y: auto; opacity: 0; transition: opacity .25s ease, transform .25s ease; z-index: 9999; pointer-events: none; box-shadow: 0 32px 80px -24px rgba(0,0,0,.65); font-family: inherit; }
+.lm-modal.lm-open { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+.lm-close { position: absolute; top: 18px; right: 18px; width: 36px; height: 36px; border: 1px solid var(--lm-border); border-radius: 50%; background: transparent; color: var(--lm-text); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; padding: 0; }
+.lm-close:hover { background: rgba(255,255,255,.06); }
+.lm-close svg { width: 16px; height: 16px; }
+.lm-handle { display: none; }
+.lm-meta { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--lm-coral); font-variant-numeric: tabular-nums; font-weight: 600; margin-bottom: 14px; }
+.lm-title { margin: 0 0 14px; font-size: 30px; font-weight: 700; line-height: 1.08; letter-spacing: -.01em; color: var(--lm-text); }
+.lm-promise { margin: 0 0 28px; font-size: 16px; line-height: 1.45; color: var(--lm-text); padding-left: 14px; border-left: 2px solid var(--lm-coral); }
+.lm-section { margin-top: 22px; }
+.lm-section-h { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--lm-muted); margin-bottom: 10px; font-weight: 600; }
+.lm-topics { margin: 0; padding: 0; list-style: none; }
+.lm-topics li { padding: 9px 0; border-bottom: 1px solid var(--lm-border); font-size: 15px; line-height: 1.4; color: var(--lm-text); }
+.lm-topics li:last-child { border-bottom: 0; }
+.lm-tools { display: flex; flex-wrap: wrap; gap: 6px; }
+.lm-tool { padding: 6px 11px; border: 1px solid var(--lm-border); border-radius: 999px; font-size: 12px; letter-spacing: .02em; color: var(--lm-text); background: rgba(255,255,255,.02); }
+.lm-line { font-size: 15px; line-height: 1.5; color: var(--lm-text); }
+.lm-cta { display: block; margin-top: 30px; padding: 16px 22px; text-align: center; background: var(--lm-coral); color: #fff; border: none; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; text-decoration: none; transition: background .15s, transform .05s; width: 100%; font-family: inherit; }
+.lm-cta:hover { background: var(--lm-coral-2); }
+.lm-cta:active { transform: translateY(1px); }
+.lm-placeholder { color: var(--lm-muted); font-style: italic; font-size: 13px; }
+
+@media (max-width: 767px) {
+  .lm-modal { left: 0; top: auto; bottom: 0; transform: translateY(100%); width: 100%; max-height: 88vh; border-radius: 24px 24px 0 0; padding: 12px 22px 28px; }
+  .lm-modal.lm-open { transform: translateY(0); }
+  .lm-handle { display: block; width: 38px; height: 4px; background: rgba(255,255,255,.18); border-radius: 4px; margin: 4px auto 16px; }
+  .lm-close { top: 14px; right: 14px; width: 32px; height: 32px; }
+  .lm-title { font-size: 24px; }
+  .lm-promise { font-size: 15px; margin-bottom: 22px; }
+}
+body.lm-locked { overflow: hidden !important; }
+</style>
+
+<div class="lm-backdrop" id="lm-backdrop" aria-hidden="true"></div>
+<div class="lm-modal" id="lm-modal" role="dialog" aria-modal="true" aria-labelledby="lm-title" tabindex="-1">
+  <span class="lm-handle" aria-hidden="true"></span>
+  <button class="lm-close" id="lm-close" aria-label="Закрыть">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3l10 10M13 3L3 13"/></svg>
+  </button>
+  <div class="lm-meta" id="lm-meta"></div>
+  <h2 class="lm-title" id="lm-title"></h2>
+  <p class="lm-promise" id="lm-promise"></p>
+  <div class="lm-section">
+    <div class="lm-section-h">Что разберём</div>
+    <ul class="lm-topics" id="lm-topics"></ul>
+  </div>
+  <div class="lm-section">
+    <div class="lm-section-h">AI-ассистенты урока</div>
+    <div class="lm-tools" id="lm-tools"></div>
+  </div>
+  <div class="lm-section">
+    <div class="lm-section-h">Артефакт занятия</div>
+    <div class="lm-line" id="lm-artifact"></div>
+  </div>
+  <div class="lm-section">
+    <div class="lm-section-h">Домашка</div>
+    <div class="lm-line" id="lm-homework"></div>
+  </div>
+  <button class="lm-cta" id="lm-cta">Записаться на поток</button>
+</div>
+
+<script id="lesson-modal-js">
+(function(){
+  // ===== Контент 8 занятий. Альберт правит здесь. =====
+  const lessons = [
+    { num:1, date:'21 мая', day:'чт', title:'Базовая ИИ-грамотность',
+      promise:'После занятия у вас есть рабочий аккаунт топ-3 LLM и понимание, чем они отличаются.',
+      topics:['Как устроены современные LLM на пальцах','Какая модель для какой задачи','Личный AI-ассистент: настройка под себя','Безопасность и приватность'],
+      tools:['Claude','ChatGPT','Gemini'],
+      artifact:'Гайд «3 лучших промпта на каждый день» + ваш настроенный ассистент',
+      homework:'Заменить одну рутинную задачу на AI до следующего занятия' },
+    { num:2, date:'26 мая', day:'вт', title:'Промпт-инжиниринг по делу',
+      promise:'Перестаёте писать «напиши мне текст» и начинаете получать предсказуемый результат.',
+      topics:['Структура промпта: роль / задача / контекст / формат','Reasoning-режимы и когда их включать','Системные промпты и память','Шаблоны промптов под вашу задачу'],
+      tools:['Claude','ChatGPT'],
+      artifact:'Библиотека из 10 шаблонов под ваш бизнес',
+      homework:'Собрать собственную папку промптов' },
+    { num:3, date:'28 мая', day:'чт', title:'Мультимодальность: текст, голос, изображение, видео',
+      promise:'Один человек делает работу маркетинг-отдела за вечер.',
+      topics:['Генерация изображений уровня 2026','Видео и анимация без видеографа','Голос: клон, дубляж, озвучка','Распознавание и работа с PDF/таблицами'],
+      tools:['Midjourney v7','FLUX.1.1 Pro','Sora 2','ElevenLabs'],
+      artifact:'Гайд по выбору модели под задачу',
+      homework:'Сделать пост или ролик о своём продукте полностью на AI' },
+    { num:4, date:'02 июня', day:'вт', title:'AI в операционке: документы, бумажки, рутина',
+      promise:'Освобождаете 5–10 часов в неделю на том, что и так делали.',
+      topics:['Договоры, акты, протоколы — AI как junior-юрист','Excel/Sheets с AI: формулы голосом','Бухгалтерия и финансы: автоматизация ввода','Customer support: первая линия на AI'],
+      tools:['Claude','NotebookLM','Excel Copilot'],
+      artifact:'Карта вашей рутины и что из неё можно отдать AI',
+      homework:'Передать AI один регулярный процесс' },
+    { num:5, date:'04 июня', day:'чт', title:'AI-ассистенты для команды',
+      promise:'У каждого сотрудника появляется свой ИИ-помощник под его роль.',
+      topics:['Создание custom GPT / Claude Project под роль','База знаний компании в AI','Делегирование: что отдавать, что оставлять','Контроль качества и риски'],
+      tools:['Claude Projects','Custom GPT','NotebookLM'],
+      artifact:'1 готовый ассистент для роли в вашей команде',
+      homework:'Запустить ассистента в работу хотя бы с одним сотрудником' },
+    { num:6, date:'09 июня', day:'вт', title:'Ваш первый AI-агент',
+      promise:'Перестаёте делать сами то, что может делать программа без вашего участия.',
+      topics:['Что такое агент и чем отличается от ассистента','No-code платформы 2026: что выбрать','Сборка агента: триггер → действия → результат','Подключение к вашим системам'],
+      tools:['n8n','Make','Manus','Zapier AI'],
+      artifact:'Один работающий агент под вашу задачу',
+      homework:'Подключить агента к реальному рабочему процессу' },
+    { num:7, date:'11 июня', day:'чт', title:'AI в продажах и маркетинге',
+      promise:'Воронка работает без вас, контент льётся, лиды квалифицируются.',
+      topics:['Генерация контента по бренд-голосу','AI-скоринг лидов','Персонализация в рассылках и на сайте','AI-исследование рынка и конкурентов'],
+      tools:['Claude','Perplexity','Manus'],
+      artifact:'Контент-машина под ваш бренд',
+      homework:'Запустить одну AI-механику в маркетинг' },
+    { num:8, date:'16 июня', day:'вт', title:'Roadmap внедрения ИИ в бизнес на год',
+      promise:'Уходите с курса с понятным планом и приоритетами, а не вдохновением.',
+      topics:['Карта внедрения: что, когда, в какой последовательности','Считаем экономику внедрения','Команда: кого учить, кого нанимать','Какие следующие шаги в горизонте года'],
+      tools:['Все инструменты курса'],
+      artifact:'Персональная roadmap внедрения ИИ',
+      homework:'Защитить план перед группой' },
+  ];
+  // ====================================================
+
+  // Найти карточки расписания по тексту "№ N" и сделать их кликабельными.
+  function attachToCards() {
+    // ищем элементы, у которых текст содержит "№ 1".."№ 8" и которые
+    // выглядят как карточки: имеют небольшой набор детей и не оборачивают пол-страницы.
+    const candidates = Array.from(document.querySelectorAll('div, li, article, section, a'));
+    const taken = new Set();
+    for (let n = 1; n <= 8; n++) {
+      const re = new RegExp('№\s*' + n + '(?!\d)');
+      let best = null;
+      for (const el of candidates) {
+        if (taken.has(el)) continue;
+        const t = (el.textContent || '').trim();
+        if (!re.test(t)) continue;
+        // карточка должна быть компактной (≤ 30 символов вокруг "№ N" + дата + день)
+        if (t.length > 80) continue;
+        // должна содержать признак даты ("мая" или "июня") или дня недели
+        if (!/(мая|июня|июля|чт|вт|пн|ср|пт|сб|вс)/i.test(t)) continue;
+        // выбираем самый "глубокий" подходящий — то есть с самым коротким текстом
+        if (!best || t.length < best.text.length) best = { el, text: t };
+      }
+      if (best) {
+        best.el.dataset.lesson = n;
+        best.el.setAttribute('role', 'button');
+        best.el.setAttribute('tabindex', '0');
+        taken.add(best.el);
+      }
+    }
+  }
+
+  function open(n) {
+    const L = lessons.find(l => l.num === n);
+    if (!L) return;
+    document.getElementById('lm-meta').textContent = '№ ' + L.num + ' · ' + L.date + ' · ' + L.day;
+    document.getElementById('lm-title').textContent = L.title;
+    document.getElementById('lm-promise').textContent = L.promise;
+    const topics = document.getElementById('lm-topics');
+    topics.innerHTML = '';
+    (L.topics || []).forEach(t => { const li = document.createElement('li'); li.textContent = t; topics.appendChild(li); });
+    const tools = document.getElementById('lm-tools');
+    tools.innerHTML = '';
+    (L.tools || []).forEach(t => { const span = document.createElement('span'); span.className = 'lm-tool'; span.textContent = t; tools.appendChild(span); });
+    document.getElementById('lm-artifact').textContent = L.artifact || '—';
+    document.getElementById('lm-homework').textContent = L.homework || '—';
+    document.getElementById('lm-backdrop').classList.add('lm-open');
+    document.getElementById('lm-modal').classList.add('lm-open');
+    document.body.classList.add('lm-locked');
+    setTimeout(() => document.getElementById('lm-modal').focus(), 50);
+  }
+
+  function close() {
+    document.getElementById('lm-backdrop').classList.remove('lm-open');
+    document.getElementById('lm-modal').classList.remove('lm-open');
+    document.body.classList.remove('lm-locked');
+  }
+
+  function bind() {
+    document.addEventListener('click', e => {
+      const card = e.target.closest('[data-lesson]');
+      if (card) {
+        const n = Number(card.dataset.lesson);
+        if (n >= 1 && n <= 8) open(n);
+      }
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') close();
+      if (e.key === 'Enter' || e.key === ' ') {
+        const card = e.target.closest && e.target.closest('[data-lesson]');
+        if (card) { e.preventDefault(); open(Number(card.dataset.lesson)); }
+      }
+    });
+    document.getElementById('lm-backdrop').addEventListener('click', close);
+    document.getElementById('lm-close').addEventListener('click', close);
+    document.getElementById('lm-cta').addEventListener('click', () => {
+      close();
+      // прокрутить к секции записи/расписания, если есть
+      const target = document.querySelector('[id*="запис" i], [id*="cta" i], [class*="cta" i]');
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    // swipe-down close на мобиле
+    let startY = null;
+    const modal = document.getElementById('lm-modal');
+    modal.addEventListener('touchstart', e => {
+      if (window.innerWidth > 767) return;
+      if (modal.scrollTop > 0) return;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+    modal.addEventListener('touchmove', e => {
+      if (startY === null) return;
+      const dy = e.touches[0].clientY - startY;
+      if (dy > 0) {
+        modal.style.transition = 'none';
+        modal.style.transform = 'translateY(' + dy + 'px)';
+      }
+    }, { passive: true });
+    modal.addEventListener('touchend', e => {
+      if (startY === null) return;
+      const dy = (e.changedTouches[0].clientY - startY);
+      modal.style.transition = '';
+      modal.style.transform = '';
+      if (dy > 80) close();
+      startY = null;
+    });
+  }
+
+  function maybeAutoOpen() {
+    try {
+      const m = location.search.match(/[?&]lesson=(\d)/);
+      if (m) {
+        const n = Number(m[1]);
+        if (n >= 1 && n <= 8) setTimeout(() => open(n), 300);
+      }
+    } catch (e) {}
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => { attachToCards(); bind(); maybeAutoOpen(); });
+  } else {
+    attachToCards(); bind(); maybeAutoOpen();
+  }
+})();
+</script>
+<!-- lesson-modal:end -->
+
 </body>
 </html>
