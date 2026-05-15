@@ -1,22 +1,46 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>schedule view</title>
-<style>html,body{margin:0;background:#1a1714;width:100%;height:100%}iframe{width:100vw;height:100vh;border:0;background:#1a1714}</style>
+<style>html,body{margin:0;background:#1a1714;width:100%;height:100%}iframe{width:100vw;height:100vh;border:0;background:#1a1714}#dbg{position:fixed;top:8px;left:8px;background:rgba(0,0,0,.85);color:#fff;font:11px monospace;padding:8px 10px;border-radius:6px;max-width:380px;z-index:10}</style>
 </head><body>
+<div id="dbg">диагностика…</div>
 <iframe id="ifr" src="iiskra.html?probe=view"></iframe>
 <script>
 const ifr = document.getElementById('ifr');
+const dbg = document.getElementById('dbg');
 ifr.addEventListener('load', () => {
   setTimeout(() => {
     try {
       const d = ifr.contentDocument;
+      const w = ifr.contentWindow;
       const sch = d.querySelector('.schedule');
-      if (sch) {
-        sch.scrollIntoView({ behavior: 'auto', block: 'center' });
-        document.title = 'SCH_FOUND';
-      } else {
-        document.title = 'SCH_MISS';
-      }
-    } catch (e) { document.title = 'ERR_' + e.name; }
+      if (sch) sch.scrollIntoView({ behavior: 'auto', block: 'center' });
+      // Берём 2-ю карточку и форсим ей класс с rotateY
+      const c2 = d.querySelector('[data-lesson="2"]');
+      if (!c2) { dbg.textContent = 'нет [data-lesson=2]'; return; }
+      const cs0 = w.getComputedStyle(c2);
+      const t0 = cs0.transform;
+      // ВКЛЮЧАЕМ force-flip через inline style (highest specificity)
+      c2.style.transform = 'perspective(1200px) rotateY(180deg)';
+      c2.style.transition = 'transform .5s';
+      setTimeout(() => {
+        const cs1 = w.getComputedStyle(c2);
+        const t1 = cs1.transform;
+        const back = c2.querySelector('.lm-back');
+        const backCs = back ? w.getComputedStyle(back) : null;
+        const bRect = back ? back.getBoundingClientRect() : null;
+        dbg.innerHTML =
+          'card #2 после inline rotateY(180):<br>' +
+          'transform before: ' + t0.slice(0, 60) + '<br>' +
+          'transform after:  ' + t1.slice(0, 60) + '<br>' +
+          'parent perspective: ' + w.getComputedStyle(c2.parentElement).perspective + '<br>' +
+          'card transform-style: ' + cs1.transformStyle + '<br>' +
+          '.lm-back exists: ' + !!back + '<br>' +
+          (back ? '.lm-back transform: ' + backCs.transform.slice(0, 60) + '<br>' : '') +
+          (bRect ? '.lm-back rect: ' + Math.round(bRect.width) + '×' + Math.round(bRect.height) + '<br>' : '') +
+          'card backface: ' + cs1.backfaceVisibility;
+        document.title = 'DBG_READY';
+      }, 800);
+    } catch (e) { dbg.textContent = 'ERR ' + e.name + ' ' + e.message; document.title = 'ERR'; }
   }, 1500);
 });
 </script>
