@@ -1147,6 +1147,9 @@ document.querySelectorAll('.t img,.tool img').forEach(img=>{
 
 
 
+
+
+
 <!-- lesson-modal:start -->
 <style id="lesson-modal-css">
 :root { --lm-coral: #e85b3e; --lm-coral-2: #ff7159; --lm-card: #1c1c1c; --lm-border: rgba(255,255,255,.08); --lm-text: #f3eee8; --lm-muted: #a39d95; }
@@ -1383,22 +1386,48 @@ body.lm-locked { overflow: hidden !important; }
   }
 
   function setupHoverHandlers() {
+    if (window.__lmHoverBound) return;
+    window.__lmHoverBound = true;
     let autoOff = false;
-    document.querySelectorAll('[data-lesson]').forEach(card => {
-      if (card.dataset.lmHoverBound) return;
-      card.dataset.lmHoverBound = '1';
-      card.addEventListener('mouseenter', () => {
-        if (!autoOff) {
-          autoOff = true;
-          const first = document.querySelector('[data-lesson="1"]');
-          if (first) first.classList.add('lm-auto-off');
+    let currentFlipped = null;
+
+    function turnOffAuto() {
+      if (autoOff) return;
+      autoOff = true;
+      const first = document.querySelector('[data-lesson="1"]');
+      if (first) first.classList.add('lm-auto-off');
+    }
+
+    function update(x, y) {
+      const cards = Array.from(document.querySelectorAll('[data-lesson]'));
+      let inside = null;
+      for (const c of cards) {
+        // Если карточка флиппнута — используем замороженный rect,
+        // потому что при rotateY(180) bounding box карточки скакает к 0-полоске.
+        let r;
+        if (c.classList.contains('lm-hover') && c.__lmStaticRect) {
+          r = c.__lmStaticRect;
+        } else {
+          r = c.getBoundingClientRect();
+          if (r.width > 20 && r.height > 20) c.__lmStaticRect = r;
         }
-        card.classList.add('lm-hover');
-      });
-      card.addEventListener('mouseleave', () => {
-        card.classList.remove('lm-hover');
-      });
-    });
+        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) { inside = c; break; }
+      }
+      if (inside !== currentFlipped) {
+        if (currentFlipped) currentFlipped.classList.remove('lm-hover');
+        if (inside) {
+          inside.classList.add('lm-hover');
+          turnOffAuto();
+        }
+        currentFlipped = inside;
+      }
+    }
+
+    document.addEventListener('mousemove', e => update(e.clientX, e.clientY), { passive: true });
+    // На scroll и resize — сбрасываем кеш rect'ов
+    const reset = () => document.querySelectorAll('[data-lesson]').forEach(c => { c.__lmStaticRect = null; });
+    window.addEventListener('scroll', reset, { passive: true, capture: true });
+    window.addEventListener('resize', reset);
   }
 
   function bind() {
