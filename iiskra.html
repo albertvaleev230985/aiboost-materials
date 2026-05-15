@@ -1102,6 +1102,9 @@ document.querySelectorAll('.t img,.tool img').forEach(img=>{
 
 
 
+
+
+
 <!-- lesson-modal:start -->
 <style id="lesson-modal-css">
 :root { --lm-coral: #e85b3e; --lm-coral-2: #ff7159; --lm-card: #1c1c1c; --lm-border: rgba(255,255,255,.08); --lm-text: #f3eee8; --lm-muted: #a39d95; }
@@ -1243,7 +1246,21 @@ body.lm-locked { overflow: hidden !important; }
         if (!/(мая|июня|июля|чт|вт|пн|ср|пт|сб|вс)/i.test(t)) continue;
         if (!best || t.length < best.text.length) best = { el, text: t };
       }
-      if (best) { best.el.dataset.lesson = n; best.el.setAttribute('role','button'); best.el.setAttribute('tabindex','0'); taken.add(best.el); }
+      if (best) {
+        // поднимаемся до элемента с реальной площадью карточки (≥80×60px)
+        let card = best.el;
+        let safety = 6;
+        while (card.parentElement && safety-- > 0) {
+          const r = card.getBoundingClientRect();
+          if (r.width >= 80 && r.height >= 60) break;
+          card = card.parentElement;
+        }
+        card.dataset.lesson = n;
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.style.cursor = 'pointer';
+        taken.add(card);
+      }
     }
   }
 
@@ -1276,9 +1293,9 @@ body.lm-locked { overflow: hidden !important; }
       const card = e.target.closest('[data-lesson]');
       if (card) {
         const n = Number(card.dataset.lesson);
-        if (n >= 1 && n <= 8) open(n);
+        if (n >= 1 && n <= 8) { e.preventDefault(); e.stopPropagation(); open(n); }
       }
-    });
+    }, true);
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') close();
       if (e.key === 'Enter' || e.key === ' ') {
@@ -1319,7 +1336,14 @@ body.lm-locked { overflow: hidden !important; }
     }
   }
 
-  function init() { ensureTopLevel(); attachToCards(); bind(); maybeAutoOpen(); }
+  function init() {
+    ensureTopLevel();
+    attachToCards();
+    bind();
+    maybeAutoOpen();
+    // повторно через 1.5с — на случай анимаций / поздней разметки
+    setTimeout(attachToCards, 1500);
+  }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else { init(); }
