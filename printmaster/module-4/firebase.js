@@ -35,12 +35,12 @@ const ROOT = 'printmaster-module-4';
 //       answers/        (test answers, индекс = номер вопроса, значение = 0..3)
 //       score: number
 //       card/
-//         built: '...'
-//         process: '...'
-//         impact: '...'
-//         junePlan: '...'
-//         resources: '...'
-//         principle: '...'
+//         feedbackUseful: '...'
+//         feedbackImprove: '...'
+//         triedAutomations: '...'
+//         testedImplementation: '...'
+//         juneTasks: '...'
+//         teamScenario: '...'
 //         filledCount: 0..6
 
 // ===== Сессия =====

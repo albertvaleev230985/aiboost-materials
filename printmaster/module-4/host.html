@@ -70,7 +70,7 @@ function render() {
 
   content.innerHTML = `
     <div class="h1">Дашборд финала PrintMaster</div>
-    <div class="lead">Один экран: тест, heatmap ошибок, карта внедрения и выдача сертификатов.</div>
+    <div class="lead">Один экран: тест, heatmap ошибок, итоговые мини-отчёты, список внедрений команды и выдача сертификатов.</div>
 
     <div class="host-shell">
       <div class="host-controls">
@@ -100,7 +100,7 @@ function render() {
         <div class="muted small">Зелёное — правильный, красное — ошибка, серое — нет ответа. Над&nbsp;номером — счётчик ошибок. Клик на&nbsp;номер — разбор.</div>
         <div class="heatmap" id="heatmap">${heatmapBlock(list)}</div>
 
-        <h2 class="h2 mt-6"><i class="ph ph-map-trifold icon-violet"></i> Карты внедрения</h2>
+        <h2 class="h2 mt-6"><i class="ph ph-map-trifold icon-violet"></i> Итоговые мини-отчёты и внедрения</h2>
         <div id="manifests">${manifestsBlock(list)}</div>
       </div>
     </div>
@@ -109,7 +109,7 @@ function render() {
   // Опасная кнопка — требует ввести слово СБРОСИТЬ заглавными
   document.getElementById('reset-btn').addEventListener('click', async () => {
     const word = prompt(
-      'ОПАСНО — это удалит ВСЕХ участников, их ответы и карты внедрения. Без возможности восстановить.\n\n' +
+      'ОПАСНО — это удалит ВСЕХ участников, их ответы и итоговые мини-отчёты. Без возможности восстановить.\n\n' +
       'Если уверен — введи слово  СБРОСИТЬ  заглавными буквами:'
     );
     if (word !== 'СБРОСИТЬ') {
@@ -191,7 +191,7 @@ function phaseLabel(phase) {
     lobby: '<i class="ph ph-hourglass"></i> Лобби',
     test: '<i class="ph ph-target"></i> Тест',
     discussion: '<i class="ph ph-chat-circle"></i> Разбор',
-    card: '<i class="ph ph-map-trifold"></i> Карта',
+    card: '<i class="ph ph-map-trifold"></i> Мини-отчёт',
     certificate: '<i class="ph ph-graduation-cap"></i> Выдача сертификатов',
     done: '<i class="ph ph-check-circle"></i> Финал',
   };
@@ -247,7 +247,7 @@ function actionsBlock() {
   }
   if (session.phase === 'discussion') {
     return `
-      <button class="btn btn-primary btn-big" data-act="start-card"><i class="ph ph-map-trifold"></i> Запустить карту (8 мин)</button>
+      <button class="btn btn-primary btn-big" data-act="start-card"><i class="ph ph-map-trifold"></i> Запустить мини-отчёт (10 мин)</button>
       <button class="btn btn-primary btn-big" data-act="certificate"><i class="ph ph-graduation-cap"></i> Сразу к&nbsp;сертификатам</button>
       <button class="btn btn-ghost" data-act="resume-test"><i class="ph ph-arrow-left"></i> Вернуться к&nbsp;тесту</button>
     `;
@@ -301,7 +301,7 @@ async function doAction(act) {
       await setSession({ phase: 'test' });
       break;
     case 'start-card':
-      await setSession({ phase: 'card', timerStartedAt: Date.now(), timerDurationSec: 480, currentQuestion: -1, showCorrect: false });
+      await setSession({ phase: 'card', timerStartedAt: Date.now(), timerDurationSec: 600, currentQuestion: -1, showCorrect: false });
       break;
     case 'certificate':
       await setSession({ phase: 'certificate', timerStartedAt: null });
@@ -478,16 +478,24 @@ function showQuestionDetail(qIdx, list) {
 
 function manifestsBlock(list) {
   const cards = list.filter(u => u.card && Object.values(u.card).some(v => typeof v === 'string' && v.trim()));
-  if (!cards.length) return `<div class="muted">Карт пока нет — участники заполнят их после теста.</div>`;
+  if (!cards.length) return `<div class="muted">Мини-отчётов пока нет — участники заполнят их после теста.</div>`;
   const rows = [
-    ['built', 'Собрано'],
-    ['process', 'Процесс'],
-    ['impact', 'Эффект'],
-    ['junePlan', 'Июнь'],
-    ['resources', 'Нужно'],
-    ['principle', 'Принцип'],
+    ['feedbackUseful', 'Полезно'],
+    ['feedbackImprove', 'Непонятно / улучшить'],
+    ['triedAutomations', 'Пробовал(а) автоматизировать'],
+    ['testedImplementation', 'Внедрил(а) / протестировал(а)'],
+    ['juneTasks', 'Июнь'],
+    ['teamScenario', 'Сценарий для команды'],
   ];
-  return cards.map(u => `
+  const scenarioCards = cards.filter(u => u.card?.teamScenario?.trim());
+  const scenarioSummary = `
+    <div class="card outline-coral" style="margin-bottom:14px;">
+      <div class="card-tag coral">Список внедрений команды</div>
+      <div class="card-title">${scenarioCards.length}/5 сценариев собрано</div>
+      <div class="card-body">Цель собственника: минимум 5 реальных сценариев, где видно задачу, старый способ, новый способ через ИИ, результат, экономию времени и&nbsp;что нужно доработать.</div>
+    </div>
+  `;
+  return scenarioSummary + cards.map(u => `
     <div class="card outline-violet manifest-card">
       <div class="user-chip" style="margin-bottom:10px;"><div class="user-ava">${(u.name[0]||'?').toUpperCase()}</div><strong>${escapeHtml(u.name)}</strong></div>
       ${rows.map(([key, label]) => u.card[key]?.trim() ? `
