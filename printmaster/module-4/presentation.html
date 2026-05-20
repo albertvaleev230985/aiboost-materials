@@ -149,6 +149,37 @@ h2 { font-size: 56px; max-width: 1060px; font-weight: 900; }
   text-transform: uppercase;
 }
 .progress { color: rgba(247,244,236,.55); }
+.fullscreen-btn {
+  position: fixed;
+  top: 22px;
+  right: 22px;
+  z-index: 20;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(247,244,236,.22);
+  border-radius: 8px;
+  background: rgba(14,20,20,.72);
+  color: var(--ink);
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+  transition: border-color .18s ease, background .18s ease, transform .18s ease, opacity .18s ease;
+}
+.fullscreen-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(47,179,163,.65);
+  background: rgba(47,179,163,.18);
+}
+.fullscreen-btn svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .small { font-size: 16px; color: var(--muted); line-height: 1.45; }
 .method {
   margin-top: 30px;
@@ -465,6 +496,8 @@ h2 { font-size: 56px; max-width: 1060px; font-weight: 900; }
   </section>
 </main>
 
+<button class="fullscreen-btn" id="fullscreenBtn" type="button" aria-label="Открыть на весь экран" title="Открыть на весь экран"></button>
+
 <div class="footer">
   <div>neovida.ai · AI Boost для PrintMaster</div>
   <div class="progress" id="progress">1 / 15</div>
@@ -474,17 +507,47 @@ h2 { font-size: 56px; max-width: 1060px; font-weight: 900; }
 const slides = [...document.querySelectorAll('.slide')];
 let current = 0;
 const progress = document.getElementById('progress');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const expandIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5"/><path d="M3 3l6 6"/><path d="M16 3h5v5"/><path d="M21 3l-6 6"/><path d="M8 21H3v-5"/><path d="M3 21l6-6"/><path d="M16 21h5v-5"/><path d="M21 21l-6-6"/></svg>';
+const collapseIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v6H3"/><path d="M3 9l6-6"/><path d="M15 3v6h6"/><path d="M21 9l-6-6"/><path d="M9 21v-6H3"/><path d="M3 15l6 6"/><path d="M15 21v-6h6"/><path d="M21 15l-6 6"/></svg>';
 function show(index) {
   current = Math.max(0, Math.min(slides.length - 1, index));
   slides.forEach((slide, i) => slide.classList.toggle('active', i === current));
   progress.textContent = `${current + 1} / ${slides.length}`;
 }
+function isFullscreen() {
+  return Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+}
+function syncFullscreenButton() {
+  const active = isFullscreen();
+  fullscreenBtn.innerHTML = active ? collapseIcon : expandIcon;
+  fullscreenBtn.setAttribute('aria-label', active ? 'Выйти из полноэкранного режима' : 'Открыть на весь экран');
+  fullscreenBtn.setAttribute('title', active ? 'Выйти из полноэкранного режима' : 'Открыть на весь экран');
+}
+async function toggleFullscreen() {
+  try {
+    if (isFullscreen()) {
+      if (document.exitFullscreen) await document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      return;
+    }
+    const target = document.documentElement;
+    if (target.requestFullscreen) await target.requestFullscreen();
+    else if (target.webkitRequestFullscreen) target.webkitRequestFullscreen();
+  } catch (error) {
+    console.warn('Fullscreen mode is unavailable', error);
+  }
+}
+fullscreenBtn.addEventListener('click', toggleFullscreen);
+document.addEventListener('fullscreenchange', syncFullscreenButton);
+document.addEventListener('webkitfullscreenchange', syncFullscreenButton);
 document.addEventListener('keydown', (event) => {
   if (['ArrowRight', 'PageDown', ' '].includes(event.key)) show(current + 1);
   if (['ArrowLeft', 'PageUp'].includes(event.key)) show(current - 1);
   if (event.key === 'Home') show(0);
   if (event.key === 'End') show(slides.length - 1);
 });
+syncFullscreenButton();
 show(0);
 </script>
 </body>
