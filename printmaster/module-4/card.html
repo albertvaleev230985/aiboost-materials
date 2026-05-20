@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Boost · PrintMaster · карта внедрения</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+</head>
+<body class="app">
+
+<header class="app-header" id="app-header"></header>
+
+<main class="wrap">
+  <div id="content"></div>
+</main>
+
+<script type="module">
+import { renderHeader, getMe, debounce, runTimer, triggerCelebration, certificateScreenHTML } from './app.js';
+import { subscribeSession, pushCard } from './firebase.js';
+
+const me = getMe();
+renderHeader(me, { showLogout: true });
+if (!me) {
+  document.querySelector('.wrap').innerHTML = `
+    <div class="card outline-coral">
+      <div class="card-tag coral">Нужно войти</div>
+      <div class="card-title">Сначала введи имя и&nbsp;фамилию</div>
+      <div class="card-body">Открой <a href="index.html" class="highlight-violet">страницу входа</a>.</div>
+    </div>`;
+  throw new Error('no me');
+}
+
+const content = document.getElementById('content');
+let session = { phase: 'lobby' };
+let stopTimer = null;
+
+const storageBase = 'aiboost_printmaster_m4:' + me.slug + ':card:';
+const fields = [
+  {
+    key: 'built',
+    label: 'Что уже собрано',
+    hint: 'Gem, база знаний, NotebookLM, Canvas-инструмент, личный Gem или другой рабочий результат. Пиши конкретно, без общих слов.',
+    placeholder: 'Например: Gem для КП по заявке клиента + NotebookLM с прайсом и FAQ + Canvas-чек-лист перед отправкой КП.',
+  },
+  {
+    key: 'process',
+    label: 'Какой процесс беру в работу',
+    hint: 'Один процесс, который реально будете внедрять и использовать, а не “когда-нибудь автоматизировать всё”.',
+    placeholder: 'Например: подготовка черновика КП после заявки клиента; первичный разбор тендерной позиции; контроль звонка.',
+  },
+  {
+    key: 'impact',
+    label: 'Где уже есть эффект',
+    hint: 'Что стало быстрее, понятнее, точнее или спокойнее после курса. Можно в минутах, шагах или качестве.',
+    placeholder: 'Например: быстрее собираю структуру ответа клиенту; меньше забываю вопросы; проще проверить риски.',
+  },
+  {
+    key: 'junePlan',
+    label: 'Что внедряю в июне',
+    hint: '1-3 действия на ближайший месяц: что докрутить, где начать применять, как часто использовать.',
+    placeholder: 'Например: до 10 июня докрутить Gem по КП; 2 раза в неделю проверять реальные заявки; собрать недостающие файлы в базу.',
+  },
+  {
+    key: 'resources',
+    label: 'Что нужно, чтобы это заработало',
+    hint: 'Материалы, доступы, документы, владелец процесса, тестовые кейсы, помощь коллег или решение руководителя.',
+    placeholder: 'Например: свежий прайс, шаблон КП, типовые вопросы клиентов, 5 тестовых заявок, ответственный за обновление базы.',
+  },
+  {
+    key: 'principle',
+    label: 'Мой принцип работы с ИИ после курса',
+    hint: 'Одна короткая фраза, которую забираете как рабочий рефлекс.',
+    placeholder: 'Например: сначала процесс, потом инструмент; ИИ делает черновик, человек проверяет финал.',
+  },
+];
+
+const card = Object.fromEntries(fields.map(f => [f.key, localStorage.getItem(storageBase + f.key) || '']));
+
+subscribeSession((s) => { session = s || session; render(); });
+
+function render() {
+  if (session.phase === 'certificate') {
+    if (stopTimer) { stopTimer(); stopTimer = null; }
+    content.innerHTML = `<div class="card outline-violet">${certificateScreenHTML(me.name)}</div>`;
+    requestAnimationFrame(() => triggerCelebration());
+    return;
+  }
+
+  const filledCount = fields.filter(f => card[f.key].trim()).length;
+  const phase = session.phase;
+  const phaseHint =
+    phase === 'card' ? `<div class="card-tag violet">Сейчас</div><div class="card-body">Альберт запустил карту внедрения. Пишите коротко, конкретно, по делу. Это не отчёт для красоты, а план, с которым можно работать после курса.</div>` :
+    phase === 'done' ? `<div class="card-tag green">Спасибо</div><div class="card-body">Урок завершён. Карта сохранена.</div>` :
+    `<div class="card-tag gold">Можно начать заранее</div><div class="card-body">Карта откроется после теста. Можно заполнить черновик сейчас и&nbsp;дополнить после разбора.</div>`;
+
+  const filledStatus = filledCount === fields.length
+    ? '<i class="ph ph-check-circle icon-green"></i> Все поля заполнены — сохранено'
+    : `Заполнено: ${filledCount}/${fields.length}`;
+
+  content.innerHTML = `
+    <div class="h1">Моя карта AI-внедрения</div>
+    <div class="lead">Не “что я узнал(а)”, а что теперь меняется в работе: инструмент, процесс, эффект, июньский план.</div>
+
+    <div class="card" style="margin-bottom:18px;">${phaseHint}</div>
+
+    ${phase === 'card' && session.timerStartedAt ? `
+      <div class="timer-text"><span>До&nbsp;конца тихой работы</span><span class="left" id="timer-left">${session.timerDurationSec || 480} сек</span></div>
+      <div class="timer-bar"><div class="fill" id="timer-fill"></div></div>
+    ` : ''}
+
+    <div class="card outline-violet">
+      ${fields.map((f, idx) => `
+        <div class="field" ${idx === fields.length - 1 ? 'style="margin-bottom:0;"' : ''}>
+          <label class="field-label" for="f-${f.key}"><span class="field-num">${idx + 1}</span> ${f.label}</label>
+          <div class="field-hint">${f.hint}</div>
+          <textarea id="f-${f.key}" placeholder="${escapeHtml(f.placeholder)}">${escapeHtml(card[f.key])}</textarea>
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:18px; flex-wrap:wrap; gap:10px;">
+      <div class="muted small" id="save-hint">${filledStatus}</div>
+      <a href="test.html" class="btn btn-ghost"><i class="ph ph-arrow-left"></i> Назад к тесту</a>
+    </div>
+  `;
+
+  const inputs = Object.fromEntries(fields.map(f => [f.key, document.getElementById('f-' + f.key)]));
+  const onInput = debounce(() => persist(), 500);
+  Object.entries(inputs).forEach(([key, el]) => {
+    el.addEventListener('input', () => {
+      card[key] = el.value;
+      localStorage.setItem(storageBase + key, el.value);
+      const hint = document.getElementById('save-hint');
+      if (hint) hint.innerHTML = '<i class="ph ph-cloud-arrow-up icon-violet"></i> Сохраняем…';
+      onInput();
+    });
+  });
+
+  if (stopTimer) { stopTimer(); stopTimer = null; }
+  if (phase === 'card' && session.timerStartedAt) {
+    const fill = document.getElementById('timer-fill');
+    const left = document.getElementById('timer-left');
+    if (fill && left) {
+      stopTimer = runTimer(session.timerStartedAt, session.timerDurationSec || 480, (rem, frac) => {
+        fill.style.width = (frac * 100) + '%';
+        left.textContent = formatTime(rem);
+        fill.className = 'fill' + (rem < 45 ? ' danger' : rem < 90 ? ' warn' : '');
+      }, () => {
+        const hint = document.getElementById('save-hint');
+        if (hint) hint.innerHTML = '<i class="ph ph-alarm icon-coral"></i> Время вышло — карта сохранена.';
+        persist();
+      });
+    }
+  }
+}
+
+function persist() {
+  const filledCount = fields.filter(f => card[f.key].trim()).length;
+  pushCard(me.slug, {
+    ...card,
+    filledCount,
+    totalFields: fields.length,
+    done: filledCount === fields.length,
+    ts: Date.now(),
+  }).then(() => {
+    const hint = document.getElementById('save-hint');
+    if (hint) hint.innerHTML = filledCount === fields.length
+      ? '<i class="ph ph-check-circle icon-green"></i> Все поля заполнены — сохранено'
+      : `Заполнено: ${filledCount}/${fields.length} — сохранено`;
+  }).catch(e => {
+    console.warn('push card failed', e);
+    const hint = document.getElementById('save-hint');
+    if (hint) hint.innerHTML = '<i class="ph ph-warning icon-coral"></i> Сетевая ошибка — данные в браузере, попробуем ещё раз через 5 сек.';
+    setTimeout(persist, 5000);
+  });
+}
+
+function formatTime(sec) {
+  const m = Math.floor(sec / 60); const s = Math.floor(sec % 60);
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
+function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+
+</body>
+</html>

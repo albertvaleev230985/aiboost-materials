@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сертификат · AI Boost для PrintMaster · PrintMaster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root {
+    --ink: #0f172a; --ink-60: #475569; --ink-40: #94a3b8;
+    --ink-20: #cbd5e1; --ink-10: #e2e8f0;
+    --accent: #B76E2E; --accent-dark: #7A431D;
+    --violet: #0F766E; --gold: #D4A44C;
+    --paper: #fefdfb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #f0eee9;
+    color: var(--ink);
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding: 24px;
+    min-height: 100vh; gap: 16px;
+  }
+
+  .controls {
+    background: #fff; border: 1px solid var(--ink-10); border-radius: 14px;
+    padding: 16px 22px; box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+    position: sticky; top: 16px; z-index: 10;
+  }
+  .controls .who { font-size: 14px; color: var(--ink-60); }
+  .controls .who strong { color: var(--ink); }
+  .controls button {
+    padding: 12px 24px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, var(--accent), var(--gold));
+    color: #fff; font-weight: 700; font-size: 15px; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.2s;
+    font-family: inherit;
+  }
+  .controls button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(183,110,46,0.35); }
+  .controls button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* Сам сертификат — A4 landscape */
+  .cert {
+    width: 297mm; height: 210mm;
+    background: var(--paper);
+    position: relative;
+    box-shadow: 0 30px 80px rgba(15,23,42,0.15), 0 0 0 1px rgba(15,23,42,0.04);
+    padding: 28mm 28mm 22mm;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .cert::before, .cert::after {
+    content: ''; position: absolute; left: 0; right: 0; height: 6px;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--violet) 100%);
+  }
+  .cert::before { top: 0; }
+  .cert::after { bottom: 0; }
+
+  .corner { position: absolute; width: 40px; height: 40px; border: 1.5px solid var(--accent); opacity: 0.85; pointer-events: none; }
+  .corner.tl { top: 10mm; left: 10mm; border-right: none; border-bottom: none; }
+  .corner.tr { top: 10mm; right: 10mm; border-left: none; border-bottom: none; border-color: var(--violet); }
+  .corner.bl { bottom: 7mm; left: 10mm; border-right: none; border-top: none; border-color: var(--violet); }
+  .corner.br { bottom: 7mm; right: 10mm; border-left: none; border-top: none; }
+
+  .pattern-bg {
+    position: absolute; inset: 0; pointer-events: none; opacity: 0.04;
+    background-image: radial-gradient(circle at 20% 30%, var(--accent) 1.5px, transparent 2px),
+                      radial-gradient(circle at 80% 60%, var(--violet) 1.5px, transparent 2px),
+                      radial-gradient(circle at 50% 80%, var(--gold) 1.5px, transparent 2px),
+                      radial-gradient(circle at 35% 70%, var(--accent) 1px, transparent 1.5px);
+    background-size: 80px 80px, 100px 100px, 120px 120px, 60px 60px;
+  }
+  .cert > *:not(.pattern-bg):not(.corner) { position: relative; z-index: 1; }
+
+  .header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .brand { display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--ink); }
+  .brand-mark { width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--violet)); }
+  .brand-sub { font-size: 11px; color: var(--ink-40); font-weight: 500; letter-spacing: 2px; margin-top: 2px; text-transform: uppercase; }
+  .date { text-align: right; font-size: 11px; color: var(--ink-60); letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; }
+  .date .big { font-size: 14px; color: var(--ink); font-weight: 800; display: block; margin-top: 2px; }
+
+  .middle { text-align: center; margin: auto 0; padding-top: 10mm; }
+  .cert-title { font-size: 13px; font-weight: 700; letter-spacing: 9px; text-transform: uppercase; color: var(--accent); margin-bottom: 4mm; }
+  .cert-subtitle { font-size: 14px; color: var(--ink-60); font-weight: 500; letter-spacing: 0.5px; margin-bottom: 8mm; }
+  .name {
+    font-family: 'Fraunces', 'Playfair Display', Georgia, serif;
+    font-size: 54pt; font-weight: 400; line-height: 1.0;
+    letter-spacing: -1px; color: var(--ink); margin-bottom: 6mm;
+    white-space: nowrap;
+  }
+  .name-underline { display: block; width: 60mm; height: 2px; background: linear-gradient(90deg, transparent 0%, var(--accent) 30%, var(--violet) 70%, transparent 100%); margin: 0 auto 10mm; }
+  .stream-label { font-size: 12px; color: var(--violet); font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10mm; }
+  .citation { font-size: 15px; line-height: 1.7; color: var(--ink-60); max-width: 180mm; margin: 0 auto; font-weight: 400; }
+  .citation strong { color: var(--ink); font-weight: 700; }
+  .citation em { font-style: italic; color: var(--accent-dark); font-weight: 600; }
+
+  .footer { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20mm; align-items: end; margin-top: auto; padding-top: 14mm; }
+  .footer > div:nth-child(2) { align-self: end; transform: translateY(2mm); }
+
+  .sig { display: flex; flex-direction: column; align-items: flex-start; position: relative; padding-top: 25mm; }
+  .sig-png { position: absolute; left: -2mm; bottom: 8mm; width: 60mm; max-height: 26mm; object-fit: contain; object-position: left bottom; pointer-events: none; z-index: 2; }
+  .sig-line { width: 60mm; height: 1.5px; background: var(--ink); margin-bottom: 3mm; position: relative; z-index: 1; }
+  .sig-name { font-size: 13px; font-weight: 800; color: var(--ink); letter-spacing: 0.5px; }
+  .sig-role { font-size: 11px; color: var(--ink-60); margin-top: 1mm; letter-spacing: 0.5px; }
+
+  .stamp-img {
+    display: block; width: 52mm; height: 52mm;
+    object-fit: contain; pointer-events: none;
+    clip-path: circle(48% at 50% 50%);
+  }
+
+  .meta-block { text-align: right; }
+  .meta-line { font-size: 11px; color: var(--ink-60); margin-bottom: 3mm; }
+  .meta-line strong { color: var(--ink); font-weight: 700; }
+  .serial { font-size: 10px; color: var(--ink-40); font-family: 'SF Mono', monospace; margin-top: 4mm; letter-spacing: 1px; }
+
+  @media print {
+    @page { size: A4 landscape; margin: 0; }
+    body { background: #fff; padding: 0; }
+    .controls { display: none !important; }
+    .cert { width: 297mm; height: 210mm; box-shadow: none; margin: 0; }
+  }
+
+  @media screen and (max-width: 1100px) {
+    .cert { transform: scale(0.75); transform-origin: top center; margin-top: -25mm; }
+  }
+  @media screen and (max-width: 850px) {
+    .cert { transform: scale(0.55); margin-top: -45mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="controls" id="controls">
+  <div class="who">Это сертификат для&nbsp;<strong id="whoText">—</strong></div>
+  <button id="downloadBtn">Скачать PDF</button>
+</div>
+
+<div class="cert" id="cert">
+  <div class="pattern-bg" aria-hidden="true"></div>
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+
+  <div class="header">
+    <div>
+      <div class="brand"><span class="brand-mark"></span>neovida.ai</div>
+      <div class="brand-sub">Экзоскелет для профессионала</div>
+    </div>
+    <div class="date">
+      Выдан
+      <span class="big" id="dateText">—</span>
+    </div>
+  </div>
+
+  <div class="middle">
+    <div class="cert-title">Сертификат</div>
+    <div class="cert-subtitle">настоящим подтверждается, что</div>
+    <div class="name" id="nameText">—</div>
+    <div class="name-underline"></div>
+    <div class="stream-label">Корпоративный курс · PrintMaster</div>
+    <div class="citation">
+      успешно завершил(а) корпоративный курс <strong>AI Boost для PrintMaster</strong>: четыре практических урока по&nbsp;ИИ-грамотности, промпт-инженерии, Gem-ассистентам, базам знаний, NotebookLM и&nbsp;Canvas-инструментам для&nbsp;рабочих процессов.
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="sig">
+      <img class="sig-png" src="signature.png" alt="" onerror="this.style.display='none'">
+      <div class="sig-line"></div>
+      <div class="sig-name">Альберт Валеев</div>
+      <div class="sig-role">основатель neovida.ai · ведущий курса</div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <img class="stamp-img" src="stamp.png" alt="">
+    </div>
+
+    <div class="meta-block">
+      <div class="meta-line"><strong>Программа</strong><br>4 урока · практикум внедрения</div>
+      <div class="serial" id="serialText">NV · AIB · 2026 · PRINTMASTER</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Получаем имя: из ?name=... или из localStorage участника
+const params = new URLSearchParams(location.search);
+let name = params.get('name');
+if (!name) {
+  try {
+    const me = JSON.parse(localStorage.getItem('aiboost_printmaster_m4:__me') || 'null');
+    if (me && me.name) name = me.name;
+  } catch (e) {}
+}
+if (!name) name = 'Имя Фамилия';
+name = name.trim();
+
+// Дата
+const date = new Date();
+const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const dateStr = `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+
+// Серийник — короткий хеш имени (fallback для неизвестных имён)
+function shortHash(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h).toString(36).slice(0,5).toUpperCase();
+}
+
+// При необходимости можно закрепить конкретные номера за участниками.
+const KNOWN_SERIALS = {};
+const serialNum = KNOWN_SERIALS[name] || shortHash(name);
+
+// Render
+const nameEl = document.getElementById('nameText');
+nameEl.textContent = name;
+const len = name.length;
+if (len > 22) nameEl.style.fontSize = '40pt';
+else if (len > 18) nameEl.style.fontSize = '46pt';
+else nameEl.style.fontSize = '54pt';
+
+document.getElementById('whoText').textContent = name;
+document.getElementById('dateText').textContent = dateStr;
+document.getElementById('serialText').textContent = `NV · AIB · 2026 · PRINTMASTER · ${serialNum}`;
+
+// Скачивание PDF через html2pdf.js
+document.getElementById('downloadBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('downloadBtn');
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Готовлю PDF…';
+  try {
+    const filename = `Сертификат_${name.replace(/\s+/g, '_')}.pdf`;
+    await html2pdf().from(document.getElementById('cert')).set({
+      filename,
+      margin: 0,
+      html2canvas: { scale: 3, useCORS: true, backgroundColor: '#ffffff' },
+      jsPDF: { unit: 'mm', format: [297, 210], orientation: 'landscape' },
+      image: { type: 'jpeg', quality: 0.95 },
+    }).save();
+    btn.textContent = 'Готово';
+    setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2500);
+  } catch (e) {
+    console.error('PDF generation failed', e);
+    // Fallback на window.print()
+    btn.textContent = orig;
+    btn.disabled = false;
+    window.print();
+  }
+});
+</script>
+
+</body>
+</html>

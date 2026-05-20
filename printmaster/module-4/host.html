@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Boost · финал PrintMaster · дашборд ведущего</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="app">
+
+<header class="app-header">
+  <div class="brand"><span class="brand-dot"></span>neovida · AI Boost · PrintMaster · ведущий</div>
+  <div class="user-chip"><div class="user-ava">А</div>Альберт · host</div>
+</header>
+
+<main class="wrap wide">
+  <div id="content"></div>
+</main>
+
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <button class="close" id="modal-close">×</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script type="module">
+import { QUESTIONS, HOST_KEY } from './questions.js';
+import { runTimer } from './app.js';
+import { subscribeSession, subscribeUsers, setSession, resetAll } from './firebase.js';
+
+const params = new URLSearchParams(location.search);
+const key = params.get('key');
+const content = document.getElementById('content');
+if (key !== HOST_KEY) {
+  content.innerHTML = `
+    <div class="card outline-coral"><div class="card-tag coral">Доступ</div>
+      <div class="card-title">Нужен ключ ведущего</div>
+      <div class="card-body">Добавь в&nbsp;URL параметр <code style="background:var(--white-10); padding:2px 8px; border-radius:4px;">?key=printmaster2026</code></div>
+    </div>`;
+  throw new Error('no key');
+}
+
+let session = { phase: 'lobby', currentQuestion: -1, timerStartedAt: null, timerDurationSec: 30, showCorrect: false };
+let users = {};
+let stopTimer = null;
+let lastSnapshot = '';
+
+subscribeSession((s) => { session = s || session; rerender(); });
+subscribeUsers((u) => { users = u || {}; rerender(); });
+
+function rerender() {
+  const snap = JSON.stringify({ session, users });
+  if (snap === lastSnapshot) return;
+  lastSnapshot = snap;
+  render();
+}
+
+function userList() {
+  return Object.entries(users).map(([slug, u]) => ({ slug, ...u, answers: u.answers || {} })).sort((a,b) => (a.joinedAt || 0) - (b.joinedAt || 0));
+}
+
+function render() {
+  const list = userList();
+  const q = session.currentQuestion >= 0 && session.currentQuestion < QUESTIONS.length ? QUESTIONS[session.currentQuestion] : null;
+
+  content.innerHTML = `
+    <div class="h1">Дашборд финала PrintMaster</div>
+    <div class="lead">Один экран: тест, heatmap ошибок, карта внедрения и выдача сертификатов.</div>
+
+    <div class="host-shell">
+      <div class="host-controls">
+        <span class="host-phase">${phaseLabel(session.phase)}</span>
+        <div id="current-q-block">${currentQBlock(q)}</div>
+        <div class="host-timer-display ${timerClass()}" id="big-timer">${session.timerStartedAt ? '' : (session.phase === 'card' ? '<i class="ph ph-timer"></i>' : '—')}</div>
+        <div class="host-action-row" id="actions">${actionsBlock()}</div>
+        <div class="muted small mt-2 ta-c">${list.length} ${plural(list.length,'участник','участника','участников')} в&nbsp;сессии</div>
+      </div>
+
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:12px; gap:10px; flex-wrap:wrap;">
+          <h2 class="h2" style="margin:0;">Участники <span class="muted small" style="font-weight:500;">(${list.length})</span></h2>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="copy-names-btn" class="btn btn-primary" style="font-size:13px; padding:8px 14px;" ${list.length === 0 ? 'disabled' : ''}><i class="ph ph-clipboard-text"></i> Скопировать имена</button>
+            <button id="download-json-btn" class="btn btn-ghost" style="font-size:13px; padding:8px 14px;" ${list.length === 0 ? 'disabled' : ''}><i class="ph ph-download-simple"></i> Скачать JSON</button>
+            <button id="reset-btn" class="btn btn-ghost" style="font-size:13px; padding:8px 14px; border-color:rgba(224,85,85,0.3); color:rgba(224,85,85,0.8);" title="Опасно — требует подтверждения вводом слова"><i class="ph ph-broom"></i> Сбросить</button>
+          </div>
+        </div>
+        <div class="host-grid" id="grid">${gridBlock(list, q)}</div>
+
+        <h2 class="h2 mt-6"><i class="ph ph-warning icon-coral"></i> Топ ошибок — что разбирать первым</h2>
+        <div class="muted small">Вопросы, на&nbsp;которых ошиблось больше всего участников. Клик на&nbsp;строку — открыть разбор с&nbsp;распределением ответов.</div>
+        <div class="top-mistakes" id="top-mistakes">${topMistakesBlock(list)}</div>
+
+        <h2 class="h2 mt-6">Heatmap · ${QUESTIONS.length} вопросов × ${list.length} ${plural(list.length,'участник','участника','участников')}</h2>
+        <div class="muted small">Зелёное — правильный, красное — ошибка, серое — нет ответа. Над&nbsp;номером — счётчик ошибок. Клик на&nbsp;номер — разбор.</div>
+        <div class="heatmap" id="heatmap">${heatmapBlock(list)}</div>
+
+        <h2 class="h2 mt-6"><i class="ph ph-map-trifold icon-violet"></i> Карты внедрения</h2>
+        <div id="manifests">${manifestsBlock(list)}</div>
+      </div>
+    </div>
+  `;
+
+  // Опасная кнопка — требует ввести слово СБРОСИТЬ заглавными
+  document.getElementById('reset-btn').addEventListener('click', async () => {
+    const word = prompt(
+      'ОПАСНО — это удалит ВСЕХ участников, их ответы и карты внедрения. Без возможности восстановить.\n\n' +
+      'Если уверен — введи слово  СБРОСИТЬ  заглавными буквами:'
+    );
+    if (word !== 'СБРОСИТЬ') {
+      if (word !== null) alert('Слово не совпало — ничего не удалено.');
+      return;
+    }
+    try {
+      await resetAll();
+      Object.keys(localStorage).forEach(k => { if (k.startsWith('aiboost_printmaster_m4:')) localStorage.removeItem(k); });
+      alert('Сессия очищена.');
+    } catch (e) { alert('Ошибка: ' + e.message); }
+  });
+
+  // Скопировать имена в буфер — быстрый путь к сертификатам
+  const copyBtn = document.getElementById('copy-names-btn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      const names = list.map(u => u.name).join('\n');
+      try {
+        await navigator.clipboard.writeText(names);
+        const orig = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="ph ph-check"></i> Скопировано — ' + list.length + ' имён';
+        copyBtn.style.background = 'linear-gradient(135deg, var(--green), var(--violet))';
+        setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.style.background = ''; }, 2500);
+      } catch (e) {
+        // фолбэк — показать в prompt чтобы вручную скопировать
+        prompt('Скопируй эти имена (Cmd+C / Ctrl+C):', names);
+      }
+    });
+  }
+
+  // Скачать всё в JSON — резервная копия данных
+  const dlBtn = document.getElementById('download-json-btn');
+  if (dlBtn) {
+    dlBtn.addEventListener('click', () => {
+      const data = {
+        exportedAt: new Date().toISOString(),
+        session,
+        participants: list.map(u => ({
+          name: u.name,
+          slug: u.slug,
+          score: computeScore(u),
+          answers: u.answers,
+          card: u.card || null,
+        })),
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      a.href = url;
+      a.download = `printmaster-aiboost-final-${stamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  bindActions();
+  bindHeatmap(list);
+
+  if (stopTimer) { stopTimer(); stopTimer = null; }
+  if (session.timerStartedAt) {
+    const dur = session.timerDurationSec || 30;
+    const display = document.getElementById('big-timer');
+    stopTimer = runTimer(session.timerStartedAt, dur, (rem) => {
+      display.textContent = formatTime(rem, session.phase === 'card');
+      display.className = 'host-timer-display ' + timerClassFor(rem);
+    }, () => {
+      const display2 = document.getElementById('big-timer');
+      if (display2) { display2.textContent = '0'; display2.className = 'host-timer-display danger'; }
+    });
+  }
+}
+
+function phaseLabel(phase) {
+  const labels = {
+    lobby: '<i class="ph ph-hourglass"></i> Лобби',
+    test: '<i class="ph ph-target"></i> Тест',
+    discussion: '<i class="ph ph-chat-circle"></i> Разбор',
+    card: '<i class="ph ph-map-trifold"></i> Карта',
+    certificate: '<i class="ph ph-graduation-cap"></i> Выдача сертификатов',
+    done: '<i class="ph ph-check-circle"></i> Финал',
+  };
+  return labels[phase] || phase;
+}
+
+function currentQBlock(q) {
+  if (!q) return `<div class="host-current-q"><span class="num">Текущий вопрос</span>—</div>`;
+  return `
+    <div class="host-current-q">
+      <span class="num">Вопрос ${session.currentQuestion + 1} из ${QUESTIONS.length} · ${q.theme}</span>
+      ${q.text}
+      <div class="correct"><i class="ph ph-check-circle icon-green"></i> Правильный: <strong>${String.fromCharCode(65 + q.correct)}</strong> — ${q.options[q.correct]}</div>
+    </div>
+  `;
+}
+
+function timerClass() {
+  if (!session.timerStartedAt) return 'idle';
+  return '';
+}
+function timerClassFor(rem) {
+  if (rem <= 5) return 'danger';
+  if (rem <= 10) return 'warn';
+  return '';
+}
+function formatTime(sec, asMinutes) {
+  if (asMinutes) {
+    const m = Math.floor(sec / 60); const s = Math.floor(sec % 60);
+    return `${m}:${s.toString().padStart(2,'0')}`;
+  }
+  return Math.ceil(sec).toString();
+}
+
+function actionsBlock() {
+  if (session.phase === 'lobby') {
+    return `<button class="btn btn-primary btn-big" data-act="start-test"><i class="ph ph-target"></i> Запустить тест</button>`;
+  }
+  if (session.phase === 'test') {
+    const isLast = session.currentQuestion >= QUESTIONS.length - 1;
+    const noQ = session.currentQuestion < 0;
+    const correctVisible = session.showCorrect;
+    const buttons = [];
+    if (noQ) {
+      buttons.push(`<button class="btn btn-primary btn-big" data-act="next-q"><i class="ph ph-play"></i> Первый вопрос</button>`);
+    } else {
+      if (!correctVisible) buttons.push(`<button class="btn btn-ghost" data-act="reveal"><i class="ph ph-eye"></i> Показать правильный</button>`);
+      if (!isLast) buttons.push(`<button class="btn btn-primary btn-big" data-act="next-q">${correctVisible ? '<i class="ph ph-play"></i> Следующий' : '<i class="ph ph-skip-forward"></i> Следующий (скрыть, не показав)'}</button>`);
+      else buttons.push(`<button class="btn btn-primary btn-big" data-act="discussion"><i class="ph ph-chat-circle"></i> К&nbsp;разбору heatmap</button>`);
+    }
+    buttons.push(`<button class="btn btn-ghost" data-act="discussion"><i class="ph ph-pause"></i> Пауза → разбор</button>`);
+    return buttons.join('');
+  }
+  if (session.phase === 'discussion') {
+    return `
+      <button class="btn btn-primary btn-big" data-act="start-card"><i class="ph ph-map-trifold"></i> Запустить карту (8 мин)</button>
+      <button class="btn btn-primary btn-big" data-act="certificate"><i class="ph ph-graduation-cap"></i> Сразу к&nbsp;сертификатам</button>
+      <button class="btn btn-ghost" data-act="resume-test"><i class="ph ph-arrow-left"></i> Вернуться к&nbsp;тесту</button>
+    `;
+  }
+  if (session.phase === 'card') {
+    return `
+      <button class="btn btn-primary btn-big" data-act="certificate"><i class="ph ph-graduation-cap"></i> Выдать сертификаты</button>
+      <button class="btn btn-ghost" data-act="end"><i class="ph ph-check-circle"></i> Завершить без сертификатов</button>
+    `;
+  }
+  if (session.phase === 'certificate') {
+    return `
+      <div class="muted small ta-c" style="padding:8px 0;">Все участники сейчас видят поздравление и&nbsp;могут скачать свой сертификат.</div>
+      <button class="btn btn-primary btn-big" data-act="end"><i class="ph ph-check-circle"></i> Завершить урок</button>
+      <button class="btn btn-ghost" data-act="start-card"><i class="ph ph-arrow-left"></i> Вернуться к&nbsp;карте</button>
+    `;
+  }
+  if (session.phase === 'done') {
+    return `<button class="btn btn-ghost" data-act="back-lobby"><i class="ph ph-arrow-counter-clockwise"></i> Вернуть в&nbsp;лобби</button>`;
+  }
+  return '';
+}
+
+function bindActions() {
+  document.querySelectorAll('[data-act]').forEach(btn => {
+    btn.addEventListener('click', () => doAction(btn.dataset.act));
+  });
+}
+
+async function doAction(act) {
+  switch (act) {
+    case 'start-test':
+      await setSession({ phase: 'test', currentQuestion: -1, timerStartedAt: null, showCorrect: false });
+      break;
+    case 'next-q': {
+      const next = (session.currentQuestion ?? -1) + 1;
+      if (next >= QUESTIONS.length) {
+        await setSession({ phase: 'discussion', timerStartedAt: null, showCorrect: false });
+      } else {
+        await setSession({ currentQuestion: next, timerStartedAt: Date.now(), timerDurationSec: 30, showCorrect: false });
+      }
+      break;
+    }
+    case 'reveal':
+      await setSession({ showCorrect: true, timerStartedAt: null });
+      break;
+    case 'discussion':
+      await setSession({ phase: 'discussion', timerStartedAt: null, showCorrect: false });
+      break;
+    case 'resume-test':
+      await setSession({ phase: 'test' });
+      break;
+    case 'start-card':
+      await setSession({ phase: 'card', timerStartedAt: Date.now(), timerDurationSec: 480, currentQuestion: -1, showCorrect: false });
+      break;
+    case 'certificate':
+      await setSession({ phase: 'certificate', timerStartedAt: null });
+      break;
+    case 'end':
+      await setSession({ phase: 'done', timerStartedAt: null });
+      break;
+    case 'back-lobby':
+      await setSession({ phase: 'lobby', currentQuestion: -1, timerStartedAt: null, showCorrect: false });
+      break;
+  }
+}
+
+function gridBlock(list, q) {
+  if (!list.length) return `<div class="card" style="grid-column:1/-1;"><div class="muted">Пока никто не зарегистрировался. Дай QR или ссылку <code>materials.neovida.ai/printmaster/module-4/</code>.</div></div>`;
+  return list.map(u => {
+    if (session.phase === 'lobby') {
+      return `<div class="host-cell"><div class="name">${escapeHtml(u.name)}</div><div class="status">в лобби</div></div>`;
+    }
+    if (session.phase === 'test' && q) {
+      const my = u.answers[session.currentQuestion];
+      if (my == null) return `<div class="host-cell thinking"><div class="name">${escapeHtml(u.name)}</div><div class="status">думает</div></div>`;
+      const ok = my === q.correct;
+      return `<div class="host-cell answered ${ok ? 'correct' : 'wrong'}">
+        <div class="name">${escapeHtml(u.name)}</div>
+        <div class="status">${ok ? '<i class="ph ph-check"></i> верно' : '<i class="ph ph-x"></i> ошибка'}</div>
+        <div class="ans-letter">${String.fromCharCode(65 + my)}</div>
+      </div>`;
+    }
+    if (session.phase === 'discussion' || session.phase === 'done') {
+      const score = computeScore(u);
+      return `<div class="host-cell done">
+        <div class="name">${escapeHtml(u.name)}</div>
+        <div class="status">результат</div>
+        <div class="score-mini">${score}<span style="font-size:14px; opacity:0.5;">/${QUESTIONS.length}</span></div>
+      </div>`;
+    }
+    if (session.phase === 'card') {
+      const c = u.card || {};
+      const fc = c.filledCount || 0;
+      const total = c.totalFields || 6;
+      const cls = fc === total ? 'done' : fc > 0 ? 'thinking' : '';
+      const status = fc === total ? '<i class="ph ph-check-circle icon-green"></i> готово' : fc > 0 ? 'пишет' : 'не начал';
+      return `<div class="host-cell ${cls}">
+        <div class="name">${escapeHtml(u.name)}</div>
+        <div class="status">${status}</div>
+        <div class="ans-letter">${fc}/${total}</div>
+      </div>`;
+    }
+    return '';
+  }).join('');
+}
+
+function computeScore(u) {
+  let score = 0;
+  QUESTIONS.forEach((q, i) => { if (u.answers[i] === q.correct) score++; });
+  return score;
+}
+
+function questionStats(list) {
+  // массив { idx, theme, wrong, answered, q }
+  return QUESTIONS.map((q, idx) => {
+    let answered = 0, wrong = 0;
+    list.forEach(u => {
+      const a = u.answers[idx];
+      if (a != null) {
+        answered++;
+        if (a !== q.correct) wrong++;
+      }
+    });
+    return { idx, theme: q.theme, wrong, answered, q };
+  });
+}
+
+function topMistakesBlock(list) {
+  if (!list.length) return '<div class="top-mistakes-empty">Нет участников — ничего разбирать ещё нельзя.</div>';
+  const stats = questionStats(list);
+  const totalAnswered = stats.reduce((s, x) => s + x.answered, 0);
+  if (totalAnswered === 0) return '<div class="top-mistakes-empty">Никто ещё не ответил — топ ошибок появится после первых ответов.</div>';
+  const mistakes = stats.filter(s => s.wrong > 0).sort((a,b) => b.wrong - a.wrong || a.idx - b.idx).slice(0, 5);
+  if (!mistakes.length) return '<div class="top-mistakes-empty"><i class="ph ph-check-circle icon-green"></i> Все ответы правильные — разбирать нечего, идём дальше.</div>';
+  return mistakes.map(m => `
+    <div class="mistake-row" data-q="${m.idx}">
+      <div class="m-num">${m.idx + 1}</div>
+      <div class="m-info">
+        <div class="m-theme">${escapeHtml(m.theme)}</div>
+        <div class="m-stats"><strong style="color:var(--red);">${m.wrong}</strong> из ${m.answered} ${plural(m.answered,'ответил','ответили','ответили')} неверно</div>
+      </div>
+      <div class="m-action">разбор &rarr;</div>
+    </div>
+  `).join('');
+}
+
+function heatmapBlock(list) {
+  if (!list.length) return '<div class="muted">Нет участников.</div>';
+  const stats = questionStats(list);
+  return `
+    <table>
+      <tr>
+        <th class="name">Участник</th>
+        ${QUESTIONS.map((_, i) => {
+          const cur = i === session.currentQuestion ? 'current' : '';
+          const errs = stats[i].wrong;
+          const errCls = errs > 0 ? 'has-errors' : '';
+          const badge = errs > 0 ? `<span class="err-badge">${errs}</span>` : '';
+          return `<th class="qcol ${cur} ${errCls}" data-q="${i}">${i + 1}${badge}</th>`;
+        }).join('')}
+        <th>Σ</th>
+      </tr>
+      ${list.map(u => `
+        <tr>
+          <td class="name">${escapeHtml(u.name)}</td>
+          ${QUESTIONS.map((q, i) => {
+            const my = u.answers[i];
+            if (my == null) return `<td class="pending">—</td>`;
+            return my === q.correct ? `<td class="ok"><i class="ph ph-check"></i></td>` : `<td class="bad"><i class="ph ph-x"></i></td>`;
+          }).join('')}
+          <td style="font-weight:800; color:var(--violet);">${computeScore(u)}</td>
+        </tr>
+      `).join('')}
+    </table>
+  `;
+}
+
+function bindHeatmap(list) {
+  document.querySelectorAll('.qcol').forEach(el => {
+    el.addEventListener('click', () => showQuestionDetail(parseInt(el.dataset.q), list));
+  });
+  document.querySelectorAll('.mistake-row').forEach(el => {
+    el.addEventListener('click', () => showQuestionDetail(parseInt(el.dataset.q), list));
+  });
+}
+
+function showQuestionDetail(qIdx, list) {
+  const q = QUESTIONS[qIdx];
+  const counts = [0,0,0,0];
+  const byWho = {};
+  list.forEach(u => {
+    const my = u.answers[qIdx];
+    if (my != null) {
+      counts[my]++;
+      byWho[my] = byWho[my] || [];
+      byWho[my].push(u.name);
+    }
+  });
+  const total = counts.reduce((a,b)=>a+b,0);
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `
+    <div class="card-tag violet">Вопрос ${qIdx+1} · ${q.theme}</div>
+    <h3>${q.text}</h3>
+    ${q.options.map((opt, i) => {
+      const isC = i === q.correct;
+      const who = byWho[i] || [];
+      return `
+        <div style="padding:10px 14px; background:${isC?'rgba(94,196,122,0.12)':'rgba(255,255,255,0.04)'}; border:1px solid ${isC?'rgba(94,196,122,0.45)':'var(--white-20)'}; border-radius:12px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <div style="font-size:15px; line-height:1.4; color:var(--white); flex:1;">
+              <span style="color:${isC?'var(--green)':'var(--white-60)'}; font-weight:800;">${String.fromCharCode(65+i)}${isC?' <i class="ph ph-check-circle"></i>':''}</span> ${opt}
+            </div>
+            <div style="font-weight:800; color:var(--violet);">${counts[i]}/${total}</div>
+          </div>
+          ${who.length?`<div class="muted small" style="margin-top:6px;">${who.map(escapeHtml).join(', ')}</div>`:''}
+        </div>
+      `;
+    }).join('')}
+    <div class="card outline-violet" style="margin-top:14px;">
+      <div class="card-tag violet">Для разбора</div>
+      <div class="card-body">${q.explanation}</div>
+      <div class="muted small mt-2"><strong>Подсказка ведущему:</strong> ${q.hostNote}</div>
+    </div>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+function manifestsBlock(list) {
+  const cards = list.filter(u => u.card && Object.values(u.card).some(v => typeof v === 'string' && v.trim()));
+  if (!cards.length) return `<div class="muted">Карт пока нет — участники заполнят их после теста.</div>`;
+  const rows = [
+    ['built', 'Собрано'],
+    ['process', 'Процесс'],
+    ['impact', 'Эффект'],
+    ['junePlan', 'Июнь'],
+    ['resources', 'Нужно'],
+    ['principle', 'Принцип'],
+  ];
+  return cards.map(u => `
+    <div class="card outline-violet manifest-card">
+      <div class="user-chip" style="margin-bottom:10px;"><div class="user-ava">${(u.name[0]||'?').toUpperCase()}</div><strong>${escapeHtml(u.name)}</strong></div>
+      ${rows.map(([key, label]) => u.card[key]?.trim() ? `
+        <div class="muted small" style="margin-top:10px; color:var(--violet); font-weight:800; text-transform:uppercase; letter-spacing:.06em;">${label}</div>
+        <div class="manifest-text" style="font-size:15px; margin-top:3px;">${escapeHtml(u.card[key])}</div>
+      ` : '').join('')}
+    </div>
+  `).join('');
+}
+
+document.getElementById('modal-close').addEventListener('click', () => document.getElementById('modal').classList.remove('open'));
+document.getElementById('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') e.currentTarget.classList.remove('open'); });
+
+function plural(n,o,f,m){const a=n%10,h=n%100;if(a===1&&h!==11)return o;if(a>=2&&a<=4&&(h<10||h>=20))return f;return m;}
+function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+render();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Boost · финал PrintMaster · живой тест</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+</head>
+<body class="app">
+
+<header class="app-header" id="app-header"></header>
+
+<main class="wrap">
+  <div id="content"></div>
+</main>
+
+<script type="module">
+import { renderHeader, getMe, runTimer, triggerCelebration, certificateScreenHTML } from './app.js';
+import { QUESTIONS, scoreFor, strengthReport } from './questions.js';
+import { subscribeSession, pushAnswer, setUserScore } from './firebase.js';
+
+const me = getMe();
+renderHeader(me, { showLogout: true });
+
+if (!me) {
+  document.querySelector('.wrap').innerHTML = `
+    <div class="card outline-coral">
+      <div class="card-tag coral">Нужно войти</div>
+      <div class="card-title">Сначала введи имя и&nbsp;фамилию</div>
+      <div class="card-body">Открой <a href="index.html" class="highlight-violet">страницу входа</a>.</div>
+    </div>`;
+  throw new Error('no me');
+}
+
+const content = document.getElementById('content');
+
+let session = { phase: 'lobby', currentQuestion: -1, timerStartedAt: null, timerDurationSec: 30, showCorrect: false };
+let myAnswers = {};
+let stopTimer = null;
+
+// Сразу показываем initial state (lobby) — иначе при пустой Firebase-сессии
+// первый callback приходит с теми же дефолтами, проверка на изменения возвращает false
+// и render() никогда не вызывается → пустой экран.
+render();
+
+subscribeSession((s) => {
+  const prev = session;
+  session = s || session;
+  if (prev.currentQuestion !== session.currentQuestion || prev.phase !== session.phase || prev.timerStartedAt !== session.timerStartedAt || prev.showCorrect !== session.showCorrect) {
+    if (stopTimer) { stopTimer(); stopTimer = null; }
+    render();
+  }
+});
+
+function render() {
+  if (session.phase === 'lobby') return renderLobby();
+  if (session.phase === 'discussion') return renderDiscussion();
+  if (session.phase === 'card') return renderGoToCard();
+  if (session.phase === 'certificate') return renderCertificate();
+  if (session.phase === 'done') return renderFinalReport();
+
+  const qIdx = session.currentQuestion;
+  if (qIdx < 0 || qIdx >= QUESTIONS.length) return renderTestWaiting();
+
+  const q = QUESTIONS[qIdx];
+  const my = myAnswers[qIdx];
+  const showCorrect = session.showCorrect === true;
+  const locked = my != null || showCorrect;
+
+  const dots = QUESTIONS.map((_, i) => {
+    if (myAnswers[i] != null && i !== qIdx) return '<span class="dot done"></span>';
+    if (i === qIdx) return '<span class="dot current"></span>';
+    return '<span class="dot"></span>';
+  }).join('');
+
+  content.innerHTML = `
+    <div class="progress-row">${dots}</div>
+    <div class="timer-text"><span>Время на ответ</span><span class="left" id="timer-left">${session.timerDurationSec || 30} сек</span></div>
+    <div class="timer-bar"><div class="fill" id="timer-fill"></div></div>
+    <div class="q-counter">Вопрос ${qIdx + 1} из ${QUESTIONS.length}</div>
+    <div class="q-text">${q.text}</div>
+    <div id="opts"></div>
+    <div class="muted small mt-2" id="status">${locked ? (showCorrect ? '<i class="ph ph-eye icon-violet"></i> Альберт раскрыл правильный ответ' : '<i class="ph ph-check-circle icon-green"></i> Ответ зафиксирован — ждём Альберта') : '<i class="ph ph-arrow-down icon-violet"></i> Выбери вариант. Можно один раз.'}</div>
+  `;
+
+  const opts = document.getElementById('opts');
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    let cls = 'q-opt';
+    if (my === i) cls += ' selected';
+    if (showCorrect) {
+      if (i === q.correct) cls += ' locked-correct';
+      else if (my === i) cls += ' locked-wrong';
+    }
+    btn.className = cls;
+    btn.disabled = locked;
+    btn.innerHTML = `<span class="letter">${String.fromCharCode(65 + i)}</span>${opt}`;
+    btn.addEventListener('click', () => {
+      if (locked) return;
+      myAnswers[qIdx] = i;
+      pushAnswer(me.slug, qIdx, i).catch(e => console.warn('push answer failed', e));
+      setUserScore(me.slug, scoreFor(myAnswers)).catch(()=>{});
+      render();
+    });
+    opts.appendChild(btn);
+  });
+
+  if (session.timerStartedAt) {
+    const fill = document.getElementById('timer-fill');
+    const left = document.getElementById('timer-left');
+    stopTimer = runTimer(session.timerStartedAt, session.timerDurationSec || 30, (rem, frac) => {
+      fill.style.width = (frac * 100) + '%';
+      left.textContent = Math.ceil(rem) + ' сек';
+      fill.className = 'fill' + (rem < 5 ? ' danger' : rem < 10 ? ' warn' : '');
+    }, () => {
+      const status = document.getElementById('status');
+      if (status && myAnswers[qIdx] == null) status.innerHTML = '<i class="ph ph-alarm icon-coral"></i> Время вышло — ждём Альберта.';
+      opts.querySelectorAll('button').forEach(b => b.disabled = true);
+    });
+  }
+}
+
+function renderLobby() {
+  content.innerHTML = `
+    <div class="card outline-violet ta-c" style="padding:48px 32px;">
+      <div style="font-size:48px; color:var(--violet); margin-bottom:8px;"><i class="ph ph-hourglass"></i></div>
+      <div class="card-title" style="font-size:24px;">Ждём Альберта</div>
+      <div class="card-body">Альберт скоро запустит первый вопрос. Закладку не&nbsp;закрывай — вопрос появится автоматически.</div>
+      <div class="muted small mt-4">Привет, ${escapeHtml(me.name)} <i class="ph ph-hand-waving icon-coral"></i></div>
+    </div>
+  `;
+}
+
+function renderDiscussion() {
+  content.innerHTML = `
+    <div class="card outline-violet ta-c" style="padding:36px 32px;">
+      <div style="font-size:42px; color:var(--violet); margin-bottom:8px;"><i class="ph ph-chat-circle"></i></div>
+      <div class="card-title">Разбор теста</div>
+      <div class="card-body">Альберт сейчас разбирает ваши ответы по&nbsp;heatmap. Слушай его — следующий вопрос/блок появится автоматически.</div>
+      <div class="muted small mt-4">Уже ответил на: ${Object.keys(myAnswers).length} из&nbsp;${QUESTIONS.length}</div>
+    </div>
+  `;
+}
+
+function renderTestWaiting() {
+  content.innerHTML = `
+    <div class="card outline-violet ta-c" style="padding:36px 32px;">
+      <div style="font-size:42px; color:var(--violet); margin-bottom:8px;"><i class="ph ph-target"></i></div>
+      <div class="card-title">Тест запущен</div>
+      <div class="card-body">Альберт вот-вот покажет первый вопрос. Никуда не&nbsp;уходи.</div>
+    </div>
+  `;
+}
+
+function renderGoToCard() {
+  content.innerHTML = `
+    <div class="card outline-coral ta-c" style="padding:36px 32px;">
+      <div style="font-size:42px; color:var(--coral); margin-bottom:8px;"><i class="ph ph-map-trifold"></i></div>
+      <div class="card-title">Время заполнить карту</div>
+      <div class="card-body">Открой карту и&nbsp;заполни 6 полей. У&nbsp;тебя 8&nbsp;минут: фиксируем, что уже внедрено и&nbsp;что уходит в&nbsp;июнь.</div>
+      <a href="card.html" class="btn btn-primary mt-4">Открыть карту <i class="ph ph-arrow-right"></i></a>
+    </div>
+  `;
+}
+
+function renderCertificate() {
+  content.innerHTML = `<div class="card outline-violet">${certificateScreenHTML(me.name)}</div>`;
+  // Запускаем салюты и звук фейерверка
+  // requestAnimationFrame чтобы DOM успел отрисоваться до анимации
+  requestAnimationFrame(() => triggerCelebration());
+}
+
+function renderFinalReport() {
+  const ansArr = QUESTIONS.map((_, i) => myAnswers[i] ?? null);
+  const report = strengthReport(ansArr);
+  const s = report.score;
+  const tagText = s >= 18 ? 'Уверенный пользователь ИИ'
+                : s >= 15 ? 'Крепкая база — почти всё знаешь'
+                : s >= 10 ? 'Освоил ядро курса'
+                :           'Есть что освежить — и&nbsp;это нормально';
+  const tagIcon = s >= 18 ? 'ph-star' : s >= 15 ? 'ph-fire' : s >= 10 ? 'ph-thumbs-up' : 'ph-target';
+
+  content.innerHTML = `
+    <div class="score-hero">
+      <div class="score-small">Твой результат</div>
+      <div class="score-big">${s}<span style="font-size:48px; opacity:0.45;">/${report.total}</span></div>
+      <div class="score-label"><i class="ph ${tagIcon}"></i> ${tagText}</div>
+    </div>
+
+    <div class="card outline-green">
+      <div class="card-tag green"><i class="ph ph-check-circle"></i> Уже в&nbsp;арсенале</div>
+      <div class="card-title">${report.known.length} ${plural(report.known.length, 'тема','темы','тем')} знаешь уверенно</div>
+    </div>
+
+    ${report.toRefresh.length ? `
+      <div class="card outline-gold">
+        <div class="card-tag gold"><i class="ph ph-arrow-clockwise"></i> Стоит освежить</div>
+        <div class="card-title">${report.toRefresh.length} ${plural(report.toRefresh.length, 'тема','темы','тем')} — стоит освежить по&nbsp;материалам модулей 2-3</div>
+      </div>` : ''}
+
+    <div class="card outline-violet mt-4">
+      <div class="card-tag violet">Спасибо</div>
+      <div class="card-title">Ты прошёл финал курса</div>
+      <div class="card-body">Сертификат можно скачать на&nbsp;финальном экране. Главное после теста — заполнить карту внедрения.</div>
+    </div>
+  `;
+}
+
+function plural(n, one, few, many) {
+  const m = n % 10, h = n % 100;
+  if (m === 1 && h !== 11) return one;
+  if (m >= 2 && m <= 4 && (h < 10 || h >= 20)) return few;
+  return many;
+}
+function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+
+</body>
+</html>
