@@ -86,6 +86,7 @@ function render() {
           <h2 class="h2" style="margin:0;">Участники <span class="muted small" style="font-weight:500;">(${list.length})</span></h2>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <button id="copy-names-btn" class="btn btn-primary" style="font-size:13px; padding:8px 14px;" ${list.length === 0 ? 'disabled' : ''}><i class="ph ph-clipboard-text"></i> Скопировать имена</button>
+            <button id="download-report-btn" class="btn btn-primary" style="font-size:13px; padding:8px 14px;" ${list.filter(u => u.card && Object.values(u.card).some(v => typeof v === 'string' && v.trim())).length === 0 ? 'disabled' : ''}><i class="ph ph-file-doc"></i> Отчёт руководителю</button>
             <button id="download-json-btn" class="btn btn-ghost" style="font-size:13px; padding:8px 14px;" ${list.length === 0 ? 'disabled' : ''}><i class="ph ph-download-simple"></i> Скачать JSON</button>
             <a href="card-preview.html" target="_blank" rel="noopener" class="btn btn-ghost" style="font-size:13px; padding:8px 14px;"><i class="ph ph-map-trifold"></i> Поля карты</a>
             <button id="reset-btn" class="btn btn-ghost" style="font-size:13px; padding:8px 14px; border-color:rgba(224,85,85,0.3); color:rgba(224,85,85,0.8);" title="Опасно — требует подтверждения вводом слова"><i class="ph ph-broom"></i> Сбросить</button>
@@ -140,6 +141,11 @@ function render() {
         prompt('Скопируй эти имена (Cmd+C / Ctrl+C):', names);
       }
     });
+  }
+
+  const reportBtn = document.getElementById('download-report-btn');
+  if (reportBtn) {
+    reportBtn.addEventListener('click', () => downloadLeadershipReport(list));
   }
 
   // Скачать всё в JSON — резервная копия данных
@@ -343,7 +349,7 @@ function gridBlock(list, q) {
     if (session.phase === 'card') {
       const c = u.card || {};
       const fc = c.filledCount || 0;
-      const total = c.totalFields || 6;
+      const total = c.totalFields || 7;
       const cls = fc === total ? 'done' : fc > 0 ? 'thinking' : '';
       const status = fc === total ? '<i class="ph ph-check-circle icon-green"></i> готово' : fc > 0 ? 'пишет' : 'не начал';
       return `<div class="host-cell ${cls}">
@@ -481,19 +487,20 @@ function manifestsBlock(list) {
   const cards = list.filter(u => u.card && Object.values(u.card).some(v => typeof v === 'string' && v.trim()));
   if (!cards.length) return `<div class="muted">Мини-отчётов пока нет — участники заполнят их после теста.</div>`;
   const rows = [
-    ['feedbackUseful', 'Полезно'],
-    ['feedbackImprove', 'Непонятно / улучшить'],
-    ['triedAutomations', 'Пробовал(а) автоматизировать'],
-    ['testedImplementation', 'Внедрил(а) / протестировал(а)'],
-    ['juneTasks', 'Июнь'],
-    ['teamScenario', 'Сценарий для команды'],
+    ['madeAssistants', 'Gems / ассистенты'],
+    ['canvasTool', 'Canvas / мини-инструмент'],
+    ['automatedProcesses', 'Процессы через ИИ'],
+    ['juneUsage', 'Использование в июне'],
+    ['supportNeeded', 'Что нужно для внедрения'],
+    ['mainImplementation', 'Главный процесс через ассистента'],
+    ['courseFeedback', 'Обратная связь'],
   ];
-  const scenarioCards = cards.filter(u => u.card?.teamScenario?.trim());
+  const scenarioCards = cards.filter(u => u.card?.mainImplementation?.trim());
   const scenarioSummary = `
     <div class="card outline-coral" style="margin-bottom:14px;">
-      <div class="card-tag coral">Список внедрений команды</div>
-      <div class="card-title">${scenarioCards.length}/5 сценариев собрано</div>
-      <div class="card-body">Цель собственника: минимум 5 реальных сценариев, где видно задачу, старый способ, новый способ через ИИ, результат, экономию времени и&nbsp;что нужно доработать.</div>
+      <div class="card-tag coral">Отчёт для руководителя</div>
+      <div class="card-title">${scenarioCards.length}/5 процессов описано</div>
+      <div class="card-body">Цель собственника: минимум 5 реальных внедрений, где видно рабочий процесс, созданный Gem/ассистент или Canvas, старый способ, новый способ через ИИ, результат, экономию времени и&nbsp;что нужно доработать. Кнопка «Отчёт руководителю» сверху скачает это одним документом.</div>
     </div>
   `;
   return scenarioSummary + cards.map(u => `
@@ -505,6 +512,94 @@ function manifestsBlock(list) {
       ` : '').join('')}
     </div>
   `).join('');
+}
+
+function downloadLeadershipReport(list) {
+  const cards = list.filter(u => u.card && Object.values(u.card).some(v => typeof v === 'string' && v.trim()));
+  const implementations = cards.filter(u => u.card?.mainImplementation?.trim());
+  const assistants = cards.filter(u => u.card?.madeAssistants?.trim());
+  const canvasTools = cards.filter(u => u.card?.canvasTool?.trim());
+  const reportDate = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long', timeStyle: 'short' }).format(new Date());
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+
+  const metric = (value, label) => `
+    <td style="width:25%; padding:14px; border:1px solid #d8deea; vertical-align:top;">
+      <div style="font-size:26px; font-weight:800; color:#1c5f4a; line-height:1;">${value}</div>
+      <div style="font-size:12px; color:#536070; margin-top:6px;">${label}</div>
+    </td>`;
+
+  const cardSection = (title, text) => text?.trim() ? `
+    <tr>
+      <td style="width:220px; padding:8px 10px; border:1px solid #d8deea; font-weight:700; color:#1d2939; vertical-align:top;">${title}</td>
+      <td style="padding:8px 10px; border:1px solid #d8deea; white-space:pre-line; vertical-align:top;">${escapeHtml(text.trim())}</td>
+    </tr>` : '';
+
+  const implementationsHtml = implementations.length ? implementations.map((u, idx) => `
+    <div style="margin:0 0 14px; padding:12px 14px; border:1px solid #d8deea; border-left:5px solid #10b981;">
+      <div style="font-weight:800; color:#1d2939; margin-bottom:6px;">${idx + 1}. ${escapeHtml(u.name)}</div>
+      <div style="white-space:pre-line;">${escapeHtml(u.card.mainImplementation.trim())}</div>
+    </div>
+  `).join('') : '<p style="color:#7a8699;">Пока нет заполненных главных процессов.</p>';
+
+  const participantCards = cards.map(u => `
+    <h3 style="margin:22px 0 8px; color:#1d2939;">${escapeHtml(u.name)} <span style="font-size:12px; font-weight:400; color:#667085;">тест: ${computeScore(u)}/${QUESTIONS.length}</span></h3>
+    <table style="width:100%; border-collapse:collapse; font-size:12px; line-height:1.45;">
+      ${cardSection('Gems / ассистенты', u.card.madeAssistants)}
+      ${cardSection('Canvas / мини-инструмент', u.card.canvasTool)}
+      ${cardSection('Процессы через ИИ', u.card.automatedProcesses)}
+      ${cardSection('Использование в июне', u.card.juneUsage)}
+      ${cardSection('Что нужно для внедрения', u.card.supportNeeded)}
+      ${cardSection('Главный процесс', u.card.mainImplementation)}
+      ${cardSection('Обратная связь', u.card.courseFeedback)}
+    </table>
+  `).join('');
+
+  const doc = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>PrintMaster AI Boost — итоговый отчёт руководителю</title>
+</head>
+<body style="font-family:Arial, sans-serif; color:#101828; margin:32px;">
+  <div style="font-size:12px; letter-spacing:1.8px; text-transform:uppercase; color:#1c5f4a; font-weight:800;">neovida.ai / AI Boost / PrintMaster</div>
+  <h1 style="font-size:28px; margin:8px 0 6px; color:#101828;">Итоговый отчёт по внедрениям ИИ</h1>
+  <p style="font-size:13px; color:#667085; margin:0 0 18px;">Сформировано из итоговых карт участников. Дата выгрузки: ${reportDate}.</p>
+
+  <table style="width:100%; border-collapse:collapse; margin:14px 0 24px;">
+    <tr>
+      ${metric(list.length, 'участников зарегистрировано')}
+      ${metric(cards.length, 'карт внедрения заполнено')}
+      ${metric(assistants.length, 'участников описали Gems / ассистентов')}
+      ${metric(implementations.length, 'главных процессов для внедрения')}
+    </tr>
+  </table>
+
+  <h2 style="font-size:20px; margin:22px 0 10px; color:#101828;">Ключевые процессы, которые команда переводит в ИИ</h2>
+  <p style="font-size:13px; color:#667085;">Цель: минимум 5 реальных внедрений, где видно задачу, старый способ, новый способ через ИИ, результат, экономию времени и что нужно доработать.</p>
+  ${implementationsHtml}
+
+  <h2 style="font-size:20px; margin:28px 0 10px; color:#101828;">Canvas / мини-инструменты</h2>
+  ${canvasTools.length ? canvasTools.map(u => `
+    <div style="margin:0 0 10px; padding:10px 12px; border:1px solid #d8deea;">
+      <strong>${escapeHtml(u.name)}:</strong>
+      <div style="white-space:pre-line; margin-top:4px;">${escapeHtml(u.card.canvasTool.trim())}</div>
+    </div>
+  `).join('') : '<p style="color:#7a8699;">Canvas-инструменты пока не описаны.</p>'}
+
+  <h2 style="font-size:20px; margin:28px 0 10px; color:#101828;">Карты участников</h2>
+  ${participantCards || '<p style="color:#7a8699;">Карт пока нет.</p>'}
+</body>
+</html>`;
+
+  const blob = new Blob(['\ufeff' + doc], { type: 'application/msword;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `printmaster-ai-boost-report-${stamp}.doc`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 document.getElementById('modal-close').addEventListener('click', () => document.getElementById('modal').classList.remove('open'));
