@@ -6345,6 +6345,145 @@ window.addEventListener('pageshow', function(){
     });
   }, 120);
 
+  /* ───── Карусель отзывов: drag/swipe + клик → лайтбокс ───── */
+  (function setupTestimonialsCarousel(){
+    var track = document.querySelector('.testimonials-track');
+    var row = document.querySelector('.testimonials-row');
+    if (!track || !row) return;
+
+    row.classList.add('js-marquee');
+
+    var SPEED = 28; // px/sec — ровно темп прежней CSS-анимации
+    var currentX = 0;
+    var halfWidth = 0;
+    var hovering = false;
+    var lbOpen = false;
+    var dragging = false;
+    var dragStartX = 0;
+    var dragStartCurrentX = 0;
+    var dragMoved = false;
+    var lastT = performance.now();
+
+    function recalcHalf(){
+      halfWidth = row.scrollWidth / 2;
+    }
+    setTimeout(recalcHalf, 0);
+    window.addEventListener('resize', recalcHalf);
+    document.querySelectorAll('.t-card video').forEach(function(v){
+      v.addEventListener('loadedmetadata', recalcHalf, { once:true });
+    });
+
+    function wrap(x){
+      if (halfWidth <= 0) return x;
+      while (x < 0) x += halfWidth;
+      while (x >= halfWidth) x -= halfWidth;
+      return x;
+    }
+
+    function step(t){
+      var dt = Math.min(0.05, (t - lastT) / 1000);
+      lastT = t;
+      if (!hovering && !lbOpen && !dragging){
+        currentX = wrap(currentX + SPEED * dt);
+      }
+      row.style.transform = 'translate3d(' + (-currentX) + 'px,0,0)';
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+
+    // Hover pause (desktop, мышь)
+    track.addEventListener('mouseenter', function(){ hovering = true; });
+    track.addEventListener('mouseleave', function(){ hovering = false; });
+
+    // Drag / swipe (мышь и тач — единый pointer API)
+    track.addEventListener('pointerdown', function(e){
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      dragging = true;
+      dragMoved = false;
+      dragStartX = e.clientX;
+      dragStartCurrentX = currentX;
+      track.classList.add('is-grabbing');
+      try { track.setPointerCapture(e.pointerId); } catch(_){}
+    });
+    track.addEventListener('pointermove', function(e){
+      if (!dragging) return;
+      var dx = e.clientX - dragStartX;
+      if (Math.abs(dx) > 5) dragMoved = true;
+      currentX = wrap(dragStartCurrentX - dx);
+    });
+    function endDrag(e){
+      if (!dragging) return;
+      dragging = false;
+      track.classList.remove('is-grabbing');
+      try { track.releasePointerCapture(e.pointerId); } catch(_){}
+    }
+    track.addEventListener('pointerup', endDrag);
+    track.addEventListener('pointercancel', endDrag);
+
+    /* Лайтбокс */
+    var lb = document.getElementById('tLightbox');
+    if (!lb) return;
+    var lbVideo = lb.querySelector('video');
+    var lbName = lb.querySelector('.t-lightbox-meta .name');
+    var lbRole = lb.querySelector('.t-lightbox-meta .role');
+    var lbClose = lb.querySelector('.t-close');
+
+    function pauseCardVideos(){
+      document.querySelectorAll('.t-card video').forEach(function(v){ v.pause(); });
+    }
+    function playCardVideos(){
+      document.querySelectorAll('.t-card video').forEach(function(v){
+        var p = v.play();
+        if (p && p.catch) p.catch(function(){});
+      });
+    }
+
+    function openLightbox(card){
+      var srcVideo = card.querySelector('video');
+      var src = srcVideo.currentSrc || srcVideo.src || srcVideo.getAttribute('src');
+      lbVideo.src = src;
+      try { lbVideo.currentTime = 0; } catch(_){}
+      lbName.textContent = card.querySelector('.name').textContent;
+      lbRole.textContent = card.querySelector('.role').textContent;
+      lb.classList.add('is-open');
+      lb.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('t-lightbox-open');
+      lbOpen = true;
+      pauseCardVideos();
+      lbVideo.muted = false;
+      var p = lbVideo.play();
+      if (p && p.catch) p.catch(function(){ /* возможен жест требуется */ });
+    }
+    function closeLightbox(){
+      lb.classList.remove('is-open');
+      lb.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('t-lightbox-open');
+      lbOpen = false;
+      try {
+        lbVideo.pause();
+        lbVideo.removeAttribute('src');
+        lbVideo.load();
+      } catch(_){}
+      playCardVideos();
+    }
+
+    lbClose.addEventListener('click', closeLightbox);
+    lb.addEventListener('click', function(e){
+      if (e.target === lb) closeLightbox();
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape' && lbOpen) closeLightbox();
+    });
+
+    // Клик по карточке: игнорируем, если был drag
+    document.querySelectorAll('.t-card').forEach(function(card){
+      card.addEventListener('click', function(e){
+        if (dragMoved) { e.preventDefault(); e.stopPropagation(); return; }
+        openLightbox(card);
+      });
+    });
+  })();
+
 })();
 </script>
 
