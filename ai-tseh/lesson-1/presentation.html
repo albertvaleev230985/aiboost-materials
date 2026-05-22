@@ -3,76 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Цех — урок 1. Старт работы с Codex</title>
-<meta name="description" content="Презентация урока 1 курса AI Цех: погружение в агентские среды и старт работы с Codex.">
+<title>AI Цех — урок 1. Погружение и старт работы с Codex</title>
+<meta name="description" content="Урок 1 курса AI Цех: погружение в рабочие AI-агенты и старт работы с Codex.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
+  *, *::before, *::after { box-sizing: border-box; }
   :root {
-    --bg: #0b0c0d;
-    --bg-deep: #090a0b;
+    --bg: #090a0b;
+    --ink: #0b0c0d;
     --panel: #111315;
-    --panel-2: #16191c;
-    --line: rgba(232, 226, 214, 0.12);
-    --line-strong: rgba(232, 226, 214, 0.24);
-    --text: #f0ece2;
-    --muted: #9b9488;
-    --dim: #6f695f;
-    --accent: #c77a3a;
-    --accent-2: #e0aa6f;
+    --panel-2: #171a1d;
+    --panel-3: #202428;
+    --text: #f1ece2;
+    --soft: #d4cabd;
+    --muted: #b8afa2;
+    --dim: #7d766d;
+    --line: rgba(241, 236, 226, 0.13);
+    --line-2: rgba(241, 236, 226, 0.23);
+    --copper: #c77a3a;
+    --copper-2: #e0aa6f;
+    --copper-3: #f0c892;
     --steel: #9aa6ad;
-    --blue: #68a7c7;
-    --blue-2: #9cc9dd;
-    --danger: #d76c5c;
-    --success: #75b889;
+    --steel-2: #6d7d86;
+    --blue: #78b5d1;
+    --blue-2: #a8d8ed;
+    --green: #75b889;
+    --red: #d76c5c;
     --radius: 8px;
   }
-
-  * { box-sizing: border-box; }
-  html, body { margin: 0; width: 100%; min-height: 100%; background: var(--bg-deep); }
-  body {
-    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    color: var(--text);
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
   button { font: inherit; }
-  .deck {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    background: var(--bg);
-  }
+  .deck { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
   .slide {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
+    padding: 50px 68px 46px;
     display: flex;
     flex-direction: column;
-    padding: 56px 72px;
+    justify-content: center;
     opacity: 0;
     visibility: hidden;
-    transform: translateX(36px);
-    transition: opacity .35s ease, transform .35s ease, visibility .35s;
+    transform: translateX(42px);
+    transition: opacity .44s ease, transform .44s ease, visibility .44s;
     overflow: hidden;
     background:
-      linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px),
-      radial-gradient(circle at 78% 8%, rgba(199, 122, 58, 0.16), transparent 34vw),
-      linear-gradient(135deg, #0a0b0c 0%, #111416 52%, #090a0b 100%);
-    background-size: 42px 42px, 42px 42px, auto, auto;
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px),
+      radial-gradient(circle at 78% 12%, rgba(199,122,58,.16), transparent 36vw),
+      radial-gradient(circle at 10% 88%, rgba(120,181,209,.08), transparent 30vw),
+      linear-gradient(135deg, #090a0b 0%, #111416 52%, #08090a 100%);
+    background-size: 48px 48px, 48px 48px, auto, auto, auto;
   }
   .slide.active { opacity: 1; visibility: visible; transform: translateX(0); }
-  .slide.prev { transform: translateX(-36px); }
-  .slide::before {
+  .slide.prev { transform: translateX(-42px); }
+  .slide::after {
     content: "";
     position: absolute;
     inset: 0;
     pointer-events: none;
     background:
-      linear-gradient(90deg, rgba(199,122,58,.10), transparent 26%, transparent 72%, rgba(104,167,199,.08)),
-      radial-gradient(circle at 50% 120%, rgba(224,170,111,.10), transparent 40%);
+      linear-gradient(90deg, rgba(199,122,58,.12), transparent 26%, transparent 74%, rgba(120,181,209,.08)),
+      radial-gradient(circle at 50% 118%, rgba(224,170,111,.09), transparent 38%);
   }
   .slide > * { position: relative; z-index: 1; }
   .progress {
@@ -81,594 +86,1027 @@
     left: 0;
     height: 4px;
     width: 0;
-    background: linear-gradient(90deg, var(--accent), var(--accent-2));
     z-index: 100;
+    background: linear-gradient(90deg, var(--copper), var(--copper-2));
+    box-shadow: 0 0 18px rgba(224,170,111,.35);
     transition: width .25s ease;
   }
   .counter {
     position: fixed;
-    right: 28px;
-    bottom: 24px;
+    right: 26px;
+    bottom: 22px;
     z-index: 100;
-    color: rgba(240,236,226,.42);
-    font-weight: 750;
-    font-size: 14px;
+    color: rgba(241,236,226,.38);
+    font-size: 13px;
+    font-weight: 800;
     letter-spacing: .08em;
   }
   .fs {
     position: fixed;
-    left: 24px;
-    bottom: 22px;
+    top: 18px;
+    right: 22px;
     z-index: 101;
     width: 42px;
     height: 42px;
     border-radius: 8px;
-    border: 1px solid var(--line);
-    color: var(--muted);
-    background: rgba(17,19,21,.82);
+    border: 1px solid rgba(241,236,226,.16);
+    background: rgba(12,14,16,.62);
+    color: rgba(241,236,226,.55);
     display: grid;
     place-items: center;
     cursor: pointer;
+    opacity: .72;
+    backdrop-filter: blur(14px);
+    transition: opacity .2s ease, border-color .2s ease, color .2s ease;
   }
+  .fs:hover { opacity: 1; color: var(--text); border-color: rgba(224,170,111,.42); }
   .fs .lucide { width: 19px; height: 19px; }
+  h1, h2, h3, p { margin: 0; letter-spacing: 0; }
   .kicker {
     display: inline-flex;
     align-items: center;
     gap: 10px;
     width: fit-content;
-    margin-bottom: 18px;
+    min-height: 36px;
     padding: 9px 13px;
-    border: 1px solid rgba(224,170,111,.34);
     border-radius: 999px;
-    color: var(--accent-2);
+    border: 1px solid rgba(224,170,111,.34);
     background: rgba(199,122,58,.10);
+    color: var(--copper-2);
     font-size: 12px;
-    font-weight: 850;
+    font-weight: 900;
     letter-spacing: .14em;
     text-transform: uppercase;
   }
   .kicker .lucide { width: 16px; height: 16px; }
-  h1, h2, h3, p { margin: 0; }
-  .title {
-    max-width: 1120px;
-    font-size: clamp(48px, 7vw, 96px);
-    line-height: .92;
-    font-weight: 900;
-    letter-spacing: 0;
-  }
   .slide-title {
     max-width: 1180px;
-    font-size: clamp(40px, 4.8vw, 70px);
-    line-height: 1.02;
-    font-weight: 900;
-    letter-spacing: 0;
+    margin-top: 18px;
     margin-bottom: 22px;
-  }
-  .slide-title .accent, .title .accent { color: var(--accent-2); }
-  .slide-subtitle {
-    max-width: 980px;
-    font-size: 24px;
-    line-height: 1.36;
-    color: #cfc7ba;
-    margin-bottom: 34px;
-  }
-  .small { color: var(--muted); font-size: 15px; line-height: 1.5; }
-  .brand-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    width: fit-content;
-    border-radius: 8px;
-    padding: 12px 15px;
-    border: 1px solid rgba(224,170,111,.32);
-    background: rgba(17,19,21,.76);
-    color: var(--accent-2);
+    font-size: clamp(42px, 5.1vw, 76px);
+    line-height: .98;
     font-weight: 900;
-    letter-spacing: 0;
   }
-  .brand-chip .lucide { width: 21px; height: 21px; }
+  .slide-title .accent, .accent { color: var(--copper-2); }
+  .slide-subtitle {
+    max-width: 970px;
+    color: var(--soft);
+    font-size: 23px;
+    line-height: 1.36;
+    font-weight: 550;
+  }
+  .muted { color: var(--muted); }
+  .lucide { width: 1em; height: 1em; stroke-width: 1.85; }
+  .logo-badge {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    background: rgba(255,255,255,.06);
+    border: 1px solid var(--line);
+  }
+  .logo-badge img {
+    max-width: 24px;
+    max-height: 24px;
+    display: block;
+    filter: brightness(0) invert(1);
+    opacity: .86;
+  }
+  .logo-badge img.logo-raw { filter: none; opacity: 1; }
+  .panel {
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.025));
+    box-shadow: 0 24px 70px rgba(0,0,0,.26);
+    backdrop-filter: blur(14px);
+  }
+  .quote-strip {
+    margin-top: 24px;
+    width: fit-content;
+    max-width: 1080px;
+    padding: 17px 21px;
+    border-left: 4px solid var(--copper);
+    background: rgba(199,122,58,.09);
+    color: #e9dfd2;
+    font-size: 22px;
+    line-height: 1.34;
+    font-weight: 800;
+  }
   .cover {
+    padding: 42px 64px 44px;
     justify-content: center;
   }
-  .cover-grid {
+  .cover-layout {
     display: grid;
-    grid-template-columns: minmax(0, .95fr) minmax(440px, .75fr);
-    gap: 46px;
+    grid-template-columns: minmax(0, .86fr) minmax(520px, .98fr);
+    gap: 42px;
     align-items: center;
   }
-  .cover .title { margin: 28px 0 22px; }
-  .cover-sub {
+  .cover h1 {
+    margin: 26px 0 22px;
+    font-size: clamp(62px, 6.2vw, 98px);
+    line-height: .88;
+    font-weight: 900;
+  }
+  .cover h1 span { color: var(--copper-2); }
+  .cover-lead {
     max-width: 780px;
+    color: var(--soft);
     font-size: 27px;
     line-height: 1.35;
-    color: #d2c9bc;
+    font-weight: 620;
   }
-  .cover-meta {
-    margin-top: 34px;
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
+  .cover-pills { display: flex; flex-wrap: wrap; gap: 11px; margin-top: 34px; }
   .pill {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    min-height: 36px;
+    gap: 9px;
+    min-height: 38px;
+    padding: 9px 12px;
     border-radius: 999px;
-    padding: 8px 12px;
     border: 1px solid var(--line);
-    background: rgba(255,255,255,.035);
+    background: rgba(255,255,255,.04);
     color: var(--muted);
     font-size: 14px;
-    font-weight: 750;
+    font-weight: 800;
   }
-  .pill .lucide { width: 16px; height: 16px; color: var(--accent-2); }
-  .machine {
+  .pill .lucide { color: var(--copper-2); }
+  .control-room {
     position: relative;
-    height: 520px;
-    border: 1px solid rgba(224,170,111,.2);
+    min-height: 560px;
     border-radius: 8px;
-    background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-    box-shadow: 0 30px 90px rgba(0,0,0,.32), inset 0 0 0 1px rgba(255,255,255,.03);
+    border: 1px solid rgba(224,170,111,.24);
+    background:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px),
+      radial-gradient(circle at 50% 44%, rgba(224,170,111,.22), transparent 34%),
+      rgba(13,15,17,.72);
+    background-size: 42px 42px, 42px 42px, auto, auto;
     overflow: hidden;
+    box-shadow: 0 34px 100px rgba(0,0,0,.34), inset 0 0 0 1px rgba(255,255,255,.03);
   }
-  .machine::before {
+  .control-room::before {
     content: "";
     position: absolute;
-    inset: 20px;
+    inset: 24px;
     border: 1px solid rgba(224,170,111,.18);
     border-radius: 8px;
   }
-  .machine-line {
+  .radar-core {
     position: absolute;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(224,170,111,.72), transparent);
-    animation: scan 5s linear infinite;
-  }
-  .machine-line.l1 { width: 78%; top: 116px; left: 11%; }
-  .machine-line.l2 { width: 60%; top: 276px; left: 20%; animation-delay: 1.2s; }
-  .machine-line.l3 { width: 68%; bottom: 94px; left: 16%; animation-delay: 2.4s; }
-  @keyframes scan { 0% { opacity: .1; transform: translateX(-30px); } 45% { opacity: .9; } 100% { opacity: .1; transform: translateX(30px); } }
-  .machine-core {
-    position: absolute;
-    inset: 142px 78px 142px;
-    border-radius: 8px;
-    border: 1px solid rgba(224,170,111,.42);
-    background: radial-gradient(circle at 50% 50%, rgba(199,122,58,.26), rgba(17,19,21,.84) 58%);
+    left: 50%;
+    top: 50%;
+    width: 254px;
+    height: 254px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
     display: grid;
     place-items: center;
     text-align: center;
+    background: radial-gradient(circle, rgba(224,170,111,.30), rgba(17,19,21,.92) 61%);
+    border: 1px solid rgba(224,170,111,.56);
+    box-shadow: 0 0 80px rgba(224,170,111,.18), inset 0 0 38px rgba(255,255,255,.045);
   }
-  .machine-core strong {
-    display: block;
-    font-size: 44px;
-    font-weight: 900;
-    color: var(--text);
-  }
-  .machine-core span {
-    display: block;
-    margin-top: 8px;
-    color: var(--muted);
-    font-size: 16px;
-    font-weight: 750;
-  }
-  .machine-node {
+  .radar-core::before, .radar-core::after {
+    content: "";
     position: absolute;
-    width: 136px;
-    min-height: 74px;
-    padding: 13px;
-    border-radius: 8px;
-    border: 1px solid rgba(232,226,214,.16);
-    background: rgba(11,12,13,.74);
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.25;
-    font-weight: 750;
+    inset: -42px;
+    border-radius: 50%;
+    border: 1px dashed rgba(224,170,111,.26);
+    animation: spin 16s linear infinite;
   }
-  .machine-node .lucide { width: 20px; height: 20px; display: block; margin-bottom: 8px; color: var(--accent-2); }
-  .machine-node.n1 { left: 44px; top: 48px; }
-  .machine-node.n2 { right: 44px; top: 54px; }
-  .machine-node.n3 { left: 48px; bottom: 48px; }
-  .machine-node.n4 { right: 44px; bottom: 48px; }
-  .split {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(360px, .78fr);
-    gap: 42px;
-    align-items: center;
+  .radar-core::after {
+    inset: -76px;
+    border-style: solid;
+    opacity: .35;
+    animation-duration: 26s;
+    animation-direction: reverse;
+  }
+  .radar-core strong { display: block; font-size: 40px; font-weight: 900; }
+  .radar-core span { display: block; margin-top: 9px; color: var(--muted); font-size: 15px; font-weight: 800; }
+  .circuit-path {
+    position: absolute;
+    inset: 0;
+    width: 100%;
     height: 100%;
   }
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 22px;
+  .circuit-path path {
+    fill: none;
+    stroke: rgba(224,170,111,.52);
+    stroke-width: 2;
+    stroke-dasharray: 8 12;
   }
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-  }
-  .cards.two { grid-template-columns: repeat(2, 1fr); }
-  .card {
-    border: 1px solid var(--line);
+  .slide.active .circuit-path path { animation: flow 5.5s linear infinite; }
+  .room-node {
+    position: absolute;
+    width: 154px;
+    min-height: 86px;
+    padding: 14px;
     border-radius: 8px;
-    background: rgba(17,19,21,.78);
-    padding: 22px;
-    box-shadow: 0 20px 64px rgba(0,0,0,.22);
-    backdrop-filter: blur(14px);
+    border: 1px solid rgba(241,236,226,.15);
+    background: rgba(7,8,9,.72);
+    color: #d8cfc2;
+    box-shadow: 0 20px 50px rgba(0,0,0,.24);
+    backdrop-filter: blur(12px);
   }
-  .card.is-accent { border-color: rgba(224,170,111,.35); background: rgba(199,122,58,.10); }
-  .card.is-blue { border-color: rgba(104,167,199,.32); background: rgba(104,167,199,.08); }
-  .card-title {
+  .room-node .lucide { width: 22px; height: 22px; color: var(--copper-2); margin-bottom: 8px; }
+  .room-node strong { display: block; font-size: 15px; line-height: 1.1; }
+  .room-node span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.25; font-weight: 700; }
+  .room-node.n1 { left: 54px; top: 60px; }
+  .room-node.n2 { right: 58px; top: 62px; }
+  .room-node.n3 { left: 42px; top: 238px; }
+  .room-node.n4 { right: 42px; top: 238px; }
+  .room-node.n5 { left: 116px; bottom: 60px; }
+  .room-node.n6 { right: 116px; bottom: 60px; }
+  .slide.active .room-node { animation: rise .55s ease-out both; }
+  .slide.active .room-node.n1 { animation-delay: .15s; }
+  .slide.active .room-node.n2 { animation-delay: .24s; }
+  .slide.active .room-node.n3 { animation-delay: .33s; }
+  .slide.active .room-node.n4 { animation-delay: .42s; }
+  .slide.active .room-node.n5 { animation-delay: .51s; }
+  .slide.active .room-node.n6 { animation-delay: .60s; }
+  .ticker {
+    position: absolute;
+    left: 38px;
+    right: 38px;
+    bottom: 30px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+  .ticker span {
+    min-height: 40px;
     display: flex;
     align-items: center;
-    gap: 11px;
-    color: var(--text);
-    font-size: 21px;
-    line-height: 1.18;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid rgba(224,170,111,.18);
+    background: rgba(199,122,58,.08);
+    color: #d8cfc2;
+    font-size: 12px;
     font-weight: 900;
-    margin-bottom: 10px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
   }
-  .card-title .lucide { width: 23px; height: 23px; color: var(--accent-2); }
-  .card-body {
-    color: var(--muted);
-    font-size: 18px;
-    line-height: 1.42;
+  .assembly {
+    display: grid;
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+    gap: 30px;
+    align-items: stretch;
+    margin-top: 8px;
   }
-  .quote {
-    margin-top: 28px;
-    max-width: 1100px;
-    padding: 18px 22px;
-    border-left: 4px solid var(--accent);
-    background: rgba(199,122,58,.09);
-    color: #e4d9cc;
-    font-size: 24px;
-    line-height: 1.34;
-    font-weight: 750;
+  .thesis-panel {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 450px;
+  }
+  .thesis-panel h3 { font-size: 34px; line-height: 1.06; font-weight: 900; }
+  .thesis-panel p { margin-top: 16px; color: var(--soft); font-size: 21px; line-height: 1.38; }
+  .thesis-rule {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .thesis-rule span {
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-radius: 8px;
+    border: 1px solid rgba(224,170,111,.2);
+    background: rgba(199,122,58,.08);
+    color: #e8ded0;
+    font-size: 13px;
+    line-height: 1.25;
+    font-weight: 850;
+  }
+  .assembly-board {
+    min-height: 450px;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    align-content: center;
+  }
+  .assembly-node {
+    min-height: 150px;
+    position: relative;
+    padding: 18px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: rgba(9,10,11,.64);
+  }
+  .assembly-node .lucide { width: 30px; height: 30px; color: var(--copper-2); margin-bottom: 16px; }
+  .assembly-node strong { display: block; font-size: 22px; line-height: 1.12; }
+  .assembly-node span { display: block; margin-top: 9px; color: var(--muted); font-size: 15px; line-height: 1.34; }
+  .assembly-node.is-output {
+    grid-column: 1 / -1;
+    min-height: 92px;
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 16px;
+    align-items: center;
+    border-color: rgba(117,184,137,.28);
+    background: rgba(117,184,137,.08);
   }
   .host-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 28px;
-    align-items: stretch;
-    margin-top: 10px;
+    margin-top: 14px;
   }
   .host-card {
     min-height: 520px;
-    border-radius: 8px;
-    border: 1px solid var(--line);
-    background: linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.025));
-    padding: 30px;
-    position: relative;
+    padding: 28px;
     overflow: hidden;
   }
   .host-card.albert { border-color: rgba(224,170,111,.34); }
-  .host-card.daniil { border-color: rgba(104,167,199,.32); }
-  .host-top {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    margin-bottom: 28px;
-  }
-  .portrait-wrap {
-    width: 184px;
-    height: 184px;
-    position: relative;
-    flex: 0 0 auto;
-  }
-  .arc {
-    position: absolute;
-    inset: -9px;
-    animation: spin 7s linear infinite;
-  }
-  .arc svg { width: 100%; height: 100%; display: block; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .host-card.daniil { border-color: rgba(120,181,209,.34); }
+  .host-top { display: flex; align-items: center; gap: 24px; margin-bottom: 28px; }
+  .portrait-wrap { width: 178px; height: 178px; position: relative; flex: 0 0 auto; }
+  .portrait-arc { position: absolute; inset: -11px; animation: spin 9s linear infinite; }
+  .portrait-arc svg { width: 100%; height: 100%; display: block; }
   .portrait {
     position: absolute;
     inset: 0;
     border-radius: 50%;
     overflow: hidden;
+    border: 1px solid rgba(255,255,255,.14);
     background: rgba(255,255,255,.04);
-    border: 1px solid rgba(255,255,255,.12);
   }
   .portrait img { width: 100%; height: 100%; object-fit: cover; object-position: center 18%; display: block; }
-  .placeholder-face {
-    height: 100%;
-    display: grid;
-    place-items: center;
-    color: var(--blue-2);
-  }
+  .placeholder-face { height: 100%; display: grid; place-items: center; color: var(--blue-2); }
   .placeholder-face .lucide { width: 58px; height: 58px; }
-  .host-name { font-size: 34px; font-weight: 900; line-height: 1.06; }
-  .host-role { margin-top: 9px; color: var(--muted); font-size: 17px; line-height: 1.34; font-weight: 700; }
-  .host-points {
-    display: grid;
-    gap: 12px;
-  }
+  .host-name { font-size: 36px; line-height: 1.04; font-weight: 900; }
+  .host-role { margin-top: 9px; color: var(--muted); font-size: 17px; line-height: 1.35; font-weight: 750; }
+  .host-points { display: grid; gap: 12px; }
   .host-point {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 13px 14px;
-    border: 1px solid var(--line);
-    background: rgba(11,12,13,.38);
-    border-radius: 8px;
-    color: #d7cec0;
-    font-size: 17px;
-    line-height: 1.34;
-  }
-  .host-point .lucide { width: 19px; height: 19px; flex: 0 0 auto; margin-top: 2px; color: var(--accent-2); }
-  .daniil .host-point .lucide { color: var(--blue-2); }
-  .timeline {
+    min-height: 70px;
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: 24px 1fr;
     gap: 12px;
-    margin-top: 22px;
-  }
-  .lesson {
-    min-height: 260px;
-    border: 1px solid var(--line);
+    align-items: start;
+    padding: 14px;
     border-radius: 8px;
-    padding: 16px 13px;
-    background: rgba(17,19,21,.76);
+    border: 1px solid var(--line);
+    background: rgba(7,8,9,.38);
+    color: #d8cfc2;
+    font-size: 16px;
+    line-height: 1.34;
+    font-weight: 680;
+  }
+  .host-point .lucide { color: var(--copper-2); margin-top: 2px; }
+  .daniil .host-point .lucide { color: var(--blue-2); }
+  .profile-grid {
+    display: grid;
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    gap: 28px;
+    align-items: stretch;
+  }
+  .profile-photo-panel {
+    min-height: 500px;
+    position: relative;
+    overflow: hidden;
+  }
+  .profile-photo-panel img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 18%;
+    filter: saturate(.92) contrast(1.02);
+  }
+  .profile-photo-panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgba(9,10,11,.9), transparent 48%), linear-gradient(90deg, rgba(9,10,11,.25), transparent);
+  }
+  .profile-caption {
+    position: absolute;
+    left: 26px;
+    right: 26px;
+    bottom: 24px;
+    z-index: 1;
+  }
+  .profile-caption strong { display: block; font-size: 34px; font-weight: 900; }
+  .profile-caption span { display: block; margin-top: 8px; color: var(--soft); font-size: 17px; line-height: 1.35; }
+  .proof-stack { display: grid; gap: 14px; }
+  .proof-row {
+    min-height: 110px;
+    display: grid;
+    grid-template-columns: 54px 1fr;
+    gap: 16px;
+    align-items: center;
+    padding: 18px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: rgba(17,19,21,.75);
+  }
+  .proof-row .lucide { width: 30px; height: 30px; color: var(--copper-2); }
+  .proof-row strong { display: block; font-size: 22px; line-height: 1.14; }
+  .proof-row span { display: block; margin-top: 6px; color: var(--muted); font-size: 16px; line-height: 1.35; font-weight: 650; }
+  .protocol {
+    display: grid;
+    grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+    gap: 28px;
+    align-items: stretch;
+  }
+  .protocol-main {
+    padding: 28px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    justify-content: space-between;
+    min-height: 452px;
   }
-  .lesson-num {
-    width: 34px;
-    height: 34px;
-    border: 1px solid rgba(224,170,111,.36);
+  .protocol-main h3 { font-size: 42px; line-height: 1.05; font-weight: 900; }
+  .protocol-main p { margin-top: 16px; color: var(--soft); font-size: 21px; line-height: 1.36; }
+  .protocol-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .protocol-card {
+    min-height: 206px;
+    padding: 20px;
     border-radius: 8px;
-    display: grid;
-    place-items: center;
-    color: var(--accent-2);
-    font-size: 14px;
-    font-weight: 900;
+    border: 1px solid var(--line);
+    background: rgba(17,19,21,.76);
   }
-  .lesson strong { font-size: 16px; line-height: 1.15; }
-  .lesson span { color: var(--muted); font-size: 13px; line-height: 1.28; }
-  .big-claim {
-    margin: auto 0;
+  .protocol-card .lucide { width: 28px; height: 28px; color: var(--copper-2); margin-bottom: 16px; }
+  .protocol-card strong { display: block; font-size: 22px; line-height: 1.12; }
+  .protocol-card span { display: block; margin-top: 9px; color: var(--muted); font-size: 16px; line-height: 1.34; }
+  .expectation {
+    display: grid;
+    grid-template-columns: 1fr 220px 1fr;
+    gap: 24px;
+    align-items: center;
+    margin-top: 16px;
+  }
+  .expect-card {
+    min-height: 432px;
+    padding: 28px;
+  }
+  .expect-card.good { border-color: rgba(117,184,137,.28); }
+  .expect-card.limit { border-color: rgba(215,108,92,.28); }
+  .expect-card h3 { font-size: 32px; line-height: 1.08; font-weight: 900; margin-bottom: 20px; }
+  .expect-line {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 12px;
+    padding: 13px 0;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    color: var(--soft);
+    font-size: 17px;
+    line-height: 1.35;
+    font-weight: 650;
+  }
+  .expect-line .lucide { color: var(--green); margin-top: 2px; }
+  .limit .expect-line .lucide { color: var(--red); }
+  .gauge {
+    width: 220px;
+    height: 220px;
     display: grid;
     place-items: center;
+    border-radius: 50%;
+    border: 1px solid rgba(224,170,111,.38);
+    background: radial-gradient(circle, rgba(224,170,111,.2), rgba(17,19,21,.78) 62%);
+    box-shadow: 0 0 70px rgba(224,170,111,.12);
     text-align: center;
   }
-  .claim-line {
-    max-width: 1180px;
-    font-size: clamp(54px, 6.4vw, 96px);
-    line-height: 1.02;
-    font-weight: 900;
+  .gauge strong { display: block; font-size: 50px; font-weight: 900; color: var(--copper-2); }
+  .gauge span { display: block; color: var(--muted); font-size: 14px; line-height: 1.25; font-weight: 800; }
+  .route-board {
+    min-height: 520px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
   }
-  .claim-line strong { color: var(--accent-2); font-weight: 900; }
-  .level-mini {
+  .route-board::before {
+    content: "";
+    position: absolute;
+    left: 54px;
+    right: 54px;
+    top: 50%;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(224,170,111,.16), rgba(224,170,111,.78), rgba(120,181,209,.30));
+  }
+  .route-grid {
+    position: relative;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 18px;
-    margin-top: 24px;
+    height: 100%;
+    align-content: center;
   }
-  .level {
-    min-height: 305px;
-    padding: 24px;
+  .route-node {
+    min-height: 196px;
+    padding: 18px;
     border-radius: 8px;
     border: 1px solid var(--line);
-    background: rgba(17,19,21,.78);
-    position: relative;
+    background: rgba(8,9,10,.78);
+    box-shadow: 0 18px 48px rgba(0,0,0,.22);
   }
-  .level.focus {
-    border-color: rgba(224,170,111,.54);
-    box-shadow: inset 0 0 0 1px rgba(199,122,58,.22), 0 0 70px rgba(199,122,58,.08);
-  }
-  .level-index {
-    width: 42px;
-    height: 42px;
+  .route-node:nth-child(even) { transform: translateY(44px); }
+  .route-node:nth-child(odd) { transform: translateY(-28px); }
+  .route-num {
+    width: 36px;
+    height: 36px;
     display: grid;
     place-items: center;
     border-radius: 8px;
-    background: rgba(199,122,58,.12);
     border: 1px solid rgba(224,170,111,.32);
-    color: var(--accent-2);
+    background: rgba(199,122,58,.12);
+    color: var(--copper-2);
+    font-weight: 900;
+    margin-bottom: 14px;
+  }
+  .route-node strong { display: block; font-size: 20px; line-height: 1.12; }
+  .route-node span { display: block; margin-top: 9px; color: var(--muted); font-size: 14px; line-height: 1.32; font-weight: 650; }
+  .shift {
+    display: grid;
+    grid-template-columns: 1fr 110px 1fr;
+    gap: 22px;
+    align-items: center;
+    margin-top: 16px;
+  }
+  .shift-card {
+    min-height: 430px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .shift-card h3 { font-size: 42px; line-height: 1.04; font-weight: 900; }
+  .shift-card p { color: var(--muted); font-size: 21px; line-height: 1.36; }
+  .shift-center {
+    height: 110px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid rgba(224,170,111,.35);
+    background: rgba(199,122,58,.1);
+    color: var(--copper-2);
+    font-size: 34px;
+    font-weight: 900;
+  }
+  .message-stack, .work-stack { display: grid; gap: 10px; }
+  .message-stack div, .work-stack div {
+    min-height: 50px;
+    padding: 13px 14px;
+    border-radius: 8px;
+    background: rgba(255,255,255,.045);
+    border: 1px solid var(--line);
+    color: #d8cfc2;
+    font-size: 15px;
+    font-weight: 750;
+  }
+  .levels {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-top: 20px;
+  }
+  .level-card {
+    min-height: 332px;
+    padding: 24px;
+    position: relative;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: rgba(17,19,21,.72);
+  }
+  .level-card.focus {
+    border-color: rgba(224,170,111,.55);
+    background: linear-gradient(145deg, rgba(199,122,58,.16), rgba(17,19,21,.76));
+  }
+  .level-index {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    border: 1px solid rgba(224,170,111,.34);
+    color: var(--copper-2);
+    background: rgba(199,122,58,.12);
     font-weight: 900;
     margin-bottom: 18px;
   }
-  .level h3 { font-size: 23px; font-weight: 900; line-height: 1.12; margin-bottom: 12px; }
-  .level p { color: var(--muted); font-size: 17px; line-height: 1.38; }
-  .level .examples { position: absolute; left: 24px; right: 24px; bottom: 22px; color: #d6ccbf; font-size: 14px; font-weight: 800; }
+  .level-card h3 { font-size: 25px; line-height: 1.12; font-weight: 900; }
+  .level-card p { margin-top: 12px; color: var(--muted); font-size: 17px; line-height: 1.36; }
+  .level-card .examples { position: absolute; left: 24px; right: 24px; bottom: 22px; color: #d7cdc0; font-size: 14px; line-height: 1.3; font-weight: 850; }
   .full-image {
-    padding: 32px 38px 38px;
-    background: #090a0b;
+    padding: 30px 38px 38px;
+    background: #08090a;
   }
   .image-frame {
     width: 100%;
     height: 100%;
     border-radius: 8px;
-    border: 1px solid rgba(224,170,111,.2);
+    border: 1px solid rgba(224,170,111,.22);
     overflow: hidden;
-    background: #0b0c0d;
+    background: #090a0b;
     box-shadow: 0 30px 90px rgba(0,0,0,.36);
   }
-  .image-frame img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    display: block;
-  }
-  .agent-formula {
-    margin-top: 22px;
+  .image-frame img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .anatomy {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 14px;
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    gap: 30px;
+    align-items: stretch;
   }
-  .formula-part {
-    min-height: 160px;
-    border: 1px solid var(--line);
-    background: rgba(17,19,21,.78);
-    border-radius: 8px;
-    padding: 18px;
+  .formula {
+    min-height: 480px;
+    padding: 28px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
   }
-  .formula-part .lucide { width: 28px; height: 28px; color: var(--accent-2); }
-  .formula-part strong { font-size: 20px; line-height: 1.15; }
-  .formula-plus {
+  .formula-line {
+    display: grid;
+    grid-template-columns: 54px 1fr;
+    gap: 16px;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .formula-line .lucide { width: 30px; height: 30px; color: var(--copper-2); }
+  .formula-line strong { display: block; font-size: 22px; }
+  .formula-line span { display: block; margin-top: 4px; color: var(--muted); font-size: 15px; }
+  .anatomy-map {
+    min-height: 480px;
+    position: relative;
+    overflow: hidden;
+  }
+  .anatomy-map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .anatomy-map path { fill: none; stroke: rgba(224,170,111,.42); stroke-width: 2; stroke-dasharray: 8 12; }
+  .slide.active .anatomy-map path { animation: flow 5s linear infinite; }
+  .brain-core {
+    position: absolute;
+    left: 50%;
+    top: 48%;
+    width: 230px;
+    height: 230px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
     text-align: center;
-    color: var(--accent-2);
-    font-size: 34px;
-    font-weight: 900;
-    align-self: center;
+    border: 1px solid rgba(224,170,111,.5);
+    background: radial-gradient(circle, rgba(199,122,58,.28), rgba(10,11,12,.9) 62%);
   }
+  .brain-core strong { font-size: 30px; font-weight: 900; }
+  .brain-core span { display: block; color: var(--muted); margin-top: 6px; font-size: 13px; font-weight: 800; }
+  .atom {
+    position: absolute;
+    width: 150px;
+    min-height: 80px;
+    padding: 14px;
+    border-radius: 8px;
+    background: rgba(8,9,10,.76);
+    border: 1px solid var(--line);
+  }
+  .atom .lucide { width: 22px; height: 22px; color: var(--copper-2); margin-bottom: 8px; }
+  .atom strong { display: block; font-size: 15px; }
+  .atom span { display: block; color: var(--muted); font-size: 12px; line-height: 1.25; margin-top: 4px; }
+  .atom.a1 { left: 44px; top: 44px; }
+  .atom.a2 { right: 44px; top: 44px; }
+  .atom.a3 { left: 32px; bottom: 58px; }
+  .atom.a4 { right: 32px; bottom: 58px; }
   .format-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 22px;
+    margin-top: 16px;
   }
   .format-card {
-    min-height: 430px;
-    padding: 26px;
+    min-height: 450px;
+    padding: 22px;
+    overflow: hidden;
+  }
+  .format-card.primary { border-color: rgba(224,170,111,.44); background: linear-gradient(145deg, rgba(199,122,58,.13), rgba(17,19,21,.75)); }
+  .logos-row { display: flex; gap: 10px; margin-bottom: 18px; }
+  .format-card h3 { font-size: 30px; font-weight: 900; line-height: 1.05; margin-bottom: 12px; }
+  .format-card p { color: var(--muted); font-size: 17px; line-height: 1.4; }
+  .mini-screen {
+    margin-top: 22px;
+    min-height: 160px;
     border-radius: 8px;
     border: 1px solid var(--line);
-    background: rgba(17,19,21,.78);
-    display: flex;
-    flex-direction: column;
+    background: rgba(7,8,9,.7);
+    overflow: hidden;
   }
-  .format-card.primary {
-    border-color: rgba(224,170,111,.52);
-    background: linear-gradient(145deg, rgba(199,122,58,.16), rgba(17,19,21,.78));
+  .mini-screen.screenshot {
+    min-height: 178px;
+    position: relative;
   }
-  .logos-row {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin: 16px 0 18px;
-  }
-  .logo-badge {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    border: 1px solid var(--line);
-    background: rgba(255,255,255,.06);
-    display: grid;
-    place-items: center;
-  }
-  .logo-badge img {
-    max-width: 22px;
-    max-height: 22px;
+  .mini-screen.screenshot img {
+    width: 100%;
+    height: 100%;
+    min-height: 178px;
+    object-fit: cover;
+    object-position: top left;
     display: block;
-    filter: brightness(0) invert(1);
-    opacity: .82;
+    filter: saturate(.86) contrast(.92);
+    opacity: .72;
   }
-  .logo-badge img.logo-raw {
-    filter: none;
-    opacity: 1;
+  .mini-screen.screenshot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgba(8,9,10,.45), transparent 56%);
+    pointer-events: none;
   }
-  .logo-badge .lucide { width: 22px; height: 22px; color: rgba(240,236,226,.82); }
-  .format-card h3 { font-size: 28px; font-weight: 900; line-height: 1.08; margin-bottom: 12px; }
-  .format-card p { color: var(--muted); font-size: 18px; line-height: 1.42; }
-  .format-card .bottom { margin-top: auto; color: #d7cec0; font-size: 16px; line-height: 1.35; font-weight: 750; }
-  .why-layout {
+  .screen-top {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.035);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(224,170,111,.52); }
+  .screen-body { padding: 14px; display: grid; gap: 10px; }
+  .screen-line { height: 13px; border-radius: 999px; background: rgba(255,255,255,.08); }
+  .screen-line.short { width: 62%; }
+  .screen-line.accent { width: 80%; background: rgba(224,170,111,.28); }
+  .codex-workstation {
     display: grid;
     grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
-    gap: 32px;
+    gap: 30px;
     align-items: stretch;
   }
-  .stack {
+  .codex-left {
+    min-height: 506px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .codex-left h3 { font-size: 42px; line-height: 1.05; font-weight: 900; }
+  .codex-left p { margin-top: 16px; color: var(--soft); font-size: 21px; line-height: 1.38; }
+  .codex-stack { display: grid; gap: 10px; }
+  .codex-chip {
+    min-height: 48px;
     display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.04);
+    color: #d8cfc2;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .codex-chip .lucide { color: var(--copper-2); }
+  .workstation-ui {
+    min-height: 506px;
+    padding: 18px;
+    display: grid;
+    grid-template-columns: .9fr 1.1fr;
     gap: 14px;
   }
-  .stack-item {
+  .ui-pane {
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: rgba(7,8,9,.62);
+    overflow: hidden;
+  }
+  .ui-pane .screen-top { height: 38px; }
+  .chat-lines { display: grid; gap: 12px; padding: 14px; }
+  .bubble {
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(255,255,255,.06);
+    color: var(--soft);
+    font-size: 13px;
+    line-height: 1.35;
+    font-weight: 700;
+  }
+  .bubble.agent { border-left: 3px solid var(--copper-2); }
+  .tool-grid {
+    padding: 14px;
     display: grid;
-    grid-template-columns: 46px 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .tool-tile {
+    min-height: 92px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.04);
+    color: #d8cfc2;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .tool-tile .lucide { width: 22px; height: 22px; color: var(--copper-2); margin-bottom: 9px; }
+  .practice-track {
+    margin-top: 18px;
+    min-height: 430px;
+    padding: 26px;
+    position: relative;
+  }
+  .practice-track::before {
+    content: "";
+    position: absolute;
+    left: 70px;
+    right: 70px;
+    top: 50%;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(224,170,111,.16), rgba(224,170,111,.78), rgba(117,184,137,.38));
+  }
+  .practice-steps {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
     gap: 14px;
+    height: 100%;
     align-items: center;
+  }
+  .practice-node {
+    min-height: 230px;
+    padding: 18px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: rgba(8,9,10,.78);
+  }
+  .practice-node:nth-child(even) { transform: translateY(38px); }
+  .practice-node:nth-child(odd) { transform: translateY(-28px); }
+  .practice-num {
+    color: var(--copper-2);
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .practice-node .lucide { width: 28px; height: 28px; color: var(--copper-2); margin-bottom: 16px; }
+  .practice-node strong { display: block; font-size: 20px; line-height: 1.12; }
+  .practice-node span { display: block; color: var(--muted); font-size: 14px; line-height: 1.32; margin-top: 9px; }
+  .practice-layout {
+    display: grid;
+    grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr);
+    gap: 30px;
+    align-items: stretch;
+  }
+  .practice-panel {
+    min-height: 500px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .practice-panel h3 { font-size: 42px; line-height: 1.05; font-weight: 900; }
+  .practice-panel p { color: var(--soft); font-size: 21px; line-height: 1.38; margin-top: 16px; }
+  .checklist { display: grid; gap: 10px; }
+  .check {
+    min-height: 48px;
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.04);
+    color: #d8cfc2;
+    font-size: 15px;
+    line-height: 1.32;
+    font-weight: 750;
+  }
+  .check .lucide { color: var(--green); margin-top: 1px; }
+  .mock-large {
+    min-height: 500px;
+    border-radius: 8px;
+    border: 1px solid rgba(224,170,111,.22);
+    background: rgba(7,8,9,.68);
+    overflow: hidden;
+  }
+  .mock-large .screen-top { height: 44px; }
+  .mock-grid { display: grid; grid-template-columns: 220px 1fr; min-height: 456px; }
+  .mock-sidebar {
+    border-right: 1px solid rgba(255,255,255,.08);
+    padding: 16px;
+    display: grid;
+    gap: 10px;
+    align-content: start;
+  }
+  .mock-main { padding: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-content: start; }
+  .mock-item {
+    min-height: 64px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.04);
+    color: var(--soft);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+  .mock-item .lucide { color: var(--copper-2); margin-right: 6px; vertical-align: -2px; }
+  .mock-item.tall { grid-row: span 2; min-height: 140px; }
+  .reveal-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: fit-content;
+    min-height: 46px;
+    border-radius: 8px;
+    border: 1px solid rgba(224,170,111,.42);
+    background: rgba(199,122,58,.14);
+    color: var(--copper-2);
+    font-weight: 900;
+    cursor: pointer;
+    padding: 12px 16px;
+  }
+  .instruction-panel {
+    position: absolute;
+    inset: 58px 68px 58px;
+    z-index: 30;
+    border-radius: 8px;
+    border: 1px solid rgba(224,170,111,.38);
+    background:
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px),
+      rgba(9,10,11,.96);
+    background-size: 42px 42px;
+    box-shadow: 0 30px 100px rgba(0,0,0,.62);
+    padding: 28px;
+    display: grid;
+    grid-template-columns: .72fr 1.28fr;
+    gap: 24px;
+  }
+  .instruction-panel.hidden { display: none; }
+  .instruction-title h3 { font-size: 38px; line-height: 1.04; font-weight: 900; }
+  .instruction-title p { margin-top: 14px; color: var(--muted); font-size: 17px; line-height: 1.35; }
+  .instruction-body {
+    display: grid;
+    gap: 12px;
+    overflow: auto;
+    padding-right: 6px;
+  }
+  .instruction-block {
     padding: 15px;
     border-radius: 8px;
     border: 1px solid var(--line);
-    background: rgba(17,19,21,.75);
+    background: rgba(255,255,255,.045);
   }
-  .stack-item img { max-width: 25px; max-height: 25px; display: block; }
-  .stack-item strong { display: block; font-size: 18px; }
-  .stack-item span { display: block; color: var(--muted); font-size: 14px; margin-top: 3px; }
-  .practice-map {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-top: 24px;
-  }
-  .practice-step {
-    min-height: 210px;
-    padding: 21px;
+  .instruction-block strong { display: block; color: var(--copper-2); font-size: 15px; margin-bottom: 7px; }
+  .instruction-block span { color: #d8cfc2; font-size: 15px; line-height: 1.38; }
+  .close-reveal {
+    position: absolute;
+    right: 16px;
+    top: 14px;
+    width: 38px;
+    height: 38px;
     border-radius: 8px;
     border: 1px solid var(--line);
-    background: rgba(17,19,21,.78);
-  }
-  .practice-step .num {
-    color: var(--accent-2);
-    font-size: 15px;
-    font-weight: 900;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-  .practice-step h3 { font-size: 22px; line-height: 1.14; margin-bottom: 10px; }
-  .practice-step p { color: var(--muted); font-size: 16px; line-height: 1.35; }
-  .prompt-box {
-    margin-top: 24px;
-    padding: 24px;
-    border-radius: 8px;
-    border: 1px solid rgba(224,170,111,.32);
-    background: rgba(7,8,9,.72);
-    font-size: 20px;
-    line-height: 1.48;
-    color: #e8dfd1;
-  }
-  .prompt-box code {
-    display: block;
-    white-space: pre-wrap;
-    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: rgba(255,255,255,.05);
+    color: var(--text);
+    cursor: pointer;
   }
   .final-grid {
-    margin-top: 18px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
+    margin-top: 20px;
   }
-  .ready {
-    min-height: 180px;
+  .ready-card {
+    min-height: 190px;
     padding: 22px;
     border-radius: 8px;
+    border: 1px solid rgba(117,184,137,.28);
     background: rgba(117,184,137,.08);
-    border: 1px solid rgba(117,184,137,.26);
   }
-  .ready .lucide { width: 28px; height: 28px; color: var(--success); margin-bottom: 14px; }
-  .ready strong { font-size: 20px; line-height: 1.16; }
-  .ready span { display: block; margin-top: 8px; color: var(--muted); line-height: 1.35; }
-  .source-note {
-    position: absolute;
-    left: 72px;
-    bottom: 24px;
-    color: rgba(240,236,226,.34);
-    font-size: 12px;
-    font-weight: 650;
-  }
-  @keyframes slideUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
-  .slide.active .anim { animation: slideUp .55s ease-out both; }
+  .ready-card .lucide { width: 30px; height: 30px; color: var(--green); margin-bottom: 15px; }
+  .ready-card strong { display: block; font-size: 21px; line-height: 1.14; }
+  .ready-card span { display: block; color: var(--muted); margin-top: 9px; font-size: 15px; line-height: 1.34; }
+  @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes flow { to { stroke-dashoffset: -160; } }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 46px rgba(224,170,111,.16); } 50% { box-shadow: 0 0 92px rgba(224,170,111,.32); } }
+  .pulse { animation: pulse 3s ease-in-out infinite; }
+  .slide.active .anim { animation: rise .55s ease-out both; }
   .slide.active .d1 { animation-delay: .08s; }
   .slide.active .d2 { animation-delay: .16s; }
   .slide.active .d3 { animation-delay: .24s; }
   .slide.active .d4 { animation-delay: .32s; }
-
-  @media (max-width: 900px) {
+  @media (max-width: 980px) {
     body { overflow: auto; }
     .deck { height: auto; min-height: 100vh; }
-    .slide { position: relative; min-height: 100vh; opacity: 1; visibility: visible; transform: none; display: none; padding: 34px 22px 54px; }
+    .slide { position: relative; min-height: 100vh; display: none; padding: 34px 22px 60px; opacity: 1; visibility: visible; transform: none; }
     .slide.active { display: flex; }
-    .cover-grid, .split, .two-col, .host-layout, .why-layout { grid-template-columns: 1fr; }
-    .cards, .cards.two, .level-mini, .timeline, .agent-formula, .format-grid, .practice-map, .final-grid { grid-template-columns: 1fr; }
-    .machine { height: 420px; }
-    .title, .slide-title { font-size: 38px; }
-    .slide-subtitle, .cover-sub { font-size: 20px; }
-    .counter { right: 18px; bottom: 18px; }
-    .source-note { left: 22px; }
+    .cover-layout, .assembly, .host-layout, .profile-grid, .protocol, .expectation, .shift, .anatomy, .codex-workstation, .practice-layout { grid-template-columns: 1fr; }
+    .format-grid, .levels, .route-grid, .practice-steps, .final-grid, .protocol-grid, .assembly-board { grid-template-columns: 1fr; }
+    .control-room { min-height: 460px; }
+    .slide-title, .cover h1 { font-size: 40px; }
+    .slide-subtitle, .cover-lead { font-size: 19px; }
+    .instruction-panel { inset: 34px 22px; grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -680,52 +1118,72 @@
 <main class="deck" id="deck">
 
 <section class="slide cover active">
-  <div class="cover-grid">
+  <div class="cover-layout">
     <div>
-      <div class="brand-chip anim"><i data-lucide="factory"></i> Практикум AI Цех</div>
-      <h1 class="title anim d1"><span class="accent">AI Цех</span></h1>
-      <p class="cover-sub anim d2">Практикум по рабочим агентам, вайбкодингу и агентским системам. Урок 1: погружение в курс и старт работы с Codex.</p>
-      <div class="cover-meta anim d3">
-        <span class="pill"><i data-lucide="calendar-days"></i> Урок 1 из 8</span>
+      <div class="kicker anim"><i data-lucide="factory"></i> Урок 1 / Погружение</div>
+      <h1 class="anim d1">Погружение<br><span>в AI Цех</span></h1>
+      <p class="cover-lead anim d2">Старт работы с Codex: превращаем чат в рабочую агентскую среду, которая видит проект, подключает инструменты и доводит задачу до результата.</p>
+      <div class="cover-pills anim d3">
         <span class="pill"><i data-lucide="clock-3"></i> 2 часа</span>
-        <span class="pill"><i data-lucide="monitor-cog"></i> Codex как рабочий исполнитель</span>
+        <span class="pill"><i data-lucide="route"></i> карта 8 занятий</span>
+        <span class="pill"><i data-lucide="monitor-cog"></i> установка и персонализация Codex</span>
       </div>
     </div>
-    <div class="machine anim d2" aria-label="Инженерный цех AI агента">
-      <div class="machine-line l1"></div>
-      <div class="machine-line l2"></div>
-      <div class="machine-line l3"></div>
-      <div class="machine-node n1"><i data-lucide="brain-circuit"></i>AI-мозг</div>
-      <div class="machine-node n2"><i data-lucide="folder-code"></i>Файлы и проекты</div>
-      <div class="machine-node n3"><i data-lucide="plug"></i>Инструменты</div>
-      <div class="machine-node n4"><i data-lucide="shield-check"></i>Контроль человека</div>
-      <div class="machine-core"><div><strong>AI ЦЕХ</strong><span>рабочая агентская среда</span></div></div>
+    <div class="control-room anim d2" aria-label="Анимированный операционный пульт AI Цеха">
+      <svg class="circuit-path" viewBox="0 0 720 560" aria-hidden="true">
+        <path d="M120 105 C220 110 248 210 360 280" />
+        <path d="M598 105 C500 118 474 210 360 280" />
+        <path d="M104 280 C210 278 260 280 360 280" />
+        <path d="M616 280 C510 278 460 280 360 280" />
+        <path d="M170 462 C244 392 300 348 360 280" />
+        <path d="M552 462 C476 392 420 348 360 280" />
+      </svg>
+      <div class="radar-core pulse"><div><strong>AI ЦЕХ</strong><span>рабочая агентская среда</span></div></div>
+      <div class="room-node n1"><i data-lucide="brain-circuit"></i><strong>AI-мозг</strong><span>понимает цель</span></div>
+      <div class="room-node n2"><i data-lucide="folder-code"></i><strong>Проект</strong><span>файлы, структура, история</span></div>
+      <div class="room-node n3"><i data-lucide="message-square-text"></i><strong>Чат</strong><span>обычный язык</span></div>
+      <div class="room-node n4"><i data-lucide="plug"></i><strong>Сервисы</strong><span>GitHub, Drive, Figma, Vercel</span></div>
+      <div class="room-node n5"><i data-lucide="terminal-square"></i><strong>Команды</strong><span>проверки и сборка</span></div>
+      <div class="room-node n6"><i data-lucide="shield-check"></i><strong>Контроль</strong><span>разрешения человека</span></div>
+      <div class="ticker" aria-hidden="true">
+        <span>цель</span><span>план</span><span>действие</span><span>проверка</span><span>результат</span>
+      </div>
     </div>
   </div>
 </section>
 
 <section class="slide">
-  <div class="kicker anim"><i data-lucide="compass"></i> Зачем курс</div>
-  <h2 class="slide-title anim d1">Это не курс «попробовать ИИ». Это курс <span class="accent">собирать руками</span></h2>
-  <p class="slide-subtitle anim d2">В центре не набор сервисов, а новый способ работы: человек ставит цель, агент подключает инструменты и доводит задачу до артефакта.</p>
-  <div class="cards anim d3">
-    <div class="card is-accent"><div class="card-title"><i data-lucide="blocks"></i> Продукты</div><div class="card-body">Сайты, мини-SaaS, интерфейсы, боты, внутренние рабочие инструменты.</div></div>
-    <div class="card"><div class="card-title"><i data-lucide="workflow"></i> Автоматизации</div><div class="card-body">Повседневные задачи, документы, файлы, браузер, сервисы и повторяемые процессы.</div></div>
-    <div class="card"><div class="card-title"><i data-lucide="network"></i> Агентские системы</div><div class="card-body">Hermes, роли, память, собственные агенты и долгосрочная работа на своих данных.</div></div>
+  <div class="kicker anim"><i data-lucide="blocks"></i> О чём курс</div>
+  <h2 class="slide-title anim d1">Не «пользоваться ИИ». <span class="accent">Собирать рабочие контуры</span></h2>
+  <div class="assembly anim d2">
+    <div class="thesis-panel panel">
+      <div>
+        <h3>Главный переход курса</h3>
+        <p>Мы не коллекционируем сервисы. Мы учимся ставить цель агенту, давать ему окружение и получать проверяемый артефакт.</p>
+      </div>
+      <div class="thesis-rule">
+        <span>цель без хаоса</span>
+        <span>инструменты в одном окне</span>
+        <span>результат, который можно открыть</span>
+      </div>
+    </div>
+    <div class="assembly-board panel">
+      <div class="assembly-node"><i data-lucide="layout-template"></i><strong>Продукты</strong><span>лендинги, мини-SaaS, интерфейсы, внутренние инструменты.</span></div>
+      <div class="assembly-node"><i data-lucide="workflow"></i><strong>Автоматизации</strong><span>повторяемые задачи, документы, файлы, браузер, сервисы.</span></div>
+      <div class="assembly-node"><i data-lucide="network"></i><strong>Агентские системы</strong><span>Hermes, роли, память, собственные рабочие агенты.</span></div>
+      <div class="assembly-node is-output"><i data-lucide="package-check"></i><div><strong>Артефакт</strong><span>то, что можно показать, проверить, доработать и использовать в работе.</span></div></div>
+    </div>
   </div>
-  <div class="quote anim d4">Фокус AI Цеха: меньше смотреть, больше запускать, проверять и собирать результат.</div>
 </section>
 
 <section class="slide">
   <div class="kicker anim"><i data-lucide="users-round"></i> Команда курса</div>
   <h2 class="slide-title anim d1">Два контура: <span class="accent">методология</span> и инженерия</h2>
   <div class="host-layout anim d2">
-    <div class="host-card albert">
+    <div class="host-card albert panel">
       <div class="host-top">
         <div class="portrait-wrap">
-          <div class="arc">
-            <svg viewBox="0 0 210 210"><circle cx="105" cy="105" r="100" fill="none" stroke="#e0aa6f" stroke-width="3" stroke-linecap="round" stroke-dasharray="470 160"/><circle cx="105" cy="105" r="100" fill="none" stroke="rgba(224,170,111,.16)" stroke-width="3"/></svg>
-          </div>
+          <div class="portrait-arc"><svg viewBox="0 0 210 210"><circle cx="105" cy="105" r="100" fill="none" stroke="#e0aa6f" stroke-width="3" stroke-linecap="round" stroke-dasharray="470 160"/><circle cx="105" cy="105" r="100" fill="none" stroke="rgba(224,170,111,.16)" stroke-width="3"/></svg></div>
           <div class="portrait"><img src="assets/images/albert.jpg" alt="Альберт Валеев"></div>
         </div>
         <div>
@@ -734,17 +1192,15 @@
         </div>
       </div>
       <div class="host-points">
-        <div class="host-point"><i data-lucide="building-2"></i> Основатель федеральной сети «Сила Слова Kids»: 67 городов России, 10 городов Казахстана, 26 000+ учеников.</div>
-        <div class="host-point"><i data-lucide="radar"></i> Исследователь-практик генеративного ИИ: мониторинг, тестирование и адаптация новых инструментов.</div>
-        <div class="host-point"><i data-lucide="route"></i> Собирает образовательную логику: от хаоса инструментов к понятной системе действий.</div>
+        <div class="host-point"><i data-lucide="building-2"></i><span>Основатель федеральной сети «Сила Слова Kids»: 67 городов России, 10 городов Казахстана, 26 000+ учеников.</span></div>
+        <div class="host-point"><i data-lucide="radar"></i><span>Исследователь-практик генеративного ИИ: тестирует новые инструменты и переводит их в понятную систему действий.</span></div>
+        <div class="host-point"><i data-lucide="route"></i><span>Фокус курса: от хаоса сервисов к рабочему контуру, который можно повторять.</span></div>
       </div>
     </div>
-    <div class="host-card daniil">
+    <div class="host-card daniil panel">
       <div class="host-top">
         <div class="portrait-wrap">
-          <div class="arc">
-            <svg viewBox="0 0 210 210"><circle cx="105" cy="105" r="100" fill="none" stroke="#9cc9dd" stroke-width="3" stroke-linecap="round" stroke-dasharray="470 160"/><circle cx="105" cy="105" r="100" fill="none" stroke="rgba(156,201,221,.16)" stroke-width="3"/></svg>
-          </div>
+          <div class="portrait-arc"><svg viewBox="0 0 210 210"><circle cx="105" cy="105" r="100" fill="none" stroke="#a8d8ed" stroke-width="3" stroke-linecap="round" stroke-dasharray="470 160"/><circle cx="105" cy="105" r="100" fill="none" stroke="rgba(168,216,237,.16)" stroke-width="3"/></svg></div>
           <div class="portrait"><div class="placeholder-face"><i data-lucide="user-round-cog"></i></div></div>
         </div>
         <div>
@@ -753,84 +1209,118 @@
         </div>
       </div>
       <div class="host-points">
-        <div class="host-point"><i data-lucide="wrench"></i> Помогает разбирать среду, вайбкодинг, логику сборки и технические решения.</div>
-        <div class="host-point"><i data-lucide="terminal-square"></i> Показывает, что происходит под капотом, когда агент работает с проектом.</div>
-        <div class="host-point"><i data-lucide="image-plus"></i> Фото и короткий профиль вставим сюда после получения материалов.</div>
+        <div class="host-point"><i data-lucide="wrench"></i><span>Помогает разбирать среду, вайбкодинг, логику сборки и технические решения.</span></div>
+        <div class="host-point"><i data-lucide="terminal-square"></i><span>Показывает, что происходит под капотом, когда агент работает с проектом.</span></div>
+        <div class="host-point"><i data-lucide="image-plus"></i><span>Место под фото и короткий профиль второго ведущего.</span></div>
       </div>
     </div>
   </div>
 </section>
 
 <section class="slide">
-  <div class="kicker anim"><i data-lucide="badge-check"></i> Профиль ведущего</div>
-  <h2 class="slide-title anim d1">Альберт: проводник между сложной технологией и <span class="accent">реальными людьми</span></h2>
-  <div class="two-col anim d2">
-    <div class="card is-accent"><div class="card-title"><i data-lucide="graduation-cap"></i> Образование</div><div class="card-body">Методология программ по ИИ-компетенциям: от первого знакомства до продвинутых сценариев внедрения.</div></div>
-    <div class="card"><div class="card-title"><i data-lucide="briefcase-business"></i> Бизнес</div><div class="card-body">AI-трансформация для МСБ: процессы, продукты, агенты, цифровые команды и внедрение в ежедневную работу.</div></div>
-    <div class="card"><div class="card-title"><i data-lucide="shield"></i> Контекст РФ/СНГ</div><div class="card-body">Инструменты, доступы, ограничения, платёжные сценарии и решения, которые реально работают в нашем контуре.</div></div>
-    <div class="card is-blue"><div class="card-title"><i data-lucide="package-check"></i> Продуктовый фокус</div><div class="card-body">Не «поиграться с нейросетью», а довести идею до рабочего инструмента, который можно использовать и показывать.</div></div>
+  <div class="profile-grid">
+    <div class="profile-photo-panel panel anim">
+      <img src="assets/images/albert.jpg" alt="Альберт Валеев">
+      <div class="profile-caption"><strong>Альберт Валеев</strong><span>Проводник между сложной технологией, бизнесом и реальными людьми.</span></div>
+    </div>
+    <div>
+      <div class="kicker anim d1"><i data-lucide="badge-check"></i> Профиль ведущего</div>
+      <h2 class="slide-title anim d2">AI-трансформация: <span class="accent">не теория, а внедрение</span></h2>
+      <div class="proof-stack anim d3">
+        <div class="proof-row"><i data-lucide="graduation-cap"></i><div><strong>Образование</strong><span>Методология программ по ИИ-компетенциям: от первого знакомства до продвинутых сценариев.</span></div></div>
+        <div class="proof-row"><i data-lucide="briefcase-business"></i><div><strong>Бизнес</strong><span>Автоматизация процессов, продукты на генеративном ИИ, кастомные SaaS под задачи компаний.</span></div></div>
+        <div class="proof-row"><i data-lucide="map-pinned"></i><div><strong>Контекст РФ/СНГ</strong><span>Инструменты, доступы, ограничения и рабочие решения, которые реально применимы в нашем контуре.</span></div></div>
+      </div>
+    </div>
   </div>
 </section>
 
 <section class="slide">
-  <div class="kicker anim"><i data-lucide="scroll-text"></i> Правила</div>
-  <h2 class="slide-title anim d1">AI Цех работает только в режиме <span class="accent">руками</span></h2>
-  <div class="cards anim d2">
-    <div class="card"><div class="card-title"><i data-lucide="monitor"></i> Ноутбук</div><div class="card-body">Планшет не вытянет курс. Работаем с компьютером, файлами, браузером и приложениями.</div></div>
-    <div class="card"><div class="card-title"><i data-lucide="key-round"></i> Доступы</div><div class="card-body">ChatGPT, VPN, Google-аккаунт и платный доступ готовим заранее. На уроке не тратим час на регистрацию.</div></div>
-    <div class="card"><div class="card-title"><i data-lucide="clipboard-check"></i> Практика</div><div class="card-body">Каждый урок заканчивается состоянием: что установлено, что собрано, что проверено.</div></div>
+  <div class="kicker anim"><i data-lucide="scroll-text"></i> Протокол цеха</div>
+  <h2 class="slide-title anim d1">Курс работает только в режиме <span class="accent">руками</span></h2>
+  <div class="protocol anim d2">
+    <div class="protocol-main panel">
+      <div>
+        <h3>8 встреч. 2 часа. Результат после каждой.</h3>
+        <p>Каждый урок заканчивается не вдохновением, а новым состоянием рабочей среды: установлено, подключено, проверено, готово к следующему шагу.</p>
+      </div>
+      <div class="quote-strip">Смотреть можно где угодно. Здесь мы заводим себе рабочую агентскую мастерскую.</div>
+    </div>
+    <div class="protocol-grid">
+      <div class="protocol-card"><i data-lucide="laptop"></i><strong>Ноутбук</strong><span>Работаем с компьютером, файлами, браузером и приложениями.</span></div>
+      <div class="protocol-card"><i data-lucide="key-round"></i><strong>Доступы заранее</strong><span>ChatGPT, VPN, Google-аккаунт и платный доступ готовятся до урока.</span></div>
+      <div class="protocol-card"><i data-lucide="hand"></i><strong>Работа руками</strong><span>Повторяем действия, проверяем, фиксируем ошибки и доводим до результата.</span></div>
+      <div class="protocol-card"><i data-lucide="clipboard-check"></i><strong>Домашки</strong><span>Домашние задания не для галочки: они закрепляют рабочую среду.</span></div>
+    </div>
   </div>
-  <div class="quote anim d3">Смотреть можно на YouTube. Здесь задача другая: завести себе рабочую агентскую среду.</div>
 </section>
 
 <section class="slide">
   <div class="kicker anim"><i data-lucide="target"></i> Ожидания</div>
-  <h2 class="slide-title anim d1">Что реально получить за 8 занятий</h2>
-  <div class="two-col anim d2">
-    <div class="card is-accent">
-      <div class="card-title"><i data-lucide="check-circle-2"></i> Можно ожидать</div>
-      <div class="card-body">Понять среду, настроить Codex, собрать первый продукт, попробовать OpenCode/Open Design, поставить Hermes и увидеть, как агенты работают в задачах.</div>
+  <h2 class="slide-title anim d1">Что реально получить за <span class="accent">8 занятий</span></h2>
+  <div class="expectation anim d2">
+    <div class="expect-card good panel">
+      <h3>Можно ожидать</h3>
+      <div class="expect-line"><i data-lucide="check-circle-2"></i><span>Настроить Codex как рабочую агентскую среду.</span></div>
+      <div class="expect-line"><i data-lucide="check-circle-2"></i><span>Собрать первый продукт или внутренний инструмент.</span></div>
+      <div class="expect-line"><i data-lucide="check-circle-2"></i><span>Понять OpenCode, Open Design, Hermes и роли агентов.</span></div>
+      <div class="expect-line"><i data-lucide="check-circle-2"></i><span>Научиться ставить задачу так, чтобы агент доводил её до артефакта.</span></div>
     </div>
-    <div class="card">
-      <div class="card-title"><i data-lucide="circle-slash"></i> Не обещаем</div>
-      <div class="card-body">Не превращаем всех в senior-разработчиков за месяц. Не обещаем, что агент делает всё без контроля. Не подменяем мышление кнопкой.</div>
+    <div class="gauge pulse"><div><strong>8</strong><span>встреч<br>до рабочего контура</span></div></div>
+    <div class="expect-card limit panel">
+      <h3>Не обещаем</h3>
+      <div class="expect-line"><i data-lucide="circle-slash"></i><span>Не превращаем всех в senior-разработчиков за месяц.</span></div>
+      <div class="expect-line"><i data-lucide="circle-slash"></i><span>Не обещаем автономность без контроля человека.</span></div>
+      <div class="expect-line"><i data-lucide="circle-slash"></i><span>Не подменяем мышление кнопкой.</span></div>
+      <div class="expect-line"><i data-lucide="circle-slash"></i><span>Не углубляем GitHub, Vercel и терминал в первом уроке.</span></div>
     </div>
   </div>
-  <div class="quote anim d3">Результат курса не «я знаю названия сервисов». Результат: я умею ставить задачу агенту и доводить её до работающего артефакта.</div>
 </section>
 
 <section class="slide">
   <div class="kicker anim"><i data-lucide="map"></i> Маршрут</div>
-  <h2 class="slide-title anim d1">8 занятий: от первого Codex до своей агентской системы</h2>
-  <div class="timeline anim d2">
-    <div class="lesson"><div class="lesson-num">1</div><strong>Старт Codex</strong><span>Погружение, агентская карта, установка, персонализация.</span></div>
-    <div class="lesson"><div class="lesson-num">2</div><strong>Codex глубже</strong><span>Скиллы, MCP, GitHub, Vercel, первый деплой.</span></div>
-    <div class="lesson"><div class="lesson-num">3</div><strong>OpenCode и среды</strong><span>AI-редакторы, терминальные агенты, разные модели.</span></div>
-    <div class="lesson"><div class="lesson-num">4</div><strong>Open Design</strong><span>Дизайн-системы, интерфейсы, продуктовая упаковка.</span></div>
-    <div class="lesson"><div class="lesson-num">5</div><strong>Hermes</strong><span>Установка, роли, память, первый агентский контур.</span></div>
-    <div class="lesson"><div class="lesson-num">6</div><strong>Личная автоматизация</strong><span>Codex как исполнитель для рутины, документов, файлов.</span></div>
-    <div class="lesson"><div class="lesson-num">7</div><strong>Команда агентов</strong><span>Юрист, методист, дизайнер, аналитик, вайбкодер.</span></div>
-    <div class="lesson"><div class="lesson-num">8</div><strong>Финальная сборка</strong><span>Мини-SaaS, инструмент или агентская система.</span></div>
+  <h2 class="slide-title anim d1">8 занятий: от Codex до своей агентской системы</h2>
+  <div class="route-board panel anim d2">
+    <div class="route-grid">
+      <div class="route-node"><div class="route-num">1</div><strong>Старт Codex</strong><span>Погружение, установка, персонализация.</span></div>
+      <div class="route-node"><div class="route-num">2</div><strong>Codex глубже</strong><span>Скиллы, MCP, GitHub, Vercel, первый деплой.</span></div>
+      <div class="route-node"><div class="route-num">3</div><strong>OpenCode и среды</strong><span>AI-редакторы, терминальные агенты, разные модели.</span></div>
+      <div class="route-node"><div class="route-num">4</div><strong>Open Design</strong><span>Дизайн-системы, интерфейсы, продуктовая упаковка.</span></div>
+      <div class="route-node"><div class="route-num">5</div><strong>Hermes</strong><span>Установка, роли, память, первый агентский контур.</span></div>
+      <div class="route-node"><div class="route-num">6</div><strong>Личная автоматизация</strong><span>Документы, файлы, рутина, рабочие процессы.</span></div>
+      <div class="route-node"><div class="route-num">7</div><strong>Команда агентов</strong><span>Юрист, методист, дизайнер, аналитик, вайбкодер.</span></div>
+      <div class="route-node"><div class="route-num">8</div><strong>Финальная сборка</strong><span>Мини-SaaS, инструмент или агентская система.</span></div>
+    </div>
   </div>
 </section>
 
 <section class="slide">
-  <div class="big-claim">
-    <div class="kicker anim"><i data-lucide="history"></i> Сдвиг парадигмы</div>
-    <div class="claim-line anim d1">Раньше ИИ <strong>отвечал</strong>.<br>Теперь агент <strong>работает</strong>.</div>
-    <p class="slide-subtitle anim d2" style="margin-top:28px; text-align:center;">AI Цех начинается с этого перехода: от чата к среде, где агент видит окружение, подключает инструменты и несёт ответственность за результат.</p>
+  <div class="kicker anim"><i data-lucide="history"></i> Сдвиг парадигмы</div>
+  <h2 class="slide-title anim d1">Раньше ИИ отвечал. <span class="accent">Теперь агент работает</span></h2>
+  <div class="shift anim d2">
+    <div class="shift-card panel">
+      <h3>Чат-ассистент</h3>
+      <p>Даёт текст, идею, объяснение. Но живёт внутри чата и не трогает рабочее окружение.</p>
+      <div class="message-stack"><div>«Объясни»</div><div>«Напиши текст»</div><div>«Предложи идеи»</div></div>
+    </div>
+    <div class="shift-center">→</div>
+    <div class="shift-card panel">
+      <h3>Рабочий агент</h3>
+      <p>Видит проект, запускает действия, проверяет результат и возвращает готовый артефакт.</p>
+      <div class="work-stack"><div>разобрал файлы</div><div>подключил инструменты</div><div>собрал и проверил</div></div>
+    </div>
   </div>
 </section>
 
 <section class="slide">
   <div class="kicker anim"><i data-lucide="layers-3"></i> Карта поля</div>
   <h2 class="slide-title anim d1">4 уровня AI-агентов</h2>
-  <p class="slide-subtitle anim d2">Сначала фиксируем лестницу. На этом курсе мы работаем не с первыми двумя уровнями, а с третьим и четвёртым.</p>
-  <div class="level-mini anim d3">
-    <div class="level"><div class="level-index">1</div><h3>Чат-ассистент</h3><p>Отвечает, пишет, объясняет и анализирует внутри чата.</p><div class="examples">ChatGPT · Claude · Gemini</div></div>
-    <div class="level"><div class="level-index">2</div><h3>Сценарная автоматизация</h3><p>Выполняет заранее собранный маршрут: если условие, то действие.</p><div class="examples">Make · n8n · Zapier</div></div>
-    <div class="level focus"><div class="level-index">3</div><h3>Рабочий агент</h3><p>Понимает цель и работает с файлами, браузером, командами, сервисами.</p><div class="examples">Codex · Claude Code · Antigravity</div></div>
-    <div class="level focus"><div class="level-index">4</div><h3>Автономная система</h3><p>Сервер, память, роли, расписания, долгосрочная работа на ваших данных.</p><div class="examples">Hermes · агенты компании</div></div>
+  <p class="slide-subtitle anim d2">AI Цех работает с третьим и четвёртым уровнем: рабочие агенты и автономные системы.</p>
+  <div class="levels anim d3">
+    <div class="level-card"><div class="level-index">1</div><h3>Чат-ассистент</h3><p>Отвечает, пишет, объясняет и анализирует внутри чата.</p><div class="examples">ChatGPT · Claude · Gemini</div></div>
+    <div class="level-card"><div class="level-index">2</div><h3>Сценарная автоматизация</h3><p>Выполняет заранее собранный маршрут: если условие, то действие.</p><div class="examples">Make · n8n · Zapier</div></div>
+    <div class="level-card focus"><div class="level-index">3</div><h3>Рабочий агент</h3><p>Работает с файлами, браузером, командами, сервисами и проектом.</p><div class="examples">Codex · Claude Code · Antigravity</div></div>
+    <div class="level-card focus"><div class="level-index">4</div><h3>Автономная система</h3><p>Сервер, память, роли, расписания, долгосрочная работа на ваших данных.</p><div class="examples">Hermes · агенты компании</div></div>
   </div>
 </section>
 
@@ -839,72 +1329,96 @@
 </section>
 
 <section class="slide">
-  <div class="kicker anim"><i data-lucide="brain-circuit"></i> Определение</div>
-  <h2 class="slide-title anim d1">Агент это LLM-мозг плюс <span class="accent">инженерная обвязка</span></h2>
-  <p class="slide-subtitle anim d2">Модель сама по себе умеет думать и писать. Агент появляется, когда вокруг неё есть инструменты, контекст, доступы, память и цикл проверки.</p>
-  <div class="agent-formula anim d3">
-    <div class="formula-part"><i data-lucide="brain"></i><strong>LLM-мозг</strong><span class="small">Понимает задачу</span></div>
-    <div class="formula-part"><i data-lucide="folder-open"></i><strong>Контекст</strong><span class="small">Видит проект</span></div>
-    <div class="formula-part"><i data-lucide="plug"></i><strong>Инструменты</strong><span class="small">Подключает сервисы</span></div>
-    <div class="formula-part"><i data-lucide="repeat-2"></i><strong>Цикл действий</strong><span class="small">Планирует, делает, проверяет</span></div>
-    <div class="formula-part"><i data-lucide="shield-check"></i><strong>Контроль</strong><span class="small">Человек принимает решения</span></div>
+  <div class="kicker anim"><i data-lucide="brain-circuit"></i> Что такое агент</div>
+  <h2 class="slide-title anim d1">LLM-мозг плюс <span class="accent">инженерная обвязка</span></h2>
+  <div class="anatomy anim d2">
+    <div class="formula panel">
+      <div class="formula-line"><i data-lucide="brain"></i><div><strong>LLM-мозг</strong><span>понимает смысл задачи</span></div></div>
+      <div class="formula-line"><i data-lucide="folder-open"></i><div><strong>Контекст</strong><span>видит проект, файлы, историю, правила</span></div></div>
+      <div class="formula-line"><i data-lucide="plug"></i><div><strong>Инструменты</strong><span>браузер, терминал, сервисы, документы</span></div></div>
+      <div class="formula-line"><i data-lucide="repeat-2"></i><div><strong>Цикл действий</strong><span>планирует, делает, проверяет, исправляет</span></div></div>
+      <div class="formula-line"><i data-lucide="shield-check"></i><div><strong>Контроль человека</strong><span>разрешения, ограничения, финальное решение</span></div></div>
+    </div>
+    <div class="anatomy-map panel">
+      <svg viewBox="0 0 620 480" aria-hidden="true">
+        <path d="M122 86 C220 118 240 196 310 232"/>
+        <path d="M500 86 C400 118 380 196 310 232"/>
+        <path d="M112 382 C210 332 250 288 310 232"/>
+        <path d="M508 382 C410 332 370 288 310 232"/>
+      </svg>
+      <div class="brain-core"><div><strong>Агент</strong><span>модель + среда + инструменты</span></div></div>
+      <div class="atom a1"><i data-lucide="target"></i><strong>План</strong><span>разбивает цель на шаги</span></div>
+      <div class="atom a2"><i data-lucide="database"></i><strong>Память</strong><span>сохраняет правила и контекст</span></div>
+      <div class="atom a3"><i data-lucide="wrench"></i><strong>Действия</strong><span>читает, правит, запускает</span></div>
+      <div class="atom a4"><i data-lucide="scan-search"></i><strong>Проверка</strong><span>ищет ошибки и подтверждает результат</span></div>
+    </div>
   </div>
-  <div class="quote anim d4">Агент ценен не тем, что «умный». Он ценен тем, что может работать в окружении.</div>
 </section>
 
 <section class="slide">
-  <div class="kicker anim"><i data-lucide="panel-top"></i> Простая карта инструментов</div>
+  <div class="kicker anim"><i data-lucide="panel-top"></i> Форматы работы</div>
   <h2 class="slide-title anim d1">Три формата AI-разработки</h2>
   <div class="format-grid anim d2">
-    <div class="format-card primary">
-      <div class="logos-row">
-        <span class="logo-badge"><img src="assets/logos/openai.svg" alt="OpenAI logo"></span>
-        <span class="logo-badge"><img src="assets/logos/claude.svg" alt="Claude logo"></span>
-        <span class="logo-badge"><img src="assets/logos/gemini.svg" alt="Gemini logo"></span>
-      </div>
+    <div class="format-card primary panel">
+      <div class="logos-row"><span class="logo-badge"><img src="assets/logos/openai.svg" alt="OpenAI"></span><span class="logo-badge"><img src="assets/logos/claude.svg" alt="Claude"></span><span class="logo-badge"><img src="assets/logos/gemini.svg" alt="Gemini"></span></div>
       <h3>Готовые агенты</h3>
-      <p>Codex, Claude Code, Antigravity. Родные рабочие кабинеты от OpenAI, Anthropic и Google.</p>
-      <div class="bottom">Фокус урока 1: человек ставит цель, агент работает внутри проекта.</div>
+      <p>Codex, Claude Code, Antigravity. Родные рабочие кабинеты, где агент работает внутри проекта.</p>
+      <div class="mini-screen screenshot"><img src="assets/images/codex-page.png" alt="Страница OpenAI Codex"></div>
     </div>
-    <div class="format-card">
-      <div class="logos-row">
-        <span class="logo-badge"><img src="assets/logos/cursor.svg" alt="Cursor logo"></span>
-        <span class="logo-badge"><img src="assets/logos/vscode.svg" alt="VS Code logo"></span>
-      </div>
+    <div class="format-card panel">
+      <div class="logos-row"><span class="logo-badge"><img src="assets/logos/cursor.svg" alt="Cursor"></span><span class="logo-badge"><img src="assets/logos/vscode.svg" alt="VS Code"></span></div>
       <h3>AI-редакторы</h3>
-      <p>Cursor, VS Code с расширениями. Рабочая мастерская, куда подключают разные модели и плагины.</p>
-      <div class="bottom">Разберём отдельно: удобно, когда нужно гибко управлять средой.</div>
+      <p>Cursor, VS Code с расширениями. Мастерская, куда подключают модели, плагины и рабочие файлы.</p>
+      <div class="mini-screen screenshot"><img src="assets/images/cursor-page.png" alt="Страница Cursor"></div>
     </div>
-    <div class="format-card">
-      <div class="logos-row">
-        <span class="logo-badge"><img class="logo-raw" src="assets/logos/opencode.svg" alt="OpenCode logo"></span>
-        <span class="logo-badge"><img src="assets/logos/openai.svg" alt="OpenAI logo"></span>
-        <span class="logo-badge"><img src="assets/logos/claude.svg" alt="Claude logo"></span>
-      </div>
+    <div class="format-card panel">
+      <div class="logos-row"><span class="logo-badge"><img class="logo-raw" src="assets/logos/opencode.svg" alt="OpenCode"></span><span class="logo-badge"><img src="assets/logos/openai.svg" alt="OpenAI"></span><span class="logo-badge"><img src="assets/logos/claude.svg" alt="Claude"></span></div>
       <h3>Терминальные агенты</h3>
       <p>OpenCode, Codex CLI, Claude CLI. Агент через командную строку: мощно, но техничнее.</p>
-      <div class="bottom">Покажем позже, чтобы понимать, что происходит под интерфейсом.</div>
+      <div class="mini-screen screenshot"><img src="assets/images/opencode-page.png" alt="Страница OpenCode"></div>
     </div>
   </div>
 </section>
 
 <section class="slide">
   <div class="kicker anim"><i data-lucide="workflow"></i> Почему Codex</div>
-  <h2 class="slide-title anim d1">Начинаем с Codex, потому что это <span class="accent">понятный вход</span> из ChatGPT</h2>
-  <div class="why-layout anim d2">
-    <div class="card is-accent">
-      <div class="card-title"><i data-lucide="message-square-text"></i> Логика знакомая</div>
-      <div class="card-body">Вы уже понимаете чат. Codex добавляет к нему рабочую среду: файлы, инструменты, действия, проверки и результат.</div>
-      <div class="quote" style="font-size:20px; margin-top:24px;">ChatGPT отвечает. Codex работает.</div>
+  <h2 class="slide-title anim d1">Начинаем с Codex: <span class="accent">понятный вход из ChatGPT</span></h2>
+  <div class="codex-workstation anim d2">
+    <div class="codex-left panel">
+      <div>
+        <h3>Один экран, много действий</h3>
+        <p>Ты пишешь обычным языком. Агент видит проект, предлагает план, правит файлы, запускает проверки и показывает результат.</p>
+      </div>
+      <div class="codex-stack">
+        <div class="codex-chip"><i data-lucide="message-square-text"></i><span>чат с человеком</span></div>
+        <div class="codex-chip"><i data-lucide="folder-code"></i><span>рабочие файлы и изменения</span></div>
+        <div class="codex-chip"><i data-lucide="globe-2"></i><span>браузер и интернет</span></div>
+        <div class="codex-chip"><i data-lucide="plug"></i><span>подключаемые сервисы</span></div>
+      </div>
     </div>
-    <div class="stack">
-      <div class="stack-item"><span class="logo-badge"><img src="assets/logos/openai.svg" alt="OpenAI logo"></span><div><strong>Родная среда OpenAI</strong><span>Не собираем сложный стек в первый день.</span></div></div>
-      <div class="stack-item"><span class="logo-badge"><img src="assets/logos/github.svg" alt="GitHub logo"></span><div><strong>Готов к проектной работе</strong><span>Файлы, версии, изменения и проверка результата.</span></div></div>
-      <div class="stack-item"><span class="logo-badge"><img src="assets/logos/chrome.svg" alt="Chrome logo"></span><div><strong>Есть браузер и интернет</strong><span>Можно проверять сайты, документацию и актуальные источники.</span></div></div>
-      <div class="stack-item"><span class="logo-badge"><img src="assets/logos/google-drive.svg" alt="Google Drive logo"></span><div><strong>Подключаемые сервисы</strong><span>Drive, Figma, Slack, GitHub, Vercel и другие инструменты через разрешённые подключения.</span></div></div>
+    <div class="workstation-ui panel">
+      <div class="ui-pane">
+        <div class="screen-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="chat-lines">
+          <div class="bubble">Собери первый проект для урока.</div>
+          <div class="bubble agent">Поняла задачу. Сначала проверю контекст, затем предложу план и безопасные действия.</div>
+          <div class="bubble">Покажи, какие разрешения нужны.</div>
+          <div class="bubble agent">Файлы читаю, изменения и внешние действия подтверждаю у человека.</div>
+        </div>
+      </div>
+      <div class="ui-pane">
+        <div class="screen-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="tool-grid">
+          <div class="tool-tile"><i data-lucide="folder-open"></i><br>Файлы</div>
+          <div class="tool-tile"><i data-lucide="terminal-square"></i><br>Команды</div>
+          <div class="tool-tile"><i data-lucide="globe-2"></i><br>Браузер</div>
+          <div class="tool-tile"><i data-lucide="git-branch"></i><br>GitHub</div>
+          <div class="tool-tile"><i data-lucide="cloud-upload"></i><br>Vercel</div>
+          <div class="tool-tile"><i data-lucide="shield-check"></i><br>Разрешения</div>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="source-note">Сверено с OpenAI Help Center и Codex docs, май 2026.</div>
 </section>
 
 <section class="slide full-image">
@@ -912,74 +1426,191 @@
 </section>
 
 <section class="slide">
-  <div class="kicker anim"><i data-lucide="play-circle"></i> Переход к практике</div>
-  <h2 class="slide-title anim d1">Сейчас заводим себе <span class="accent">рабочего исполнителя</span></h2>
-  <p class="slide-subtitle anim d2">Не углубляемся в GitHub, Vercel и терминал. Задача урока 1: открыть Codex, установить приложение, персонализировать агента и проверить первый запрос.</p>
-  <div class="practice-map anim d3">
-    <div class="practice-step"><div class="num">Шаг 1</div><h3>Открываем Codex</h3><p>Через ChatGPT/Codex web, смотрим общий интерфейс и где находится download.</p></div>
-    <div class="practice-step"><div class="num">Шаг 2</div><h3>Скачиваем приложение</h3><p>Mac или Windows, входим в тот же ChatGPT-аккаунт.</p></div>
-    <div class="practice-step"><div class="num">Шаг 3</div><h3>Персонализируем</h3><p>Даём агенту правила курса, стиль работы, цели и ограничения.</p></div>
-    <div class="practice-step"><div class="num">Шаг 4</div><h3>Проверяем</h3><p>Первый безопасный запрос: агент должен показать, что понял среду и правила.</p></div>
+  <div class="kicker anim"><i data-lucide="play-circle"></i> Практика</div>
+  <h2 class="slide-title anim d1">Второй час: заводим себе <span class="accent">рабочего исполнителя</span></h2>
+  <div class="practice-track panel anim d2">
+    <div class="practice-steps">
+      <div class="practice-node"><div class="practice-num">Шаг 1</div><i data-lucide="globe-2"></i><strong>Открываем Codex</strong><span>Веб-версия ChatGPT, вход в Codex, проверка доступа.</span></div>
+      <div class="practice-node"><div class="practice-num">Шаг 2</div><i data-lucide="download"></i><strong>Ставим приложение</strong><span>Mac или Windows, авторизация в том же аккаунте.</span></div>
+      <div class="practice-node"><div class="practice-num">Шаг 3</div><i data-lucide="panel-top"></i><strong>Разбираем зоны</strong><span>Чат, файлы, изменения, разрешения, ход работы.</span></div>
+      <div class="practice-node"><div class="practice-num">Шаг 4</div><i data-lucide="user-cog"></i><strong>Персонализируем</strong><span>Правила курса, стиль работы, цели, ограничения.</span></div>
+      <div class="practice-node"><div class="practice-num">Шаг 5</div><i data-lucide="message-circle-check"></i><strong>Проверяем</strong><span>Первый безопасный запрос и фиксация готовности.</span></div>
+    </div>
   </div>
 </section>
 
 <section class="slide">
   <div class="kicker anim"><i data-lucide="download"></i> Практика 1</div>
   <h2 class="slide-title anim d1">Открываем Codex и ставим приложение</h2>
-  <div class="cards two anim d2">
-    <div class="card">
-      <div class="card-title"><i data-lucide="globe-2"></i> Веб-версия</div>
-      <div class="card-body">Заходим в ChatGPT, открываем Codex, проверяем доступ. Если Codex не виден, проверяем тариф, VPN и аккаунт.</div>
+  <div class="practice-layout anim d2">
+    <div class="practice-panel panel">
+      <div>
+        <h3>Самый простой вход: через интерфейс Codex</h3>
+        <p>Не начинаем с терминала. Сначала заходим привычным путём, смотрим web-версию и ставим приложение под свою систему.</p>
+      </div>
+      <div class="checklist">
+        <div class="check"><i data-lucide="check"></i><span>Открыть ChatGPT и перейти в Codex.</span></div>
+        <div class="check"><i data-lucide="check"></i><span>Проверить, что аккаунт и тариф дают доступ.</span></div>
+        <div class="check"><i data-lucide="check"></i><span>Скачать приложение под Mac или Windows.</span></div>
+        <div class="check"><i data-lucide="check"></i><span>Авторизоваться в том же аккаунте.</span></div>
+      </div>
     </div>
-    <div class="card is-accent">
-      <div class="card-title"><i data-lucide="laptop"></i> Приложение</div>
-      <div class="card-body">Через интерфейс Codex скачиваем версию под свою систему. Mac получает Mac, Windows получает Windows.</div>
+    <div class="mock-large panel">
+      <div class="screen-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="mock-grid">
+        <div class="mock-sidebar">
+          <div class="mock-item"><i data-lucide="message-square"></i>ChatGPT</div>
+          <div class="mock-item"><i data-lucide="factory"></i>Codex</div>
+          <div class="mock-item"><i data-lucide="download"></i>Download app</div>
+        </div>
+        <div class="mock-main">
+          <div class="mock-item tall"><i data-lucide="monitor-down"></i> Desktop app<br><span class="muted">Mac / Windows</span></div>
+          <div class="mock-item"><i data-lucide="user-check"></i> Login</div>
+          <div class="mock-item"><i data-lucide="shield-check"></i> Access check</div>
+          <div class="mock-item"><i data-lucide="app-window"></i> Open workspace</div>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="quote anim d3">Самый простой путь: не терминал, а готовое приложение с понятным интерфейсом.</div>
 </section>
 
 <section class="slide">
-  <div class="kicker anim"><i data-lucide="sliders-horizontal"></i> Практика 2</div>
+  <div class="kicker anim"><i data-lucide="scan-search"></i> Практика 2</div>
+  <h2 class="slide-title anim d1">Показываем основные зоны Codex</h2>
+  <div class="practice-layout anim d2">
+    <div class="mock-large panel">
+      <div class="screen-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="mock-grid">
+        <div class="mock-sidebar">
+          <div class="mock-item"><i data-lucide="message-square-text"></i>Чат</div>
+          <div class="mock-item"><i data-lucide="list-checks"></i>Задачи</div>
+          <div class="mock-item"><i data-lucide="folder-open"></i>Проекты</div>
+          <div class="mock-item"><i data-lucide="shield-alert"></i>Разрешения</div>
+        </div>
+        <div class="mock-main">
+          <div class="mock-item tall"><i data-lucide="file-diff"></i>Изменения<br><span class="muted">что агент предлагает править</span></div>
+          <div class="mock-item"><i data-lucide="terminal-square"></i>Команды</div>
+          <div class="mock-item"><i data-lucide="activity"></i>Ход работы</div>
+          <div class="mock-item"><i data-lucide="check-check"></i>Проверки</div>
+        </div>
+      </div>
+    </div>
+    <div class="practice-panel panel">
+      <div>
+        <h3>Смотрим не кнопки, а принцип</h3>
+        <p>Codex ценен тем, что показывает процесс: что понял, какой план строит, какие файлы трогает и где просит разрешение.</p>
+      </div>
+      <div class="checklist">
+        <div class="check"><i data-lucide="check"></i><span>Где писать задачу обычным языком.</span></div>
+        <div class="check"><i data-lucide="check"></i><span>Где агент показывает план и ход работы.</span></div>
+        <div class="check"><i data-lucide="check"></i><span>Где видно изменения и проверки.</span></div>
+        <div class="check"><i data-lucide="check"></i><span>Где человек принимает решение.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="user-cog"></i> Практика 3</div>
   <h2 class="slide-title anim d1">Персонализация: агент должен понять <span class="accent">ваш контур</span></h2>
-  <p class="slide-subtitle anim d2">Пустой агент работает как универсальный исполнитель. Персонализированный агент начинает учитывать человека, бизнес, цели, стиль, ограничения и качество.</p>
-  <div class="cards anim d3">
-    <div class="card"><div class="card-title"><i data-lucide="user-round"></i> Кто вы</div><div class="card-body">Роль, сфера, задачи, уровень технической подготовки.</div></div>
-    <div class="card"><div class="card-title"><i data-lucide="flag"></i> Цели</div><div class="card-body">Что хотите собрать на курсе и какие рабочие задачи хотите закрыть.</div></div>
-    <div class="card"><div class="card-title"><i data-lucide="shield-alert"></i> Ограничения</div><div class="card-body">Что нельзя трогать, где спрашивать разрешение, какие данные не использовать.</div></div>
+  <div class="practice-layout anim d2">
+    <div class="practice-panel panel">
+      <div>
+        <h3>Пустой агент универсален. Настроенный агент работает точнее.</h3>
+        <p>Даём ему роль, цели, ограничения, стиль общения и правила качества, чтобы он не каждый раз начинал с нуля.</p>
+      </div>
+      <button class="reveal-button" data-reveal="personalization"><i data-lucide="panel-top-open"></i> Развернуть персонализацию</button>
+    </div>
+    <div class="assembly-board panel">
+      <div class="assembly-node"><i data-lucide="user-round"></i><strong>Кто я</strong><span>роль, сфера, уровень технической подготовки.</span></div>
+      <div class="assembly-node"><i data-lucide="flag"></i><strong>Куда иду</strong><span>цели курса, личный проект, рабочие задачи.</span></div>
+      <div class="assembly-node"><i data-lucide="shield-alert"></i><strong>Границы</strong><span>что нельзя трогать, где спрашивать разрешение.</span></div>
+      <div class="assembly-node is-output"><i data-lucide="badge-check"></i><div><strong>Режим работы</strong><span>агент начинает учитывать человека, бизнес и качество результата.</span></div></div>
+    </div>
+  </div>
+  <div class="instruction-panel hidden" id="personalization">
+    <button class="close-reveal" data-close><i data-lucide="x"></i></button>
+    <div class="instruction-title">
+      <h3>Персонализация Codex</h3>
+      <p>Структура, которую участник даёт агенту перед первой серьёзной работой.</p>
+    </div>
+    <div class="instruction-body">
+      <div class="instruction-block"><strong>1. Роль и контекст</strong><span>Кто я, чем занимаюсь, какие задачи хочу решать в AI Цехе, какие сервисы использую.</span></div>
+      <div class="instruction-block"><strong>2. Стиль работы</strong><span>Объясняй простым языком, действуй по шагам, сначала показывай план, затем переходи к действиям.</span></div>
+      <div class="instruction-block"><strong>3. Правила безопасности</strong><span>Не удаляй файлы, не публикуй, не отправляй данные во внешние сервисы и не запускай рискованные команды без подтверждения.</span></div>
+      <div class="instruction-block"><strong>4. Качество результата</strong><span>Проверяй работу, показывай ошибки, предлагай следующий шаг, не сдавай полуготовое.</span></div>
+      <div class="instruction-block"><strong>5. Формат ответа</strong><span>Коротко: что понял, что сделал, где файл или ссылка, что проверить дальше.</span></div>
+    </div>
   </div>
 </section>
 
 <section class="slide">
-  <div class="kicker anim"><i data-lucide="plug-zap"></i> Практика 3</div>
+  <div class="kicker anim"><i data-lucide="plug-zap"></i> Практика 4</div>
   <h2 class="slide-title anim d1">Мастер-инструкция: просим Codex <span class="accent">упаковать себя</span></h2>
-  <p class="slide-subtitle anim d2">Готовый промпт включает правила работы, нужные скиллы, MCP/коннекторы, проверки и поведение агента. Сегодня мы не пишем всё руками, а отдаём агенту инструкцию по сборке рабочего режима.</p>
-  <div class="prompt-box anim d3">
-    <code>Ты работаешь как мой агент AI Цеха. Проверь доступные инструменты, предложи нужные подключения, сохрани правила работы, объясни, что уже готово, а что требует моего разрешения. Ничего рискованного не делай без подтверждения.</code>
+  <div class="practice-layout anim d2">
+    <div class="assembly-board panel">
+      <div class="assembly-node"><i data-lucide="book-open"></i><strong>Правила</strong><span>личные инструкции, стиль, ограничения, критерии качества.</span></div>
+      <div class="assembly-node"><i data-lucide="blocks"></i><strong>Скиллы</strong><span>готовые сценарии работы: дизайн, документы, презентации, ревью.</span></div>
+      <div class="assembly-node"><i data-lucide="plug"></i><strong>MCP и коннекторы</strong><span>GitHub, Vercel, Google Drive, Figma, браузер и другие сервисы.</span></div>
+      <div class="assembly-node is-output"><i data-lucide="shield-check"></i><div><strong>Разрешения</strong><span>агент объясняет, что может сделать сам, а где ждёт подтверждение.</span></div></div>
+    </div>
+    <div class="practice-panel panel">
+      <div>
+        <h3>Инструкция не «магия». Это сборка рабочего режима.</h3>
+        <p>Мы даём агенту не одну задачу, а правила, по которым он дальше будет работать на курсе.</p>
+      </div>
+      <button class="reveal-button" data-reveal="master"><i data-lucide="panel-top-open"></i> Развернуть мастер-инструкцию</button>
+    </div>
   </div>
-  <div class="source-note">Финальный мастер-промпт будет в шпаргалке участника.</div>
+  <div class="instruction-panel hidden" id="master">
+    <button class="close-reveal" data-close><i data-lucide="x"></i></button>
+    <div class="instruction-title">
+      <h3>Мастер-инструкция</h3>
+      <p>Команда, которая переводит Codex в режим рабочего агента AI Цеха.</p>
+    </div>
+    <div class="instruction-body">
+      <div class="instruction-block"><strong>1. Проверь среду</strong><span>Определи, какие инструменты, скиллы и подключения доступны прямо сейчас.</span></div>
+      <div class="instruction-block"><strong>2. Предложи подключения</strong><span>Скажи, какие сервисы стоит подключить для курса и зачем они нужны.</span></div>
+      <div class="instruction-block"><strong>3. Сохрани правила работы</strong><span>Запомни ограничения, стиль, требования к качеству и формат отчёта.</span></div>
+      <div class="instruction-block"><strong>4. Обозначь разрешения</strong><span>Раздели действия на безопасные, требующие подтверждения и запрещённые.</span></div>
+      <div class="instruction-block"><strong>5. Проверь себя</strong><span>Коротко отчитайся, что готово, что требует настройки, и предложи первый безопасный запрос.</span></div>
+    </div>
+  </div>
 </section>
 
 <section class="slide">
-  <div class="kicker anim"><i data-lucide="shield-check"></i> Практика 4</div>
+  <div class="kicker anim"><i data-lucide="shield-check"></i> Практика 5</div>
   <h2 class="slide-title anim d1">Первый запрос должен быть <span class="accent">безопасным</span></h2>
-  <p class="slide-subtitle anim d2">В конце урока мы не ломаем проекты и не деплоим. Проверяем, что агент понимает правила и умеет действовать спокойно.</p>
-  <div class="prompt-box anim d3">
-    <code>Проверь, что ты понял мои правила работы. Коротко опиши, какие задачи ты можешь брать в AI Цехе, какие действия требуют моего подтверждения, и предложи первый безопасный проект для практики на следующем уроке.</code>
+  <div class="practice-layout anim d2">
+    <div class="practice-panel panel">
+      <div>
+        <h3>Проверяем не силу, а управляемость</h3>
+        <p>В первом запросе агент не ломает проекты, не удаляет файлы и не публикует результат. Он показывает, что понял правила.</p>
+      </div>
+      <div class="quote-strip">«Опиши, какие задачи ты можешь брать в AI Цехе, какие действия требуют подтверждения, и предложи первый безопасный проект для практики».</div>
+    </div>
+    <div class="mock-large panel">
+      <div class="screen-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="mock-main" style="grid-template-columns:1fr; padding:22px;">
+        <div class="mock-item"><i data-lucide="clipboard-check"></i> Агент пересказал правила курса.</div>
+        <div class="mock-item"><i data-lucide="shield-alert"></i> Агент назвал действия, где нужно подтверждение.</div>
+        <div class="mock-item"><i data-lucide="route"></i> Агент предложил первый проект без риска.</div>
+        <div class="mock-item"><i data-lucide="check-check"></i> Участник понимает, что среда готова.</div>
+      </div>
+    </div>
   </div>
-  <div class="quote anim d4">Первый результат: Codex установлен, персонализирован и готов к работе в следующих занятиях.</div>
 </section>
 
 <section class="slide">
   <div class="kicker anim"><i data-lucide="check-check"></i> Финал урока 1</div>
-  <h2 class="slide-title anim d1">Что должно быть готово к концу занятия</h2>
+  <h2 class="slide-title anim d1">К концу занятия Codex должен быть <span class="accent">готов к работе</span></h2>
   <div class="final-grid anim d2">
-    <div class="ready"><i data-lucide="app-window"></i><strong>Codex открыт</strong><span>Участник понимает, где web-версия и приложение.</span></div>
-    <div class="ready"><i data-lucide="laptop-minimal-check"></i><strong>Приложение стоит</strong><span>Mac/Windows установлен и авторизован.</span></div>
-    <div class="ready"><i data-lucide="user-cog"></i><strong>Агент настроен</strong><span>Внесены персональные правила и контекст курса.</span></div>
-    <div class="ready"><i data-lucide="message-circle-check"></i><strong>Первый запрос прошёл</strong><span>Агент подтвердил правила и предложил следующий безопасный шаг.</span></div>
+    <div class="ready-card"><i data-lucide="app-window"></i><strong>Codex открыт</strong><span>Понятно, где web-версия и приложение.</span></div>
+    <div class="ready-card"><i data-lucide="laptop-minimal-check"></i><strong>Приложение стоит</strong><span>Mac/Windows установлен и авторизован.</span></div>
+    <div class="ready-card"><i data-lucide="user-cog"></i><strong>Агент настроен</strong><span>Внесены персональные правила и контекст курса.</span></div>
+    <div class="ready-card"><i data-lucide="message-circle-check"></i><strong>Первый запрос прошёл</strong><span>Агент подтвердил правила и следующий безопасный шаг.</span></div>
   </div>
-  <div class="quote anim d3">Следующий урок: скиллы, MCP, GitHub, Vercel и первый цикл «агент сделал, мы проверили, выложили».</div>
+  <div class="quote-strip anim d3">Следующий урок: скиллы, MCP, GitHub, Vercel и первый цикл «агент сделал, мы проверили, выложили».</div>
 </section>
 
 </main>
@@ -1004,8 +1635,13 @@
     counter.textContent = `${current + 1} / ${slides.length}`;
     progress.style.width = `${((current + 1) / slides.length) * 100}%`;
   }
+  window.show = show;
 
   document.addEventListener('keydown', (event) => {
+    if (event.target && ['BUTTON', 'A'].includes(event.target.tagName)) return;
+    if (event.key === 'Escape') {
+      document.querySelectorAll('.instruction-panel').forEach(panel => panel.classList.add('hidden'));
+    }
     if (event.key === 'ArrowRight' || event.key === ' ' || event.key === 'PageDown') {
       event.preventDefault();
       show(current + 1);
@@ -1016,6 +1652,18 @@
     }
     if (event.key === 'Home') show(0);
     if (event.key === 'End') show(slides.length - 1);
+  });
+
+  document.querySelectorAll('[data-reveal]').forEach(button => {
+    button.addEventListener('click', () => {
+      const target = document.getElementById(button.dataset.reveal);
+      if (target) target.classList.remove('hidden');
+    });
+  });
+  document.querySelectorAll('[data-close]').forEach(button => {
+    button.addEventListener('click', () => {
+      button.closest('.instruction-panel')?.classList.add('hidden');
+    });
   });
 
   fsBtn.addEventListener('click', () => {
