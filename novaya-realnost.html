@@ -6420,30 +6420,55 @@ window.addEventListener('pageshow', function(){
     track.addEventListener('mouseenter', function(){ hovering = true; });
     track.addEventListener('mouseleave', function(){ hovering = false; });
 
-    // Drag / swipe (мышь и тач — единый pointer API)
+    // Drag / swipe (мышь и тач — единый pointer API).
+    // Важно: pointer capture НЕ ставится сразу — иначе click на дочерней
+    // карточке не синтезируется. Capture включаем только когда зафиксирован
+    // реальный drag (>5px). До этого момента — это потенциально обычный клик.
+    var pressedCard = null;
     track.addEventListener('pointerdown', function(e){
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       dragging = true;
       dragMoved = false;
       dragStartX = e.clientX;
       dragStartCurrentX = currentX;
+      pressedCard = e.target.closest ? e.target.closest('.t-card') : null;
       track.classList.add('is-grabbing');
-      try { track.setPointerCapture(e.pointerId); } catch(_){}
     });
     track.addEventListener('pointermove', function(e){
       if (!dragging) return;
       var dx = e.clientX - dragStartX;
-      if (Math.abs(dx) > 5) dragMoved = true;
-      currentX = wrap(dragStartCurrentX - dx);
+      if (!dragMoved && Math.abs(dx) > 5){
+        dragMoved = true;
+        try { track.setPointerCapture(e.pointerId); } catch(_){}
+      }
+      if (dragMoved){
+        currentX = wrap(dragStartCurrentX - dx);
+      }
     });
     function endDrag(e){
       if (!dragging) return;
+      var wasMoved = dragMoved;
+      var card = pressedCard;
       dragging = false;
+      dragMoved = false;
+      pressedCard = null;
       track.classList.remove('is-grabbing');
       try { track.releasePointerCapture(e.pointerId); } catch(_){}
+      // Простое касание без drag — открываем лайтбокс на нажатой карточке
+      if (!wasMoved && card){
+        openLightbox(card);
+      }
     }
     track.addEventListener('pointerup', endDrag);
-    track.addEventListener('pointercancel', endDrag);
+    track.addEventListener('pointercancel', function(e){
+      // отмена — никаких действий, кроме сброса состояния
+      if (!dragging) return;
+      dragging = false;
+      dragMoved = false;
+      pressedCard = null;
+      track.classList.remove('is-grabbing');
+      try { track.releasePointerCapture(e.pointerId); } catch(_){}
+    });
 
     /* Лайтбокс */
     var lb = document.getElementById('tLightbox');
