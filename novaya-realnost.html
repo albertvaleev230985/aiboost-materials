@@ -6788,6 +6788,128 @@ if ('scrollRestoration' in history) {
     });
   });
 
+  /* ───── Модалка «Записаться» ───── */
+  (function setupSignupModal(){
+    var modal = document.getElementById('signupModal');
+    if (!modal) return;
+    var closeBtn = modal.querySelector('.signup-close');
+    var formStep = modal.querySelector('[data-step="form"]');
+    var thanksStep = modal.querySelector('[data-step="thanks"]');
+    var form = modal.querySelector('#signupForm');
+    var submit = modal.querySelector('.signup-submit');
+    var thanksName = modal.querySelector('.signup-thanks-name');
+    var lastFocus = null;
+
+    function open(){
+      lastFocus = document.activeElement;
+      // Сброс к форме при каждом открытии (на случай если до этого было «спасибо»)
+      formStep.hidden = false;
+      thanksStep.hidden = true;
+      form.reset();
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('signup-open');
+      setTimeout(function(){
+        var first = form.querySelector('input[name="name"]');
+        if (first) first.focus();
+      }, 200);
+    }
+    function close(){
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('signup-open');
+      if (lastFocus && lastFocus.focus) try { lastFocus.focus(); } catch(_){}
+    }
+    function showThanks(name){
+      thanksName.textContent = name || 'друг';
+      formStep.hidden = true;
+      thanksStep.hidden = false;
+    }
+
+    // Триггеры открытия — все элементы с [data-signup]
+    document.querySelectorAll('[data-signup]').forEach(function(el){
+      el.addEventListener('click', function(e){
+        e.preventDefault();
+        open();
+      });
+    });
+
+    closeBtn.addEventListener('click', close);
+    modal.addEventListener('click', function(e){
+      if (e.target === modal) close();
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape' && modal.classList.contains('is-open')) close();
+    });
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      if (submit.disabled) return;
+
+      // honeypot — если заполнено, тихо игнорируем (это бот)
+      var hp = form.querySelector('input[name="company"]');
+      if (hp && hp.value) { showThanks(form.name.value); return; }
+
+      // Валидация
+      var name = form.name.value.trim();
+      var phone = form.phone.value.trim();
+      var telegram = form.telegram.value.trim();
+      var ok = true;
+      [['name', name], ['phone', phone]].forEach(function(p){
+        var input = form.querySelector('input[name="'+p[0]+'"]');
+        if (!p[1] || (p[0] === 'phone' && p[1].replace(/\D/g, '').length < 7)) {
+          input.classList.add('is-error');
+          ok = false;
+        } else {
+          input.classList.remove('is-error');
+        }
+      });
+      if (!ok) return;
+
+      var payload = {
+        name: name,
+        phone: phone,
+        telegram: telegram,
+        source: 'novaya-realnost.html',
+        stream: 'Поток 3',
+        timestamp: new Date().toISOString(),
+        url: location.href
+      };
+
+      submit.disabled = true;
+      submit.classList.add('is-loading');
+
+      // TODO: заменить URL на Google Apps Script Web App после деплоя.
+      // Сейчас отправка идёт в console.log и просто показывает «Спасибо» —
+      // лидов не теряем, но они нигде не записываются.
+      console.log('[SIGNUP]', payload);
+
+      // Имитация запроса — задержка ~700мс, чтобы UX чувствовался
+      setTimeout(function(){
+        submit.disabled = false;
+        submit.classList.remove('is-loading');
+        showThanks(name);
+      }, 700);
+
+      /* Будущая версия с реальным endpoint:
+      fetch('https://script.google.com/macros/s/...../exec', {
+        method: 'POST', mode: 'no-cors',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      }).finally(function(){
+        submit.disabled = false;
+        submit.classList.remove('is-loading');
+        showThanks(name);
+      });
+      */
+    });
+
+    // Сбрасываем ошибочный стейт при наборе
+    form.querySelectorAll('input').forEach(function(input){
+      input.addEventListener('input', function(){ input.classList.remove('is-error'); });
+    });
+  })();
+
   /* ───── Кастомный курсор-фонарик ───── */
   var cursor = document.getElementById('cursor');
   var cursorDot = document.getElementById('cursorDot');
