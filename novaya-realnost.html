@@ -8097,16 +8097,28 @@ if ('scrollRestoration' in history) {
       }, 250);
     });
 
-    // Старт
+    // Прелоад ВСЕХ кадров — обязательно ДО play(), иначе первая
+    // итерация каждого состояния лагает на 50-100мс из-за HTTP fetch.
+    // Держим Image-объекты в массиве чтобы GC не выкинул их из кеша.
+    var preloaded = [];
+    var loadedCount = 0;
+    var totalFrames = 0;
+    Object.keys(FRAMES).forEach(function(state){
+      var cfg = FRAMES[state];
+      totalFrames += cfg.count;
+      for (var i = 0; i < cfg.count; i++){
+        var im = new Image();
+        im.src = 'mascot/' + state + '/' + pad(i) + '.webp';
+        im.onload = function(){ loadedCount++; };
+        preloaded.push(im);
+      }
+    });
+
+    // Старт сразу — даже если ещё грузится; первые кадры обычно уже
+    // в кеше браузера на момент play()
     play('idle');
     resetIdleClock();
     scheduleSpontaneous();
-
-    // Прелоад первых кадров чтобы первый показ был мгновенным
-    ['waiting/00','waving/00','jumping/00'].forEach(function(p){
-      var pre = new Image();
-      pre.src = 'mascot/' + p + '.webp';
-    });
   })();
 
   /* ───── Модалка «Задать вопрос» ───── */
