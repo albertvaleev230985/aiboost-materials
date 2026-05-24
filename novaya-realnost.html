@@ -8092,7 +8092,7 @@ if ('scrollRestoration' in history) {
       }, IDLE_DELAY);
     }
 
-    // Активность пользователя
+    // Активность пользователя — сбрасывает idle-таймер
     ['mousemove','scroll','keydown','touchstart','click'].forEach(function(ev){
       document.addEventListener(ev, function(e){
         // Игнорируем клики по самому маскоту — он сам сбросит
@@ -8100,6 +8100,28 @@ if ('scrollRestoration' in history) {
         resetIdleClock();
       }, { passive: true });
     });
+
+    // Реакция на «активный скролл» — если юзер заметно скроллит,
+    // маскот раз в N секунд приветствует движением (с throttle)
+    var lastScrollReact = 0;
+    var lastScrollY = window.scrollY;
+    var scrollDelta = 0;
+    window.addEventListener('scroll', function(){
+      var dy = Math.abs(window.scrollY - lastScrollY);
+      lastScrollY = window.scrollY;
+      scrollDelta += dy;
+      var now = Date.now();
+      // Реагируем только если накопили заметный скролл (>1200px)
+      // и прошло минимум 8 сек с последней реакции
+      if (scrollDelta > 1200 && now - lastScrollReact > 8000){
+        scrollDelta = 0;
+        lastScrollReact = now;
+        if (currentState === 'idle' || currentState === 'waiting'){
+          hideBubble();
+          play('waving');
+        }
+      }
+    }, { passive: true });
 
     // Hover — приветствие
     mascot.addEventListener('mouseenter', function(){
