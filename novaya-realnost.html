@@ -8008,12 +8008,19 @@ if ('scrollRestoration' in history) {
     var bubble = document.getElementById('mascotBubble');
     if (!mascot || !img) return;
 
-    // Состояния и кадры
+    // Состояния и кадры — fps подобраны «по-человечески»:
+    // idle/waiting медленные (микро-движения), waving/jumping живые но не быстрые
     var FRAMES = {
-      idle:    { count: 6, fps: 6,  loop: true  },
-      waiting: { count: 6, fps: 4,  loop: true  },
-      waving:  { count: 4, fps: 8,  loop: false, next: 'idle' },
-      jumping: { count: 5, fps: 10, loop: false, next: 'idle' }
+      // Кадры idle различаются микро-движениями (моргание, хвост) — играем
+      // редко, как реальное моргание раз в ~3 сек
+      idle:    { count: 6, fps: 2,   loop: true  },
+      // Садится один раз и ОСТАЁТСЯ сидеть (loop:false, holdLast)
+      // — больше не «вскакивает» обратно
+      waiting: { count: 6, fps: 1.8, loop: false, holdLast: true },
+      // Машет плавно
+      waving:  { count: 4, fps: 5,   loop: false, next: 'idle' },
+      // Прыгает живо но не как метеор
+      jumping: { count: 5, fps: 7,   loop: false, next: 'idle' }
     };
 
     var currentState = 'idle';
@@ -8021,8 +8028,8 @@ if ('scrollRestoration' in history) {
     var frameTimer = null;
     var idleTimer = null;
     var spontaneousTimer = null;
-    var IDLE_DELAY = 9000;   // 9 сек простоя → задумывается
-    var SPONTANEOUS_MIN = 6000, SPONTANEOUS_MAX = 13000; // случайные «оживляющие» движения — часто, чтобы маскот «жил»
+    var IDLE_DELAY = 12000;  // 12 сек простоя → задумывается (больше воздуха)
+    var SPONTANEOUS_MIN = 9000, SPONTANEOUS_MAX = 18000; // оживляется реже — спокойнее
 
     function pad(n){ return n < 10 ? '0' + n : '' + n; }
 
