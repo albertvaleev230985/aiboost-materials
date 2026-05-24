@@ -7990,6 +7990,247 @@ if ('scrollRestoration' in history) {
     });
   }, 120);
 
+  /* ───── Маскот — state machine + bubble + ask-modal ───── */
+  (function setupMascot(){
+    var mascot = document.getElementById('mascot');
+    var img = document.getElementById('mascotImg');
+    var bubble = document.getElementById('mascotBubble');
+    if (!mascot || !img) return;
+
+    // Состояния и кадры
+    var FRAMES = {
+      idle:    { count: 6, fps: 6,  loop: true  },
+      waiting: { count: 6, fps: 4,  loop: true  },
+      waving:  { count: 4, fps: 8,  loop: false, next: 'idle' },
+      jumping: { count: 5, fps: 10, loop: false, next: 'idle' }
+    };
+
+    var currentState = 'idle';
+    var currentFrame = 0;
+    var frameTimer = null;
+    var idleTimer = null;
+    var spontaneousTimer = null;
+    var IDLE_DELAY = 9000;   // 9 сек простоя → задумывается
+    var SPONTANEOUS_MIN = 18000, SPONTANEOUS_MAX = 32000; // случайные «оживляющие» движения
+
+    function pad(n){ return n < 10 ? '0' + n : '' + n; }
+
+    function play(state){
+      if (!FRAMES[state]) state = 'idle';
+      currentState = state;
+      currentFrame = 0;
+      if (frameTimer) clearTimeout(frameTimer);
+      tick();
+    }
+    function tick(){
+      var cfg = FRAMES[currentState];
+      img.src = 'mascot/' + currentState + '/' + pad(currentFrame) + '.webp';
+      currentFrame++;
+      if (currentFrame >= cfg.count){
+        if (cfg.loop) {
+          currentFrame = 0;
+        } else {
+          play(cfg.next || 'idle');
+          return;
+        }
+      }
+      frameTimer = setTimeout(tick, 1000 / cfg.fps);
+    }
+
+    function showBubble(){
+      mascot.classList.add('is-bubble', 'is-attention');
+    }
+    function hideBubble(){
+      mascot.classList.remove('is-bubble', 'is-attention');
+    }
+
+    function scheduleSpontaneous(){
+      if (spontaneousTimer) clearTimeout(spontaneousTimer);
+      var ms = SPONTANEOUS_MIN + Math.random() * (SPONTANEOUS_MAX - SPONTANEOUS_MIN);
+      spontaneousTimer = setTimeout(function(){
+        // Не отвлекаем если bubble показан или другая анимация
+        if (currentState === 'idle'){
+          var anims = ['waving', 'jumping'];
+          play(anims[Math.floor(Math.random() * anims.length)]);
+        }
+        scheduleSpontaneous();
+      }, ms);
+    }
+
+    function resetIdleClock(){
+      if (idleTimer) clearTimeout(idleTimer);
+      // Если был waiting и/или bubble — возвращаемся к idle
+      if (currentState === 'waiting'){
+        play('idle');
+      }
+      hideBubble();
+      idleTimer = setTimeout(function(){
+        play('waiting');
+        showBubble();
+      }, IDLE_DELAY);
+    }
+
+    // Активность пользователя
+    ['mousemove','scroll','keydown','touchstart','click'].forEach(function(ev){
+      document.addEventListener(ev, function(e){
+        // Игнорируем клики по самому маскоту — он сам сбросит
+        if (e.target && e.target.closest && e.target.closest('#mascot')) return;
+        resetIdleClock();
+      }, { passive: true });
+    });
+
+    // Hover — приветствие
+    mascot.addEventListener('mouseenter', function(){
+      if (currentState === 'idle' || currentState === 'waiting'){
+        hideBubble();
+        play('waving');
+      }
+    });
+
+    // Клик — прыжок + модалка
+    mascot.addEventListener('click', function(e){
+      e.stopPropagation();
+      play('jumping');
+      hideBubble();
+      setTimeout(function(){
+        if (window.__openAskModal) window.__openAskModal();
+      }, 250);
+    });
+
+    // Старт
+    play('idle');
+    resetIdleClock();
+    scheduleSpontaneous();
+
+    // Прелоад первых кадров чтобы первый показ был мгновенным
+    ['waiting/00','waving/00','jumping/00'].forEach(function(p){
+      var pre = new Image();
+      pre.src = 'mascot/' + p + '.webp';
+    });
+  })();
+
+  /* ───── Модалка «Задать вопрос» ───── */
+  (function setupAskModal(){
+    var modal = document.getElementById('askModal');
+    if (!modal) return;
+    var closeBtn = modal.querySelector('.ask-close');
+    var formStep = modal.querySelector('[data-step="form"]');
+    var thanksStep = modal.querySelector('[data-step="thanks"]');
+    var form = modal.querySelector('#askForm');
+    var submit = modal.querySelector('.ask-submit');
+    var thanksName = modal.querySelector('.ask-thanks-name');
+    var lastFocus = null;
+
+    function open(){
+      lastFocus = document.activeElement;
+      formStep.hidden = false;
+      thanksStep.hidden = true;
+      form.reset();
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('ask-open');
+      setTimeout(function(){
+        var first = form.querySelector('input[name="name"]');
+        if (first) first.focus();
+      }, 200);
+    }
+    function close(){
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('ask-open');
+      if (lastFocus && lastFocus.focus) try { lastFocus.focus(); } catch(_){}
+    }
+    function showThanks(name){
+      thanksName.textContent = name || 'друг';
+      formStep.hidden = true;
+      thanksStep.hidden = false;
+    }
+
+    window.__openAskModal = open;
+
+    closeBtn.addEventListener('click', close);
+    modal.addEventListener('click', function(e){
+      if (e.target === modal) close();
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape' && modal.classList.contains('is-open')) close();
+    });
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      if (submit.disabled) return;
+
+      var hp = form.querySelector('input[name="company"]');
+      if (hp && hp.value) { showThanks(form.name.value); return; }
+
+      var name = form.name.value.trim();
+      var telegram = form.telegram.value.trim();
+      var question = form.question.value.trim();
+      var ok = true;
+      [['name', name, 1], ['telegram', telegram, 2], ['question', question, 3]].forEach(function(p){
+        var input = form.querySelector('[name="'+p[0]+'"]');
+        if (!p[1] || (p[0] === 'question' && p[1].length < 3)){
+          input.classList.add('is-error');
+          ok = false;
+        } else {
+          input.classList.remove('is-error');
+        }
+      });
+      if (!ok) return;
+
+      // Telegram-бот тот же — переиспользуем токен
+      var TG_BOT_TOKEN = '8710283046:AAEX7RcTj0AfQNRm-yssusvvqyHqAPSHQns';
+      var TG_CHAT_ID = '329280773';
+
+      function tgEscape(s){
+        return String(s || '').replace(/[<>&]/g, function(c){
+          return { '<':'&lt;', '>':'&gt;', '&':'&amp;' }[c];
+        });
+      }
+
+      var tgText =
+        '💬 <b>Вопрос с лендинга</b>\n\n' +
+        '<b>Имя:</b> ' + tgEscape(name) + '\n' +
+        '<b>Telegram:</b> ' + tgEscape(telegram) + '\n' +
+        '\n<b>Вопрос:</b>\n' + tgEscape(question) + '\n\n' +
+        '<i>с лендинга «ИИ. Новая реальность» · маскот-чат</i>';
+
+      var formData = new FormData();
+      formData.append('chat_id', TG_CHAT_ID);
+      formData.append('parse_mode', 'HTML');
+      formData.append('text', tgText);
+      formData.append('disable_web_page_preview', 'true');
+
+      submit.disabled = true;
+      submit.classList.add('is-loading');
+
+      fetch('https://api.telegram.org/bot' + TG_BOT_TOKEN + '/sendMessage', {
+        method: 'POST', body: formData
+      }).then(function(r){ return r.json(); })
+        .then(function(data){
+          if (!data || !data.ok) console.warn('[ASK] Telegram error:', data);
+        })
+        .catch(function(err){ console.warn('[ASK] fetch error:', err); })
+        .finally(function(){
+          submit.disabled = false;
+          submit.classList.remove('is-loading');
+          showThanks(name);
+        });
+
+      setTimeout(function(){
+        if (submit.classList.contains('is-loading')){
+          submit.disabled = false;
+          submit.classList.remove('is-loading');
+          showThanks(name);
+        }
+      }, 4000);
+    });
+
+    form.querySelectorAll('input, textarea').forEach(function(input){
+      input.addEventListener('input', function(){ input.classList.remove('is-error'); });
+    });
+  })();
+
   /* ───── Карусель отзывов: drag/swipe + клик → лайтбокс ───── */
   (function setupTestimonialsCarousel(){
     var track = document.querySelector('.testimonials-track');
