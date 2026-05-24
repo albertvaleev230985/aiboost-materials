@@ -6819,42 +6819,78 @@ window.addEventListener('pageshow', function(){
       try { track.releasePointerCapture(e.pointerId); } catch(_){}
     });
 
-    /* Лайтбокс */
+    /* Лайтбокс (общий — для отзывов и оценок) */
     var lb = document.getElementById('tLightbox');
     if (!lb) return;
     var lbVideo = lb.querySelector('video');
+    var lbImg = lb.querySelector('.t-lightbox-img');
     var lbName = lb.querySelector('.t-lightbox-meta .name');
     var lbRole = lb.querySelector('.t-lightbox-meta .role');
     var lbClose = lb.querySelector('.t-close');
 
-    function pauseCardVideos(){
-      document.querySelectorAll('.t-card video').forEach(function(v){ v.pause(); });
+    function pauseAllAutoVideos(){
+      document.querySelectorAll('.t-card video, .r-card video').forEach(function(v){ v.pause(); });
     }
-    function playCardVideos(){
+    function resumeAutoVideos(){
+      // Восстанавливаем .t-card видео (отзывы) — они должны крутиться всегда
       document.querySelectorAll('.t-card video').forEach(function(v){
-        var p = v.play();
-        if (p && p.catch) p.catch(function(){});
+        var p = v.play(); if (p && p.catch) p.catch(function(){});
       });
+      // .r-card — только те что видны в viewport (см. observer ниже)
+      if (window.__rRefreshAutoplay) window.__rRefreshAutoplay();
+    }
+    function setRatingsPaused(p){
+      var grid = document.querySelector('.ratings-grid');
+      if (grid) grid.classList.toggle('is-paused', p);
     }
 
-    function openLightbox(card){
-      var srcVideo = card.querySelector('video');
-      var src = srcVideo.currentSrc || srcVideo.src || srcVideo.getAttribute('src');
-      lbVideo.src = src;
-      try { lbVideo.currentTime = 0; } catch(_){}
-      lbName.textContent = card.querySelector('.name').textContent;
-      lbRole.textContent = card.querySelector('.role').textContent;
+    // openLightbox теперь принимает параметры (вызывается и для .t-card, и для .r-card)
+    function openLightbox(opts){
+      var type = opts.type || 'video';
+      var src = opts.src;
+      if (!src) return;
+      if (type === 'image'){
+        lb.classList.add('is-image');
+        lbImg.src = src;
+        try { lbVideo.pause(); lbVideo.removeAttribute('src'); lbVideo.load(); } catch(_){}
+      } else {
+        lb.classList.remove('is-image');
+        lbVideo.src = src;
+        try { lbVideo.currentTime = 0; } catch(_){}
+      }
+      lbName.textContent = opts.name || '';
+      lbRole.textContent = opts.role || '';
+      lbRole.style.display = opts.role ? '' : 'none';
       lb.classList.add('is-open');
       lb.setAttribute('aria-hidden', 'false');
       document.body.classList.add('t-lightbox-open');
       lbOpen = true;
-      pauseCardVideos();
-      lbVideo.muted = false;
-      var p = lbVideo.play();
-      if (p && p.catch) p.catch(function(){ /* возможен жест требуется */ });
+      pauseAllAutoVideos();
+      setRatingsPaused(true);
+      if (type === 'video'){
+        lbVideo.muted = false;
+        var p = lbVideo.play();
+        if (p && p.catch) p.catch(function(){});
+      }
     }
+    // Открыть отзыв из .t-card (старый API)
+    function openTestimonialLightbox(card){
+      var srcVideo = card.querySelector('video');
+      openLightbox({
+        type: 'video',
+        src: srcVideo.currentSrc || srcVideo.src || srcVideo.getAttribute('src'),
+        name: card.querySelector('.name').textContent,
+        role: card.querySelector('.role').textContent
+      });
+    }
+    // Открытие из .t-card на pointerup (endDrag) делегирует сюда
+    window.__openTestimonialLightbox = openTestimonialLightbox;
+    // Доступно для блока .r-card ниже
+    window.__openMediaLightbox = openLightbox;
+
     function closeLightbox(){
       lb.classList.remove('is-open');
+      lb.classList.remove('is-image');
       lb.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('t-lightbox-open');
       lbOpen = false;
@@ -6863,7 +6899,9 @@ window.addEventListener('pageshow', function(){
         lbVideo.removeAttribute('src');
         lbVideo.load();
       } catch(_){}
-      playCardVideos();
+      lbImg.src = '';
+      setRatingsPaused(false);
+      resumeAutoVideos();
     }
 
     lbClose.addEventListener('click', closeLightbox);
@@ -6874,9 +6912,72 @@ window.addEventListener('pageshow', function(){
       if (e.key === 'Escape' && lbOpen) closeLightbox();
     });
 
-    // Открытие лайтбокса полностью на pointerup внутри endDrag —
-    // отдельный click-listener не нужен (вызывал бы двойное открытие).
+    // Подменим openLightbox внутри endDrag-области — оно вызывает локальный
+    // openLightbox(card). Переопределим через window:
+    // (endDrag вызывает openLightbox(card); этот openLightbox — ниже определённая
+    //  функция, которая для .t-card работает через openTestimonialLightbox)
   })();
+
+  /* ───── Оценки: кликабельность карточек + умная загрузка видео ───── */
+  (function setupRatingsCards(){
+    var grid = document.querySelector('.ratings-grid');
+    if (!grid) return;
+    var cards = grid.querySelectorAll('.r-card');
+    var isMobile = window.matchMedia('(max-width: 760px)').matches;
+
+    // На мобайле — ВООБЩЕ не автоплеим, только постеры. Видео грузится в лайтбоксе.
+    if (isMobile){
+      cards.forEach(function(c){
+        var v = c.querySelector('video');
+        if (v) {
+          v.preload = 'none';
+          v.removeAttribute('autoplay');
+          v.pause();
+        }
+      });
+    } else {
+      // На десктопе — IntersectionObserver: играет только то, что в viewport
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          var v = e.target.querySelector('video');
+          if (!v) return;
+          if (e.isIntersecting){
+            var p = v.play(); if (p && p.catch) p.catch(function(){});
+          } else {
+            v.pause();
+          }
+        });
+      }, { threshold: 0.15, rootMargin: '120px 0px' });
+      cards.forEach(function(c){ io.observe(c); });
+
+      // Хелпер для resumeAutoVideos после закрытия лайтбокса
+      window.__rRefreshAutoplay = function(){
+        cards.forEach(function(c){
+          var v = c.querySelector('video');
+          if (!v) return;
+          var r = c.getBoundingClientRect();
+          var visible = r.bottom > 0 && r.top < window.innerHeight;
+          if (visible){ var p = v.play(); if (p && p.catch) p.catch(function(){}); }
+        });
+      };
+    }
+
+    // Клик по карточке → открыть в лайтбоксе
+    cards.forEach(function(card){
+      card.addEventListener('click', function(){
+        var type = card.getAttribute('data-r-type') || 'video';
+        var src = card.getAttribute('data-r-src');
+        var tag = card.getAttribute('data-r-tag') || '';
+        var role = card.getAttribute('data-r-role') || '';
+        if (window.__openMediaLightbox){
+          window.__openMediaLightbox({ type: type, src: src, name: tag, role: role });
+        }
+      });
+      card.style.cursor = 'pointer';
+    });
+  })();
+
+})();
 
 })();
 </script>
