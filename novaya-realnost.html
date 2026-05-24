@@ -8007,19 +8007,15 @@ if ('scrollRestoration' in history) {
     var bubble = document.getElementById('mascotBubble');
     if (!mascot || !img) return;
 
-    // Состояния и кадры — fps подобраны «по-человечески»:
-    // idle/waiting медленные (микро-движения), waving/jumping живые но не быстрые
+    // Состояния и кадры:
+    // idle/waiting — статичные ОДИНОЧНЫЕ кадры (frame swap отключён, anim даёт CSS-breathing)
+    // spontaneous-движения — это и есть «жизнь» маскота (waving / jumping / running)
     var FRAMES = {
-      // Кадры idle различаются микро-движениями (моргание, хвост) — играем
-      // редко, как реальное моргание раз в ~3 сек
-      idle:    { count: 6, fps: 2,   loop: true  },
-      // Садится один раз и ОСТАЁТСЯ сидеть (loop:false, holdLast)
-      // — больше не «вскакивает» обратно
-      waiting: { count: 6, fps: 1.8, loop: false, holdLast: true },
-      // Машет плавно
-      waving:  { count: 4, fps: 5,   loop: false, next: 'idle' },
-      // Прыгает живо но не как метеор
-      jumping: { count: 5, fps: 7,   loop: false, next: 'idle' }
+      idle:    { count: 1, fps: 1, loop: false, holdLast: true, frameStart: 2 }, // 1 статичный кадр (idle/02)
+      waiting: { count: 6, fps: 1.6, loop: false, holdLast: true },              // садится → сидит
+      waving:  { count: 4, fps: 4, loop: false, next: 'idle' },                  // плавно машет (1 сек)
+      jumping: { count: 5, fps: 6, loop: false, next: 'idle' },                  // прыгает (0.8 сек)
+      running: { count: 6, fps: 8, loop: false, next: 'idle' }                   // короткая пробежка (0.75 сек)
     };
 
     var currentState = 'idle';
@@ -8027,8 +8023,9 @@ if ('scrollRestoration' in history) {
     var frameTimer = null;
     var idleTimer = null;
     var spontaneousTimer = null;
-    var IDLE_DELAY = 12000;  // 12 сек простоя → задумывается (больше воздуха)
-    var SPONTANEOUS_MIN = 9000, SPONTANEOUS_MAX = 18000; // оживляется реже — спокойнее
+    var IDLE_DELAY = 14000;  // 14 сек простоя → bubble «чем могу помочь»
+    var FIRST_SPONTANEOUS = 3000;  // первое движение — через 3 сек после загрузки
+    var SPONTANEOUS_MIN = 7000, SPONTANEOUS_MAX = 14000;  // потом каждые 7-14 сек
 
     function pad(n){ return n < 10 ? '0' + n : '' + n; }
 
