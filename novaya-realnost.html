@@ -5061,6 +5061,302 @@ body.signup-open{ overflow:hidden; }
     animation:none;
   }
 }
+
+/* ══════════════════════════════════════════════════════
+   Маскот-бычок · sticky widget + модалка вопроса
+   ══════════════════════════════════════════════════════ */
+.mascot{
+  position:fixed;
+  right:24px; bottom:24px;
+  z-index:9000;
+  width:120px; height:130px;
+  cursor:pointer;
+  pointer-events:auto;
+  user-select:none;
+  -webkit-user-select:none;
+  filter:drop-shadow(0 8px 22px rgba(0,0,0,.4));
+  transition:transform 240ms cubic-bezier(.16,1,.3,1);
+}
+.mascot:hover{ transform:translateY(-4px) scale(1.05); }
+.mascot:active{ transform:scale(.96); }
+.mascot img{
+  width:100%; height:100%;
+  display:block;
+  object-fit:contain;
+  image-rendering:-webkit-optimize-contrast;
+  image-rendering:crisp-edges;
+  pointer-events:none;
+}
+
+/* Bubble «Чем могу помочь?» */
+.mascot-bubble{
+  position:absolute;
+  right:118px;
+  bottom:28px;
+  background:var(--ivory);
+  color:var(--night);
+  padding:12px 18px;
+  border-radius:16px;
+  font-family:var(--sans);
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:-0.005em;
+  line-height:1.3;
+  white-space:nowrap;
+  box-shadow:0 12px 32px -8px rgba(0,0,0,.6);
+  pointer-events:none;
+  opacity:0;
+  transform:translateX(6px) scale(.94);
+  transition:opacity 280ms ease, transform 280ms cubic-bezier(.16,1,.3,1);
+}
+.mascot-bubble::after{
+  content:'';
+  position:absolute;
+  right:-7px; bottom:18px;
+  width:0; height:0;
+  border:7px solid transparent;
+  border-left-color:var(--ivory);
+  border-right:0;
+}
+.mascot.is-bubble .mascot-bubble{
+  opacity:1;
+  transform:translateX(0) scale(1);
+  pointer-events:auto;
+}
+.mascot-bubble .accent{ color:var(--coral); }
+
+/* Hint-точка-индикатор: лёгкое пульсирующее коралл-кольцо вокруг маскота при «waiting» */
+.mascot::before{
+  content:'';
+  position:absolute;
+  inset:8px;
+  border-radius:50%;
+  background:radial-gradient(circle at center, rgba(255,111,97,.25) 0%, transparent 70%);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 400ms ease;
+}
+.mascot.is-attention::before{
+  opacity:1;
+  animation:mascot-attention 2.4s ease-in-out infinite;
+}
+@keyframes mascot-attention{
+  0%, 100% { transform:scale(.95); opacity:.4; }
+  50%      { transform:scale(1.1); opacity:.85; }
+}
+
+/* На мобайле — компактнее, bubble уже не sticky, появляется только на тап */
+@media (max-width:640px){
+  .mascot{
+    right:16px; bottom:16px;
+    width:80px; height:88px;
+  }
+  .mascot-bubble{
+    right:auto; left:50%;
+    bottom:96px;
+    transform:translateX(-50%) scale(.94);
+    font-size:13px;
+    padding:10px 14px;
+  }
+  .mascot-bubble::after{
+    right:auto; left:50%;
+    bottom:-7px; top:auto;
+    margin-left:-7px;
+    border:7px solid transparent;
+    border-top-color:var(--ivory);
+    border-bottom:0;
+  }
+  .mascot.is-bubble .mascot-bubble{
+    transform:translateX(-50%) scale(1);
+  }
+}
+
+/* Когда какая-то модалка открыта — маскот спрятан */
+body.signup-open .mascot,
+body.ask-open .mascot,
+body.t-lightbox-open .mascot{
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 200ms ease;
+}
+
+/* ─── Модалка-вопрос ─── */
+.ask-modal{
+  position:fixed; inset:0;
+  background:rgba(5,8,15,.86);
+  -webkit-backdrop-filter:blur(20px);
+          backdrop-filter:blur(20px);
+  display:none;
+  align-items:center; justify-content:center;
+  z-index:10000;
+  padding:24px;
+  opacity:0;
+  transition:opacity 240ms ease;
+}
+.ask-modal.is-open{ display:flex; opacity:1; }
+body.ask-open{ overflow:hidden; }
+
+.ask-card{
+  position:relative;
+  width:100%;
+  max-width:460px;
+  max-height:92vh;
+  overflow-y:auto;
+  padding:30px 28px 26px;
+  background:linear-gradient(180deg, #15192B 0%, #0C1124 100%);
+  border:1px solid rgba(255,111,97,.32);
+  border-radius:24px;
+  box-shadow:0 40px 100px -20px rgba(255,111,97,.4);
+  color:var(--ivory);
+  transform:scale(.96) translateY(8px);
+  transition:transform 320ms cubic-bezier(.16,1,.3,1);
+}
+.ask-modal.is-open .ask-card{ transform:scale(1) translateY(0); }
+.ask-card[hidden]{ display:none; }
+
+.ask-close{
+  position:absolute;
+  top:14px; right:14px;
+  width:36px; height:36px;
+  border-radius:50%;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.14);
+  color:var(--ivory);
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:background 200ms ease, border-color 200ms ease, transform 200ms ease;
+  z-index:2;
+}
+.ask-close:hover{
+  background:rgba(255,111,97,.22);
+  border-color:var(--coral);
+  transform:rotate(90deg);
+}
+
+.ask-head{
+  display:flex; align-items:center; gap:14px;
+  margin-bottom:18px;
+}
+.ask-head-icon{
+  width:54px; height:54px;
+  flex-shrink:0;
+  background-size:contain;
+  background-repeat:no-repeat;
+  background-position:center;
+}
+.ask-head h3{
+  margin:0 0 4px;
+  font-family:var(--sans);
+  font-size:22px;
+  line-height:1.15;
+  font-weight:700;
+  color:var(--ivory);
+  letter-spacing:-0.015em;
+}
+.ask-head .sub{
+  font-size:13px;
+  line-height:1.4;
+  color:var(--ivory);
+  opacity:.65;
+}
+
+.ask-form{
+  display:flex; flex-direction:column; gap:12px;
+  margin-top:6px;
+}
+.ask-field{
+  display:flex; flex-direction:column; gap:6px;
+}
+.ask-field .lbl{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--ivory);
+  opacity:.55;
+  font-weight:600;
+}
+.ask-field .opt{ text-transform:none; letter-spacing:0; opacity:.7; }
+.ask-field input,
+.ask-field textarea{
+  width:100%;
+  padding:12px 14px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:10px;
+  color:var(--ivory);
+  font-family:var(--sans);
+  font-size:14px;
+  letter-spacing:-0.005em;
+  transition:border-color 180ms ease, background 180ms ease;
+  -webkit-appearance:none;
+  appearance:none;
+  resize:none;
+}
+.ask-field textarea{
+  min-height:96px;
+  line-height:1.45;
+  resize:vertical;
+}
+.ask-field input::placeholder,
+.ask-field textarea::placeholder{ color:rgba(244,241,234,.32); }
+.ask-field input:focus,
+.ask-field textarea:focus{
+  outline:none;
+  background:rgba(255,255,255,.06);
+  border-color:var(--coral);
+}
+.ask-field input.is-error,
+.ask-field textarea.is-error{
+  border-color:#ff5a4d;
+  background:rgba(255,90,77,.06);
+}
+
+.ask-submit{
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  padding:14px 22px;
+  margin-top:6px;
+  background:var(--coral);
+  color:var(--night);
+  border:none;
+  border-radius:99px;
+  font-family:var(--sans);
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  transition:background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+.ask-submit:hover{
+  background:var(--coral-deep);
+  transform:translateY(-1px);
+  box-shadow:0 12px 32px -8px var(--coral-glow);
+}
+.ask-submit:disabled{ opacity:.55; cursor:wait; }
+.ask-submit.is-loading .ask-submit-label::after{ content:'…'; animation:dots 1s steps(3,end) infinite; }
+.ask-disclaimer{
+  margin:10px 0 0;
+  font-size:11px;
+  line-height:1.4;
+  color:var(--ivory);
+  opacity:.5;
+  text-align:center;
+}
+
+/* Шаг «спасибо» в ask-modal */
+.ask-step-thanks{ text-align:center; }
+.ask-thanks-name{ color:var(--coral); }
+.ask-check{
+  width:62px; height:62px;
+  margin:6px auto 14px;
+  border-radius:50%;
+  background:rgba(255,111,97,.16);
+  border:1px solid var(--coral);
+  display:flex; align-items:center; justify-content:center;
+  color:var(--coral);
+  box-shadow:0 0 0 6px rgba(255,111,97,.08);
+}
 .signup-contacts{
   display:flex; flex-direction:column; gap:10px;
   margin-top:22px;
