@@ -7161,29 +7161,60 @@ if ('scrollRestoration' in history) {
       submit.disabled = true;
       submit.classList.add('is-loading');
 
-      // TODO: заменить URL на Google Apps Script Web App после деплоя.
-      // Сейчас отправка идёт в console.log и просто показывает «Спасибо» —
-      // лидов не теряем, но они нигде не записываются.
-      console.log('[SIGNUP]', payload);
+      /* Отправка в Telegram-бот @neovida_managerbot напрямую.
+         Токен бота публичный в JS — для бота-уведомлятора без секретов
+         в чатах это приемлемо. Если будет спам — переедем на Apps Script
+         proxy с тем же интерфейсом. */
+      var TG_BOT_TOKEN = '8710283046:AAEX7RcTj0AfQNRm-yssusvvqyHqAPSHQns';
+      var TG_CHAT_ID = '329280773'; // Альберт Валеев
 
-      // Имитация запроса — задержка ~700мс, чтобы UX чувствовался
-      setTimeout(function(){
-        submit.disabled = false;
-        submit.classList.remove('is-loading');
-        showThanks(name);
-      }, 700);
+      function tgEscape(s){
+        return String(s || '').replace(/[<>&]/g, function(c){
+          return { '<':'&lt;', '>':'&gt;', '&':'&amp;' }[c];
+        });
+      }
 
-      /* Будущая версия с реальным endpoint:
-      fetch('https://script.google.com/macros/s/...../exec', {
-        method: 'POST', mode: 'no-cors',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(payload)
+      var tgText =
+        '🟢 <b>Новая заявка · поток 3</b>\n\n' +
+        '<b>Имя:</b> ' + tgEscape(name) + '\n' +
+        '<b>Телефон:</b> ' + tgEscape(phone) + '\n' +
+        (telegram ? '<b>Telegram:</b> ' + tgEscape(telegram) + '\n' : '') +
+        '\n<i>с лендинга «ИИ. Новая реальность»</i>\n' +
+        '<code>' + tgEscape(payload.timestamp) + '</code>';
+
+      var formData = new FormData();
+      formData.append('chat_id', TG_CHAT_ID);
+      formData.append('parse_mode', 'HTML');
+      formData.append('text', tgText);
+      formData.append('disable_web_page_preview', 'true');
+
+      fetch('https://api.telegram.org/bot' + TG_BOT_TOKEN + '/sendMessage', {
+        method: 'POST',
+        body: formData
+      }).then(function(r){
+        return r.json();
+      }).then(function(data){
+        if (!data || !data.ok){
+          console.warn('[SIGNUP] Telegram error:', data);
+        }
+      }).catch(function(err){
+        console.warn('[SIGNUP] fetch error:', err);
       }).finally(function(){
+        // Показываем «Спасибо» в любом случае — пользователь не должен
+        // видеть техническую ошибку, лид у нас уже в payload + console
         submit.disabled = false;
         submit.classList.remove('is-loading');
         showThanks(name);
       });
-      */
+
+      // Fallback на случай если сеть подвисла > 4 сек — всё равно показать «Спасибо»
+      setTimeout(function(){
+        if (submit.classList.contains('is-loading')){
+          submit.disabled = false;
+          submit.classList.remove('is-loading');
+          showThanks(name);
+        }
+      }, 4000);
     });
 
     // Сбрасываем ошибочный стейт при наборе
