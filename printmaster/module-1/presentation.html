@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>neovida · Нейропросвещение - AI Boost PrintMaster - Модуль 1</title>
+  <style>
+    :root {
+      --bg: #111827;
+      --panel: #172033;
+      --panel2: #202b40;
+      --text: #f8fafc;
+      --muted: #aab6c8;
+      --line: rgba(255,255,255,.14);
+      --coral: #df6b58;
+      --teal: #29aaa4;
+      --amber: #e0a640;
+      --green: #37b777;
+      --red: #e06464;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #0b1020;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+
+    .deck {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      background: var(--bg);
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      padding: clamp(28px, 5vw, 72px);
+      background:
+        linear-gradient(120deg, rgba(41,170,164,.08), transparent 42%),
+        linear-gradient(300deg, rgba(223,107,88,.08), transparent 48%),
+        var(--bg);
+    }
+
+    .slide.active {
+      display: grid;
+      align-content: center;
+      gap: 24px;
+    }
+
+    .kicker {
+      color: var(--teal);
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    h1, h2 {
+      margin: 0;
+      letter-spacing: 0;
+      line-height: 1.04;
+    }
+
+    h1 {
+      max-width: 980px;
+      font-size: 86px;
+    }
+
+    h2 {
+      max-width: 1080px;
+      font-size: 64px;
+    }
+
+    .subtitle {
+      max-width: 920px;
+      color: var(--muted);
+      font-size: 29px;
+      line-height: 1.25;
+    }
+
+    .accent { color: var(--coral); }
+    .teal { color: var(--teal); }
+    .amber { color: var(--amber); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      max-width: 1120px;
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      min-height: 132px;
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 26px;
+      line-height: 1.15;
+      color: var(--white);
+    }
+
+    .card p, .card li {
+      margin: 0;
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1.42;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 24px;
+    }
+
+    li { margin: 8px 0; }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+      gap: 42px;
+      align-items: center;
+      max-width: 1240px;
+    }
+
+    .quote {
+      border-left: 6px solid var(--coral);
+      padding: 18px 0 18px 24px;
+      color: var(--white);
+      font-size: 38px;
+      line-height: 1.18;
+      max-width: 980px;
+    }
+
+    .table {
+      display: grid;
+      gap: 8px;
+      max-width: 1180px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: .9fr 1.15fr;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .cell {
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    .cell strong {
+      color: var(--white);
+    }
+
+    .prompt {
+      max-width: 1080px;
+      background: #0c1220;
+      border: 1px solid rgba(41,170,164,.32);
+      border-radius: 8px;
+      padding: 22px;
+      color: #eef6ff;
+      white-space: pre-wrap;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 18px;
+      line-height: 1.42;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+      max-width: 1180px;
+    }
+
+    .step {
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 15px;
+      min-height: 140px;
+    }
+
+    .time {
+      display: inline-block;
+      color: var(--amber);
+      font-weight: 900;
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+
+    .step strong {
+      display: block;
+      font-size: 17px;
+      line-height: 1.2;
+    }
+
+    .step span {
+      display: block;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.32;
+      margin-top: 8px;
+    }
+
+    .nav {
+      position: fixed;
+      left: 24px;
+      right: 24px;
+      bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+      color: rgba(255,255,255,.62);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.07);
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    button:hover { background: rgba(255,255,255,.14); }
+
+    .progress {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      height: 5px;
+      background: var(--coral);
+      width: 0%;
+      z-index: 11;
+      transition: width .2s ease;
+    }
+
+    @media (max-width: 900px) {
+      body { overflow: auto; }
+      .deck { height: auto; min-height: 100vh; }
+      .slide {
+        position: relative;
+        min-height: 100vh;
+        padding: 28px 18px 84px;
+      }
+      .kicker { font-size: 13px; }
+      h1 { font-size: 44px; }
+      h2 { font-size: 36px; }
+      .subtitle { font-size: 21px; }
+      .card h3 { font-size: 22px; }
+      .card p, .card li, .cell, .prompt { font-size: 16px; }
+      .quote { font-size: 25px; }
+      .split, .grid, .grid.three, .timeline, .row {
+        grid-template-columns: 1fr;
+      }
+      .card, .step { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" id="deck">
+    <section class="slide active">
+      <div class="kicker">neovida · Нейропросвещение</div>
+      <h1>ИИ-грамотность для <span class="accent">PrintMaster</span></h1>
+      <div class="subtitle">Финансы, тендеры, звонки, документы, сопровождение клиентов и SMM. Первый рабочий результат уже сегодня.</div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Цель встречи</div>
+      <h2>Не лекция про нейросети. <span class="accent">Практика для вашей работы</span></h2>
+      <div class="grid three">
+        <div class="card"><h3>Понять</h3><p>Что такое ИИ, чат, ассистент, агент и автоматизация.</p></div>
+        <div class="card"><h3>Попробовать</h3><p>Сделать первый запрос по своей роли на телефоне.</p></div>
+        <div class="card"><h3>Безопасно</h3><p>Разобрать, какие данные нельзя отправлять в публичные модели.</p></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Кто в зале</div>
+      <h2>Printmaster: роли, где ИИ даст быстрый эффект</h2>
+      <div class="grid three">
+        <div class="card"><h3>Финансы</h3><p>Вероника: прогноз, ДДС, ОПиУ, расходы, поступления.</p></div>
+        <div class="card"><h3>IT и внедрения</h3><p>Тимур: 1С, подрядчики, внутренние запросы, ТЗ.</p></div>
+        <div class="card"><h3>Коммуникации</h3><p>Наталья: заявки, звонки, скрипты, конверсия.</p></div>
+        <div class="card"><h3>Тендеры</h3><p>Илья и Никита: спецификации, поставщики, маржа.</p></div>
+        <div class="card"><h3>Юрист</h3><p>Марат: ФАС, договоры, протоколы разногласий.</p></div>
+        <div class="card"><h3>Документы и SMM</h3><p>ЭДО, 1С, Контур, контент, сопровождение ремонтов.</p></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Зачем это вам</div>
+      <h2>ИИ снимает ручную работу, <span class="teal">но не снимает ответственность</span></h2>
+      <div class="table">
+        <div class="row">
+          <div class="cell"><strong>Финансы</strong><br>Собирать прогноз с нуля</div>
+          <div class="cell">Получить структуру, список данных, риски и вопросы к отделам</div>
+        </div>
+        <div class="row">
+          <div class="cell"><strong>Тендеры</strong><br>Вручную разбирать спецификацию</div>
+          <div class="cell">Получить чек-лист характеристик, аналогов, поставщиков и маржи</div>
+        </div>
+        <div class="row">
+          <div class="cell"><strong>Звонки</strong><br>Слушать без системы</div>
+          <div class="cell">Получить разбор разговора, ошибки, вопросы и улучшение скрипта</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Карта понятий</div>
+      <h2>Бот, ассистент, агент, автоматизация</h2>
+      <div class="grid">
+        <div class="card"><h3>Чат-модель</h3><p>Один запрос - один ответ. Например: письмо клиенту или чек-лист.</p></div>
+        <div class="card"><h3>Ассистент</h3><p>Работает с инструкцией и контекстом: услуги, регламенты, стиль.</p></div>
+        <div class="card"><h3>Агент</h3><p>Делает цепочку шагов: найти, сравнить, собрать таблицу, подготовить вывод.</p></div>
+        <div class="card"><h3>Автоматизация</h3><p>Повторяющийся процесс, который начинает выполняться регулярно.</p></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Главное правило</div>
+      <h2>Промпт - это <span class="accent">постановка задачи</span></h2>
+      <div class="quote">Роль + контекст + задача + формат + ограничения</div>
+      <div class="subtitle">Если сказать "напиши что-нибудь" - получите воду. Если дать контекст Printmaster - получите рабочий черновик.</div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Плохой и хороший запрос</div>
+      <div class="split">
+        <div>
+          <h2>Без контекста ИИ не знает вашу работу</h2>
+          <div class="subtitle">Плохой запрос: "Напиши клиенту про ремонт". Слишком мало роли, деталей и формата.</div>
+        </div>
+        <div class="prompt">Ты - специалист Printmaster по сопровождению ремонтов. Клиент сомневается, согласовывать ли ремонт принтера за 12 500 руб. Инженер выявил износ узла подачи бумаги. Напиши спокойное сообщение: почему ремонт нужен, что будет если отложить, какой следующий шаг. Формат: 5-7 предложений.</div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Практика на телефонах</div>
+      <h2>Первый запрос: ИИ интервьюирует вас</h2>
+      <div class="prompt">Ты - мой AI-помощник. Я работаю в компании Printmaster: обслуживание офисной техники, ремонт принтеров, заправка картриджей, корпоративные клиенты, тендеры и прямые договоры.
+
+Задай мне 7 вопросов по моей роли, чтобы понять, какие рабочие задачи можно ускорить с ИИ. Задавай вопросы по одному. После моих ответов предложи 5 задач, которые я могу попробовать делегировать ИИ уже на этой неделе.</div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Живое демо 1</div>
+      <h2>Финдиректор: структура прогноза</h2>
+      <div class="prompt">Ты - финансовый аналитик для компании по обслуживанию офисной техники.
+
+Помоги подготовить структуру месячного финпрогноза. Нужно понять: какие данные собрать по выручке, поступлениям, расходам, дебиторке и плановым оплатам.
+
+Сделай таблицу данных, логику прогноза ДДС, 10 вопросов к отделам и список рисков для собственника.</div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Живое демо 2</div>
+      <h2>Тендеры: спецификация, поставщики, маржа</h2>
+      <div class="prompt">Ты - помощник РОПа ТМЦ Printmaster. Нужно предварительно оценить тендерную позицию.
+
+Вот обезличенное описание позиции: [описание без данных заказчика].
+
+Сделай: критичные характеристики, возможные аналоги, вопросы поставщикам, таблицу расчета маржи и красные флаги участия.</div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Живое демо 3</div>
+      <h2>Колл-центр: разбор звонка без токсичности</h2>
+      <div class="prompt">Ты - руководитель отдела коммуникации Printmaster. Ниже обезличенный фрагмент разговора оператора с клиентом.
+
+[фрагмент без ФИО, телефона и названия клиента]
+
+Проанализируй: что хорошо, где потеряли клиента, какие вопросы стоило задать, как улучшить скрипт и какую обратную связь дать оператору.</div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Живое демо 4</div>
+      <h2>Юрист: договоры, ФАС, условия закупки</h2>
+      <div class="prompt">Ты - юридический помощник Printmaster по тендерам и договорам. Работай как предварительный аналитик, не как финальный юрист.
+
+По обезличенному фрагменту условий найди потенциальные риски, вопросы для проверки, черновик запроса разъяснений и список того, что обязан проверить юрист.</div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Безопасность</div>
+      <h2>Что нельзя отправлять в публичные ИИ-сервисы</h2>
+      <div class="grid">
+        <div class="card"><h3>Персональные данные</h3><p>ФИО, телефоны, почты, паспорта, данные клиентов и сотрудников.</p></div>
+        <div class="card"><h3>Документы</h3><p>Договоры, счета, акты, накладные, реквизиты, закрытые условия.</p></div>
+        <div class="card"><h3>Системы</h3><p>Выгрузки из 1С, CRM, Контур, ЭДО, внутренние отчеты.</p></div>
+        <div class="card"><h3>Финансы</h3><p>Закрытые показатели, маржа, платежи, планы без разрешения.</p></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Как работать безопасно</div>
+      <h2>Обезличивайте и проверяйте</h2>
+      <div class="grid three">
+        <div class="card"><h3>1. Убираем данные</h3><p>"Клиент А", "договор N", "сумма X", без телефонов и реквизитов.</p></div>
+        <div class="card"><h3>2. Берем черновик</h3><p>ИИ предлагает структуру, вопросы, варианты, но не финальное решение.</p></div>
+        <div class="card"><h3>3. Человек проверяет</h3><p>Финансы, право и тендеры всегда проходят человеческую проверку.</p></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">GPT-native сотрудник</div>
+      <h2>Новый рабочий рефлекс</h2>
+      <div class="quote">Вижу повторяющуюся задачу - спрашиваю: что здесь можно отдать ИИ как черновик, анализ, таблицу, чек-лист или список вопросов?</div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Практика по ролям</div>
+      <h2>Выберите свой сценарий в шпаргалке</h2>
+      <div class="grid three">
+        <div class="card"><h3>Финансы</h3><p>Структура прогноза и вопросы к отделам.</p></div>
+        <div class="card"><h3>Тендеры</h3><p>Спецификация, аналоги, поставщики, маржа.</p></div>
+        <div class="card"><h3>Звонки</h3><p>Разбор разговора и улучшение скрипта.</p></div>
+        <div class="card"><h3>Юрист</h3><p>Риски, разъяснения, проверка условий.</p></div>
+        <div class="card"><h3>SMM</h3><p>Пост под Telegram, Max, Instagram и видео.</p></div>
+        <div class="card"><h3>Документы</h3><p>Письма, чек-листы, статусы ЭДО.</p></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Тайминг</div>
+      <h2>3 часа: от хаоса к первому результату</h2>
+      <div class="timeline">
+        <div class="step"><span class="time">0:00</span><strong>Контекст</strong><span>Зачем ИИ Printmaster</span></div>
+        <div class="step"><span class="time">0:20</span><strong>База</strong><span>Чаты, ассистенты, агенты</span></div>
+        <div class="step"><span class="time">0:45</span><strong>Промпты</strong><span>Формула задачи</span></div>
+        <div class="step"><span class="time">1:20</span><strong>Практика</strong><span>Первый запрос</span></div>
+        <div class="step"><span class="time">1:50</span><strong>Демо</strong><span>4 кейса компании</span></div>
+        <div class="step"><span class="time">2:25</span><strong>Данные</strong><span>152-ФЗ и риски</span></div>
+        <div class="step"><span class="time">2:45</span><strong>Домашка</strong><span>5 дней применения</span></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Домашка</div>
+      <h2>5 дней: формируем привычку</h2>
+      <div class="grid">
+        <div class="card"><h3>День 1</h3><p>Один запрос по своей роли, сохранить лучший ответ.</p></div>
+        <div class="card"><h3>День 2</h3><p>Улучшить рабочий текст: письмо, пост, скрипт или чек-лист.</p></div>
+        <div class="card"><h3>День 3</h3><p>Попросить ИИ задать 10 уточняющих вопросов.</p></div>
+        <div class="card"><h3>День 4</h3><p>Сделать таблицу или чек-лист повторяющегося процесса.</p></div>
+        <div class="card"><h3>День 5</h3><p>Записать 3 задачи для делегирования на модуле 2.</p></div>
+        <div class="card"><h3>Важно</h3><p>Не загружать реальные персональные и закрытые данные.</p></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Следующий модуль</div>
+      <h2>Сегодня научились разговаривать с ИИ. Дальше - инструменты и процессы.</h2>
+      <div class="subtitle">Будем разбирать сервисы, персональных ассистентов, документы, поиск, визуал и первые цепочки автоматизации под задачи Printmaster.</div>
+    </section>
+
+    <section class="slide">
+      <div class="kicker">Финал</div>
+      <h1>Вопросы?</h1>
+      <div class="subtitle">Главный итог: ИИ полезен там, где есть повторяемая ручная работа, текст, анализ, таблица, проверка или черновик решения.</div>
+    </section>
+  </main>
+
+  <div class="nav">
+    <div id="counter">1 / 20</div>
+    <div class="buttons">
+      <button type="button" id="prev" aria-label="Назад">‹</button>
+      <button type="button" id="next" aria-label="Вперед">›</button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const counter = document.getElementById('counter');
+    const progress = document.getElementById('progress');
+    let index = 0;
+
+    function show(nextIndex) {
+      index = Math.max(0, Math.min(slides.length - 1, nextIndex));
+      slides.forEach((slide, i) => slide.classList.toggle('active', i === index));
+      counter.textContent = `${index + 1} / ${slides.length}`;
+      progress.style.width = `${((index + 1) / slides.length) * 100}%`;
+    }
+
+    document.getElementById('prev').addEventListener('click', () => show(index - 1));
+    document.getElementById('next').addEventListener('click', () => show(index + 1));
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') show(index + 1);
+      if (event.key === 'ArrowLeft' || event.key === 'PageUp') show(index - 1);
+      if (event.key === 'Home') show(0);
+      if (event.key === 'End') show(slides.length - 1);
+    });
+    show(0);
+  </script>
+</body>
+</html>
