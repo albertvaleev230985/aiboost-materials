@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Цех — урок 2 · Первый деплой · Шпаргалка</title>
+<meta name="description" content="Шпаргалка урока 2 AI Цех «Первый деплой»: сервер, хостинг, GitHub, Vercel, localhost, deploy и первый публичный проект.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    --bg: #0a0b0c; --ink: #0b0c0d; --panel: #111315; --panel-2: #16191c;
+    --text: #f1ece2; --soft: #d8cebf; --muted: #a59c8e; --dim: #756e63;
+    --line: rgba(241,236,226,0.12); --line-2: rgba(241,236,226,0.22);
+    --copper: #c77a3a; --copper-2: #e0aa6f; --copper-3: #f3cf9b;
+    --steel: #9aa6ad; --green: #75b889; --red: #d76c5c;
+    --radius: 12px; --radius-lg: 16px;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --metal: linear-gradient(176deg, #fbe6c6 2%, #e9b87e 34%, #c77a3a 66%, #f3cf9b 99%);
+    --ease: cubic-bezier(.22,.61,.36,1);
+    --shadow: 0 22px 70px rgba(0,0,0,.34);
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; color: var(--text); line-height: 1.6;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background:
+      linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px),
+      radial-gradient(circle at 82% 4%, rgba(199,122,58,.18), transparent 36vw),
+      radial-gradient(circle at 4% 30%, rgba(154,166,173,.07), transparent 28vw),
+      linear-gradient(135deg, #0a0b0c 0%, #111416 54%, #090a0b 100%);
+    background-size: 44px 44px, 44px 44px, auto, auto, auto;
+    background-attachment: fixed;
+  }
+  a { color: var(--copper-2); text-decoration: none; }
+  button { font: inherit; }
+  .mono { font-family: var(--mono); }
+  .lucide { width: 1em; height: 1em; stroke-width: 1.8; }
+  .metal { background: var(--metal); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+
+  .page { width: min(100%, 1040px); margin: 0 auto; padding: 30px 24px 80px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 14px;
+    padding: 10px 0 24px; color: var(--muted); font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+  .topbar .brand { display: flex; align-items: center; gap: 9px; }
+  .topbar .brand .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--copper-2); box-shadow: 0 0 10px var(--copper-2); }
+  .print-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid var(--line);
+    border-radius: var(--radius); color: var(--text); background: rgba(17,19,21,.8); cursor: pointer; font-family: Inter, sans-serif; letter-spacing: 0; text-transform: none; }
+  .print-btn:hover { border-color: rgba(224,170,111,.5); }
+
+  /* hero */
+  .hero { position: relative; overflow: hidden; padding: 40px; border: 1px solid var(--line); border-radius: var(--radius-lg);
+    background: linear-gradient(140deg, rgba(22,25,28,.92), rgba(9,10,11,.96)); box-shadow: var(--shadow); }
+  .hero::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--metal); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(199,122,58,.2), transparent 70%); pointer-events: none; }
+  .kicker { position: relative; display: inline-flex; align-items: center; gap: 9px; margin-bottom: 20px; padding: 8px 13px;
+    border: 1px solid rgba(224,170,111,.3); border-radius: 999px; color: var(--copper-2);
+    background: rgba(199,122,58,.1); font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+  .kicker::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--copper-2); box-shadow: 0 0 9px var(--copper-2); }
+  h1 { position: relative; max-width: 860px; margin: 0; font-size: clamp(36px, 6.4vw, 64px); line-height: .98; font-weight: 900; letter-spacing: -.03em; }
+  .hero-lead { position: relative; max-width: 780px; margin: 20px 0 0; color: var(--soft); font-size: 18px; }
+  .hero-lead b { color: var(--text); font-weight: 700; }
+
+  /* hero route mini-pipeline */
+  .mini-route { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 4px; margin-top: 28px; }
+  .mr-node { display: inline-flex; align-items: center; gap: 9px; padding: 9px 14px; border-radius: 999px;
+    border: 1px solid var(--line); background: rgba(8,9,10,.6); font-size: 14px; font-weight: 700; }
+  .mr-node .lucide { width: 17px; height: 17px; color: var(--copper-2); }
+  .mr-node img { width: 16px; height: 16px; filter: brightness(0) invert(1); opacity: .9; }
+  .mr-node.last { border-color: rgba(117,184,137,.4); color: #dff5e5; }
+  .mr-node.last .lucide { color: var(--green); }
+  .mr-arrow { color: var(--copper-2); opacity: .7; }
+  .mr-arrow .lucide { width: 18px; height: 18px; }
+
+  /* sections */
+  .section { margin-top: 30px; padding: 30px; border: 1px solid var(--line); border-radius: var(--radius-lg);
+    background: linear-gradient(150deg, rgba(255,255,255,.04), rgba(255,255,255,.012)); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .section::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(243,207,155,.4), transparent); }
+  .sec-head { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; margin-bottom: 22px; }
+  .sec-num { width: 44px; height: 44px; display: grid; place-items: center; border-radius: var(--radius);
+    border: 1px solid rgba(224,170,111,.32); color: var(--copper-2); background: rgba(199,122,58,.1);
+    font-family: var(--mono); font-weight: 700; font-size: 18px; }
+  h2 { margin: 0; font-size: clamp(22px, 3.4vw, 30px); line-height: 1.1; font-weight: 900; letter-spacing: -.025em; }
+  .sec-lead { margin: 6px 0 0; color: var(--muted); font-size: 15px; }
+
+  /* route list */
+  .route { position: relative; display: grid; gap: 0; padding-left: 36px; }
+  .route::before { content: ""; position: absolute; left: 15px; top: 22px; bottom: 22px; width: 2px;
+    background: linear-gradient(180deg, var(--copper-2), rgba(117,184,137,.7)); border-radius: 2px; }
+  .route-item { position: relative; display: grid; grid-template-columns: 1fr; padding: 13px 0; }
+  .route-item::before { content: ""; position: absolute; left: -29px; top: 18px; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--ink); border: 2px solid var(--copper-2); box-shadow: 0 0 0 4px rgba(199,122,58,.12); }
+  .route-item:last-child::before { border-color: var(--green); box-shadow: 0 0 0 4px rgba(117,184,137,.16); }
+  .route-item strong { font-size: 17px; font-weight: 800; }
+  .route-item span { color: var(--muted); font-size: 14.5px; }
+  .route-item .mono { color: var(--copper-3); font-size: 13.5px; }
+
+  /* duo compare */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .cmp-card { padding: 22px; border-radius: var(--radius); border: 1px solid var(--line); background: rgba(8,9,10,.5); }
+  .cmp-head { display: flex; align-items: center; gap: 13px; margin-bottom: 13px; }
+  .cmp-logo { width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center; border: 1px solid var(--line); background: rgba(8,9,10,.7); }
+  .cmp-logo img { width: 24px; height: 24px; filter: brightness(0) invert(1); opacity: .92; }
+  .cmp-logo .lucide { width: 24px; height: 24px; color: var(--copper-2); }
+  .cmp-head strong { font-size: 22px; font-weight: 900; letter-spacing: -.02em; }
+  .cmp-head .tag { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--copper-2); margin-top: 2px; }
+  .cmp-card p { margin: 0; color: var(--soft); font-size: 14.5px; }
+  .cmp-card p code { font-family: var(--mono); color: var(--copper-3); font-size: 13px; }
+  .cmp-card.neutral .cmp-logo .lucide { color: var(--steel); }
+
+  /* copy prompt */
+  .copy-shell { border-radius: var(--radius); border: 1px solid rgba(224,170,111,.26); background: rgba(8,9,10,.8); overflow: hidden; box-shadow: var(--shadow); }
+  .copy-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 13px 18px; border-bottom: 1px solid var(--line); }
+  .copy-title { display: flex; align-items: center; gap: 12px; }
+  .copy-title .dots { display: flex; gap: 6px; }
+  .copy-title .dots i { width: 11px; height: 11px; border-radius: 50%; }
+  .copy-title .dots i:nth-child(1){ background:#d76c5c; } .copy-title .dots i:nth-child(2){ background:#e0aa6f; } .copy-title .dots i:nth-child(3){ background:#75b889; }
+  .copy-title b { font-family: var(--mono); color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: .04em; }
+  .copy-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px; border: 1px solid rgba(224,170,111,.3);
+    border-radius: 9px; color: var(--text); background: rgba(199,122,58,.12); cursor: pointer; white-space: nowrap; font-size: 13px; font-weight: 600; }
+  .prompt-box { margin: 0; padding: 22px; color: #f0e6d6; font: 14px/1.6 var(--mono); white-space: pre-wrap; cursor: copy; }
+  .prompt-box .hl { color: var(--copper-3); }
+  .copy-shell.copied { border-color: rgba(117,184,137,.5); }
+  .copy-shell.copied .copy-btn { border-color: rgba(117,184,137,.5); color: #dff5e5; background: rgba(117,184,137,.12); }
+
+  /* checklist */
+  .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .check { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; padding: 16px;
+    border: 1px solid var(--line); border-radius: var(--radius); background: rgba(8,9,10,.5); }
+  .check .ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+    border: 1px solid rgba(117,184,137,.3); background: rgba(117,184,137,.1); color: var(--green); }
+  .check .ic .lucide { width: 17px; height: 17px; }
+  .check strong { display: block; color: var(--text); font-size: 15.5px; margin-bottom: 2px; }
+  .check span { color: var(--muted); font-size: 14px; }
+  .check.copper .ic { border-color: rgba(224,170,111,.3); background: rgba(199,122,58,.1); color: var(--copper-2); }
+
+  .warning { display: grid; grid-template-columns: 32px 1fr; gap: 13px; margin-top: 16px; padding: 18px;
+    border: 1px solid rgba(215,108,92,.34); border-radius: var(--radius); background: linear-gradient(140deg, rgba(215,108,92,.1), rgba(215,108,92,.02)); }
+  .warning .ic { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; border: 1px solid rgba(215,108,92,.34); background: rgba(215,108,92,.12); color: var(--red); }
+  .warning .ic .lucide { width: 18px; height: 18px; }
+  .warning div:last-child { color: var(--soft); font-size: 14.5px; align-self: center; }
+  .warning strong { color: var(--text); }
+
+  /* terms */
+  .terms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; }
+  .term { padding: 15px 17px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(8,9,10,.5); transition: .25s var(--ease); }
+  .term:hover { border-color: rgba(224,170,111,.34); transform: translateY(-2px); }
+  .term b { display: block; color: var(--text); font-size: 15.5px; font-weight: 800; letter-spacing: -.01em; }
+  .term span { display: block; margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.34; }
+
+  .download { display: grid; grid-template-columns: 52px 1fr auto; gap: 16px; align-items: center; margin-top: 16px;
+    padding: 18px 20px; border: 1px solid rgba(224,170,111,.3); border-radius: var(--radius);
+    background: linear-gradient(120deg, rgba(199,122,58,.14), rgba(199,122,58,.03)); }
+  .download .ic { width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center; border: 1px solid rgba(224,170,111,.3); background: rgba(199,122,58,.12); color: var(--copper-2); }
+  .download .ic .lucide { width: 26px; height: 26px; }
+  .download strong { display: block; color: var(--text); font-size: 17px; font-weight: 900; letter-spacing: -.02em; }
+  .download span { color: var(--muted); font-size: 13.5px; }
+  .download .go { color: var(--copper-2); }
+
+  .footer { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--dim); font-size: 13px; text-align: center; }
+  .footer b { color: var(--muted); }
+
+  @media (max-width: 760px) {
+    .page { padding: 20px 14px 60px; }
+    .hero, .section { padding: 22px; }
+    .compare, .checks, .terms { grid-template-columns: 1fr; }
+    .copy-head { flex-direction: column; align-items: flex-start; }
+    .copy-btn { width: 100%; justify-content: center; }
+    .download { grid-template-columns: 44px 1fr; }
+    .download .go { display: none; }
+  }
+  @media print {
+    body { background: #fffaf2; color: #15110d; background-image: none; }
+    .page { width: 100%; padding: 0; }
+    .hero, .section, .copy-shell, .cmp-card, .check, .term, .download, .route-item { box-shadow: none; break-inside: avoid;
+      background: #fffaf2; border-color: #e6dac6; color: #15110d; }
+    .metal { -webkit-text-fill-color: #b06a2c; color: #b06a2c; }
+    .print-btn, .copy-btn { display: none; }
+    .prompt-box { color: #2a2118; background: #f6efe2; }
+    h1, h2, .term b, .check strong, .cmp-head strong { color: #15110d; }
+    .muted, .sec-lead, .term span, .check span, .cmp-card p { color: #5a5044; }
+  }
+</style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span> neovida · Нейропросвещение</div>
+      <button class="print-btn" type="button" onclick="window.print()"><i data-lucide="printer"></i> PDF / печать</button>
+    </div>
+
+    <header class="hero">
+      <div class="kicker"><i data-lucide="factory"></i> Урок 2 / Первый деплой · шпаргалка участника</div>
+      <h1>GitHub, Vercel и <span class="metal">первый публичный деплой</span></h1>
+      <p class="hero-lead">Эта шпаргалка нужна, чтобы не путать, <b>где живёт код</b>, где открывается сайт, что такое сервер, хостинг, localhost — и когда пора нажимать стоп.</p>
+      <div class="mini-route">
+        <span class="mr-node"><i data-lucide="folder-code"></i> Папка</span>
+        <span class="mr-arrow"><i data-lucide="chevron-right"></i></span>
+        <span class="mr-node"><i data-lucide="monitor-dot"></i> localhost</span>
+        <span class="mr-arrow"><i data-lucide="chevron-right"></i></span>
+        <span class="mr-node"><i data-lucide="git-commit-horizontal"></i> Git</span>
+        <span class="mr-arrow"><i data-lucide="chevron-right"></i></span>
+        <span class="mr-node"><img src="assets/logos/github.svg" alt="GitHub"> GitHub</span>
+        <span class="mr-arrow"><i data-lucide="chevron-right"></i></span>
+        <span class="mr-node"><img src="assets/logos/vercel.svg" alt="Vercel"> Vercel</span>
+        <span class="mr-arrow"><i data-lucide="chevron-right"></i></span>
+        <span class="mr-node last"><i data-lucide="globe"></i> Публичная ссылка</span>
+      </div>
+    </header>
+
+    <!-- 1 МАРШРУТ -->
+    <section class="section">
+      <div class="sec-head"><div class="sec-num">1</div><div><h2>Главная карта маршрута</h2><p class="sec-lead">Держишь эту цепочку — GitHub и Vercel перестают быть кашей.</p></div></div>
+      <div class="route">
+        <div class="route-item"><strong>Идея</strong><span>что хотим показать человеку.</span></div>
+        <div class="route-item"><strong>Папка проекта</strong><span>файлы на компьютере: <span class="mono">index.html</span>, <span class="mono">styles.css</span>, <span class="mono">script.js</span>, README.</span></div>
+        <div class="route-item"><strong>localhost</strong><span>локальный адрес — его видишь только ты, пока проект запущен на твоём компьютере.</span></div>
+        <div class="route-item"><strong>Сервер и хостинг</strong><span>место, где сайт становится доступен другим людям.</span></div>
+        <div class="route-item"><strong>Git</strong><span>история сохранений: <span class="mono">status → add → commit</span>.</span></div>
+        <div class="route-item"><strong>GitHub</strong><span>облачное место для кода и истории проекта.</span></div>
+        <div class="route-item"><strong>Vercel</strong><span>берёт код из GitHub, собирает проект и публикует сайт.</span></div>
+        <div class="route-item"><strong>Публичная ссылка</strong><span>адрес, который уже можно отправить другому человеку.</span></div>
+      </div>
+    </section>
+
+    <!-- 2 4 СЛОЯ -->
+    <section class="section">
+      <div class="sec-head"><div class="sec-num">2</div><div><h2>Сервер, хостинг, GitHub и Vercel</h2><p class="sec-lead">Разводим четыре слоя: где сайт отдаётся, где размещается, где хранится код и кто делает деплой.</p></div></div>
+      <div class="compare">
+        <div class="cmp-card neutral"><div class="cmp-head"><div class="cmp-logo"><i data-lucide="server"></i></div><div><strong>Сервер</strong><span class="tag">отдаёт сайт</span></div></div><p>Компьютер или облако, которое отдаёт сайт браузеру пользователя.</p></div>
+        <div class="cmp-card neutral"><div class="cmp-head"><div class="cmp-logo"><i data-lucide="building-2"></i></div><div><strong>Хостинг</strong><span class="tag">место для сайта</span></div></div><p>Площадка, где сайт размещается и становится доступен из интернета.</p></div>
+        <div class="cmp-card"><div class="cmp-head"><div class="cmp-logo"><img src="assets/logos/github.svg" alt="GitHub"></div><div><strong>GitHub</strong><span class="tag">хранилище кода</span></div></div><p>Хранит код, историю изменений и репозиторий. Сам по себе сайт публичным не делает.</p></div>
+        <div class="cmp-card"><div class="cmp-head"><div class="cmp-logo"><img src="assets/logos/vercel.svg" alt="Vercel"></div><div><strong>Vercel</strong><span class="tag">публикация</span></div></div><p>Берёт код из GitHub, собирает проект и выдаёт публичную ссылку вида <code>project.vercel.app</code>.</p></div>
+      </div>
+    </section>
+
+    <!-- 3 ПРОМПТ -->
+    <section class="section">
+      <div class="sec-head"><div class="sec-num">3</div><div><h2>Промпт для Codex</h2><p class="sec-lead">Вставь целиком. Он специально ограничивает проект, чтобы не улететь в backend, базы и платежи.</p></div></div>
+      <div class="copy-shell" data-copy-shell>
+        <div class="copy-head">
+          <div class="copy-title"><span class="dots"><i></i><i></i><i></i></span><b>codex · маленький статический проект</b></div>
+          <button class="copy-btn" type="button" data-copy-button><i data-lucide="copy"></i> Скопировать</button>
+        </div>
+        <pre class="prompt-box" data-copy-text>Я новичок. Помоги мне создать маленький статический веб-проект для урока по хостингу.
+
+Цель: сделать простую страницу, запустить её локально, сохранить в GitHub и подготовить к деплою на Vercel.
+
+Требования:
+- используй простой HTML, CSS и JavaScript;
+- не используй React, Vite, backend, базу данных, auth, платежи и API-ключи;
+- работай маленькими шагами;
+- после каждого шага объясняй простыми словами, что изменилось;
+- перед деплоем проверь, что проект открывается локально;
+- если нужен мой шаг в GitHub или Vercel, дай инструкцию в 1-3 действия.
+
+Сначала составь план из 5-7 шагов. Потом начни с создания файлов проекта.</pre>
+      </div>
+    </section>
+
+    <!-- 4 ФРАЗЫ -->
+    <section class="section">
+      <div class="sec-head"><div class="sec-num">4</div><div><h2>Фразы для работы с Codex</h2><p class="sec-lead">Когда проект уже создан — эти команды помогают не принимать «готово» вслепую.</p></div></div>
+      <div class="copy-shell" data-copy-shell>
+        <div class="copy-head">
+          <div class="copy-title"><span class="dots"><i></i><i></i><i></i></span><b>codex · проверка и подготовка к деплою</b></div>
+          <button class="copy-btn" type="button" data-copy-button><i data-lucide="copy"></i> Скопировать</button>
+        </div>
+        <pre class="prompt-box" data-copy-text>Сделай первую статическую версию без backend и базы.
+
+Покажи, какие файлы изменились, и объясни простыми словами.
+
+Проверь локально и скажи, что именно подтверждает результат.
+
+Перед git pull сначала проверь статус, потом подтяни изменения безопасно.
+
+Я не понимаю ошибку. Объясни её бытовым языком и предложи минимальный фикс.
+
+Подготовь проект к деплою на Vercel, но не добавляй auth, базу, платежи и API-ключи.</pre>
+      </div>
+    </section>
+
+    <!-- 5 ЧЕК-ЛИСТ -->
+    <section class="section">
+      <div class="sec-head"><div class="sec-num">5</div><div><h2>Чек-лист перед публичной ссылкой</h2><p class="sec-lead">Не публикуем «на авось». Сначала простая проверка.</p></div></div>
+      <div class="checks">
+        <div class="check"><div class="ic"><i data-lucide="check"></i></div><div><strong>Проект открыт локально</strong><span>страница реально видна в браузере, не только «файлы созданы».</span></div></div>
+        <div class="check"><div class="ic"><i data-lucide="check"></i></div><div><strong>Понятны изменения</strong><span>Codex объяснил, какие файлы изменил и зачем.</span></div></div>
+        <div class="check"><div class="ic"><i data-lucide="check"></i></div><div><strong>Нет секретов</strong><span>в коде нет паролей, API-ключей, токенов, банковских данных.</span></div></div>
+        <div class="check"><div class="ic"><i data-lucide="check"></i></div><div><strong>Есть commit</strong><span>название объясняет смысл изменения, а не просто «fix».</span></div></div>
+        <div class="check"><div class="ic"><i data-lucide="check"></i></div><div><strong>GitHub открыт</strong><span>репозиторий содержит нужные файлы проекта.</span></div></div>
+        <div class="check"><div class="ic"><i data-lucide="check"></i></div><div><strong>Vercel дал ссылку</strong><span>публичная ссылка открывается не только у тебя.</span></div></div>
+      </div>
+      <div class="warning"><div class="ic"><i data-lucide="triangle-alert"></i></div><div><strong>Стоп-сигнал:</strong> если появляются логин, платежи, клиентские данные, база данных, API-ключи или реальные пользователи — это уже не «быстро задеплоить». Остановись и попроси разбор.</div></div>
+    </section>
+
+    <!-- 6 ЧТО СДАВАТЬ -->
+    <section class="section">
+      <div class="sec-head"><div class="sec-num">6</div><div><h2>Что сдавать после урока</h2><p class="sec-lead">Нужны следы работы, по которым понятно, где проект и где он застрял.</p></div></div>
+      <div class="checks">
+        <div class="check copper"><div class="ic"><i data-lucide="link"></i></div><div><strong>Если получилось</strong><span>ссылка Vercel, ссылка GitHub и 3 предложения «что где живёт».</span></div></div>
+        <div class="check copper"><div class="ic"><i data-lucide="bug"></i></div><div><strong>Если не получилось</strong><span>скрин или текст места, где застрял, и полный текст ошибки.</span></div></div>
+        <div class="check copper"><div class="ic"><i data-lucide="pencil-line"></i></div><div><strong>Названия commit</strong><span>напиши 3 нормальных названия сохранений для своего проекта.</span></div></div>
+        <div class="check copper"><div class="ic"><i data-lucide="lightbulb"></i></div><div><strong>Идея улучшения</strong><span>одна маленькая идея, что добавить в проект дальше.</span></div></div>
+      </div>
+    </section>
+
+    <!-- 7 ГЛОССАРИЙ -->
+    <section class="section">
+      <div class="sec-head"><div class="sec-num">7</div><div><h2>Слова из «Словаря выжившего», что прошли</h2><p class="sec-lead">Если термин снова всплывёт в Codex, Vercel или GitHub — ищи его в PDF.</p></div></div>
+      <div class="terms">
+        <div class="term"><b>Проект</b><span>папка со всеми файлами будущего сайта или приложения.</span></div>
+        <div class="term"><b>localhost</b><span>адрес проекта, открытый только на твоём компьютере.</span></div>
+        <div class="term"><b>Сервер</b><span>компьютер или облако, которое отдаёт сайт пользователям.</span></div>
+        <div class="term"><b>Хостинг</b><span>место, где сайт размещается и доступен другим людям.</span></div>
+        <div class="term"><b>Git</b><span>история сохранений проекта.</span></div>
+        <div class="term"><b>Repository</b><span>проект вместе с историей изменений.</span></div>
+        <div class="term"><b>Commit</b><span>осмысленная точка сохранения.</span></div>
+        <div class="term"><b>Push</b><span>отправить изменения на GitHub.</span></div>
+        <div class="term"><b>Deploy</b><span>публикация проекта в интернет.</span></div>
+        <div class="term"><b>Preview</b><span>тестовая ссылка для проверки до публикации.</span></div>
+        <div class="term"><b>Production</b><span>настоящая публичная версия проекта.</span></div>
+        <div class="term"><b>Домен</b><span>человеческий адрес сайта.</span></div>
+      </div>
+      <a class="download" href="assets/slovar-vyzhivshego-studenta-v-codex-ai-tseh.pdf" target="_blank" rel="noopener">
+        <div class="ic"><i data-lucide="file-down"></i></div>
+        <div><strong>Скачать PDF «Словарь выжившего в Codex»</strong><span>глоссарий технических слов человеческим языком</span></div>
+        <i data-lucide="arrow-up-right" class="go"></i>
+      </a>
+    </section>
+
+    <!-- 8 ФОРМУЛА -->
+    <section class="section">
+      <div class="sec-head"><div class="sec-num">8</div><div><h2>Формула урока</h2><p class="sec-lead">Её нужно уметь объяснить человеку, который просто хочет выложить сайт по ссылке.</p></div></div>
+      <div class="copy-shell" data-copy-shell>
+        <div class="copy-head">
+          <div class="copy-title"><span class="dots"><i></i><i></i><i></i></span><b>финальная формула · в заметки</b></div>
+          <button class="copy-btn" type="button" data-copy-button><i data-lucide="copy"></i> Скопировать</button>
+        </div>
+        <pre class="prompt-box" data-copy-text>Пока я смотрел локально, это был localhost.
+Чтобы сайт увидели другие, нужен хостинг.
+Код лежит в GitHub.
+Сайт опубликован на Vercel.
+Домен — это красивый адрес, который можно подключить позже.
+База не нужна, пока мы не храним данные пользователей.</pre>
+      </div>
+    </section>
+
+    <div class="footer">
+      <b>neovida · Нейропросвещение</b><br>
+      AI Цех · урок 2 · Первый деплой — GitHub, Vercel и первый публичный деплой
+    </div>
+  </main>
+
+<script>
+  function copyFromShell(shell) {
+    const textNode = shell.querySelector('[data-copy-text]');
+    const button = shell.querySelector('[data-copy-button]');
+    if (!textNode) return;
+    navigator.clipboard.writeText(textNode.innerText).then(() => {
+      shell.classList.add('copied');
+      if (button) {
+        const original = button.innerHTML;
+        button.innerHTML = '<i data-lucide="check"></i> Скопировано';
+        if (window.lucide) lucide.createIcons();
+        setTimeout(() => { button.innerHTML = original; shell.classList.remove('copied'); if (window.lucide) lucide.createIcons(); }, 1600);
+      }
+    });
+  }
+  document.querySelectorAll('[data-copy-shell]').forEach((shell) => shell.addEventListener('click', () => copyFromShell(shell)));
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>

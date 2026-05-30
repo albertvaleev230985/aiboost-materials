@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Цех — урок 2. Первый деплой</title>
+<meta name="description" content="Урок 2 курса AI Цех: путь проекта от локальной папки до публичной ссылки через GitHub и Vercel.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    --bg: #090a0b;
+    --ink: #0b0c0d;
+    --panel: #111315;
+    --panel-2: #16191c;
+    --panel-3: #1d2125;
+    --text: #f1ece2;
+    --soft: #d8cebf;
+    --muted: #a59c8e;
+    --dim: #756e63;
+    --line: rgba(241, 236, 226, 0.12);
+    --line-2: rgba(241, 236, 226, 0.22);
+    --copper: #c77a3a;
+    --copper-2: #e0aa6f;
+    --copper-3: #f3cf9b;
+    --steel: #9aa6ad;
+    --blue: #78b5d1;
+    --green: #75b889;
+    --red: #d76c5c;
+    --radius: 10px;
+    --radius-lg: 16px;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --metal: linear-gradient(176deg, #fbe6c6 2%, #e9b87e 34%, #c77a3a 66%, #f3cf9b 99%);
+    --ease: cubic-bezier(.22, .61, .36, 1);
+    --shadow-md: 0 18px 50px rgba(0,0,0,.32);
+    --shadow-lg: 0 34px 90px rgba(0,0,0,.46);
+  }
+
+  html, body {
+    margin: 0; width: 100%; height: 100%; overflow: hidden;
+    background: var(--bg); color: var(--text);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; }
+  h1, h2, h3, p { margin: 0; letter-spacing: -0.01em; }
+  .lucide { width: 1em; height: 1em; stroke-width: 1.8; }
+  .mono { font-family: var(--mono); }
+
+  /* ---------- deck chrome ---------- */
+  .deck { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+  .slide {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    padding: 52px 72px 58px;
+    display: flex; flex-direction: column; justify-content: center;
+    opacity: 0; visibility: hidden; transform: translateX(46px) scale(.992);
+    transition: opacity .5s var(--ease), transform .5s var(--ease), visibility .5s;
+    overflow: hidden;
+    background:
+      linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px),
+      radial-gradient(circle at 80% 6%, rgba(199,122,58,.20), transparent 40vw),
+      radial-gradient(circle at 4% 96%, rgba(120,181,209,.06), transparent 32vw),
+      linear-gradient(135deg, #0a0b0c 0%, #111416 54%, #08090a 100%);
+    background-size: 46px 46px, 46px 46px, auto, auto, auto;
+  }
+  .slide::before { /* engineering corner crosshair */
+    content: ""; position: absolute; inset: 24px; pointer-events: none; z-index: 0;
+    border: 1px solid rgba(241,236,226,.05); border-radius: 6px;
+    -webkit-mask: linear-gradient(#000 0 0) top left/26px 1px no-repeat,
+      linear-gradient(#000 0 0) top left/1px 26px no-repeat,
+      linear-gradient(#000 0 0) top right/26px 1px no-repeat,
+      linear-gradient(#000 0 0) top right/1px 26px no-repeat,
+      linear-gradient(#000 0 0) bottom left/26px 1px no-repeat,
+      linear-gradient(#000 0 0) bottom left/1px 26px no-repeat,
+      linear-gradient(#000 0 0) bottom right/26px 1px no-repeat,
+      linear-gradient(#000 0 0) bottom right/1px 26px no-repeat;
+  }
+  .slide > * { position: relative; z-index: 1; }
+  .slide.active { opacity: 1; visibility: visible; transform: translateX(0) scale(1); }
+  .slide.prev { transform: translateX(-46px) scale(.992); }
+
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px; width: 0; z-index: 100;
+    background: var(--metal); box-shadow: 0 0 20px rgba(224,170,111,.5);
+    transition: width .35s var(--ease);
+  }
+  .counter {
+    position: fixed; right: 30px; bottom: 24px; z-index: 100;
+    color: rgba(241,236,226,.5); font-family: var(--mono);
+    font-size: 13px; font-weight: 600; letter-spacing: .14em;
+  }
+  .counter b { color: var(--copper-2); }
+  .brandmark {
+    position: fixed; left: 30px; bottom: 24px; z-index: 100;
+    display: flex; align-items: center; gap: 9px;
+    color: rgba(241,236,226,.42); font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  }
+  .brandmark .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--copper-2); box-shadow: 0 0 10px var(--copper-2); }
+  .fs {
+    position: fixed; top: 20px; right: 24px; z-index: 101;
+    width: 42px; height: 42px; border-radius: 10px;
+    border: 1px solid rgba(241,236,226,.16); background: rgba(12,14,16,.6);
+    color: rgba(241,236,226,.55); display: grid; place-items: center; cursor: pointer;
+    opacity: .7; backdrop-filter: blur(12px); transition: .2s var(--ease);
+  }
+  .fs:hover { opacity: 1; color: var(--text); border-color: rgba(224,170,111,.5); }
+
+  /* ---------- shared atoms ---------- */
+  .kicker {
+    display: inline-flex; align-items: center; gap: 10px; width: fit-content;
+    padding: 8px 14px; border-radius: 999px;
+    border: 1px solid rgba(224,170,111,.32); background: rgba(199,122,58,.10);
+    color: var(--copper-2); font-family: var(--mono);
+    font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+  }
+  .kicker .lucide { width: 15px; height: 15px; }
+  .kicker::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--copper-2); box-shadow: 0 0 9px var(--copper-2); }
+
+  .slide-title {
+    max-width: 1240px; margin: 20px 0 22px;
+    font-size: clamp(40px, 4.9vw, 72px); line-height: .98; font-weight: 900; letter-spacing: -0.025em;
+  }
+  .metal {
+    background: var(--metal); -webkit-background-clip: text; background-clip: text;
+    color: transparent; -webkit-text-fill-color: transparent;
+  }
+  .slide-sub { max-width: 1000px; color: var(--soft); font-size: 22px; line-height: 1.4; font-weight: 500; }
+  .slide-sub b { color: var(--text); font-weight: 700; }
+
+  .panel {
+    border-radius: var(--radius-lg); border: 1px solid var(--line);
+    background: linear-gradient(150deg, rgba(255,255,255,.05), rgba(255,255,255,.014));
+    box-shadow: var(--shadow-md); backdrop-filter: blur(12px); position: relative; overflow: hidden;
+  }
+  .panel::before { /* brushed top light */
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(243,207,155,.5), transparent);
+  }
+
+  .formula {
+    margin-top: 8px; width: fit-content; max-width: 1180px;
+    padding: 22px 26px 22px 28px; border-radius: 12px;
+    border: 1px solid rgba(224,170,111,.24);
+    background: linear-gradient(120deg, rgba(199,122,58,.13), rgba(199,122,58,.03));
+    position: relative; color: #efe3d3; font-size: 22px; line-height: 1.4; font-weight: 700;
+  }
+  .formula::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; border-radius: 4px; background: var(--metal); }
+
+  /* staggered reveal */
+  .anim { opacity: 0; transform: translateY(22px); transition: opacity .6s var(--ease), transform .6s var(--ease); }
+  .slide.active .anim { opacity: 1; transform: translateY(0); }
+  .slide.active .d1 { transition-delay: .07s; }
+  .slide.active .d2 { transition-delay: .15s; }
+  .slide.active .d3 { transition-delay: .24s; }
+  .slide.active .d4 { transition-delay: .33s; }
+  .slide.active .d5 { transition-delay: .42s; }
+  .slide.active .d6 { transition-delay: .51s; }
+
+  /* ============ SIGNATURE: deploy pipeline ============ */
+  .pipeline {
+    position: relative; display: grid; grid-auto-flow: column;
+    grid-auto-columns: 1fr; gap: 0; align-items: stretch; margin-top: 26px;
+    padding: 8px 0;
+  }
+  .pl-track {
+    position: absolute; left: 7%; right: 7%; top: 64px; height: 3px; z-index: 0;
+    background: linear-gradient(90deg, rgba(224,170,111,.12), rgba(224,170,111,.55) 50%, rgba(117,184,137,.6));
+    border-radius: 3px;
+  }
+  .pl-track::after { /* traveling pulse */
+    content: ""; position: absolute; top: 50%; left: 0; width: 120px; height: 9px; transform: translateY(-50%);
+    background: radial-gradient(closest-side, rgba(243,207,155,.95), rgba(243,207,155,0));
+    border-radius: 50%; filter: blur(.3px);
+  }
+  .slide.active .pl-track::after { animation: travel 3.6s var(--ease) .5s infinite; }
+  @keyframes travel { 0% { left: -8%; opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { left: 104%; opacity: 0; } }
+
+  .pl-node { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 8px; }
+  .pl-dot {
+    width: 86px; height: 86px; border-radius: 20px; display: grid; place-items: center;
+    border: 1px solid rgba(241,236,226,.16);
+    background: radial-gradient(circle at 30% 24%, rgba(255,255,255,.07), rgba(8,9,10,.92));
+    box-shadow: var(--shadow-md); margin-bottom: 16px; position: relative;
+  }
+  .pl-dot .lucide { width: 34px; height: 34px; color: var(--copper-2); }
+  .pl-dot img { width: 34px; height: 34px; filter: brightness(0) invert(1); opacity: .92; }
+  .pl-node:last-child .pl-dot { border-color: rgba(117,184,137,.42); box-shadow: 0 0 0 1px rgba(117,184,137,.2), var(--shadow-md); }
+  .pl-node:last-child .pl-dot .lucide { color: var(--green); }
+  .pl-num { position: absolute; top: -9px; right: -9px; width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center; font-family: var(--mono); font-size: 12px; font-weight: 700;
+    color: var(--ink); background: var(--metal); box-shadow: 0 4px 12px rgba(199,122,58,.4); }
+  .pl-node strong { display: block; font-size: 18px; font-weight: 800; line-height: 1.06; }
+  .pl-node span { display: block; margin-top: 7px; color: var(--muted); font-size: 13.5px; line-height: 1.32; font-weight: 500; max-width: 168px; }
+
+  /* ============ cover ============ */
+  .cover { padding: 48px 72px; }
+  .cover-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(480px,.95fr); gap: 54px; align-items: center; }
+  .cover h1 { margin: 26px 0 22px; font-size: clamp(58px, 6.4vw, 104px); line-height: .9; font-weight: 900; letter-spacing: -0.04em; }
+  .cover-lead { max-width: 700px; color: var(--soft); font-size: 26px; line-height: 1.36; font-weight: 600; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 11px; margin-top: 30px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 9px; padding: 10px 15px; border-radius: 999px;
+    border: 1px solid rgba(241,236,226,.16); background: rgba(255,255,255,.045);
+    color: var(--soft); font-size: 14px; font-weight: 700;
+  }
+  .pill .lucide { width: 17px; height: 17px; color: var(--copper-2); }
+
+  /* cover machine: vertical route */
+  .machine { padding: 30px 30px 26px; }
+  .machine-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+    font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .machine-head .live { display: inline-flex; align-items: center; gap: 7px; color: var(--green); }
+  .machine-head .live i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 9px var(--green); animation: blink 1.6s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.32} }
+  .vroute { position: relative; display: grid; gap: 14px; padding-left: 38px; }
+  .vroute::before { content: ""; position: absolute; left: 16px; top: 18px; bottom: 18px; width: 2px;
+    background: linear-gradient(180deg, var(--copper-2), rgba(117,184,137,.7)); border-radius: 2px; }
+  .vstep { display: grid; grid-template-columns: 1fr; position: relative; }
+  .vstep::before { content: ""; position: absolute; left: -30px; top: 7px; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--ink); border: 2px solid var(--copper-2); box-shadow: 0 0 0 4px rgba(199,122,58,.12); }
+  .vstep:last-child::before { border-color: var(--green); box-shadow: 0 0 0 4px rgba(117,184,137,.16); }
+  .vstep strong { font-size: 19px; font-weight: 800; }
+  .vstep span { color: var(--muted); font-size: 14px; font-weight: 500; }
+
+  /* ============ compare duo (GitHub vs Vercel / Сервер vs Хостинг) ============ */
+  .duo { display: grid; grid-template-columns: 1fr 64px 1fr; gap: 0; align-items: stretch; margin-top: 16px; }
+  .duo-card { padding: 30px 30px 28px; border-radius: var(--radius-lg); display: flex; flex-direction: column; }
+  .duo-head { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+  .duo-logo { width: 60px; height: 60px; border-radius: 14px; display: grid; place-items: center;
+    border: 1px solid var(--line); background: rgba(8,9,10,.7); }
+  .duo-logo img { width: 32px; height: 32px; filter: brightness(0) invert(1); opacity: .94; }
+  .duo-logo .lucide { width: 32px; height: 32px; color: var(--copper-2); }
+  .duo-head strong { font-size: 40px; font-weight: 900; letter-spacing: -.03em; }
+  .duo-head .tag { display: block; margin-top: 2px; font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--copper-2); }
+  .duo-card > p { color: var(--soft); font-size: 21px; line-height: 1.34; font-weight: 600; margin-bottom: 20px; }
+  .duo-list { list-style: none; margin: auto 0 0; padding: 0; display: grid; gap: 12px; }
+  .duo-list li { display: grid; grid-template-columns: 26px 1fr; gap: 11px; color: var(--muted); font-size: 16px; line-height: 1.3; font-weight: 600; }
+  .duo-list li .lucide { width: 20px; height: 20px; color: var(--copper-2); margin-top: 1px; }
+  .duo-mid { position: relative; display: grid; place-items: center; }
+  .duo-mid .arrow { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
+    border: 1px solid rgba(224,170,111,.4); background: rgba(199,122,58,.12); color: var(--copper-2); box-shadow: 0 0 24px rgba(199,122,58,.2); }
+  .duo-mid .arrow .lucide { width: 24px; height: 24px; }
+  .duo-mid::before, .duo-mid::after { content: ""; position: absolute; top: 50%; height: 2px; width: 24px;
+    background: linear-gradient(90deg, transparent, var(--copper-2)); }
+  .duo-mid::before { left: -4px; }
+  .duo-mid::after { right: -4px; transform: scaleX(-1); }
+  .neutral .duo-logo .lucide { color: var(--steel); }
+
+  /* ============ split big-card + status list ============ */
+  .split { display: grid; grid-template-columns: minmax(0,.92fr) minmax(440px,1.08fr); gap: 30px; align-items: stretch; margin-top: 14px; }
+  .bigcard { padding: 34px; display: flex; flex-direction: column; justify-content: space-between; }
+  .bigcard h3 { font-size: 42px; line-height: 1.02; font-weight: 900; letter-spacing: -.03em; }
+  .bigcard p { margin-top: 16px; color: var(--soft); font-size: 21px; line-height: 1.36; font-weight: 600; }
+  .stat-list { display: grid; gap: 13px; align-content: center; }
+  .stat-row { display: grid; grid-template-columns: 46px 1fr; gap: 16px; align-items: center;
+    padding: 17px 19px; border-radius: 12px; border: 1px solid var(--line); background: rgba(8,9,10,.46); transition: .25s var(--ease); }
+  .stat-row:hover { border-color: rgba(224,170,111,.34); transform: translateX(4px); }
+  .stat-ic { width: 46px; height: 46px; border-radius: 11px; display: grid; place-items: center;
+    border: 1px solid rgba(224,170,111,.22); background: rgba(199,122,58,.09); color: var(--copper-2); }
+  .stat-ic .lucide { width: 23px; height: 23px; }
+  .stat-row strong { display: block; font-size: 18px; font-weight: 800; }
+  .stat-row span { display: block; margin-top: 3px; color: var(--muted); font-size: 14.5px; font-weight: 500; line-height: 1.3; }
+  .stat-row.ok .stat-ic { border-color: rgba(117,184,137,.3); background: rgba(117,184,137,.1); color: var(--green); }
+  .stat-row.warn .stat-ic { border-color: rgba(215,108,92,.3); background: rgba(215,108,92,.1); color: var(--red); }
+
+  /* ============ layer stack (iso) ============ */
+  .layers { display: grid; gap: 12px; margin-top: 18px; max-width: 1180px; }
+  .layer {
+    display: grid; grid-template-columns: 64px 250px 1fr; gap: 22px; align-items: center;
+    padding: 18px 24px; border-radius: 13px; border: 1px solid var(--line);
+    background: linear-gradient(100deg, rgba(20,23,26,.86), rgba(10,12,13,.6));
+    transition: .3s var(--ease); position: relative; overflow: hidden;
+  }
+  .layer::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--metal); opacity: .8; }
+  .layer:hover { transform: translateX(6px); border-color: rgba(224,170,111,.3); }
+  .layer:nth-child(1) { margin-left: 0; }
+  .layer:nth-child(2) { margin-left: 30px; }
+  .layer:nth-child(3) { margin-left: 60px; }
+  .layer:nth-child(4) { margin-left: 90px; }
+  .layer:nth-child(5) { margin-left: 120px; }
+  .layer:nth-child(6) { margin-left: 150px; }
+  .layer-n { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--copper-2); }
+  .layer strong { font-size: 24px; font-weight: 900; letter-spacing: -.02em; }
+  .layer span { color: var(--muted); font-size: 16px; font-weight: 500; line-height: 1.3; }
+  .layer .lucide { color: var(--copper-2); }
+
+  /* ============ steps flow (numbered with connectors) ============ */
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 22px; }
+  .step { position: relative; padding: 0 16px; }
+  .step:not(:last-child)::after { content: ""; position: absolute; top: 28px; right: -2px; width: 4px; height: 4px; }
+  .step-card { padding: 24px 22px; border-radius: 14px; border: 1px solid var(--line); background: rgba(10,12,13,.6); height: 100%; position: relative; }
+  .step-card::before { content: ""; position: absolute; top: 28px; right: -20px; width: 40px; height: 2px;
+    background: linear-gradient(90deg, var(--copper-2), rgba(224,170,111,.2)); z-index: 2; }
+  .step:last-child .step-card::before { display: none; }
+  .step-n { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 18px;
+    font-family: var(--mono); font-weight: 700; font-size: 18px; color: var(--copper-2);
+    border: 1px solid rgba(224,170,111,.36); background: rgba(199,122,58,.1); }
+  .step-card strong { display: block; font-size: 22px; font-weight: 900; line-height: 1.08; letter-spacing: -.02em; }
+  .step-card span { display: block; margin-top: 11px; color: var(--muted); font-size: 15.5px; line-height: 1.34; font-weight: 500; }
+  .step-card .lucide.bg { position: absolute; right: 16px; bottom: 14px; width: 34px; height: 34px; color: rgba(224,170,111,.16); }
+
+  /* ============ git timeline ============ */
+  .timeline { position: relative; margin-top: 26px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; padding: 24px 0 8px; }
+  .timeline::before { content: ""; position: absolute; left: 8%; right: 8%; top: 38px; height: 2px;
+    background: repeating-linear-gradient(90deg, rgba(224,170,111,.5) 0 14px, transparent 14px 24px); }
+  .tl-node { position: relative; text-align: center; padding: 0 18px; }
+  .tl-bullet { width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 22px; position: relative; z-index: 1;
+    display: grid; place-items: center; background: var(--ink); border: 2px solid var(--copper-2);
+    box-shadow: 0 0 0 5px rgba(199,122,58,.12); }
+  .tl-bullet .lucide { width: 15px; height: 15px; color: var(--copper-2); }
+  .tl-cmd { font-family: var(--mono); font-size: 21px; font-weight: 700; color: var(--text); }
+  .tl-node p { margin-top: 9px; color: var(--muted); font-size: 16px; line-height: 1.32; font-weight: 500; }
+
+  /* ============ url anatomy ============ */
+  .url-anatomy { margin-top: 24px; }
+  .url-bar { display: inline-flex; align-items: center; gap: 2px; flex-wrap: wrap;
+    padding: 18px 24px; border-radius: 14px; border: 1px solid rgba(224,170,111,.28);
+    background: rgba(8,9,10,.74); font-family: var(--mono); font-size: clamp(22px, 3vw, 40px); font-weight: 700; }
+  .url-bar .seg { padding: 2px 6px; border-radius: 6px; position: relative; }
+  .url-bar .seg.proto { color: var(--steel); }
+  .url-bar .seg.sub { color: var(--copper-3); background: rgba(199,122,58,.14); }
+  .url-bar .seg.dom { color: var(--text); }
+  .url-bar .seg.tld { color: var(--green); }
+  .url-legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; }
+  .ul-item { padding: 18px 20px; border-radius: 12px; border: 1px solid var(--line); background: rgba(10,12,13,.56); }
+  .ul-item b { display: block; font-family: var(--mono); font-size: 15px; margin-bottom: 7px; }
+  .ul-item.sub b { color: var(--copper-3); }
+  .ul-item.dom b { color: var(--text); }
+  .ul-item.tld b { color: var(--green); }
+  .ul-item span { color: var(--muted); font-size: 15px; line-height: 1.36; font-weight: 500; }
+
+  /* ============ danger grid ============ */
+  .danger-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; }
+  .danger { padding: 24px 22px; border-radius: 14px; border: 1px solid rgba(215,108,92,.26);
+    background: linear-gradient(150deg, rgba(215,108,92,.09), rgba(215,108,92,.02)); position: relative; overflow: hidden; }
+  .danger .badge { position: absolute; top: 16px; right: 16px; font-family: var(--mono); font-size: 11px;
+    letter-spacing: .12em; color: var(--red); opacity: .8; }
+  .danger-ic { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 16px;
+    border: 1px solid rgba(215,108,92,.34); background: rgba(215,108,92,.12); color: var(--red); }
+  .danger-ic .lucide { width: 24px; height: 24px; }
+  .danger strong { display: block; font-size: 21px; font-weight: 900; letter-spacing: -.02em; }
+  .danger span { display: block; margin-top: 9px; color: var(--muted); font-size: 15px; line-height: 1.34; font-weight: 500; }
+
+  /* ============ checkpoint trio ============ */
+  .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 22px; }
+  .tcard { padding: 26px 24px; border-radius: 14px; border: 1px solid var(--line); background: rgba(10,12,13,.6); position: relative; }
+  .tcard.stop { border-color: rgba(215,108,92,.3); background: linear-gradient(150deg, rgba(215,108,92,.08), rgba(215,108,92,.02)); }
+  .tcard.ok { border-color: rgba(117,184,137,.26); }
+  .tcard-ic { width: 50px; height: 50px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 18px;
+    border: 1px solid rgba(224,170,111,.24); background: rgba(199,122,58,.1); color: var(--copper-2); }
+  .tcard.stop .tcard-ic { border-color: rgba(215,108,92,.3); background: rgba(215,108,92,.1); color: var(--red); }
+  .tcard.ok .tcard-ic { border-color: rgba(117,184,137,.3); background: rgba(117,184,137,.1); color: var(--green); }
+  .tcard-ic .lucide { width: 25px; height: 25px; }
+  .tcard strong { display: block; font-size: 23px; font-weight: 900; letter-spacing: -.02em; }
+  .tcard span { display: block; margin-top: 10px; color: var(--muted); font-size: 16px; line-height: 1.36; font-weight: 500; }
+
+  /* ============ word constellation ============ */
+  .constell { position: relative; min-height: 560px; margin-top: 14px; padding: 30px; }
+  .constell::before, .constell::after { content: ""; position: absolute; border: 1px dashed rgba(224,170,111,.16); border-radius: 50%; }
+  .constell::before { inset: 70px 220px; }
+  .constell::after { inset: 150px 380px; border-color: rgba(224,170,111,.24); }
+  .cw { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%,-50%) rotate(var(--r,0deg));
+    padding: 9px 14px; border-radius: 10px; border: 1px solid rgba(241,236,226,.1);
+    background: rgba(6,7,8,.7); font-weight: 800; white-space: nowrap;
+    font-size: var(--fs,15px); color: rgba(241,236,226,.4); }
+  .cw.core { color: var(--copper-2); border-color: rgba(224,170,111,.4); background: rgba(199,122,58,.12);
+    font-weight: 900; box-shadow: 0 14px 40px rgba(199,122,58,.14); z-index: 3; }
+  .cw.mid { color: var(--soft); border-color: rgba(241,236,226,.16); z-index: 2; }
+  .constell-center { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); text-align: center; z-index: 4; }
+  .constell-center .lucide { width: 40px; height: 40px; color: var(--copper-2); }
+  .constell-center b { display: block; margin-top: 8px; font-family: var(--mono); font-size: 14px; letter-spacing: .14em; text-transform: uppercase; color: var(--copper-2); }
+
+  /* ============ glossary board ============ */
+  .term-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
+  .term { padding: 16px 18px; border-radius: 11px; border: 1px solid var(--line); background: rgba(10,12,13,.6); transition: .25s var(--ease); }
+  .term:hover { border-color: rgba(224,170,111,.34); transform: translateY(-3px); }
+  .term b { display: block; font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+  .term span { display: block; margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.3; font-weight: 500; }
+  .term b .mono-tag { font-family: var(--mono); font-size: 12px; color: var(--copper-2); margin-left: 6px; }
+  .download {
+    display: grid; grid-template-columns: 56px 1fr auto; gap: 18px; align-items: center; margin-top: 20px;
+    padding: 20px 24px; border-radius: 14px; text-decoration: none; color: var(--text);
+    border: 1px solid rgba(224,170,111,.3); background: linear-gradient(120deg, rgba(199,122,58,.14), rgba(199,122,58,.03));
+  }
+  .download .ic { width: 56px; height: 56px; border-radius: 13px; display: grid; place-items: center;
+    border: 1px solid rgba(224,170,111,.3); background: rgba(199,122,58,.12); color: var(--copper-2); }
+  .download .ic .lucide { width: 28px; height: 28px; }
+  .download strong { display: block; font-size: 22px; font-weight: 900; letter-spacing: -.02em; }
+  .download span { color: var(--muted); font-size: 15px; font-weight: 500; }
+  .download .go { color: var(--copper-2); }
+
+  /* ============ prompt panel ============ */
+  .prompt-wrap { margin-top: 22px; border-radius: 16px; border: 1px solid rgba(224,170,111,.28); background: rgba(8,9,10,.78); overflow: hidden; box-shadow: var(--shadow-md); }
+  .prompt-bar { display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--line);
+    font-family: var(--mono); font-size: 13px; color: var(--muted); letter-spacing: .06em; }
+  .prompt-bar .dots { display: flex; gap: 7px; margin-right: 8px; }
+  .prompt-bar .dots i { width: 11px; height: 11px; border-radius: 50%; }
+  .prompt-bar .dots i:nth-child(1){ background: #d76c5c; }
+  .prompt-bar .dots i:nth-child(2){ background: #e0aa6f; }
+  .prompt-bar .dots i:nth-child(3){ background: #75b889; }
+  .prompt-body { padding: 26px 28px; font-family: var(--mono); font-size: 18px; line-height: 1.62; color: #f0e6d6; white-space: pre-wrap; }
+  .prompt-body .hl { color: var(--copper-3); }
+
+  /* ============ quiz ============ */
+  .quiz { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; }
+  .qcard { padding: 24px 22px; border-radius: 14px; border: 1px solid var(--line); background: rgba(10,12,13,.6);
+    display: flex; flex-direction: column; gap: 14px; min-height: 150px; transition: .25s var(--ease); }
+  .qcard:hover { border-color: rgba(224,170,111,.32); transform: translateY(-3px); }
+  .qcard small { font-family: var(--mono); font-size: 13px; letter-spacing: .12em; color: var(--copper-2); }
+  .qcard strong { font-size: 22px; line-height: 1.16; font-weight: 800; letter-spacing: -.02em; }
+
+  /* ============ final ============ */
+  .final { background:
+      linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px),
+      radial-gradient(circle at 60% 46%, rgba(224,170,111,.22), transparent 38vw),
+      linear-gradient(135deg, #08090a 0%, #101315 52%, #070809 100%);
+    background-size: 46px 46px, 46px 46px, auto, auto; }
+  .final-grid { display: grid; grid-template-columns: minmax(0,.82fr) minmax(500px,1.1fr); gap: 48px; align-items: center; }
+  .final h2 { font-size: clamp(62px, 7vw, 120px); line-height: .86; font-weight: 900; letter-spacing: -.045em; }
+  .final p { margin-top: 24px; color: var(--soft); font-size: 24px; line-height: 1.36; font-weight: 600; }
+  .signal { position: relative; min-height: 560px; padding: 40px; }
+  .signal-cap { position: absolute; left: 28px; top: 28px; font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .signal-line { position: absolute; left: 88px; right: 88px; top: 46%; height: 3px; transform-origin: left; transform: scaleX(0);
+    background: linear-gradient(90deg, rgba(224,170,111,.1), rgba(224,170,111,.85), rgba(117,184,137,.75)); border-radius: 3px; }
+  .slide.active .signal-line { animation: grow 2s var(--ease) .4s forwards; }
+  @keyframes grow { to { transform: scaleX(1); } }
+  .snode { position: absolute; top: calc(46% - 56px); width: 112px; height: 112px; border-radius: 22px; display: grid; place-items: center;
+    border: 1px solid rgba(241,236,226,.16); background: radial-gradient(circle at 30% 24%, rgba(255,255,255,.06), rgba(8,9,10,.92)); box-shadow: var(--shadow-lg); }
+  .snode img { width: 46px; height: 46px; filter: brightness(0) invert(1); opacity: .92; }
+  .snode .lucide { width: 46px; height: 46px; color: var(--copper-2); }
+  .snode.n1 { left: 44px; } .snode.n2 { left: calc(50% - 56px); } .snode.n3 { right: 44px; border-color: rgba(117,184,137,.4); }
+  .snode.n3 .lucide { color: var(--green); }
+  .snode strong { position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 12px; letter-spacing: .1em; color: var(--muted); white-space: nowrap; }
+  .public-link { position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%); min-width: 420px; text-align: center;
+    padding: 20px 26px; border-radius: 14px; border: 1px solid rgba(117,184,137,.4); background: rgba(117,184,137,.1);
+    color: #dff5e5; font-family: var(--mono); font-size: 24px; font-weight: 700; letter-spacing: .02em; opacity: 0; }
+  .slide.active .public-link { animation: ignite .9s var(--ease) 2.2s forwards, pulse 2s ease-in-out 3.1s infinite; }
+  @keyframes ignite { from { opacity: 0; transform: translateX(-50%) translateY(16px); filter: blur(6px); } to { opacity: 1; transform: translateX(-50%) translateY(0); filter: blur(0); } }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 rgba(117,184,137,0); } 50% { box-shadow: 0 0 44px rgba(117,184,137,.3); } }
+
+  /* ============ responsive ============ */
+  @media (max-width: 1180px) {
+    .slide { padding: 34px 26px 48px; justify-content: flex-start; overflow-y: auto; }
+    .cover-grid, .split, .final-grid { grid-template-columns: 1fr; }
+    .duo { grid-template-columns: 1fr; gap: 16px; }
+    .duo-mid { display: none; }
+    .pipeline { grid-auto-flow: row; grid-auto-columns: auto; }
+    .pl-track { display: none; }
+    .pl-node { flex-direction: row; gap: 16px; text-align: left; align-items: center; }
+    .pl-dot { margin-bottom: 0; }
+    .pl-node span { max-width: none; }
+    .layers { } .layer { grid-template-columns: 1fr; margin-left: 0 !important; }
+    .steps, .danger-grid, .trio, .quiz, .url-legend, .timeline { grid-template-columns: 1fr 1fr; }
+    .step-card::before { display: none; }
+    .term-board { grid-template-columns: 1fr 1fr; }
+    .constell { min-height: auto; display: flex; flex-wrap: wrap; gap: 8px; }
+    .constell::before, .constell::after, .constell-center { display: none; }
+    .cw { position: static; transform: none !important; }
+    .slide-title { font-size: clamp(32px, 7vw, 50px); }
+  }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+<div class="progress" id="progress"></div>
+<button class="fs" id="fsBtn" title="На весь экран"><i data-lucide="maximize"></i></button>
+<div class="brandmark"><span class="dot"></span> neovida · AI Цех</div>
+<div class="counter" id="counter"><b>01</b> / 18</div>
+
+<!-- 01 COVER -->
+<section class="slide cover active">
+  <div class="cover-grid">
+    <div>
+      <div class="kicker anim"><i data-lucide="factory"></i> Урок 2 / Первый деплой</div>
+      <h1 class="anim d1">От папки<br><span class="metal">до публичной ссылки</span></h1>
+      <p class="cover-lead anim d2">Сервер, хостинг, GitHub, Vercel, localhost и первый деплой — без технического тумана.</p>
+      <div class="pill-row anim d3">
+        <span class="pill"><i data-lucide="clock-3"></i> 2 часа</span>
+        <span class="pill"><i data-lucide="git-branch"></i> GitHub</span>
+        <span class="pill"><i data-lucide="triangle"></i> Vercel</span>
+        <span class="pill"><i data-lucide="link"></i> Публичная ссылка</span>
+      </div>
+    </div>
+    <div class="machine panel anim d2">
+      <div class="machine-head"><span>PROJECT ROUTE · LESSON 02</span><span class="live"><i></i> DEPLOY</span></div>
+      <div class="vroute">
+        <div class="vstep"><strong>Папка проекта</strong><span>код живёт на твоём компьютере</span></div>
+        <div class="vstep"><strong>localhost</strong><span>проверка только у тебя</span></div>
+        <div class="vstep"><strong>Git</strong><span>история сохранений проекта</span></div>
+        <div class="vstep"><strong>GitHub</strong><span>код и история в облаке</span></div>
+        <div class="vstep"><strong>Vercel</strong><span>сборка и публикация</span></div>
+        <div class="vstep"><strong>Публичная ссылка</strong><span>то, что уже можно отправить человеку</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 ЦЕЛЬ -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="target"></i> Цель урока</div>
+  <h2 class="slide-title anim d1">Сегодня проект перестаёт быть <span class="metal">файлом на компьютере</span></h2>
+  <p class="slide-sub anim d2">Мы не учим весь Git и не строим SaaS. Мы собираем <b>первый маршрут публикации</b>: создать, открыть локально, сохранить, отправить в GitHub, выложить через Vercel.</p>
+  <div class="formula anim d3">Код лежит в GitHub. Сайт опубликован на Vercel. localhost — это только твой компьютер.</div>
+</section>
+
+<!-- 03 КАРТА МАРШРУТА (signature pipeline) -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="route"></i> Карта маршрута</div>
+  <h2 class="slide-title anim d1">Один путь, который надо <span class="metal">увидеть целиком</span></h2>
+  <p class="slide-sub anim d2">По этому конвейеру сегодня пройдёт наш проект — от идеи в голове до ссылки, которую открывают другие люди.</p>
+  <div class="pipeline anim d3">
+    <div class="pl-track"></div>
+    <div class="pl-node"><div class="pl-dot"><span class="pl-num">1</span><i data-lucide="folder-code"></i></div><strong>Папка</strong><span>файлы проекта</span></div>
+    <div class="pl-node"><div class="pl-dot"><span class="pl-num">2</span><i data-lucide="monitor-dot"></i></div><strong>localhost</strong><span>локальная проверка</span></div>
+    <div class="pl-node"><div class="pl-dot"><span class="pl-num">3</span><i data-lucide="git-commit-horizontal"></i></div><strong>Git</strong><span>история сохранений</span></div>
+    <div class="pl-node"><div class="pl-dot"><span class="pl-num">4</span><img src="assets/logos/github.svg" alt="GitHub"></div><strong>GitHub</strong><span>код в облаке</span></div>
+    <div class="pl-node"><div class="pl-dot"><span class="pl-num">5</span><img src="assets/logos/vercel.svg" alt="Vercel"></div><strong>Vercel</strong><span>сборка и деплой</span></div>
+    <div class="pl-node"><div class="pl-dot"><span class="pl-num">6</span><i data-lucide="globe"></i></div><strong>Ссылка</strong><span>открывается у людей</span></div>
+  </div>
+</section>
+
+<!-- 04 СЛОВА УРОКА (constellation) -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="book-open-check"></i> Слова урока</div>
+  <h2 class="slide-title anim d1">Эти слова сегодня станут <span class="metal">нормальными человеческими</span></h2>
+  <div class="constell panel anim d2">
+    <div class="constell-center"><i data-lucide="cpu"></i><b>ядро урока</b></div>
+    <span class="cw core" style="--x:24%;--y:24%;--fs:30px;--r:-2deg;">GitHub</span>
+    <span class="cw core" style="--x:74%;--y:26%;--fs:30px;--r:2deg;">Vercel</span>
+    <span class="cw core" style="--x:50%;--y:14%;--fs:26px;">хостинг</span>
+    <span class="cw core" style="--x:18%;--y:62%;--fs:24px;--r:1deg;">сервер</span>
+    <span class="cw core" style="--x:80%;--y:64%;--fs:24px;--r:-1deg;">localhost</span>
+    <span class="cw core" style="--x:50%;--y:84%;--fs:24px;">deploy</span>
+    <span class="cw mid" style="--x:38%;--y:40%;--fs:18px;--r:-1deg;">Commit</span>
+    <span class="cw mid" style="--x:62%;--y:42%;--fs:18px;--r:1deg;">Push</span>
+    <span class="cw mid" style="--x:30%;--y:80%;--fs:17px;">Build</span>
+    <span class="cw mid" style="--x:70%;--y:82%;--fs:17px;">Preview</span>
+    <span class="cw mid" style="--x:88%;--y:46%;--fs:16px;">домен</span>
+    <span class="cw mid" style="--x:12%;--y:42%;--fs:16px;">Git</span>
+    <span class="cw" style="--x:8%;--y:18%;--fs:13px;--r:2deg;">Repository</span>
+    <span class="cw" style="--x:90%;--y:16%;--fs:13px;--r:-2deg;">README</span>
+    <span class="cw" style="--x:6%;--y:78%;--fs:13px;">.gitignore</span>
+    <span class="cw" style="--x:94%;--y:80%;--fs:13px;">Production</span>
+    <span class="cw" style="--x:42%;--y:62%;--fs:13px;--r:1deg;">База данных</span>
+    <span class="cw" style="--x:58%;--y:62%;--fs:13px;--r:-1deg;">API-key</span>
+    <span class="cw" style="--x:32%;--y:10%;--fs:12px;">npm install</span>
+    <span class="cw" style="--x:68%;--y:10%;--fs:12px;">Терминал</span>
+    <span class="cw" style="--x:16%;--y:90%;--fs:12px;">Error</span>
+    <span class="cw" style="--x:84%;--y:92%;--fs:12px;">Responsive</span>
+  </div>
+</section>
+
+<!-- 05 GitHub vs Vercel -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="split"></i> Главная путаница</div>
+  <h2 class="slide-title anim d1">GitHub и Vercel — <span class="metal">не одно и то же</span></h2>
+  <div class="duo">
+    <div class="duo-card panel anim d2">
+      <div class="duo-head"><div class="duo-logo"><img src="assets/logos/github.svg" alt="GitHub"></div><div><strong>GitHub</strong><span class="tag">хранилище кода</span></div></div>
+      <p>Хранит код, историю изменений и репозиторий.</p>
+      <ul class="duo-list">
+        <li><i data-lucide="archive"></i><span>Показывает, какие файлы есть в проекте</span></li>
+        <li><i data-lucide="history"></i><span>Хранит всю commit-историю</span></li>
+        <li><i data-lucide="cloud-off"></i><span>Сам по себе сайт публичным не делает</span></li>
+      </ul>
+    </div>
+    <div class="duo-mid anim d3"><div class="arrow"><i data-lucide="arrow-right"></i></div></div>
+    <div class="duo-card panel anim d4">
+      <div class="duo-head"><div class="duo-logo"><img src="assets/logos/vercel.svg" alt="Vercel"></div><div><strong>Vercel</strong><span class="tag">публикация сайта</span></div></div>
+      <p>Берёт код из GitHub, собирает проект и отдаёт сайт по ссылке.</p>
+      <ul class="duo-list">
+        <li><i data-lucide="cloud-upload"></i><span>Создаёт deployment из репозитория</span></li>
+        <li><i data-lucide="link"></i><span>Выдаёт публичную ссылку</span></li>
+        <li><i data-lucide="refresh-cw"></i><span>Обновляет сайт после push в GitHub</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 06 localhost -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="monitor-dot"></i> localhost</div>
+  <h2 class="slide-title anim d1">Если ссылка начинается с localhost — её <span class="metal">видишь только ты</span></h2>
+  <div class="split">
+    <div class="bigcard panel anim d2">
+      <div>
+        <h3>Локальный черновик</h3>
+        <p>localhost — это адрес проекта на твоём компьютере. Пока локальный сервер запущен, ты видишь результат в браузере.</p>
+      </div>
+      <div class="formula" style="margin-top:24px">localhost нельзя отправлять клиенту, другу или в общий чат как публичную ссылку.</div>
+    </div>
+    <div class="stat-list anim d3">
+      <div class="stat-row"><div class="stat-ic"><i data-lucide="monitor-check"></i></div><div><strong>У тебя открылось</strong><span>это ещё не значит, что откроется у других</span></div></div>
+      <div class="stat-row"><div class="stat-ic"><i data-lucide="play"></i></div><div><strong>Нужен запуск</strong><span>сервер или preview работает на твоём компьютере</span></div></div>
+      <div class="stat-row ok"><div class="stat-ic"><i data-lucide="globe"></i></div><div><strong>Публичность — позже</strong><span>начинается после деплоя на хостинг</span></div></div>
+      <div class="stat-row warn"><div class="stat-ic"><i data-lucide="shield-alert"></i></div><div><strong>Проверяем до публикации</strong><span>сначала локально, потом наружу</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 07 Сервер и хостинг -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="server"></i> Сервер и хостинг</div>
+  <h2 class="slide-title anim d1">Чтобы сайт увидели другие, ему нужно <span class="metal">место в интернете</span></h2>
+  <div class="duo">
+    <div class="duo-card panel neutral anim d2">
+      <div class="duo-head"><div class="duo-logo"><i data-lucide="server"></i></div><div><strong>Сервер</strong><span class="tag">отдаёт сайт</span></div></div>
+      <p>Компьютер или облако, которое отдаёт сайт, когда человек открывает ссылку.</p>
+      <ul class="duo-list">
+        <li><i data-lucide="power"></i><span>Должен быть включён и доступен из интернета</span></li>
+        <li><i data-lucide="send"></i><span>Отдаёт браузеру страницы, стили и файлы</span></li>
+        <li><i data-lucide="shield"></i><span>Для реальных данных — аккуратная настройка</span></li>
+      </ul>
+    </div>
+    <div class="duo-mid anim d3"><div class="arrow"><i data-lucide="plus"></i></div></div>
+    <div class="duo-card panel anim d4">
+      <div class="duo-head"><div class="duo-logo"><i data-lucide="building-2"></i></div><div><strong>Хостинг</strong><span class="tag">место для сайта</span></div></div>
+      <p>Площадка, где проект размещается, собирается и становится доступен другим.</p>
+      <ul class="duo-list">
+        <li><i data-lucide="triangle"></i><span>Vercel — удобный хостинг для web-проектов</span></li>
+        <li><i data-lucide="link"></i><span>После деплоя появляется публичная ссылка</span></li>
+        <li><i data-lucide="refresh-cw"></i><span>При новых изменениях сайт обновляется</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 08 Git timeline -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="git-commit-horizontal"></i> Git</div>
+  <h2 class="slide-title anim d1">Git — это <span class="metal">история сохранений</span>, а не облако и не сайт</h2>
+  <div class="timeline anim d2">
+    <div class="tl-node"><div class="tl-bullet"><i data-lucide="list-checks"></i></div><div class="tl-cmd">git status</div><p>показывает, что изменилось в проекте</p></div>
+    <div class="tl-node"><div class="tl-bullet"><i data-lucide="plus-square"></i></div><div class="tl-cmd">git add</div><p>выбирает изменения для сохранения</p></div>
+    <div class="tl-node"><div class="tl-bullet"><i data-lucide="bookmark-check"></i></div><div class="tl-cmd">git commit</div><p>создаёт понятную точку сохранения</p></div>
+  </div>
+  <div class="formula anim d3">Commit сохраняет. Push отправляет. Deploy публикует.</div>
+</section>
+
+<!-- 09 Deploy steps -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="cloud-upload"></i> Деплой</div>
+  <h2 class="slide-title anim d1">Deploy — это <span class="metal">проверяемый выпуск</span>, не финал навсегда</h2>
+  <p class="slide-sub anim d2">Меняешь код → сохраняешь → отправляешь в GitHub → Vercel собирает новую версию. И так по кругу, безопасно.</p>
+  <div class="steps anim d3">
+    <div class="step"><div class="step-card"><div class="step-n">01</div><strong>Код изменился</strong><span>текст, стили или логика стали другими</span><i data-lucide="file-pen-line" class="bg"></i></div></div>
+    <div class="step"><div class="step-card"><div class="step-n">02</div><strong>Commit</strong><span>сохранили понятную версию проекта</span><i data-lucide="bookmark-check" class="bg"></i></div></div>
+    <div class="step"><div class="step-card"><div class="step-n">03</div><strong>Push</strong><span>отправили изменения в GitHub</span><i data-lucide="upload-cloud" class="bg"></i></div></div>
+    <div class="step"><div class="step-card"><div class="step-n">04</div><strong>Автодеплой</strong><span>Vercel пересобрал публичную ссылку</span><i data-lucide="refresh-cw" class="bg"></i></div></div>
+  </div>
+</section>
+
+<!-- 10 Домен (url anatomy) -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="globe"></i> Домен</div>
+  <h2 class="slide-title anim d1">Домен — это <span class="metal">человеческий адрес</span> сайта</h2>
+  <p class="slide-sub anim d2">Для учебной версии хватает технической ссылки <span class="mono">project.vercel.app</span>. Красивый домен подключают позже.</p>
+  <div class="url-anatomy anim d3">
+    <div class="url-bar">
+      <span class="seg proto">https://</span><span class="seg sub">materials</span><span class="seg dom">.neovida</span><span class="seg tld">.ai</span>
+    </div>
+    <div class="url-legend">
+      <div class="ul-item sub"><b>materials</b><span>поддомен — отдельная зона внутри бренда</span></div>
+      <div class="ul-item dom"><b>neovida</b><span>имя домена — сам бренд проекта</span></div>
+      <div class="ul-item tld"><b>.ai</b><span>зона домена верхнего уровня</span></div>
+    </div>
+  </div>
+  <div class="formula anim d4" style="margin-top:22px"><i data-lucide="triangle-alert" style="vertical-align:-3px;color:var(--copper-2)"></i> DNS не трогаем вслепую — домен легко направить не туда.</div>
+</section>
+
+<!-- 11 База данных -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="database"></i> База данных</div>
+  <h2 class="slide-title anim d1">Для первой статической страницы <span class="metal">база не нужна</span></h2>
+  <div class="trio anim d2">
+    <div class="tcard ok"><div class="tcard-ic"><i data-lucide="file-code-2"></i></div><strong>Статика</strong><span>текст, блоки, кнопки, простая логика прямо в браузере. Этого достаточно для первого деплоя.</span></div>
+    <div class="tcard"><div class="tcard-ic"><i data-lucide="database"></i></div><strong>База</strong><span>нужна, когда храним заявки, пользователей, заказы или настройки между визитами.</span></div>
+    <div class="tcard stop"><div class="tcard-ic"><i data-lucide="shield-alert"></i></div><strong>Checkpoint</strong><span>логин, платежи, клиентские данные и API-ключи не делаем «по-быстрому».</span></div>
+  </div>
+</section>
+
+<!-- 12 Практика -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="circle-play"></i> Практика</div>
+  <h2 class="slide-title anim d1">Собираем маленький проект и проходим <span class="metal">всю цепочку</span></h2>
+  <div class="steps anim d2">
+    <div class="step"><div class="step-card"><div class="step-n">01</div><strong>Создать</strong><span>простая HTML / CSS / JS страница без backend</span><i data-lucide="sparkles" class="bg"></i></div></div>
+    <div class="step"><div class="step-card"><div class="step-n">02</div><strong>Открыть</strong><span>проверить локально, не на глаз</span><i data-lucide="monitor-check" class="bg"></i></div></div>
+    <div class="step"><div class="step-card"><div class="step-n">03</div><strong>Сохранить</strong><span>Git показывает, что именно изменилось</span><i data-lucide="git-commit-horizontal" class="bg"></i></div></div>
+    <div class="step"><div class="step-card"><div class="step-n">04</div><strong>Опубликовать</strong><span>GitHub + Vercel дают публичную ссылку</span><i data-lucide="link" class="bg"></i></div></div>
+  </div>
+</section>
+
+<!-- 13 Промпт -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="message-square-code"></i> Промпт для Codex</div>
+  <h2 class="slide-title anim d1">Codex должен работать <span class="metal">маленькими шагами</span></h2>
+  <div class="prompt-wrap anim d2">
+    <div class="prompt-bar"><span class="dots"><i></i><i></i><i></i></span> codex · новый статический проект</div>
+    <div class="prompt-body">Я новичок. Помоги создать <span class="hl">маленький статический веб-проект</span> для урока по хостингу.
+
+Цель: простая страница → запустить локально → сохранить в GitHub → подготовить к деплою на Vercel.
+
+Требования: простой HTML, CSS и JavaScript; <span class="hl">без React, backend, базы, auth, платежей и API-ключей</span>.
+
+Сначала составь план из 5–7 шагов. Потом начни с создания файлов проекта.</div>
+  </div>
+</section>
+
+<!-- 14 Проверка -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="scan-search"></i> Проверка</div>
+  <h2 class="slide-title anim d1">Не принимаем «готово», пока <span class="metal">не проверено</span></h2>
+  <div class="trio anim d2">
+    <div class="tcard ok"><div class="tcard-ic"><i data-lucide="monitor-check"></i></div><strong>Открылось локально</strong><span>есть видимый результат в браузере, а не только «файлы созданы».</span></div>
+    <div class="tcard ok"><div class="tcard-ic"><i data-lucide="file-diff"></i></div><strong>Понятны изменения</strong><span>ясно, какие файлы созданы или изменены и зачем.</span></div>
+    <div class="tcard ok"><div class="tcard-ic"><i data-lucide="message-circle-check"></i></div><strong>Есть отчёт</strong><span>что сделано, что проверено и где остаётся риск.</span></div>
+  </div>
+  <div class="formula anim d3" style="margin-top:22px">Красивый экран ещё не доказывает, что проект работает. Сначала проверь — потом «готово».</div>
+</section>
+
+<!-- 15 Стоп-зоны -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="traffic-cone"></i> Стоп-зоны</div>
+  <h2 class="slide-title anim d1">Что <span class="metal">не делаем</span> на первом деплое</h2>
+  <div class="danger-grid anim d2">
+    <div class="danger"><span class="badge">STOP</span><div class="danger-ic"><i data-lucide="key-round"></i></div><strong>API-ключи</strong><span>не вставляем секреты в публичный код и в GitHub</span></div>
+    <div class="danger"><span class="badge">STOP</span><div class="danger-ic"><i data-lucide="credit-card"></i></div><strong>Платежи</strong><span>это ответственность, не учебный быстрый шаг</span></div>
+    <div class="danger"><span class="badge">STOP</span><div class="danger-ic"><i data-lucide="users"></i></div><strong>Клиентские данные</strong><span>не используем реальные данные в прототипе</span></div>
+    <div class="danger"><span class="badge">STOP</span><div class="danger-ic"><i data-lucide="lock-keyhole"></i></div><strong>Логин и роли</strong><span>auth требует проверки доступа и рисков</span></div>
+    <div class="danger"><span class="badge">STOP</span><div class="danger-ic"><i data-lucide="database"></i></div><strong>База</strong><span>подключаем, когда есть реальная причина хранить данные</span></div>
+    <div class="danger"><span class="badge">STOP</span><div class="danger-ic"><i data-lucide="server-cog"></i></div><strong>Production SaaS</strong><span>учебная ссылка не равна готовому продукту для рынка</span></div>
+  </div>
+</section>
+
+<!-- 16 Глоссарий -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="book-open-check"></i> Глоссарий</div>
+  <h2 class="slide-title anim d1">Слова, которые сегодня <span class="metal">перестают быть мутными</span></h2>
+  <div class="term-board anim d2">
+    <div class="term"><b>Проект</b><span>папка со всеми файлами</span></div>
+    <div class="term"><b>localhost</b><span>только твой компьютер</span></div>
+    <div class="term"><b>Сервер</b><span>отдаёт сайт пользователям</span></div>
+    <div class="term"><b>Хостинг</b><span>место для сайта в интернете</span></div>
+    <div class="term"><b>Git</b><span>история сохранений</span></div>
+    <div class="term"><b>Repository</b><span>проект вместе с историей</span></div>
+    <div class="term"><b>Commit</b><span>осмысленная точка сохранения</span></div>
+    <div class="term"><b>Push</b><span>отправить в GitHub</span></div>
+    <div class="term"><b>GitHub</b><span>код и история в облаке</span></div>
+    <div class="term"><b>Vercel</b><span>сборка и деплой сайта</span></div>
+    <div class="term"><b>Deploy</b><span>публикация версии проекта</span></div>
+    <div class="term"><b>Домен</b><span>человеческий адрес сайта</span></div>
+  </div>
+  <a class="download anim d3" href="assets/slovar-vyzhivshego-studenta-v-codex-ai-tseh.pdf" target="_blank" rel="noopener">
+    <div class="ic"><i data-lucide="file-down"></i></div>
+    <div><strong>Словарь выжившего в Codex</strong><span>PDF · человеческий перевод технических слов</span></div>
+    <i data-lucide="arrow-up-right" class="go"></i>
+  </a>
+</section>
+
+<!-- 17 Контроль / Формула -->
+<section class="slide">
+  <div class="kicker anim"><i data-lucide="clipboard-check"></i> Контроль понимания</div>
+  <h2 class="slide-title anim d1">Объясняешь без терминального дыма — <span class="metal">урок сработал</span></h2>
+  <div class="quiz anim d2">
+    <div class="qcard"><small>01</small><strong>Что такое сервер и хостинг?</strong></div>
+    <div class="qcard"><small>02</small><strong>Чем GitHub отличается от Vercel?</strong></div>
+    <div class="qcard"><small>03</small><strong>Что такое localhost?</strong></div>
+    <div class="qcard"><small>04</small><strong>Что значит deploy?</strong></div>
+    <div class="qcard"><small>05</small><strong>Зачем нужен домен?</strong></div>
+    <div class="qcard"><small>06</small><strong>Почему база не нужна первой странице?</strong></div>
+  </div>
+</section>
+
+<!-- 18 FINAL -->
+<section class="slide final">
+  <div class="final-grid">
+    <div>
+      <div class="kicker anim"><i data-lucide="radio-tower"></i> AI Цех · урок 2</div>
+      <h2 class="anim d1">Спасибо<br><span class="metal">за работу</span></h2>
+      <p class="anim d2">Сегодня проект прошёл путь от локальной папки до публичной ссылки. Точка А → точка Б.</p>
+    </div>
+    <div class="signal panel anim d2" aria-label="Публичная ссылка загорается">
+      <div class="signal-cap">Deploy signal</div>
+      <div class="signal-line"></div>
+      <div class="snode n1"><i data-lucide="folder-code"></i><strong>папка</strong></div>
+      <div class="snode n2"><img src="assets/logos/github.svg" alt="GitHub"><strong>GitHub</strong></div>
+      <div class="snode n3"><img src="assets/logos/vercel.svg" alt="Vercel"><strong>Vercel</strong></div>
+      <div class="public-link">project.vercel.app</div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+  let current = 0;
+
+  function update(next) {
+    current = Math.max(0, Math.min(slides.length - 1, next));
+    slides.forEach((s, i) => {
+      s.classList.toggle('active', i === current);
+      s.classList.toggle('prev', i < current);
+    });
+    counter.innerHTML = `<b>${String(current + 1).padStart(2, '0')}</b> / ${String(slides.length).padStart(2, '0')}`;
+    progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); update(current + 1); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); update(current - 1); }
+    if (e.key === 'Home') update(0);
+    if (e.key === 'End') update(slides.length - 1);
+  });
+  document.getElementById('deck').addEventListener('click', (e) => {
+    if (e.target.closest('a, button')) return;
+    const x = e.clientX / window.innerWidth;
+    update(x < 0.18 ? current - 1 : current + 1);
+  });
+  document.getElementById('fsBtn').addEventListener('click', () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  });
+
+  update(0);
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>
