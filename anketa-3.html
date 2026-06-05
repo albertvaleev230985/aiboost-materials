@@ -883,15 +883,15 @@
 <div class="confetti-container" id="confetti"></div>
 
 <script>
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGRbaNKnI3S2bipd6BRopuzOrZjjOOLpyJ5Kgfo1MvBCdCxjqepz1fy6jScc_k0L4/exec';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbybNxodSevTQSglBBlaVjYvirKwrpW35wNM9HibQ0qh03idmXnKYedlETx65ajw7yRE/exec';
   const ANNA_INTAKE_URL = 'https://23-95-220-165.nip.io/anna/questionnaire';
   const COURSE_META = {
-    course_id: 'nova-realnost-online',
-    course_title: 'ИИ. Новая реальность онлайн',
-    cohort_id: 'nova-realnost-online-2026-05-04',
-    cohort_title: 'ИИ. Новая реальность онлайн — старт 04.05',
-    flow_type: 'online',
-    source: 'aiboost-materials/anketa-2.html'
+    course_id: 'nova-realnost',
+    course_title: 'ИИ. Новая реальность',
+    cohort_id: 'nova-realnost-ochno-potok-3',
+    cohort_title: 'ИИ. Новая реальность очно — поток 3, старт 16.06',
+    flow_type: 'offline',
+    source: 'aiboost-materials/anketa-3.html'
   };
 
   const state = { name:'', telegram:'', phone:'', occupation:'', business_area:'', team_size:'', ai_level:'', routines:[], goals:[], specific_task:'', device:'' };
@@ -1134,18 +1134,27 @@
     btn.disabled = true;
     btn.style.opacity = '0.5';
 
+    const sheetPayload = {
+      ...state,
+      course_id: COURSE_META.course_id,
+      cohort_id: COURSE_META.cohort_id,
+      source: COURSE_META.source
+    };
+
+    // Основной приёмник — Google Таблица (no-cors, надёжно). Только сетевой сбой считается ошибкой.
     try {
-      const annaPayload = buildAnnaPayload();
-      await submitToAnnaIntake(annaPayload);
-      if (SCRIPT_URL) {
-        await fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(state) });
-      }
-      showProfile();
+      await fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(sheetPayload) });
     } catch(e) {
       btn.disabled = false;
       btn.style.opacity = '1';
-      alert('Ошибка. Попробуйте ещё раз.');
+      alert('Не удалось отправить анкету. Проверьте интернет и попробуйте ещё раз.');
+      return;
     }
+
+    // Anna intake — необязательно, сбой не блокирует показ успеха.
+    try { await submitToAnnaIntake(buildAnnaPayload()); } catch(e) { console.warn('anna intake skipped:', e); }
+
+    showProfile();
   }
 
   // ═══ PROFILE ═══
