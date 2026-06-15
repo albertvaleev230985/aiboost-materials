@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-система Камиля Амирханова | Урок 2 - Промпт-инженерия и ассистенты</title>
+<link rel="icon" href="data:,">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0d0d13;
+  --bg-2: #16161f;
+  --panel: rgba(255,255,255,0.08);
+  --panel-2: rgba(255,255,255,0.12);
+  --line: rgba(255,255,255,0.18);
+  --white: #ffffff;
+  --white-90: rgba(255,255,255,0.9);
+  --white-78: rgba(255,255,255,0.78);
+  --white-62: rgba(255,255,255,0.62);
+  --white-42: rgba(255,255,255,0.42);
+  --accent: #E07461;
+  --accent-2: #E6A15C;
+  --mint: #10b981;
+  --teal: #14b8a6;
+  --blue: #5b8def;
+  --violet: #a78bfa;
+  --amber: #f0c040;
+  --red: #e05555;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--white);
+  -webkit-font-smoothing: antialiased;
+}
+
+.deck { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 56px 84px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(36px);
+  transition: opacity .45s ease, transform .45s ease;
+  overflow-y: auto;
+}
+.slide.active { opacity: 1; visibility: visible; transform: translateX(0); }
+.slide.prev { transform: translateX(-36px); }
+.slide::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 18% 14%, rgba(224,116,97,.14), transparent 42%),
+    radial-gradient(ellipse at 82% 84%, rgba(16,185,129,.10), transparent 45%);
+  opacity: .95;
+}
+.slide > * { position: relative; z-index: 1; }
+
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 30; transition: width .35s ease; box-shadow: 0 0 18px rgba(224,116,97,.45); }
+.slide-counter { position: fixed; right: 30px; bottom: 22px; color: var(--white-42); font-weight: 650; font-size: 15px; z-index: 30; pointer-events: none; }
+.fullscreen-btn { position: fixed; top: 18px; right: 22px; z-index: 30; width: 42px; height: 42px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); color: var(--white-78); font-weight: 800; cursor: pointer; }
+.fullscreen-btn:hover { background: var(--panel-2); color: var(--white); }
+.fullscreen-btn svg { width: 19px; height: 19px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+.brand-line { font-size: 14px; letter-spacing: 3px; text-transform: uppercase; color: var(--white-42); font-weight: 750; margin-bottom: 22px; }
+.brand-line b { color: var(--accent); }
+.eyebrow { font-size: 14px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); font-weight: 800; margin-bottom: 18px; }
+.title-big { font-size: 72px; line-height: 1.02; font-weight: 780; letter-spacing: -2px; margin-bottom: 24px; max-width: 1080px; }
+.title-big .accent, .slide-title .accent { color: var(--accent); }
+.title-big .mint, .slide-title .mint { color: var(--mint); }
+.title-sub { font-size: 28px; line-height: 1.35; color: var(--white-78); max-width: 940px; margin-bottom: 42px; }
+.title-meta { font-size: 18px; color: var(--white-42); letter-spacing: .5px; }
+.title-meta b { color: var(--accent-2); }
+.slide-title { font-size: 46px; line-height: 1.12; font-weight: 760; letter-spacing: -.6px; margin-bottom: 26px; max-width: 1100px; }
+.slide-subtitle { font-size: 24px; line-height: 1.45; color: var(--white-78); margin-bottom: 28px; max-width: 980px; }
+.body { font-size: 22px; line-height: 1.55; color: var(--white-78); max-width: 1100px; }
+.body strong { color: var(--white); }
+
+.title-slide { align-items: center; text-align: center; }
+.title-slide::before { background: radial-gradient(ellipse at 50% 38%, rgba(224,116,97,.22), transparent 60%); }
+
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; width: 100%; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; width: 100%; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; width: 100%; }
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px 26px;
+  box-shadow: 0 18px 44px rgba(0,0,0,.22);
+}
+.card.hot { border-color: rgba(224,116,97,.48); background: linear-gradient(135deg, rgba(224,116,97,.18), rgba(255,255,255,.06)); }
+.card.mint { border-color: rgba(16,185,129,.42); background: linear-gradient(135deg, rgba(16,185,129,.16), rgba(255,255,255,.05)); }
+.card-title { font-size: 22px; line-height: 1.22; font-weight: 760; margin-bottom: 9px; color: var(--white); }
+.card-kicker { font-size: 12px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--accent); font-weight: 850; margin-bottom: 10px; }
+.card-body { font-size: 18px; line-height: 1.45; color: var(--white-78); }
+.card-body strong { color: var(--white); }
+
+.steps { display: grid; gap: 18px; max-width: 1080px; }
+.step { display: grid; grid-template-columns: 52px 1fr; gap: 18px; align-items: flex-start; }
+.step-num { width: 52px; height: 52px; border-radius: 15px; background: linear-gradient(135deg, var(--accent), #c25844); color: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 850; box-shadow: 0 12px 26px rgba(224,116,97,.22); }
+.step-title { font-size: 24px; font-weight: 760; color: var(--white); margin-bottom: 4px; }
+.step-text { font-size: 18px; color: var(--white-70, rgba(255,255,255,.72)); line-height: 1.45; }
+
+.formula { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 16px; }
+.formula-card { border-radius: 18px; border: 1px solid var(--line); background: var(--panel); padding: 22px 16px; text-align: center; }
+.formula-letter { font-size: 48px; line-height: 1; font-weight: 850; margin-bottom: 8px; }
+.formula-name { font-size: 13px; color: var(--white); font-weight: 850; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 7px; }
+.formula-desc { font-size: 14px; line-height: 1.35; color: var(--white-62); }
+.r { color: var(--accent); } .k { color: var(--blue); } .z { color: var(--mint); } .f { color: var(--violet); } .o { color: var(--amber); }
+
+.prompt {
+  background: rgba(16,185,129,.10);
+  border: 1px solid rgba(16,185,129,.32);
+  border-left: 4px solid var(--mint);
+  border-radius: 0 14px 14px 0;
+  padding: 22px 26px;
+  color: var(--white-90);
+  font-size: 18px;
+  line-height: 1.55;
+  white-space: pre-line;
+  max-width: 1120px;
+}
+.prompt.compact { font-size: 16px; line-height: 1.45; }
+.label { display: inline-block; color: var(--accent); font-size: 12px; letter-spacing: 1.8px; text-transform: uppercase; font-weight: 850; margin-bottom: 10px; }
+
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; width: 100%; }
+.vs-card { border-radius: 18px; padding: 28px; border: 1px solid var(--line); background: var(--panel); }
+.vs-card.bad { border-color: rgba(224,85,85,.42); background: rgba(224,85,85,.10); }
+.vs-card.good { border-color: rgba(16,185,129,.42); background: rgba(16,185,129,.12); }
+.vs-label { font-size: 13px; letter-spacing: 1.8px; text-transform: uppercase; font-weight: 850; color: var(--white-62); margin-bottom: 14px; }
+.bad .vs-label { color: #ff9a9a; }
+.good .vs-label { color: var(--mint); }
+
+.table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 17px; }
+.table th { text-align: left; color: var(--accent); font-weight: 850; padding: 13px 16px; border-bottom: 2px solid rgba(224,116,97,.38); background: rgba(255,255,255,.06); }
+.table td { color: var(--white-78); padding: 13px 16px; border-bottom: 1px solid rgba(255,255,255,.10); vertical-align: top; line-height: 1.35; }
+.table strong { color: var(--white); }
+
+.flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 14px; align-items: stretch; margin-top: 8px; }
+.flow-box { text-align: center; border-radius: 16px; border: 1px solid var(--line); background: var(--panel); padding: 24px 18px; }
+.flow-tag { font-size: 12px; letter-spacing: 1.4px; color: var(--accent); text-transform: uppercase; font-weight: 850; margin-bottom: 10px; }
+.flow-name { font-size: 22px; font-weight: 780; margin-bottom: 6px; }
+.flow-desc { font-size: 16px; color: var(--white-62); line-height: 1.35; }
+.arrow { display: flex; align-items: center; color: var(--white-42); font-size: 32px; }
+
+.quote { max-width: 1040px; border-left: 4px solid var(--accent); background: var(--panel); border-radius: 0 16px 16px 0; padding: 26px 32px; font-size: 26px; line-height: 1.42; color: var(--white); font-weight: 650; }
+.small { font-size: 15px; line-height: 1.4; color: var(--white-42); margin-top: 18px; }
+
+.practice { background: #f3f6ee; color: #15151b; }
+.practice::before { display: none; }
+.practice .eyebrow, .practice .slide-title .accent, .practice .card-kicker { color: #c25844; }
+.practice .slide-title, .practice .card-title, .practice .body strong, .practice .step-title { color: #15151b; }
+.practice .slide-subtitle, .practice .body, .practice .card-body, .practice .step-text { color: rgba(21,21,27,.72); }
+.practice .card, .practice .prompt { background: rgba(255,255,255,.68); border-color: rgba(21,21,27,.13); box-shadow: 0 18px 42px rgba(20,22,18,.08); }
+.practice .prompt { border-left-color: #c25844; color: #15151b; }
+.practice .table th { color: #c25844; background: rgba(21,21,27,.05); border-bottom-color: rgba(194,88,68,.32); }
+.practice .table td { color: rgba(21,21,27,.74); border-bottom-color: rgba(21,21,27,.10); }
+
+@keyframes up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+.slide.active .anim-1 { animation: up .52s ease both; }
+.slide.active .anim-2 { animation: up .52s ease .10s both; }
+.slide.active .anim-3 { animation: up .52s ease .20s both; }
+.slide.active .anim-4 { animation: up .52s ease .30s both; }
+.slide.active .anim-5 { animation: up .52s ease .40s both; }
+
+@media (max-width: 900px) {
+  .slide { padding: 34px 24px; }
+  .title-big { font-size: 42px; letter-spacing: -.8px; }
+  .title-sub { font-size: 21px; }
+  .slide-title { font-size: 32px; }
+  .slide-subtitle, .body { font-size: 19px; }
+  .grid-2, .grid-3, .grid-4, .split, .formula, .flow { grid-template-columns: 1fr; }
+  .arrow { transform: rotate(90deg); justify-content: center; }
+  .table { font-size: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<button class="fullscreen-btn" id="fsBtn" title="Полный экран" aria-label="Полный экран">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+</button>
+<div class="slide-counter" id="slideCounter"></div>
+
+<div class="deck" id="deck">
+
+  <section class="slide title-slide">
+    <div class="brand-line anim-1"><b>neovida</b> · Нейропросвещение</div>
+    <h1 class="title-big anim-2">AI-система <span class="accent">Камиля Амирханова</span></h1>
+    <p class="title-sub anim-3">Урок 2 · Промпт-инженерия и твои первые ассистенты</p>
+    <div class="title-meta anim-4"><b>15 июня 2026</b> · персональная программа</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Маршрут урока</div>
+    <h2 class="slide-title anim-2">Сегодня ты научишься управлять <span class="accent">качеством ответа</span></h2>
+    <div class="steps">
+      <div class="step anim-2"><div class="step-num">1</div><div><div class="step-title">Фундамент промпт-инженерии</div><div class="step-text">Что такое промпт, почему без ТЗ результат расползается, как работает формула РКЗФО.</div></div></div>
+      <div class="step anim-3"><div class="step-num">2</div><div><div class="step-title">Техники усиления</div><div class="step-text">Роли, обратный промптинг, пошаговая работа, уточняющие вопросы, итерации.</div></div></div>
+      <div class="step anim-4"><div class="step-num">3</div><div><div class="step-title">Контекст и длинные задачи</div><div class="step-text">Как не терять смысл в длинном диалоге, как структурировать входные данные.</div></div></div>
+      <div class="step anim-5"><div class="step-num">4</div><div><div class="step-title">От промпта к ассистенту</div><div class="step-text">Чем отличаются Project, Custom GPT, Gem и NotebookLM. В конце собираешь GPT «Мой редактор».</div></div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Твоя неделя с ИИ</div>
+    <h2 class="slide-title anim-2">Ты уже используешь ИИ не «поиграться», а <span class="accent">в живых задачах</span></h2>
+    <div class="grid-3">
+      <div class="card anim-2"><div class="card-kicker">Работа с людьми</div><div class="card-title">Встречи и консультации</div><div class="card-body">Запись встреч, транскрибация, конспекты, шаги и домашки после индивидуальной работы.</div></div>
+      <div class="card anim-3"><div class="card-kicker">Контент</div><div class="card-title">Reels, посты, афиши</div><div class="card-body">Видео от видеомейкера, тексты для Telegram и Instagram, первые афиши через изображения.</div></div>
+      <div class="card anim-4"><div class="card-kicker">Личная система</div><div class="card-title">Цели, спорт, семья</div><div class="card-body">План месяца, подготовка к трейлу, проект «Отец. Воспитание детей».</div></div>
+    </div>
+    <div class="quote anim-5" style="margin-top:26px;">Главный следующий уровень: не пробовать больше кнопок, а научиться ставить задачу так, чтобы ИИ выдавал конкретно, глубоко и ближе к твоему голосу.</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Что такое промпт</div>
+    <h2 class="slide-title anim-2">Промпт - это <span class="accent">инструкция для ИИ</span></h2>
+    <div class="quote anim-2">Это твой единственный способ объяснить нейросети, кто она в задаче, какой контекст учитывать, что сделать и по каким критериям проверять результат.</div>
+    <p class="body anim-3" style="margin-top:24px;">Чем точнее поручение, тем меньше случайности. Промпт-инженерия не про красивые фразы, а про управление результатом.</p>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Без ТЗ = результат ХЗ</div>
+    <h2 class="slide-title anim-2">ИИ не читает мысли. Он достраивает <span class="accent">недостающие условия</span></h2>
+    <div class="split">
+      <div class="vs-card bad anim-3">
+        <div class="vs-label">Слабый режим</div>
+        <div class="card-title">«Ну напиши что-нибудь»</div>
+        <div class="card-body">ИИ угадывает роль, аудиторию, стиль, глубину и критерии качества. Итог - средний текст без характера.</div>
+      </div>
+      <div class="vs-card good anim-4">
+        <div class="vs-label">Рабочий режим</div>
+        <div class="card-title">«Вот задача, контекст и стандарт»</div>
+        <div class="card-body">ИИ получает рамку, понимает критерии и работает как сотрудник, а не как генератор случайных вариантов.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Формула</div>
+    <h2 class="slide-title anim-2">РКЗФО - твой быстрый каркас сильного промпта</h2>
+    <div class="formula anim-3">
+      <div class="formula-card"><div class="formula-letter r">Р</div><div class="formula-name">Роль</div><div class="formula-desc">Кто ИИ в задаче</div></div>
+      <div class="formula-card"><div class="formula-letter k">К</div><div class="formula-name">Контекст</div><div class="formula-desc">Ситуация, аудитория, данные</div></div>
+      <div class="formula-card"><div class="formula-letter z">З</div><div class="formula-name">Задача</div><div class="formula-desc">Что нужно получить</div></div>
+      <div class="formula-card"><div class="formula-letter f">Ф</div><div class="formula-name">Формат</div><div class="formula-desc">В каком виде отдать</div></div>
+      <div class="formula-card"><div class="formula-letter o">О</div><div class="formula-name">Ограничения</div><div class="formula-desc">Что нельзя и что проверить</div></div>
+    </div>
+    <p class="body anim-4" style="margin-top:24px;">Для твоих задач добавляем шестой слой: <strong>критерии твоего авторского голоса</strong>. Без него будет «нормально», но не будет «по-твоему».</p>
+  </section>
+
+  <section class="slide practice">
+    <div class="eyebrow anim-1">Пример на твоей теме</div>
+    <h2 class="slide-title anim-2">Один и тот же запрос. Два разных результата.</h2>
+    <div class="split">
+      <div class="vs-card bad anim-3">
+        <div class="vs-label">Слишком общий запрос</div>
+        <div class="prompt compact">Напиши пост про цели.</div>
+      </div>
+      <div class="vs-card good anim-4">
+        <div class="vs-label">Рабочая постановка</div>
+        <div class="prompt compact">Ты мой редактор и методолог.
+
+Контекст: я пишу для предпринимателей и экспертов, которым важны фокус, энергия, личная стратегия и действие без суеты.
+
+Задача: напиши Telegram-пост на тему: почему цели не работают, если человек не учитывает уровень энергии.
+
+Критерии: одна сильная мысль, живой пример, без мотивационной банальности, финал с практическим вопросом.
+
+Формат: 1800-2200 знаков, короткие абзацы, без заголовков.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Почему роль решает всё</div>
+    <h2 class="slide-title anim-2">Роль задаёт <span class="accent">оптику</span></h2>
+    <div class="grid-3">
+      <div class="card hot anim-2"><div class="card-title">Ты мой редактор</div><div class="card-body">Собери авторский текст из Reels, тезисов, голосовой заметки или черновика.</div></div>
+      <div class="card anim-3"><div class="card-title">Ты мой методолог</div><div class="card-body">Преврати консультацию в структуру, домашку и следующий шаг клиента.</div></div>
+      <div class="card anim-4"><div class="card-title">Ты продюсер клуба</div><div class="card-body">Упакуй встречу, тему месяца, прогрев и вовлечение участников.</div></div>
+      <div class="card anim-3"><div class="card-title">Ты специалист по трейлам</div><div class="card-body">Собери план подготовки, но не заменяй врача или персонального тренера.</div></div>
+      <div class="card anim-4"><div class="card-title">Ты архитектор обучения</div><div class="card-body">Собери тренинг, программу, блоки, упражнения и критерии результата.</div></div>
+      <div class="card anim-5"><div class="card-title">Ты мой ассистент по задачам</div><div class="card-body">Разбери цели месяца, завалы и приоритеты без лишней философии.</div></div>
+    </div>
+  </section>
+
+  <section class="slide practice">
+    <div class="eyebrow anim-1">Практика роли</div>
+    <h2 class="slide-title anim-2">Reels → Telegram и Instagram</h2>
+    <div class="prompt anim-3">Ты мой редактор и SMM-стратег.
+
+Входные данные: вот краткое содержание Reels: [вставить тезисы или транскрипт].
+
+Задача: сделай из этого:
+1. Telegram-пост в моём стиле.
+2. Короткую подпись для Instagram.
+3. 3 варианта первого абзаца, чтобы выбрать лучший заход.
+
+Критерии: одна сильная мысль, человеческий тон, без нейробанальностей, без корпоративного языка.
+
+Если не хватает контекста, задай до 3 вопросов перед текстом.</div>
+  </section>
+
+  <section class="slide title-slide">
+    <div class="brand-line anim-1"><b>Блок 2</b></div>
+    <h2 class="title-big anim-2">6 техник</h2>
+    <p class="title-sub anim-3">Которые делают промпты мощнее</p>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Техника 1</div>
+    <h2 class="slide-title anim-2">Обратный промптинг: <span class="accent">покажи пример</span></h2>
+    <div class="quote anim-3">Нашёл текст, картинку, афишу, письмо или пост, который нравится? Покажи ИИ и попроси извлечь структуру, стиль, логику и промпт для создания похожего результата.</div>
+    <p class="body anim-4" style="margin-top:22px;">Это полезно, когда ты хочешь не просто «сделай красиво», а понять, из каких элементов собран сильный пример.</p>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Обратный промптинг</div>
+    <h2 class="slide-title anim-2">5 способов использовать технику</h2>
+    <table class="table anim-3">
+      <tr><th>Источник</th><th>Что просить у ИИ</th><th>Твой пример</th></tr>
+      <tr><td><strong>Пост</strong></td><td>Извлеки тон, структуру, смысловые приёмы, формулу захода</td><td>Эталонные посты для «Моего редактора»</td></tr>
+      <tr><td><strong>Reels</strong></td><td>Разбери сценарий, драматургию, ключевой тезис, CTA</td><td>Reels от видеомейкера → пост и подпись</td></tr>
+      <tr><td><strong>Афиша</strong></td><td>Опиши композицию, текстовую иерархию, настроение, промпт для новой афиши</td><td>Афиши клуба / тренинга</td></tr>
+      <tr><td><strong>Письмо / КП</strong></td><td>Разбери логику убеждения и сделай шаблон</td><td>Приглашение в программу или клуб</td></tr>
+      <tr><td><strong>Конспект</strong></td><td>Извлеки структуру сильного итогового сообщения</td><td>Итог консультации для клиента</td></tr>
+    </table>
+  </section>
+
+  <section class="slide practice">
+    <div class="eyebrow anim-1">Практика: обратный промптинг</div>
+    <h2 class="slide-title anim-2">Извлекаем стиль из твоих материалов</h2>
+    <div class="prompt anim-3">Проанализируй этот текст / Reels / афишу.
+
+Извлеки:
+1. Структуру.
+2. Тон.
+3. Смысловые приёмы.
+4. Как начинается и заканчивается материал.
+5. Что делает его сильным.
+
+После анализа собери промпт, чтобы я мог создавать похожие материалы для своей работы, но без копирования чужого текста.</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Техника 2</div>
+    <h2 class="slide-title anim-2">Рассуждай пошагово</h2>
+    <div class="quote anim-2">Волшебная фраза: «Рассуждай пошагово». ИИ показывает ход мысли, как бухгалтер показывает расчёт.</div>
+    <p class="body anim-3" style="margin-top:22px;">Пошаговость нужна там, где есть решение, риск, стратегия, выбор или сложная структура.</p>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Пошаговое мышление</div>
+    <h2 class="slide-title anim-2">Где применять в твоих задачах</h2>
+    <table class="table anim-3">
+      <tr><th>Задача</th><th>Шаги рассуждения</th></tr>
+      <tr><td><strong>Продукт</strong></td><td>Аудитория → боль → обещание → формат → MVP → риски</td></tr>
+      <tr><td><strong>Корпоративный тренинг</strong></td><td>Цель компании → аудитория → модули → практика → измерение результата</td></tr>
+      <tr><td><strong>Reels / пост</strong></td><td>Главная мысль → конфликт → пример → вывод → действие</td></tr>
+      <tr><td><strong>Консультация</strong></td><td>Проблема → гипотезы → решение → шаги → домашка</td></tr>
+      <tr><td><strong>Трейл</strong></td><td>Текущий уровень → нагрузка → восстановление → риски → план недели</td></tr>
+    </table>
+  </section>
+
+  <section class="slide practice">
+    <div class="eyebrow anim-1">Практика: пошагово</div>
+    <h2 class="slide-title anim-2">Разбираем реальный вопрос по шагам</h2>
+    <div class="prompt anim-3">Разбери задачу пошагово.
+
+Задача: [вставить вопрос: продукт, тренинг, Reels, консультация, подготовка к трейлу]
+
+Иди по шагам:
+1. Что является настоящей целью.
+2. Какие вводные важны.
+3. Какие варианты решения есть.
+4. Какие риски и слепые зоны.
+5. Какой самый простой следующий шаг.</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Пошаговая работа</div>
+    <h2 class="slide-title anim-2">Не проси сразу финал. Задай <span class="accent">процесс</span></h2>
+    <div class="flow anim-2">
+      <div class="flow-box"><div class="flow-tag">Шаг 1</div><div class="flow-name">Разбор</div><div class="flow-desc">Извлеки смысл, проблему, аудиторию</div></div>
+      <div class="arrow">&rarr;</div>
+      <div class="flow-box"><div class="flow-tag">Шаг 2</div><div class="flow-name">Черновик</div><div class="flow-desc">Собери первую версию результата</div></div>
+      <div class="arrow">&rarr;</div>
+      <div class="flow-box"><div class="flow-tag">Шаг 3</div><div class="flow-name">Проверка</div><div class="flow-desc">Проверь по критериям и улучши</div></div>
+    </div>
+    <p class="body anim-3" style="margin-top:24px;">Это особенно полезно для продукта, консультаций, тренингов, контента и длинных транскриптов.</p>
+  </section>
+
+  <section class="slide practice">
+    <div class="eyebrow anim-1">Практика пошагово</div>
+    <h2 class="slide-title anim-2">Консультация → конспект, шаги, домашка</h2>
+    <div class="prompt anim-3">Ты мой методолог клиентской работы.
+
+Вот сырой конспект или транскрипт консультации:
+[вставить текст]
+
+Собери клиенту понятный итог:
+1. Что обсуждали.
+2. Главные выводы.
+3. Какие решения приняли.
+4. Конкретные шаги на неделю.
+5. Домашка клиента.
+6. Где есть риск, что клиент не сделает, и как это упростить.
+
+Тон: ясный, человеческий, без давления и без канцелярита.</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Техника 3: усиливаем ответ</div>
+    <h2 class="slide-title anim-2">Сильный ответ почти всегда рождается <span class="accent">во второй версии</span></h2>
+    <div class="grid-3">
+      <div class="card hot anim-2"><div class="card-title">Три эксперта</div><div class="card-body">Попроси ответ от лица нескольких ролей: методолога, маркетолога и практика. Пусть каждый даст оценку и они обсудят между собой.</div></div>
+      <div class="card anim-3"><div class="card-title">Адвокат дьявола</div><div class="card-body">Пусть ИИ раскритикует свой ответ: риски, слабые места, возражения, причины, почему план может не сработать.</div></div>
+      <div class="card mint anim-4"><div class="card-title">Адаптируй</div><div class="card-body">Перепиши один и тот же материал для разных аудиторий: клиент, участник клуба, корпоративный заказчик.</div></div>
+    </div>
+    <div class="quote anim-5" style="margin-top:24px;">Один запрос → три приёма → результат, который можно показывать людям, а не оставлять черновиком.</div>
+  </section>
+
+  <section class="slide practice">
+    <div class="eyebrow anim-1">Практика усиления</div>
+    <h2 class="slide-title anim-2">Обстукиваем идею продукта несколькими ролями</h2>
+    <div class="prompt compact anim-3">Ответь от лица трёх специалистов:
+1. Продуктовый стратег.
+2. Методолог образовательных программ.
+3. Практик, который работает с клиентами руками.
+
+Контекст: я уточняю идею нового продукта на основе промптов, консультаций и клиентского опыта.
+
+Идея: [вставить]
+
+Сделай:
+1. Пусть каждый специалист даст свою оценку.
+2. Потом проведи короткое обсуждение между ними.
+3. Найди 5 слабых мест идеи.
+4. Предложи минимальную версию продукта на 7 дней теста.
+5. Адаптируй объяснение продукта для Telegram-поста, личного сообщения и корпоративного заказчика.</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Техника 4</div>
+    <h2 class="slide-title anim-2">Итерации + запреты</h2>
+    <div class="quote anim-2">Первый ответ ИИ - это черновик. Дальше ты правишь его в диалоге: тон, длина, структура, запреты, аудитория, уровень конкретики.</div>
+    <div class="split anim-3" style="margin-top:24px;">
+      <div class="vs-card bad"><div class="vs-label">Слабо</div><div class="card-title">«Переделай»</div><div class="card-body">ИИ не понимает, что именно изменить, и снова угадывает.</div></div>
+      <div class="vs-card good"><div class="vs-label">Сильно</div><div class="card-title">«Сделай короче, убери канцелярит, добавь пример»</div><div class="card-body">Ты управляешь направлением правки.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Фразы для итераций</div>
+    <h2 class="slide-title anim-2">Не пиши «переделай». Управляй <span class="accent">направлением правки</span></h2>
+    <div class="grid-2">
+      <div class="prompt compact anim-2">Сделай версию 2: меньше воды, больше конкретики, сильнее авторская мысль.</div>
+      <div class="prompt compact anim-3">Проверь, где текст звучит как общий AI-текст. Перепиши эти места.</div>
+      <div class="prompt compact anim-4">Сохрани смысл, но сделай тон спокойнее, глубже и менее рекламным.</div>
+      <div class="prompt compact anim-5">Дай 3 варианта захода: мягкий, прямой, провокационный.</div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Техника 5: задай мне вопросы</div>
+    <h2 class="slide-title anim-2">Хороший ИИ не угадывает. Он <span class="accent">уточняет</span></h2>
+    <div class="quote anim-2">Если данных мало, не проси сразу финал. Попроси ИИ задать вопросы, которые реально влияют на качество.</div>
+    <div class="prompt anim-3" style="margin-top:24px;">Перед тем как писать текст, задай мне до 5 вопросов, которые сильнее всего повлияют на качество результата. Не спрашивай очевидное. Спрашивай только то, без чего текст будет общим.</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Как это работает</div>
+    <h2 class="slide-title anim-2">Сначала вопросы. Потом точный результат.</h2>
+    <div class="flow anim-2">
+      <div class="flow-box"><div class="flow-tag">1</div><div class="flow-name">Задача</div><div class="flow-desc">Я хочу [результат]</div></div>
+      <div class="arrow">&rarr;</div>
+      <div class="flow-box"><div class="flow-tag">2</div><div class="flow-name">Вопросы</div><div class="flow-desc">ИИ уточняет вводные</div></div>
+      <div class="arrow">&rarr;</div>
+      <div class="flow-box"><div class="flow-tag">3</div><div class="flow-name">Промпт</div><div class="flow-desc">ИИ собирает задачу в РКЗФО</div></div>
+    </div>
+    <div class="prompt anim-3" style="margin-top:24px;">Я хочу [задача]. Задай мне 10 уточняющих вопросов, прежде чем начинать. После моих ответов собери идеальный промпт и только потом выполни задачу.</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Задай мне вопросы</div>
+    <h2 class="slide-title anim-2">Где эта техника особенно полезна</h2>
+    <table class="table anim-3">
+      <tr><th>Задача</th><th>Какие вопросы должен задать ИИ</th></tr>
+      <tr><td><strong>Новый продукт</strong></td><td>Для кого, какая боль, какой первый результат, как проверить спрос, что уже есть.</td></tr>
+      <tr><td><strong>Корпоративный тренинг</strong></td><td>Кто аудитория, что должно измениться, формат, ограничения, критерии результата.</td></tr>
+      <tr><td><strong>Reels / пост</strong></td><td>Главная мысль, аудитория, тон, пример из жизни, действие после текста.</td></tr>
+      <tr><td><strong>Итог консультации</strong></td><td>Что решили, какие шаги, где сопротивление, что дать как домашку.</td></tr>
+      <tr><td><strong>План месяца</strong></td><td>Цели, ресурсы, ограничения, приоритеты, что точно надо выкинуть.</td></tr>
+    </table>
+  </section>
+
+  <section class="slide practice">
+    <div class="eyebrow anim-1">Практика: задай вопросы</div>
+    <h2 class="slide-title anim-2">Не додумываем задачу за ИИ</h2>
+    <div class="prompt anim-3">Мне нужно подготовить [продукт / программу / пост / итог консультации / план месяца].
+
+Сначала задай мне до 7 вопросов, без которых результат будет общим.
+После моих ответов:
+1. Собери сильный промпт по РКЗФО.
+2. Покажи, какие вводные стали решающими.
+3. Выполни задачу в нужном формате.</div>
+  </section>
+
+  <section class="slide title-slide">
+    <div class="brand-line anim-1"><b>Блок 3</b></div>
+    <h2 class="title-big anim-2">Память ИИ</h2>
+    <p class="title-sub anim-3">Почему ИИ теряет фокус в длинных чатах</p>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Контекстное окно</div>
+    <h2 class="slide-title anim-2">У ИИ есть рабочий стол. Он <span class="accent">не бесконечный</span></h2>
+    <div class="grid-3">
+      <div class="card anim-2"><div class="card-kicker">Что лежит на столе</div><div class="card-title">Диалог, файлы, инструкции</div><div class="card-body">Всё, что модель видит прямо сейчас и использует для ответа.</div></div>
+      <div class="card hot anim-3"><div class="card-kicker">Что происходит</div><div class="card-title">Середина размывается</div><div class="card-body">В длинном диалоге модель может хуже держать старые детали и ограничения.</div></div>
+      <div class="card mint anim-4"><div class="card-kicker">Твоя задача</div><div class="card-title">Держать рамку</div><div class="card-body">Повторять цель, структуру, ограничения и критерии качества.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Эффект длинного контекста</div>
+    <h2 class="slide-title anim-2">Начало и конец держатся лучше. <span class="accent">Середина проседает.</span></h2>
+    <div class="grid-3">
+      <div class="card mint anim-2" style="text-align:center;"><div class="card-title">Начало</div><div class="card-body">Роль, цель, главный контекст. Обычно помнит хорошо.</div></div>
+      <div class="card hot anim-3" style="text-align:center;"><div class="card-title">Середина</div><div class="card-body">Детали, исключения, старые договорённости. Чаще теряет.</div></div>
+      <div class="card mint anim-4" style="text-align:center;"><div class="card-title">Конец</div><div class="card-body">Последняя задача, ограничения, просьба. Обычно влияет сильнее.</div></div>
+    </div>
+    <div class="quote anim-5" style="margin-top:24px;">Вывод простой: всё критичное ставь в начало, а перед финальным ответом повторяй в конце.</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Правило 1</div>
+    <h2 class="slide-title anim-2">Ключевое - в начало и конец</h2>
+    <div class="split">
+      <div class="vs-card bad anim-2">
+        <div class="vs-label">Слабо</div>
+        <div class="prompt compact">Вот длинный контекст про Reels, программу, клуб, аудиторию...
+
+В конце: сделай текст. Только Telegram и Instagram.</div>
+      </div>
+      <div class="vs-card good anim-3">
+        <div class="vs-label">Сильно</div>
+        <div class="prompt compact">Главное ограничение: результат нужен только для Telegram и Instagram.
+
+Дальше контекст...
+
+Финал: напомню, нужен только Telegram и Instagram, без универсального текста.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Правило 2</div>
+    <h2 class="slide-title anim-2">Структурируй и нумеруй</h2>
+    <div class="split">
+      <div class="vs-card bad anim-2">
+        <div class="vs-label">Стена текста</div>
+        <div class="card-body">«Мне нужен пост из рилса, чтобы было в моём стиле, не длинно, для Telegram и Instagram, там ещё аудитория...»</div>
+      </div>
+      <div class="vs-card good anim-3">
+        <div class="vs-label">Структура</div>
+        <div class="prompt compact">1. Вход: транскрипт Reels.
+2. Аудитория: [кто читает].
+3. Задача: Telegram-пост + Instagram-подпись.
+4. Стиль: мой голос, без нейробанальностей.
+5. Ограничения: короткие абзацы, одна мысль.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Правило 3</div>
+    <h2 class="slide-title anim-2">Новый чат = чистая память</h2>
+    <div class="split">
+      <div class="card mint anim-2">
+        <div class="card-title">Когда открывать новый чат</div>
+        <div class="card-body">Сменил тему. Диалог стал слишком длинным. ИИ начал путать вводные. Нужна новая задача без старого шума.</div>
+      </div>
+      <div class="card hot anim-3">
+        <div class="card-title">Когда оставаться в чате</div>
+        <div class="card-body">Дорабатываешь один текст, идёшь по шагам, отвечаешь на вопросы ИИ, уточняешь тот же продукт.</div>
+      </div>
+    </div>
+    <div class="quote anim-4" style="margin-top:24px;">Одна задача - один диалог. Одна большая тема - проект или отдельный ассистент.</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Правило 4</div>
+    <h2 class="slide-title anim-2">Резюмируй длинные диалоги</h2>
+    <div class="prompt anim-3">Давай подведём итог и перенесём дальше:
+1. Мы собираем программу корпоративного тренинга.
+2. Аудитория: [кто].
+3. Главный результат: [что должно измениться].
+4. Уже выбрали 4 модуля: [список].
+5. Ограничения: без лекционного перегруза, практика после каждого блока.
+
+Теперь на основе этого сделай финальную структуру программы.</div>
+  </section>
+
+  <section class="slide title-slide">
+    <div class="brand-line anim-1"><b>Блок 4</b></div>
+    <h2 class="title-big anim-2">Практика</h2>
+    <p class="title-sub anim-3">Пишем промпт для твоей работы по формуле РКЗФО</p>
+  </section>
+
+  <section class="slide practice">
+    <div class="eyebrow anim-1">Полный пример РКЗФО</div>
+    <h2 class="slide-title anim-2">Корпоративный тренинг → программа</h2>
+    <div class="prompt compact anim-3">Р: Ты мой методолог корпоративного обучения и продюсер образовательных программ.
+
+К: я разрабатываю корпоративную тренинговую программу для [аудитория]. Цель компании: [что должно измениться после обучения]. Формат: [онлайн / офлайн / смешанный]. Длительность: [сколько часов / встреч].
+
+З: собери структуру программы.
+
+Ф: цель обучения, 4-6 модулей, упражнения, домашки, измерение результата, риски.
+
+О: без воды, без академического языка, с практикой после каждого смыслового блока.</div>
+  </section>
+
+  <section class="slide practice">
+    <div class="eyebrow anim-1">Практика: пишем свой промпт</div>
+    <h2 class="slide-title anim-2">7 минут - одна реальная задача недели</h2>
+    <div class="steps">
+      <div class="step anim-2"><div class="step-num">1</div><div><div class="step-title">Выбери задачу</div><div class="step-text">Reels, пост, консультация, тренинг, продукт, план месяца.</div></div></div>
+      <div class="step anim-3"><div class="step-num">2</div><div><div class="step-title">Собери РКЗФО</div><div class="step-text">Роль, контекст, задача, формат, ограничения.</div></div></div>
+      <div class="step anim-4"><div class="step-num">3</div><div><div class="step-title">Добавь усилитель</div><div class="step-text">Вопросы, пошаговость, три эксперта или запреты.</div></div></div>
+      <div class="step anim-5"><div class="step-num">4</div><div><div class="step-title">Итерируй</div><div class="step-text">Проверь ответ и попроси версию 2 по точным критериям.</div></div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Техника 6: мета-промпт</div>
+    <h2 class="slide-title anim-2">Попроси ИИ написать <span class="accent">промпт для ИИ</span></h2>
+    <div class="prompt anim-3">Помоги мне сформулировать сильный промпт для задачи: [описание задачи].
+
+Сначала задай мне вопросы, если данных не хватает.
+Потом собери промпт по структуре: роль, контекст, входные данные, задача, формат, критерии качества, ограничения.
+
+После промпта объясни, почему он должен сработать.</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Мета-промпт: как это работает</div>
+    <h2 class="slide-title anim-2">Ты думаешь о задаче. ИИ думает о формулировке.</h2>
+    <div class="grid-3">
+      <div class="card anim-2"><div class="card-kicker">Вход</div><div class="card-title">Говоришь как есть</div><div class="card-body">«Хочу упаковать идею продукта, но пока мысли сырые».</div></div>
+      <div class="card hot anim-3"><div class="card-kicker">Сборка</div><div class="card-title">ИИ задаёт вопросы</div><div class="card-body">Уточняет аудиторию, формат, критерии, риски, ограничения.</div></div>
+      <div class="card mint anim-4"><div class="card-kicker">Выход</div><div class="card-title">Готовый промпт</div><div class="card-body">Ты вставляешь его в ChatGPT, Gemini или будущего ассистента.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Супертехника</div>
+    <h2 class="slide-title anim-2">Наговори задачу голосом</h2>
+    <div class="quote anim-2">РКЗФО надо понимать, но не обязательно каждый раз писать вручную. Можно наговорить мысль голосом и попросить ИИ упаковать её в сильный промпт.</div>
+    <div class="prompt anim-3" style="margin-top:24px;">Я сейчас наговорю мысль сыро. Твоя задача - извлечь из неё роль, контекст, задачу, формат, ограничения и критерии качества. Потом собери из этого сильный промпт.</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Как это работает</div>
+    <h2 class="slide-title anim-2">Голос → структура → результат</h2>
+    <div class="flow anim-2">
+      <div class="flow-box"><div class="flow-tag">1</div><div class="flow-name">Наговорил</div><div class="flow-desc">Мысль, пример, задача, ограничения</div></div>
+      <div class="arrow">&rarr;</div>
+      <div class="flow-box"><div class="flow-tag">2</div><div class="flow-name">ИИ разобрал</div><div class="flow-desc">Вытащил РКЗФО и вопросы</div></div>
+      <div class="arrow">&rarr;</div>
+      <div class="flow-box"><div class="flow-tag">3</div><div class="flow-name">Ты проверил</div><div class="flow-desc">Уточнил, убрал лишнее, запустил</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Что ИИ сделал сам</div>
+    <h2 class="slide-title anim-2">Он превращает сырой рассказ в <span class="accent">рабочую инструкцию</span></h2>
+    <table class="table anim-3">
+      <tr><th>Элемент</th><th>Что достаёт из рассказа</th><th>Пример</th></tr>
+      <tr><td><strong>Роль</strong></td><td>Кем должен быть ИИ</td><td>«мой редактор», «методолог», «стратег»</td></tr>
+      <tr><td><strong>Контекст</strong></td><td>Для кого, зачем, в какой ситуации</td><td>клуб, консультации, Reels, тренинг</td></tr>
+      <tr><td><strong>Задача</strong></td><td>Что именно нужно получить</td><td>пост, конспект, программа, план</td></tr>
+      <tr><td><strong>Формат</strong></td><td>Как выдать результат</td><td>таблица, структура, текст, список</td></tr>
+      <tr><td><strong>Ограничения</strong></td><td>Что нельзя и как проверять</td><td>без воды, без общего AI-текста</td></tr>
+    </table>
+  </section>
+
+  <section class="slide title-slide">
+    <div class="brand-line anim-1"><b>Фразы-усилители</b></div>
+    <h2 class="title-big anim-2">Короткие команды,<br>которые меняют качество</h2>
+    <p class="title-sub anim-3">Добавляй их в любой промпт, когда нужен результат выше среднего</p>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">15 фраз</div>
+    <h2 class="slide-title anim-2">Усилители для точности, глубины и честности</h2>
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; font-size:14px; line-height:1.35;">
+      <div class="card anim-2" style="padding:12px;">1. Если не знаешь - скажи прямо, не выдумывай.</div>
+      <div class="card anim-2" style="padding:12px;">2. Если не уверен - перепроверь логику.</div>
+      <div class="card anim-2" style="padding:12px;">3. Сначала задай вопросы, если данных мало.</div>
+      <div class="card anim-3" style="padding:12px;">4. Не додумывай за меня - обозначь пробелы.</div>
+      <div class="card anim-3" style="padding:12px;">5. Будь критичным к слабым местам идеи.</div>
+      <div class="card anim-3" style="padding:12px;">6. Дай версию 2: точнее, короче, глубже.</div>
+      <div class="card anim-4" style="padding:12px;">7. Не уходи в сторону от задачи.</div>
+      <div class="card anim-4" style="padding:12px;">8. Учитывай всё, что я сказал выше.</div>
+      <div class="card anim-4" style="padding:12px;">9. Начинай с главного вывода.</div>
+      <div class="card anim-5" style="padding:12px;">10. Разделяй факты, гипотезы и рекомендации.</div>
+      <div class="card anim-5" style="padding:12px;">11. Не повторяй одну мысль ради объёма.</div>
+      <div class="card anim-5" style="padding:12px;">12. Дай 3 варианта с разным тоном.</div>
+      <div class="card anim-5" style="padding:12px;">13. Проверь, где текст звучит как AI.</div>
+      <div class="card anim-5" style="padding:12px;">14. Адаптируй под конкретную аудиторию.</div>
+      <div class="card anim-5" style="padding:12px;">15. В конце дай следующий практический шаг.</div>
+    </div>
+  </section>
+
+  <section class="slide title-slide">
+    <div class="brand-line anim-1"><b>Следующий уровень</b></div>
+    <h2 class="title-big anim-2">Ассистентный<br>подход</h2>
+    <p class="title-sub anim-3">От разовых промптов к постоянному помощнику</p>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Сегодня vs следующий уровень</div>
+    <h2 class="slide-title anim-2">Разовый промпт решает задачу. Ассистент <span class="accent">держит роль</span></h2>
+    <div class="split">
+      <div class="vs-card bad anim-2">
+        <div class="vs-label">Разовый промпт</div>
+        <div class="card-title">Каждый раз объясняешь заново</div>
+        <div class="card-body">Роль, контекст, стиль, продукты, аудитория, запреты. Работает, но каждый раз требует настройки.</div>
+      </div>
+      <div class="vs-card good anim-3">
+        <div class="vs-label">Ассистент</div>
+        <div class="card-title">Один раз настраиваешь систему</div>
+        <div class="card-body">У него есть постоянная роль, знания, файлы, правила качества и тесты на твоих задачах.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Переход к ассистентам</div>
+    <h2 class="slide-title anim-2">Ассистент - это повторяемый промпт, который <span class="accent">стал рабочей ролью</span></h2>
+    <table class="table anim-3">
+      <tr><th>Уровень</th><th>Когда использовать</th><th>Твой пример</th></tr>
+      <tr><td><strong>Разовый промпт</strong></td><td>Одна задача, один результат</td><td>Сделать пост из одного Reels</td></tr>
+      <tr><td><strong>Шаблон</strong></td><td>Повторяемая задача без отдельной роли</td><td>Конспект консультации по одной структуре</td></tr>
+      <tr><td><strong>Project</strong></td><td>Долгая тема с файлами и чатами</td><td>«Мой контент», «Клиенты и консультации»</td></tr>
+      <tr><td><strong>Custom GPT / Gem</strong></td><td>Постоянный помощник с ролью и знаниями</td><td>«Мой редактор», «Методолог консультаций»</td></tr>
+      <tr><td><strong>NotebookLM</strong></td><td>Большая база источников</td><td>Книга, методички, лекции, программы</td></tr>
+    </table>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Project vs Custom GPT</div>
+    <h2 class="slide-title anim-2">Проект - кабинет. GPT - сотрудник.</h2>
+    <div class="split">
+      <div class="card hot anim-3">
+        <div class="card-kicker">Project</div>
+        <div class="card-title">Где мы работаем?</div>
+        <div class="card-body">Рабочее пространство для долгой темы. Внутри живут чаты, файлы, источники и инструкция проекта. Пример: «Мой контент».</div>
+      </div>
+      <div class="card mint anim-4">
+        <div class="card-kicker">Custom GPT</div>
+        <div class="card-title">Кто помогает?</div>
+        <div class="card-body">Отдельный ассистент с постоянной ролью, инструкциями, knowledge-файлами и возможностями. Пример: «Мой редактор».</div>
+      </div>
+    </div>
+    <p class="body anim-5" style="margin-top:24px;">Они не конкурируют. Сильная связка: проект хранит контекст темы, GPT выполняет конкретную роль внутри этой системы.</p>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Почему инструкции есть и там, и там</div>
+    <h2 class="slide-title anim-2">Внешне похоже. Смысл разный.</h2>
+    <table class="table anim-3">
+      <tr><th></th><th>Project instruction</th><th>Custom GPT instruction</th></tr>
+      <tr><td><strong>Смысл</strong></td><td>Правила комнаты</td><td>Должностная инструкция сотрудника</td></tr>
+      <tr><td><strong>Отвечает на вопрос</strong></td><td>Как работать внутри этой папки?</td><td>Кто ты и как работаешь всегда?</td></tr>
+      <tr><td><strong>Граница</strong></td><td>Только внутри конкретного проекта</td><td>Каждый запуск этого GPT</td></tr>
+      <tr><td><strong>Пример</strong></td><td>«Здесь работаем только над моим контентом»</td><td>«Ты мой редактор, превращаешь мысли в тексты»</td></tr>
+      <tr><td><strong>Ошибка</strong></td><td>Пытаться сделать из проекта отдельного ассистента</td><td>Засунуть в GPT всё подряд без роли и стандарта</td></tr>
+    </table>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Gem и NotebookLM</div>
+    <h2 class="slide-title anim-2">Гембот - не замена GPT. Это другой контур.</h2>
+    <div class="grid-2">
+      <div class="card anim-2">
+        <div class="card-kicker">Gem в Gemini</div>
+        <div class="card-title">Хорош для Google-экосистемы</div>
+        <div class="card-body">Инструкции, файлы, Drive, исследование, документы. Уместен, если материалы живут в Google и нужен ассистент вокруг них.</div>
+      </div>
+      <div class="card anim-3">
+        <div class="card-kicker">NotebookLM</div>
+        <div class="card-title">База источников, не главный автор</div>
+        <div class="card-body">Книга, методички, лекции, конспекты, учебные продукты. Сильный источник знаний, но писать в твоём стиле лучше учить отдельного GPT.</div>
+      </div>
+    </div>
+    <div class="quote anim-4" style="margin-top:26px;">Для сегодняшнего вау-эффекта берём Custom GPT. NotebookLM подключаем позже как библиотеку методологии.</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Что собираем</div>
+    <h2 class="slide-title anim-2">Custom GPT «Мой редактор»</h2>
+    <div class="grid-3">
+      <div class="card hot anim-2"><div class="card-title">Задача</div><div class="card-body">Превращать мысли, Reels, транскрипты и тезисы в сильные тексты.</div></div>
+      <div class="card mint anim-3"><div class="card-title">Стандарт</div><div class="card-body">Ближе к твоему голосу, без общего нейротекста и мотивационной ваты.</div></div>
+      <div class="card anim-4"><div class="card-title">Поведение</div><div class="card-body">Задаёт вопросы, делает 2-3 версии, объясняет, где текст попал или промахнулся.</div></div>
+    </div>
+    <p class="small anim-5">Технически: GPT создаётся в ChatGPT через GPTs / Create. По актуальной справке OpenAI knowledge - до 20 файлов, каждый до 512 MB.</p>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Что загрузить</div>
+    <h2 class="slide-title anim-2">Не «всё подряд». Нужны <span class="accent">чистые файлы роли</span></h2>
+    <table class="table anim-3">
+      <tr><th>Файл</th><th>Что внутри</th><th>Зачем</th></tr>
+      <tr><td><strong>voice_map.md</strong></td><td>Мои темы, интонация, структура, запреты, сильные ходы</td><td>Чтобы GPT понимал мой голос</td></tr>
+      <tr><td><strong>best_posts.md</strong></td><td>10-15 моих эталонных постов</td><td>Чтобы были образцы стиля</td></tr>
+      <tr><td><strong>bad_examples.md</strong></td><td>3-5 текстов, которые мне не нравятся</td><td>Чтобы не повторять слабый AI-тон</td></tr>
+      <tr><td><strong>products.md</strong></td><td>Клуб, наставничество, тренинги, книга, образовательные продукты</td><td>Чтобы не терять продуктовый контекст</td></tr>
+      <tr><td><strong>content_tasks.md</strong></td><td>Reels, посты, консультации, афиши, продуктовые идеи</td><td>Чтобы GPT знал мои типовые задачи</td></tr>
+    </table>
+  </section>
+
+  <section class="slide practice">
+    <div class="eyebrow anim-1">Инструкция GPT</div>
+    <h2 class="slide-title anim-2">Скелет, который вставляем в Custom GPT</h2>
+    <div class="prompt compact anim-3">Ты мой редактор и контент-стратег.
+
+Твоя задача - помогать мне превращать мысли, голосовые заметки, Reels, транскрипты и идеи в сильные тексты для Telegram, Instagram, выступлений, образовательных продуктов и клиентской коммуникации.
+
+Главный критерий: текст должен звучать ближе к моему голосу, а не как общий AI-текст.
+
+Работай так:
+1. Сначала пойми задачу, аудиторию и цель текста.
+2. Если данных недостаточно, задай до 3 коротких уточняющих вопросов.
+3. Используй загруженные материалы как карту авторского стиля и продуктового контекста.
+4. Давай 2-3 версии, когда это помогает выбрать тон.
+5. После текста коротко объясняй, где он попал в мой голос и что можно докрутить.</div>
+  </section>
+
+  <section class="slide practice">
+    <div class="eyebrow anim-1">Тест на уроке</div>
+    <h2 class="slide-title anim-2">Проверяешь GPT на трёх своих задачах</h2>
+    <div class="grid-3">
+      <div class="card anim-2"><div class="card-kicker">Тест 1</div><div class="card-title">Reels → пост</div><div class="card-body">Берём реальный Reels, делаем Telegram и Instagram, докручиваем голос.</div></div>
+      <div class="card anim-3"><div class="card-kicker">Тест 2</div><div class="card-title">Консультация → итог</div><div class="card-body">Сырой конспект превращаем в выводы, шаги и домашку клиента.</div></div>
+      <div class="card anim-4"><div class="card-kicker">Тест 3</div><div class="card-title">Продукт → структура</div><div class="card-body">Уточняем идею, слабые места, MVP на 7 дней и вопросы к запуску.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Твои будущие ассистенты</div>
+    <h2 class="slide-title anim-2">Один GPT сегодня. Потом - <span class="accent">система ролей</span></h2>
+    <table class="table anim-3">
+      <tr><th>Ассистент</th><th>Что делает</th><th>Первый тест</th></tr>
+      <tr><td><strong>Мой редактор</strong></td><td>Посты, Reels, голосовые мысли, тексты</td><td>Telegram-пост из Reels</td></tr>
+      <tr><td><strong>Методолог консультаций</strong></td><td>Итоги встреч, шаги, домашки, удержание клиента</td><td>Конспект консультации</td></tr>
+      <tr><td><strong>Продюсер клуба</strong></td><td>Темы месяца, вовлечение, прогрев, анонсы</td><td>План контента на неделю</td></tr>
+      <tr><td><strong>Архитектор обучения</strong></td><td>Корпоративные тренинги, программы, упражнения</td><td>Структура тренинга</td></tr>
+    </table>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">5 ошибок новичка</div>
+    <h2 class="slide-title anim-2">Что ломает качество ответа</h2>
+    <table class="table anim-3">
+      <tr><th>Ошибка</th><th>Как звучит</th><th>Как исправить</th></tr>
+      <tr><td>Размытый запрос</td><td>«Напиши пост»</td><td>Роль + контекст + задача + формат</td></tr>
+      <tr><td>Всё в одном</td><td>«Сделай стратегию, посты, презентацию»</td><td>Разбить на этапы</td></tr>
+      <tr><td>Нет контекста</td><td>«Придумай продукт»</td><td>Добавить аудиторию, опыт, ограничения</td></tr>
+      <tr><td>Нет итераций</td><td>Принял первый ответ</td><td>Попросить версию 2 по критериям</td></tr>
+      <tr><td>Нет проверки</td><td>ИИ звучит уверенно</td><td>Попросить риски, слабые места, вопросы</td></tr>
+    </table>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Домашка после урока 2</div>
+    <h2 class="slide-title anim-2">Цель - не выучить промпты. Цель - <span class="accent">усилить ассистента</span></h2>
+    <div class="steps">
+      <div class="step anim-2"><div class="step-num">1</div><div><div class="step-title">Собрать датасет голоса</div><div class="step-text">10-15 сильных постов, 3-5 антипримеров, 5 частых тем.</div></div></div>
+      <div class="step anim-3"><div class="step-num">2</div><div><div class="step-title">Прогнать 3 рабочих кейса</div><div class="step-text">Reels → пост; голосовая мысль → текст; консультация или встреча → конспект и задачи.</div></div></div>
+      <div class="step anim-4"><div class="step-num">3</div><div><div class="step-title">Оценить попадание</div><div class="step-text">Где попал в стиль, где общий текст, какие файлы или правила добавить.</div></div></div>
+      <div class="step anim-5"><div class="step-num">4</div><div><div class="step-title">Выбрать следующего ассистента</div><div class="step-text">Методолог, продюсер клуба, помощник по консультациям или образовательный архитектор.</div></div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow anim-1">Финал</div>
+    <h2 class="slide-title anim-2">Ты переходишь от «пользуюсь ИИ» к <span class="accent">своей системе помощников</span></h2>
+    <div class="quote anim-3">Разовый промпт даёт результат на сегодня. Ассистентный подход начинает копить качество.</div>
+    <p class="small anim-4">Источники фактов по инструментам: OpenAI Help Center по GPTs, Projects и File Uploads; Google Help по Gemini Gems и NotebookLM. Проверено 15 июня 2026.</p>
+  </section>
+
+</div>
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+let current = 0;
+const counter = document.getElementById('slideCounter');
+const progress = document.getElementById('progressBar');
+
+function showSlide(index) {
+  if (index < 0 || index >= slides.length) return;
+  slides.forEach((slide, i) => {
+    slide.classList.remove('active', 'prev');
+    if (i < index) slide.classList.add('prev');
+  });
+  slides[index].classList.add('active');
+  current = index;
+  counter.textContent = `${index + 1} / ${slides.length}`;
+  progress.style.width = `${((index + 1) / slides.length) * 100}%`;
+}
+
+document.addEventListener('keydown', (event) => {
+  if (['ArrowRight', ' ', 'PageDown'].includes(event.key)) { event.preventDefault(); showSlide(current + 1); }
+  if (['ArrowLeft', 'PageUp'].includes(event.key)) { event.preventDefault(); showSlide(current - 1); }
+  if (event.key === 'Home') showSlide(0);
+  if (event.key === 'End') showSlide(slides.length - 1);
+});
+
+document.getElementById('fsBtn').addEventListener('click', () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+
+let touchStartX = 0;
+document.addEventListener('touchstart', (event) => { touchStartX = event.changedTouches[0].screenX; }, { passive: true });
+document.addEventListener('touchend', (event) => {
+  const dx = event.changedTouches[0].screenX - touchStartX;
+  if (Math.abs(dx) > 50) showSlide(current + (dx < 0 ? 1 : -1));
+}, { passive: true });
+
+showSlide(0);
+</script>
+</body>
+</html>
