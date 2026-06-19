@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>7 Прудов · шпаргалка по нейросетям (обучение)</title>
+<style>
+  :root{
+    --coral:#E07461; --coral-dark:#C55A48; --coral-soft:#FBEDE9;
+    --purple:#8B6EB5; --purple-soft:#F0ECF6;
+    --ink:#1A1A22; --ink-2:#54546A; --ink-3:#8A8AA0;
+    --line:#ECECF1; --bg:#FFFFFF; --panel:#FAFAFC; --panel-2:#F4F4F8;
+    --ok:#2E9E6B; --ok-soft:#E8F6EF;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:-apple-system,'SF Pro Display','SF Pro Text','Segoe UI',system-ui,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:var(--panel-2);line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .doc{max-width:860px;margin:0 auto;background:var(--bg);}
+
+  header.top{background:linear-gradient(150deg,#FFFFFF 0%,#FDF1EC 55%,#FAE7DF 100%);padding:28px clamp(16px,5vw,48px) 24px;border-bottom:1px solid #F2DDD4;}
+  .brandline{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+  .mark{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--coral),var(--coral-dark));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#fff;letter-spacing:-1px;box-shadow:0 6px 16px rgba(224,116,97,.3);}
+  .wm{font-weight:800;font-size:16px;}
+  .wm small{display:block;font-weight:600;font-size:10px;letter-spacing:2px;color:var(--coral-dark);text-transform:uppercase;margin-top:2px;}
+  .kicker{color:var(--coral-dark);font-weight:700;font-size:11.5px;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:8px;}
+  header.top h1{font-size:clamp(22px,4vw,30px);line-height:1.12;font-weight:800;letter-spacing:-.4px;}
+  header.top h1 b{color:var(--coral);}
+  header.top .lead{font-size:13.5px;color:var(--ink-2);margin-top:10px;}
+
+  section{padding:24px clamp(16px,5vw,48px);}
+  .sec-head{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;border-bottom:2px solid var(--line);padding-bottom:10px;}
+  .sec-num{font-weight:800;font-size:12px;color:#fff;background:var(--coral);border-radius:7px;padding:3px 9px;flex-shrink:0;}
+  .sec-head h2{font-size:19px;font-weight:800;letter-spacing:-.3px;}
+
+  /* warm-up steps */
+  .steps{display:grid;gap:11px;}
+  .step{border:1px solid var(--line);border-radius:13px;background:var(--panel);padding:14px 15px;}
+  .step .n{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:8px;background:var(--coral);color:#fff;font-weight:800;font-size:13px;margin-right:8px;}
+  .step h4{display:flex;align-items:center;font-size:15px;font-weight:800;margin-bottom:8px;}
+
+  /* prompt card */
+  .pcard{border:1px solid var(--line);border-radius:11px;background:#fff;padding:11px 13px;margin-top:9px;}
+  .pcard .ptop{display:flex;align-items:center;gap:9px;margin-bottom:7px;}
+  .pcard .tag{font-size:11px;font-weight:700;color:var(--coral-dark);background:var(--coral-soft);border-radius:6px;padding:3px 8px;}
+  .copy{margin-left:auto;border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2);font-weight:600;font-size:11.5px;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;}
+  .copy:hover{border-color:var(--coral);color:var(--coral-dark);}
+  .ptext{font-size:13.5px;color:var(--ink);white-space:pre-wrap;}
+  .ptext .v{color:var(--coral-dark);font-weight:600;}
+
+  /* tools */
+  .tools-now{background:var(--ok-soft);border:1px solid #CDEBDC;border-radius:12px;padding:12px 15px;margin-bottom:14px;font-size:14px;color:#155236;}
+  .tools-now b{color:#0e3f29;}
+  .toolgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+  .tg{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:13px 15px;}
+  .tg h4{font-size:13px;font-weight:800;margin-bottom:9px;display:flex;align-items:center;gap:7px;}
+  .tg h4 .dot{width:8px;height:8px;border-radius:3px;background:var(--coral);}
+  .tg.west h4 .dot{background:var(--purple);}
+  .tl{display:flex;flex-wrap:wrap;gap:7px;}
+  .tl a{font-size:12.5px;font-weight:600;text-decoration:none;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 10px;}
+  .tl a span{color:var(--ink-3);font-weight:500;}
+  .tl a:hover{border-color:var(--coral);}
+
+  /* formula */
+  .formula{border:1px solid var(--line);border-radius:13px;background:var(--panel);padding:15px 16px;}
+  .fla{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .fla .b{background:var(--coral-soft);color:var(--coral-dark);font-weight:700;font-size:13px;border-radius:8px;padding:7px 11px;}
+  .fla .b small{display:block;font-weight:500;color:var(--ink-3);font-size:11px;}
+  ul.clean{list-style:none;}
+  ul.clean li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;color:var(--ink-2);}
+  ul.clean li:before{content:"";position:absolute;left:3px;top:12px;width:7px;height:7px;border-radius:50%;background:var(--coral);}
+  ul.clean li b{color:var(--ink);}
+
+  /* tabs */
+  .tabs{display:flex;gap:7px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px;-webkit-overflow-scrolling:touch;}
+  .tabbtn{flex-shrink:0;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);font-weight:700;font-size:13px;border-radius:9px;padding:9px 13px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .tabbtn.act{background:var(--coral);color:#fff;border-color:var(--coral);}
+  .panel{display:none;}
+  .panel.on{display:block;}
+
+  /* assistants */
+  .asst{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .acard{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:12px 14px;}
+  .acard .an{font-weight:800;font-size:14px;}
+  .acard .au{font-size:11.5px;font-weight:700;color:var(--purple);background:var(--purple-soft);border-radius:6px;padding:2px 8px;display:inline-block;margin:5px 0 6px;}
+  .acard p{font-size:13px;color:var(--ink-2);}
+
+  footer{padding:22px clamp(16px,5vw,48px) 36px;color:var(--ink-3);font-size:12px;border-top:1px solid var(--line);}
+  footer b{color:var(--ink);}
+
+  @media (max-width:620px){ .toolgrid,.asst{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <header class="top">
+    <div class="brandline">
+      <div class="mark">N</div>
+      <div class="wm">NEOVIDA<small>AI consulting</small></div>
+    </div>
+    <div class="kicker">Шпаргалка участника · обучение по нейросетям</div>
+    <h1>Нейросети для <b>7 Прудов</b>: бери и работай</h1>
+    <p class="lead">Открой на телефоне или ноутбуке. Идём по шагам: знакомишься с моделью, берёшь промпт под свой отдел, в конце собираешь себе ассистента. Кнопка «Копировать» переносит промпт, дальше подставляешь свои данные в [скобках].</p>
+  </header>
+
+  <!-- 1 ИНСТРУМЕНТЫ -->
+  <section>
+    <div class="sec-head"><span class="sec-num">1</span><h2>На чём работаем</h2></div>
+    <div class="tools-now"><b>Сегодня работаем в Qwen или DeepSeek.</b> Без VPN, бесплатно, открываются в браузере, ставить ничего не надо.</div>
+    <div class="toolgrid">
+      <div class="tg">
+        <h4><span class="dot"></span>Без VPN (наши рабочие)</h4>
+        <div class="tl">
+          <a href="https://chat.qwen.ai" target="_blank">Qwen <span>· сильный, чистый</span></a>
+          <a href="https://chat.deepseek.com" target="_blank">DeepSeek <span>· топ в анализе</span></a>
+          <a href="https://kimi.com" target="_blank">Kimi <span>· длинные тексты</span></a>
+          <a href="https://chat.z.ai" target="_blank">GLM <span>· шустрый</span></a>
+          <a href="https://giga.chat" target="_blank">GigaChat <span>· Сбер</span></a>
+          <a href="https://ya.ru" target="_blank">Алиса <span>· Яндекс</span></a>
+        </div>
+      </div>
+      <div class="tg west">
+        <h4><span class="dot"></span>Топ-3 западных (через VPN)</h4>
+        <div class="tl">
+          <a href="https://chatgpt.com" target="_blank">ChatGPT</a>
+          <a href="https://claude.ai" target="_blank">Claude</a>
+          <a href="https://gemini.google.com" target="_blank">Gemini <span>· тут Gems</span></a>
+        </div>
+        <ul class="clean" style="margin-top:8px"><li>Это уровень выше. К нему растём, когда настроим VPN и аккаунт. Сегодня для урока не обязательно.</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 РАЗМИНКА -->
+  <section>
+    <div class="sec-head"><span class="sec-num">2</span><h2>Поехали за 3 шага</h2></div>
+    <div class="steps">
+      <div class="step">
+        <h4><span class="n">1</span>Расскажи модели о себе</h4>
+        <div class="pcard">
+          <div class="ptop"><span class="tag">досье о себе</span><button class="copy" onclick="cp(this)">Копировать</button></div>
+          <div class="ptext">Я работаю в компании, которая строит и продаёт коттеджные посёлки и участки под Екатеринбургом. Моя роль: <span class="v">[должность]</span>. Чем занимаюсь: <span class="v">[3-5 задач]</span>. Запомни это как контекст обо мне для всех следующих ответов.</div>
+        </div>
+      </div>
+      <div class="step">
+        <h4><span class="n">2</span>Спроси, чем модель тебе полезна</h4>
+        <div class="pcard">
+          <div class="ptop"><span class="tag">чем поможешь</span><button class="copy" onclick="cp(this)">Копировать</button></div>
+          <div class="ptext">С учётом того, что ты обо мне знаешь, расскажи, чем именно ты можешь быть мне полезен в работе. Дай 10 конкретных задач, которые мы можем закрывать вместе, под мою роль.</div>
+        </div>
+      </div>
+      <div class="step">
+        <h4><span class="n">3</span>Бери промпт под свой отдел</h4>
+        <p style="font-size:13.5px;color:var(--ink-2)">Листай ниже, выбирай свою кнопку и копируй готовый промпт. Подставляй свои данные вместо <span style="color:var(--coral-dark);font-weight:600">[скобок]</span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 ФОРМУЛА -->
+  <section>
+    <div class="sec-head"><span class="sec-num">3</span><h2>Формула сильного промпта</h2></div>
+    <div class="formula">
+      <div class="fla">
+        <span class="b">Роль<small>кто модель</small></span>
+        <span class="b">Контекст<small>что важно знать</small></span>
+        <span class="b">Задача<small>что сделать</small></span>
+        <span class="b">Формат<small>как оформить</small></span>
+        <span class="b">Ограничения<small>чего нельзя</small></span>
+      </div>
+      <ul class="clean">
+        <li><b>«Задай мне вопросы»:</b> попроси модель сначала уточнить, а потом сделать. Качество вырастает резко.</li>
+        <li><b>«Думай пошагово»:</b> для сложных задач проси расписать ход рассуждения.</li>
+        <li><b>Итерации:</b> не нравится результат, не пиши заново, скажи что поправить.</li>
+        <li><b>Мета-промпт:</b> «улучши мой промпт, чтобы получить лучший результат».</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 4 ПРОМПТЫ ПО ОТДЕЛАМ -->
+  <section>
+    <div class="sec-head"><span class="sec-num">4</span><h2>Промпты под твой отдел</h2></div>
+    <div class="tabs">
+      <button class="tabbtn act" onclick="tab('p-sales',this)">Продажи</button>
+      <button class="tabbtn" onclick="tab('p-mkt',this)">Маркетинг</button>
+      <button class="tabbtn" onclick="tab('p-part',this)">Партнёры</button>
+      <button class="tabbtn" onclick="tab('p-deal',this)">Сделки/ипотека</button>
+      <button class="tabbtn" onclick="tab('p-buh',this)">Бухгалтерия</button>
+      <button class="tabbtn" onclick="tab('p-law',this)">Юристы</button>
+      <button class="tabbtn" onclick="tab('p-uk',this)">УК/посёлки</button>
+      <button class="tabbtn" onclick="tab('p-boss',this)">Руководитель</button>
+    </div>
+
+    <div id="p-sales" class="panel on">
+      <div class="pcard"><div class="ptop"><span class="tag">разбор звонка</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Ты руководитель отдела продаж в девелопменте загородной недвижимости. Вот транскрибация звонка менеджера с клиентом: <span class="v">[вставь текст]</span>. Найди, где менеджер потерял клиента, какие возражения не отработал, слова-паразиты. Дай 3 рекомендации и следующий шаг по сделке.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">сводка по сделкам</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Вот выгрузка по сделкам за неделю: <span class="v">[вставь таблицу]</span>. Посчитай конверсию по этапам, найди сделки, застрявшие дольше 7 дней, собери сводку для собственника на 5 строк.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">ответ на возражение</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Клиент говорит: «дорого, я подумаю». Дай 5 вариантов ответа менеджера, по-человечески, без давления, с целью назначить просмотр участка.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">коммерческое</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Собери коммерческое предложение по участку: посёлок <span class="v">[название]</span>, площадь <span class="v">[X]</span>, цена <span class="v">[Y]</span>, рассрочка <span class="v">[условия]</span>. Структура: оффер, что входит, цена, следующий шаг. Коротко и понятно.</div></div>
+    </div>
+
+    <div id="p-mkt" class="panel">
+      <div class="pcard"><div class="ptop"><span class="tag">разбор баннера</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Ты топовый маркетолог коттеджных посёлков. Разбери этот баннер глазами покупателя участка: <span class="v">[опиши или вставь]</span>. Не оценивай дизайн, найди почему он плохо конвертит, предложи 5 сильных офферов и УТП, чтобы удвоить заявки.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">контент-план</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Сделай контент-план на неделю для соцсетей посёлка <span class="v">[название]</span>: 7 постов, у каждого заголовок и первая строка. Темы: участки, инфраструктура, акции, отзывы, загородная жизнь.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">ответ на отзыв</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Вот негативный отзыв клиента: <span class="v">[вставь]</span>. Напиши вежливый, человеческий ответ от лица компании, без шаблонов и оправданий, с предложением решить вопрос.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">идеи видео</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Дай 10 идей коротких видео про загородную жизнь и наши посёлки, которые цепляют покупателя участка. К каждой идее первая фраза для захвата внимания.</div></div>
+    </div>
+
+    <div id="p-part" class="panel">
+      <div class="pcard"><div class="ptop"><span class="tag">сообщение об акции</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Напиши персональное сообщение риэлтору о новой акции на участки в посёлке <span class="v">[название]</span>: по-человечески, коротко, с просьбой ответить, берёт он в работу или нет. Дай 3 варианта тона.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">канал для агентов</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Контент-план на неделю для Telegram-канала риэлторов-партнёров: акции, новые объекты, польза для их продаж. 7 постов с заголовками и первой строкой.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">объявление Avito</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Напиши продающее объявление на Avito для участка: посёлок <span class="v">[название]</span>, <span class="v">[характеристики]</span>. Заголовок плюс текст, под покупателя загородного участка.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">follow-up</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Составь цепочку из 3 follow-up сообщений риэлтору, который не ответил на инфо об акции. Мягко, по нарастающей, цель получить ответ да или нет.</div></div>
+    </div>
+
+    <div id="p-deal" class="panel">
+      <div class="pcard"><div class="ptop"><span class="tag">памятка по ипотеке</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Составь клиенту понятную памятку по покупке дома в ипотеку с материнским капиталом: этапы, документы, сроки. Простым языком, на одну страницу.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">чек-лист документов</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Дай чек-лист документов для сделки купли-продажи дома в ипотеку. Раздели на три части: от покупателя, от продавца, для банка.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">вопросы по рассрочке</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Клиент спрашивает про рассрочку на участок. Дай понятные ответы на 7 частых вопросов: первый взнос, срок, проценты, досрочное погашение, что если просрочка.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">график сделки</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Распиши план сделки по дому от брони до регистрации с примерными сроками каждого этапа и напоминаниями, что и когда контролировать.</div></div>
+    </div>
+
+    <div id="p-buh" class="panel">
+      <div class="pcard"><div class="ptop"><span class="tag">снегоход на расходы</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Ты аудитор по российскому учёту. Компания покупает снегоход для обслуживания коттеджных посёлков зимой. Можно ли поставить на расходы, как амортизировать, какие риски? Дай варианты со ссылкой на норму, финальное решение оставь за мной.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">разбор оборотки</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Вот оборотно-сальдовая ведомость: <span class="v">[вставь]</span>. Выдели крупнейшие статьи расходов, аномалии и что проверить вручную. Только по цифрам из файла, без выдумок.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">закон простыми словами</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Объясни простыми словами это изменение в налоговом законодательстве: <span class="v">[вставь или опиши]</span>. Что меняется для компании на УСН и что надо сделать.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">календарь платежей</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Вот список предстоящих налогов и платежей: <span class="v">[вставь]</span>. Собери календарь на месяц: что, когда, сколько, что важно не пропустить.</div></div>
+    </div>
+
+    <div id="p-law" class="panel">
+      <div class="pcard"><div class="ptop"><span class="tag">сравнение редакций</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Сравни две редакции договора: <span class="v">[А]</span> и <span class="v">[Б]</span>. Таблицей покажи, что изменилось, и подсветь пункты, рискованные для нас как продавца земли.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">аналитическая записка</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Подготовь аналитическую записку по вопросу <span class="v">[вставь]</span> с опорой на нормы права и судебную практику. Структура: вопрос, нормы, практика, вывод, риски.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">риски в договоре</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Проверь договор контрагента: <span class="v">[вставь]</span>. Найди пункты, рискованные для нас, и предложи формулировки в нашу пользу.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">резюме решения суда</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Сделай краткое резюме этого судебного решения: <span class="v">[вставь]</span>. Суть спора, позиции сторон, что решил суд, вывод для нас.</div></div>
+    </div>
+
+    <div id="p-uk" class="panel">
+      <div class="pcard"><div class="ptop"><span class="tag">маршрут обращения</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Вот обращение жителя посёлка: <span class="v">[вставь]</span>. Определи, в какую службу направить (сети, дороги, электрика, бухгалтерия), составь задачу исполнителю и вежливый ответ жителю.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">ответ на жалобу</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Житель жалуется: <span class="v">[вставь]</span>. Напиши спокойный вежливый ответ: признай проблему, предложи срок решения, без отписок.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">сводка задолженностей</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Вот список задолженностей жителей: <span class="v">[вставь]</span>. Собери сводку: кто, сколько, как давно, и подготовь шаблон вежливого напоминания об оплате.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">регламент</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Опиши простыми шагами регламент приёма и обработки обращения жителя от заявки до закрытия, чтобы по нему мог работать любой сотрудник.</div></div>
+    </div>
+
+    <div id="p-boss" class="panel">
+      <div class="pcard"><div class="ptop"><span class="tag">сводка из таблицы</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Вот выгрузка данных: <span class="v">[вставь]</span>. Собери для меня короткую управленческую сводку: главные цифры, тренд, на что обратить внимание.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">протокол встречи</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Вот мои заметки со встречи: <span class="v">[вставь]</span>. Сделай протокол: решения, задачи, ответственные, сроки.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">задачи из переписки</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Вот переписка: <span class="v">[вставь]</span>. Вытащи все договорённости и задачи с дедлайнами в виде списка.</div></div>
+      <div class="pcard"><div class="ptop"><span class="tag">задай мне вопросы</span><button class="copy" onclick="cp(this)">Копировать</button></div><div class="ptext">Задай мне 7 вопросов, чтобы помочь составить <span class="v">[письмо, план или документ]</span>, и только потом сделай.</div></div>
+    </div>
+  </section>
+
+  <!-- 5 АССИСТЕНТЫ -->
+  <section>
+    <div class="sec-head"><span class="sec-num">5</span><h2>12 ассистентов, которых можно собрать</h2></div>
+    <p style="font-size:13.5px;color:var(--ink-2);margin-bottom:14px">Ассистент это сохранённый промпт с ролью и знаниями: один раз настроил, дальше просто запускаешь и получаешь готовый результат, не выдумывая заново. Самый удобный вид это Gem в Gemini или Custom GPT, но начать можно с обычного сохранённого шаблона в любом инструменте.</p>
+    <div class="asst">
+      <div class="acard"><div class="an">Разбор звонков</div><span class="au">продажи</span><p>Вставляешь транскрипт, получаешь ошибки, оценку и следующий шаг.</p></div>
+      <div class="acard"><div class="an">Контрактный ревизор</div><span class="au">юристы</span><p>Вставляешь договор, получаешь риски и правки в нашу пользу.</p></div>
+      <div class="acard"><div class="an">Учётный консультант</div><span class="au">бухгалтерия</span><p>Вопрос по учёту, варианты с опорой на норму, финал за тобой.</p></div>
+      <div class="acard"><div class="an">Генератор КП</div><span class="au">продажи</span><p>По параметрам участка собирает коммерческое в фирменном виде.</p></div>
+      <div class="acard"><div class="an">Контент-машина для агентов</div><span class="au">партнёры</span><p>Тема, и готов пост для Telegram-канала риэлторов.</p></div>
+      <div class="acard"><div class="an">Памятка-бот по ипотеке</div><span class="au">сделки</span><p>Вопрос клиента, и понятный ответ по ипотеке и маткапиталу.</p></div>
+      <div class="acard"><div class="an">Маршрутизатор обращений</div><span class="au">УК</span><p>Обращение жителя, и готовы задача исполнителю и ответ.</p></div>
+      <div class="acard"><div class="an">Регламент-мейкер</div><span class="au">любой отдел</span><p>Описал процесс, получил готовый регламент для команды.</p></div>
+      <div class="acard"><div class="an">Ответчик на отзывы</div><span class="au">маркетинг</span><p>Негатив на площадке, и корректный человеческий ответ.</p></div>
+      <div class="acard"><div class="an">Аналитик таблиц</div><span class="au">руководитель</span><p>Выгрузка, и короткая сводка с цифрами и аномалиями.</p></div>
+      <div class="acard"><div class="an">Конкурент-разведчик</div><span class="au">маркетинг и партнёры</span><p>Данные по рынку, и сравнение цен и предложений.</p></div>
+      <div class="acard"><div class="an">Письмо-помощник</div><span class="au">все</span><p>Черновик мысли, и чистое деловое письмо без канцелярита.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <b>NEOVIDA</b> · AI consulting · neovida.ai &nbsp;·&nbsp; Шпаргалка для обучения команды 7 Прудов.
+  </footer>
+
+</div>
+<script>
+  function tab(id,btn){
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+    document.getElementById(id).classList.add('on');
+    document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('act'));
+    btn.classList.add('act');
+  }
+  function cp(b){
+    var el=b.closest('.pcard').querySelector('.ptext');
+    var text=el.innerText;
+    function done(){var o=b.textContent;b.textContent='✓ скопировано';setTimeout(function(){b.textContent=o;},1500);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(fallback);}else{fallback();}
+    function fallback(){var t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(t);done();}
+  }
+</script>
+</body>
+</html>

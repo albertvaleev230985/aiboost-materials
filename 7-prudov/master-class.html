@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>7 Прудов × NEOVIDA · Мастер-класс по нейросетям</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#FBFAF8; --ink:#1A1620; --ink-2:#5B5566; --ink-3:#938CA0;
+  --coral:#E07461; --coral-d:#C85944; --coral-soft:#FBEDE9;
+  --purple:#8B6EB5; --purple-soft:#F1ECF7;
+  --line:#ECE8EF; --card:#FFFFFF;
+  --dark1:#211A2B; --dark2:#2E2030; --dark3:#3A2230;
+  --ok:#2E9E6B; --ok-soft:#E9F6EF;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:#0c0a10;
+  font-family:-apple-system,'SF Pro Display','SF Pro Text','Segoe UI',system-ui,Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink);-webkit-font-smoothing:antialiased;}
+.deck{width:100%;height:100vh;position:relative;overflow:hidden;background:var(--bg);}
+
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+  padding:clamp(34px,6vh,72px) clamp(40px,7vw,110px);
+  opacity:0;visibility:hidden;transform:translateX(36px) scale(.99);
+  transition:opacity .55s ease,transform .55s cubic-bezier(.2,.7,.2,1);overflow-y:auto;
+  background:linear-gradient(160deg,#FFFFFF 0%,#FBF4F1 100%);}
+.slide.active{opacity:1;visibility:visible;transform:none;z-index:2;}
+.slide.prev{transform:translateX(-36px) scale(.99);}
+
+/* entrance */
+.slide .up{opacity:0;}
+.slide.active .up{animation:rise .6s var(--d,0s) cubic-bezier(.2,.7,.2,1) both;}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+
+/* typography */
+.eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--coral-d);font-weight:800;
+  font-size:clamp(12px,1.3vw,15px);letter-spacing:3px;text-transform:uppercase;margin-bottom:18px;}
+.eyebrow .ico{width:1.2em;height:1.2em;}
+h1.t{font-size:clamp(34px,5.6vw,68px);font-weight:850;line-height:1.04;letter-spacing:-1px;}
+h2.t{font-size:clamp(28px,4.2vw,50px);font-weight:850;line-height:1.08;letter-spacing:-.6px;margin-bottom:14px;}
+.t .c{color:var(--coral);} .t .p{color:var(--purple);}
+.lead{font-size:clamp(17px,2vw,26px);color:var(--ink-2);line-height:1.45;max-width:60ch;margin-top:14px;}
+.kick{font-size:clamp(15px,1.7vw,20px);color:var(--ink-2);margin-top:6px;}
+
+.ico{width:1em;height:1em;display:inline-block;vertical-align:-.14em;}
+
+/* dark slides */
+.slide.dark{background:radial-gradient(120% 130% at 12% 0%,#3a2233 0%,var(--dark1) 55%,#16121d 100%);color:#fff;}
+.slide.dark .lead{color:rgba(255,255,255,.78);}
+.slide.dark .kick{color:rgba(255,255,255,.6);}
+.slide.dark .eyebrow{color:#F2A593;}
+.hero-bg{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none;}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;animation:float 16s ease-in-out infinite;}
+.blob.a{width:46vw;height:46vw;left:-10vw;top:-14vw;background:radial-gradient(circle,#E07461,transparent 65%);}
+.blob.b{width:40vw;height:40vw;right:-12vw;bottom:-16vw;background:radial-gradient(circle,#8B6EB5,transparent 65%);animation-delay:-6s;}
+.blob.c{width:24vw;height:24vw;right:18vw;top:-8vw;background:radial-gradient(circle,#F0C040,transparent 65%);opacity:.28;animation-delay:-3s;}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(3vw,3vh) scale(1.08)}}
+.slide.dark>*{position:relative;z-index:1;}
+
+/* mark */
+.mark{width:54px;height:54px;border-radius:15px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--coral),var(--coral-d));
+  display:flex;align-items:center;justify-content:center;font-weight:850;font-size:28px;color:#fff;letter-spacing:-1px;
+  box-shadow:0 12px 30px rgba(224,116,97,.45);}
+.brandrow{display:flex;align-items:center;gap:14px;margin-bottom:34px;}
+.brandrow .wm{font-weight:850;letter-spacing:.5px;font-size:19px;}
+.brandrow .wm small{display:block;font-weight:600;font-size:11px;letter-spacing:3px;color:rgba(255,255,255,.55);text-transform:uppercase;margin-top:3px;}
+.title-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px;}
+.title-meta .m{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:11px;padding:9px 15px;font-size:14px;font-weight:600;}
+.title-meta .m b{color:#F2A593;}
+
+/* generic blocks */
+.grid{display:grid;gap:clamp(12px,1.6vw,20px);margin-top:8px;}
+.g2{grid-template-columns:1fr 1fr;} .g3{grid-template-columns:repeat(3,1fr);} .g4{grid-template-columns:repeat(4,1fr);}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:clamp(16px,1.8vw,24px);
+  box-shadow:0 10px 30px rgba(26,22,32,.05);transition:transform .25s ease,box-shadow .25s ease;}
+.card:hover{transform:translateY(-4px);box-shadow:0 18px 44px rgba(224,116,97,.14);}
+.tile{width:48px;height:48px;border-radius:13px;background:var(--coral-soft);color:var(--coral-d);
+  display:flex;align-items:center;justify-content:center;font-size:25px;margin-bottom:13px;}
+.tile.pp{background:var(--purple-soft);color:var(--purple);}
+.tile.ok{background:var(--ok-soft);color:var(--ok);}
+.card h3{font-size:clamp(17px,1.7vw,21px);font-weight:800;margin-bottom:6px;}
+.card p{font-size:clamp(13.5px,1.35vw,16px);color:var(--ink-2);line-height:1.45;}
+
+/* dept grid */
+.dept{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-top:10px;}
+.dcard{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:15px 16px;box-shadow:0 8px 22px rgba(26,22,32,.05);}
+.dcard .h{display:flex;align-items:center;gap:9px;font-weight:800;font-size:15.5px;margin-bottom:6px;}
+.dcard .h .ico{color:var(--coral);font-size:19px;}
+.dcard p{font-size:13px;color:var(--ink-2);line-height:1.4;}
+
+/* big statement */
+.big{font-size:clamp(26px,3.6vw,46px);font-weight:850;line-height:1.18;letter-spacing:-.5px;max-width:18ch;}
+.big .c{color:var(--coral);}
+
+/* tools */
+.tgrp{margin-top:14px;}
+.tgrp .lbl{font-size:14px;font-weight:800;color:var(--ink-3);letter-spacing:1px;text-transform:uppercase;margin-bottom:11px;display:flex;align-items:center;gap:8px;}
+.chips{display:flex;flex-wrap:wrap;gap:11px;}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px 16px;box-shadow:0 6px 18px rgba(26,22,32,.05);min-width:150px;}
+.chip .n{font-weight:800;font-size:17px;display:flex;align-items:center;gap:8px;}
+.chip .n .ico{color:var(--coral);font-size:18px;}
+.chip .d{font-size:12.5px;color:var(--ink-3);margin-top:2px;}
+.chip.west .n .ico{color:var(--purple);}
+.now{margin-top:16px;background:var(--ok-soft);border:1px solid #CDEBDC;border-radius:13px;padding:13px 18px;font-size:clamp(15px,1.6vw,19px);color:#155236;font-weight:600;}
+.now b{color:#0e3f29;}
+
+/* steps */
+.steps{display:flex;flex-direction:column;gap:13px;margin-top:8px;}
+.st{display:flex;gap:16px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:15px 18px;box-shadow:0 8px 22px rgba(26,22,32,.05);}
+.st .num{flex-shrink:0;width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--coral),var(--coral-d));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:850;font-size:18px;}
+.st h3{font-size:clamp(16px,1.6vw,20px);font-weight:800;margin-bottom:4px;}
+.st .pr{font-size:13.5px;color:var(--ink-2);background:var(--bg);border:1px dashed #E2D7D2;border-radius:9px;padding:8px 11px;margin-top:7px;line-height:1.4;}
+.st .pr v{color:var(--coral-d);font-weight:700;}
+
+/* formula */
+.fla{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;}
+.fb{flex:1;min-width:150px;background:var(--card);border:1px solid var(--line);border-top:4px solid var(--coral);border-radius:14px;padding:16px 18px;box-shadow:0 8px 22px rgba(26,22,32,.05);}
+.fb .k{font-weight:850;font-size:clamp(17px,1.8vw,22px);}
+.fb .s{font-size:13px;color:var(--ink-2);margin-top:4px;}
+
+/* vs */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:8px;}
+.vsc{border-radius:16px;padding:20px 22px;}
+.vsc.bad{background:#FBEEEC;border:1px solid #F2C9C1;}
+.vsc.good{background:var(--ok-soft);border:1px solid #CDEBDC;}
+.vsc .tag{font-weight:800;font-size:13px;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;}
+.vsc.bad .tag{color:var(--coral-d);} .vsc.good .tag{color:var(--ok);}
+.vsc p{font-size:clamp(14px,1.5vw,18px);line-height:1.5;color:var(--ink);}
+.vsc.bad p{color:var(--ink-2);font-style:italic;}
+
+/* badge slide (ваша очередь) */
+.badge{display:inline-block;background:linear-gradient(135deg,var(--coral),var(--coral-d));color:#fff;
+  font-weight:850;font-size:clamp(13px,1.5vw,17px);letter-spacing:2px;text-transform:uppercase;border-radius:12px;padding:10px 20px;box-shadow:0 12px 30px rgba(224,116,97,.4);}
+.qrwrap{display:flex;align-items:center;gap:24px;margin-top:26px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px 24px;box-shadow:0 14px 36px rgba(26,22,32,.08);max-width:640px;}
+.qrwrap img{width:128px;height:128px;border-radius:10px;flex-shrink:0;}
+.qrwrap .u{font-weight:800;font-size:clamp(15px,1.7vw,20px);}
+.qrwrap .u span{color:var(--coral-d);}
+.qrwrap .sub{font-size:14px;color:var(--ink-2);margin-top:6px;}
+
+/* assistants */
+.asg{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-top:8px;}
+.ac{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px 14px;box-shadow:0 6px 18px rgba(26,22,32,.05);}
+.ac .ico{color:var(--purple);font-size:20px;}
+.ac .n{font-weight:800;font-size:14.5px;margin:7px 0 4px;}
+.ac p{font-size:12px;color:var(--ink-2);line-height:1.35;}
+.ac .role{font-size:10.5px;font-weight:700;color:var(--purple);background:var(--purple-soft);border-radius:5px;padding:2px 7px;display:inline-block;margin-top:7px;}
+
+/* chrome */
+.bar{position:fixed;left:0;bottom:0;width:100%;height:54px;display:flex;align-items:center;gap:16px;
+  padding:0 26px;z-index:50;pointer-events:none;}
+.progress{position:fixed;top:0;left:0;height:4px;background:linear-gradient(90deg,var(--coral),var(--purple));z-index:60;transition:width .5s cubic-bezier(.2,.7,.2,1);box-shadow:0 0 14px rgba(224,116,97,.5);}
+.dots{display:flex;gap:7px;pointer-events:auto;}
+.dot{width:8px;height:8px;border-radius:50%;background:rgba(26,22,32,.16);cursor:pointer;transition:.25s;}
+.dot.on{background:var(--coral);width:22px;border-radius:4px;}
+.slide.dark ~ .bar .dot{}
+.counter{margin-left:auto;font-size:13px;font-weight:700;color:var(--ink-3);pointer-events:auto;}
+.fs{position:fixed;top:16px;right:18px;z-index:60;background:rgba(255,255,255,.7);border:1px solid var(--line);border-radius:10px;
+  width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-2);backdrop-filter:blur(6px);}
+.hint{position:fixed;bottom:64px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--ink-3);z-index:50;opacity:.8;}
+
+@media (max-width:760px){
+  .g2,.g3,.g4,.dept,.asg{grid-template-columns:1fr 1fr;}
+  .vs{grid-template-columns:1fr;}
+  .qrwrap{flex-direction:column;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<!-- ICON SPRITE -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-sparkle" viewBox="0 0 256 256"><path d="M84.27,171.73l-55.09-20.3a7.92,7.92,0,0,1,0-14.86l55.09-20.3,20.3-55.09a7.92,7.92,0,0,1,14.86,0l20.3,55.09,55.09,20.3a7.92,7.92,0,0,1,0,14.86l-55.09,20.3-20.3,55.09a7.92,7.92,0,0,1-14.86,0Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><line x1="176" y1="16" x2="176" y2="64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><line x1="152" y1="40" x2="200" y2="40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-brain" viewBox="0 0 256 256"><path d="M72,172H64A48,48,0,0,1,48,78.73V72a40,40,0,0,1,80,0V176" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M184,172h8a48,48,0,0,0,16-93.27V72a40,40,0,0,0-80,0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M152,139.33A40,40,0,1,0,208,176v-6.73" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M104,139.33A40,40,0,1,1,48,176v-6.73" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-lightning" viewBox="0 0 256 256"><polygon points="160 16 148 96 208 120 96 240 108 160 48 136 160 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-target" viewBox="0 0 256 256"><line x1="128" y1="128" x2="224" y2="32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M195.88,60.12A95.92,95.92,0,1,0,218,94.56" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M161.94,94.06a48,48,0,1,0,13.11,43.46" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-buildings" viewBox="0 0 256 256"><path d="M160,88h48a8,8,0,0,1,8,8V216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><line x1="16" y1="216" x2="240" y2="216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M40,216V80.55a8,8,0,0,1,4.61-7.25l104-48.54A8,8,0,0,1,160,32V216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-chat" viewBox="0 0 256 256"><line x1="96" y1="108" x2="160" y2="108" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><line x1="96" y1="148" x2="160" y2="148" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M79.93,211.11a96,96,0,1,0-35-35h0L32.42,213.46a8,8,0,0,0,10.12,10.12l37.39-12.47Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-robot" viewBox="0 0 256 256"><circle cx="88" cy="104" r="14" fill="currentColor"/><circle cx="168" cy="104" r="14" fill="currentColor"/><rect x="32" y="56" width="192" height="160" rx="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><line x1="128" y1="56" x2="128" y2="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><rect x="68" y="144" width="120" height="36" rx="18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-rocket" viewBox="0 0 256 256"><path d="M191.11,112.89c24-24,25.5-52.55,24.75-65.28a8,8,0,0,0-7.47-7.47c-12.73-.75-41.26.73-65.28,24.75L80,128l48,48Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M136,72H74.35a8,8,0,0,0-5.65,2.34L34.35,108.69a8,8,0,0,0,4.53,13.57L80,128" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M184,120v61.65a8,8,0,0,1-2.34,5.65l-34.35,34.35a8,8,0,0,1-13.57-4.53L128,176" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M90.36,194.93C83.55,204.2,69.15,216,40,216c0-29.15,11.8-43.55,21.07-50.36" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-check" viewBox="0 0 256 256"><polyline points="88 136 112 160 168 104" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><circle cx="128" cy="128" r="96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 256 256"><line x1="40" y1="128" x2="216" y2="128" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><polyline points="144 56 216 128 144 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-wand" viewBox="0 0 256 256"><line x1="80" y1="40" x2="80" y2="88" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><line x1="56" y1="64" x2="104" y2="64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><line x1="144" y1="80" x2="176" y2="112" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><rect x="21.49" y="105.37" width="213.02" height="45.25" rx="8" transform="translate(-53.02 128) rotate(-45)" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-cap" viewBox="0 0 256 256"><polygon points="12 96 128 32 244 96 128 160 12 96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><polyline points="180 240 180 124.69 128 96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M216,111.45v54.84a8,8,0,0,1-2,5.31c-11.3,12.59-38.9,36.4-86,36.4s-74.68-23.81-86-36.4a8,8,0,0,1-2-5.31V111.45" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-users" viewBox="0 0 256 256"><circle cx="128" cy="144" r="40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M72,216a65,65,0,0,1,112,0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M164,72.55a32,32,0,1,1,39.63,45.28c14.33,3.1,27.89,14.84,36.4,26.17" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M16,144c8.51-11.33,22.06-23.07,36.4-26.17A32,32,0,1,1,92,72.55" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-list" viewBox="0 0 256 256"><line x1="128" y1="128" x2="216" y2="128" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><line x1="128" y1="64" x2="216" y2="64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><line x1="128" y1="192" x2="216" y2="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><polyline points="40 64 56 80 88 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><polyline points="40 128 56 144 88 112" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><polyline points="40 192 56 208 88 176" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-bulb" viewBox="0 0 256 256"><line x1="88" y1="232" x2="168" y2="232" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M78.7,167A79.87,79.87,0,0,1,48,104.45C47.76,61.09,82.72,25,126.07,24a80,80,0,0,1,51.34,142.9A24.3,24.3,0,0,0,168,186v2a8,8,0,0,1-8,8H96a8,8,0,0,1-8-8v-2A24.11,24.11,0,0,0,78.7,167Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-dollar" viewBox="0 0 256 256"><line x1="128" y1="72" x2="128" y2="88" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><line x1="128" y1="168" x2="128" y2="184" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><circle cx="128" cy="128" r="96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><path d="M104,168h36a20,20,0,0,0,0-40H116a20,20,0,0,1,0-40h36" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-shield" viewBox="0 0 256 256"><path d="M216,112V56a8,8,0,0,0-8-8H48a8,8,0,0,0-8,8v56c0,96,88,120,88,120S216,208,216,112Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><polyline points="88 136 112 160 168 104" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+<symbol id="i-map" viewBox="0 0 256 256"><line x1="96" y1="184" x2="96" y2="40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><line x1="160" y1="72" x2="160" y2="216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/><polygon points="96 184 32 200 32 56 96 40 160 72 224 56 224 200 160 216 96 184" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/></symbol>
+</svg>
+
+<div class="deck" id="deck">
+
+  <!-- 1 ТИТУЛ -->
+  <section class="slide dark active">
+    <div class="hero-bg"><div class="blob a"></div><div class="blob b"></div><div class="blob c"></div></div>
+    <div class="brandrow up" style="--d:.05s"><div class="mark">N</div><div class="wm">NEOVIDA<small>AI consulting</small></div></div>
+    <div class="eyebrow up" style="--d:.15s"><svg class="ico"><use href="#i-sparkle"/></svg>Мастер-класс для команды</div>
+    <h1 class="t up" style="--d:.25s">Нейросети для команды<br><span class="c">7 Прудов</span></h1>
+    <p class="lead up" style="--d:.4s">От нуля до личного цифрового ассистента. За три часа каждый соберёт себе помощника под свои задачи.</p>
+    <div class="title-meta up" style="--d:.55s">
+      <div class="m"><b>Екатеринбург</b> · 19 июня 2026</div>
+      <div class="m">3 часа · практика</div>
+      <div class="m">ведёт <b>Альберт Валеев</b></div>
+    </div>
+  </section>
+
+  <!-- 2 СЕГОДНЯ ВЫ -->
+  <section class="slide">
+    <div class="eyebrow up"><svg class="ico"><use href="#i-target"/></svg>Что вы унесёте</div>
+    <h2 class="t up" style="--d:.05s">Сегодня вы <span class="c">уйдёте с результатом</span></h2>
+    <div class="grid g4">
+      <div class="card up" style="--d:.15s"><div class="tile"><svg class="ico"><use href="#i-lightning"/></svg></div><h3>Рабочий ИИ в руках</h3><p>У каждого открыта и работает нейросеть, без танцев с настройкой.</p></div>
+      <div class="card up" style="--d:.25s"><div class="tile"><svg class="ico"><use href="#i-chat"/></svg></div><h3>Умение ставить задачу</h3><p>Один навык, который раскрывает всё: правильный промпт.</p></div>
+      <div class="card up" style="--d:.35s"><div class="tile"><svg class="ico"><use href="#i-robot"/></svg></div><h3>Свой ассистент</h3><p>Цифровой помощник под вашу главную задачу.</p></div>
+      <div class="card up" style="--d:.45s"><div class="tile"><svg class="ico"><use href="#i-list"/></svg></div><h3>Список задач</h3><p>Что конкретно ИИ закрывает в вашем отделе.</p></div>
+    </div>
+  </section>
+
+  <!-- 3 ЧТО ТАКОЕ -->
+  <section class="slide">
+    <div class="eyebrow up"><svg class="ico"><use href="#i-brain"/></svg>Простыми словами</div>
+    <div class="big up" style="--d:.1s">Нейросеть это не магия.<br>Это <span class="c">калькулятор смыслов</span>.</div>
+    <p class="lead up" style="--d:.3s">Модель прочитала гигантский объём текстов и очень точно предсказывает, что ответить на вашу задачу. Это ваш экзоскелет: усиливает человека, а не заменяет. Финальное решение всегда за вами.</p>
+  </section>
+
+  <!-- 4 ЧТО ЗАКРЫТЬ -->
+  <section class="slide">
+    <div class="eyebrow up"><svg class="ico"><use href="#i-buildings"/></svg>Под вашу компанию</div>
+    <h2 class="t up" style="--d:.05s">Что реально закрыть <span class="c">в 7 Прудов</span></h2>
+    <div class="dept">
+      <div class="dcard up" style="--d:.12s"><div class="h"><svg class="ico"><use href="#i-target"/></svg>Продажи</div><p>Разбор звонков, контроль воронки, мгновенные КП.</p></div>
+      <div class="dcard up" style="--d:.18s"><div class="h"><svg class="ico"><use href="#i-sparkle"/></svg>Маркетинг</div><p>Цена лида, контент, ответы на отзывы.</p></div>
+      <div class="dcard up" style="--d:.24s"><div class="h"><svg class="ico"><use href="#i-users"/></svg>Партнёры</div><p>Рассылка риэлторам с контролем прочтения.</p></div>
+      <div class="dcard up" style="--d:.30s"><div class="h"><svg class="ico"><use href="#i-check"/></svg>Сделки и ипотека</div><p>Статусы сделок, памятки, напоминания.</p></div>
+      <div class="dcard up" style="--d:.36s"><div class="h"><svg class="ico"><use href="#i-dollar"/></svg>Бухгалтерия</div><p>Вопросы по учёту с опорой, своды.</p></div>
+      <div class="dcard up" style="--d:.42s"><div class="h"><svg class="ico"><use href="#i-shield"/></svg>Юристы</div><p>Анализ и сравнение договоров, мониторинг закона.</p></div>
+      <div class="dcard up" style="--d:.48s"><div class="h"><svg class="ico"><use href="#i-chat"/></svg>УК и посёлки</div><p>Маршрут обращений жителей и готовые ответы.</p></div>
+      <div class="dcard up" style="--d:.54s"><div class="h"><svg class="ico"><use href="#i-map"/></svg>Руководитель</div><p>Сводки из таблиц, протоколы, задачи из переписки.</p></div>
+    </div>
+  </section>
+
+  <!-- 5 ПРОФИТ -->
+  <section class="slide">
+    <div class="eyebrow up"><svg class="ico"><use href="#i-lightning"/></svg>Зачем это бизнесу</div>
+    <h2 class="t up" style="--d:.05s">Что это даёт <span class="c">в деньгах и времени</span></h2>
+    <div class="grid g3">
+      <div class="card up" style="--d:.15s"><div class="tile"><svg class="ico"><use href="#i-lightning"/></svg></div><h3>Рутина уходит</h3><p>Однотипную работу закрывает ИИ, человек берётся за важное.</p></div>
+      <div class="card up" style="--d:.28s"><div class="tile pp"><svg class="ico"><use href="#i-users"/></svg></div><h3>Масштаб без штата</h3><p>Вести 300 контактов так же качественно, как раньше 30.</p></div>
+      <div class="card up" style="--d:.41s"><div class="tile ok"><svg class="ico"><use href="#i-rocket"/></svg></div><h3>Каждый x10</h3><p>Когнитивный экзоскелет для каждого сотрудника.</p></div>
+    </div>
+  </section>
+
+  <!-- 6 DIVIDER -->
+  <section class="slide dark">
+    <div class="hero-bg"><div class="blob a"></div><div class="blob b"></div></div>
+    <div class="eyebrow up"><svg class="ico"><use href="#i-sparkle"/></svg>Часть 1</div>
+    <h1 class="t up" style="--d:.1s">На чём <span class="c">работаем</span></h1>
+    <p class="lead up" style="--d:.25s">Не только Алиса и ChatGPT. Есть инструменты, которые работают без VPN и бесплатно.</p>
+  </section>
+
+  <!-- 7 ИНСТРУМЕНТЫ -->
+  <section class="slide">
+    <div class="eyebrow up"><svg class="ico"><use href="#i-sparkle"/></svg>Инструменты</div>
+    <h2 class="t up" style="--d:.05s">Выбираем рабочий инструмент</h2>
+    <div class="tgrp up" style="--d:.15s">
+      <div class="lbl"><svg class="ico" style="color:var(--coral)"><use href="#i-check"/></svg>Без VPN, бесплатно</div>
+      <div class="chips">
+        <div class="chip"><div class="n"><svg class="ico"><use href="#i-sparkle"/></svg>Qwen</div><div class="d">сильный, чистый</div></div>
+        <div class="chip"><div class="n"><svg class="ico"><use href="#i-brain"/></svg>DeepSeek</div><div class="d">топ в анализе</div></div>
+        <div class="chip"><div class="n"><svg class="ico"><use href="#i-chat"/></svg>Kimi</div><div class="d">длинные тексты</div></div>
+        <div class="chip"><div class="n"><svg class="ico"><use href="#i-lightning"/></svg>GLM</div><div class="d">шустрый</div></div>
+        <div class="chip"><div class="n"><svg class="ico"><use href="#i-chat"/></svg>GigaChat</div><div class="d">Сбер</div></div>
+        <div class="chip"><div class="n"><svg class="ico"><use href="#i-chat"/></svg>Алиса</div><div class="d">Яндекс</div></div>
+      </div>
+    </div>
+    <div class="tgrp up" style="--d:.3s">
+      <div class="lbl"><svg class="ico" style="color:var(--purple)"><use href="#i-rocket"/></svg>Топ-3 западных, через VPN</div>
+      <div class="chips">
+        <div class="chip west"><div class="n"><svg class="ico"><use href="#i-sparkle"/></svg>ChatGPT</div><div class="d">универсал</div></div>
+        <div class="chip west"><div class="n"><svg class="ico"><use href="#i-sparkle"/></svg>Claude</div><div class="d">тексты и документы</div></div>
+        <div class="chip west"><div class="n"><svg class="ico"><use href="#i-robot"/></svg>Gemini</div><div class="d">тут живут Gems</div></div>
+      </div>
+    </div>
+    <div class="now up" style="--d:.45s"><b>Сегодня работаем в Qwen или DeepSeek.</b> Открываются в браузере, ставить ничего не надо.</div>
+  </section>
+
+  <!-- 8 DIVIDER -->
+  <section class="slide dark">
+    <div class="hero-bg"><div class="blob a"></div><div class="blob b"></div></div>
+    <div class="eyebrow up"><svg class="ico"><use href="#i-chat"/></svg>Часть 2</div>
+    <h1 class="t up" style="--d:.1s">Единственный язык<br>общения с ИИ это <span class="c">промпт</span></h1>
+    <p class="lead up" style="--d:.25s">Качество ответа зависит не от модели, а от того, как вы поставили задачу.</p>
+  </section>
+
+  <!-- 9 РАЗМИНКА -->
+  <section class="slide">
+    <div class="eyebrow up"><svg class="ico"><use href="#i-wand"/></svg>Поехали за 3 шага</div>
+    <h2 class="t up" style="--d:.05s">Начинаем с простого</h2>
+    <div class="steps">
+      <div class="st up" style="--d:.15s"><div class="num">1</div><div><h3>Расскажи модели о себе</h3><div class="pr">Я работаю в компании, которая строит и продаёт коттеджные посёлки под Екатеринбургом. Моя роль: <v>[должность]</v>. Чем занимаюсь: <v>[3-5 задач]</v>. Запомни это как контекст.</div></div></div>
+      <div class="st up" style="--d:.28s"><div class="num">2</div><div><h3>Спроси, чем модель полезна</h3><div class="pr">С учётом этого дай 10 конкретных задач, которые мы можем закрывать вместе под мою роль.</div></div></div>
+      <div class="st up" style="--d:.41s"><div class="num">3</div><div><h3>Бери промпт под свой отдел</h3><div class="pr">Открываешь шпаргалку и берёшь готовый промпт. Подставляешь свои данные в <v>[скобках]</v>.</div></div></div>
+    </div>
+  </section>
+
+  <!-- 10 ФОРМУЛА -->
+  <section class="slide">
+    <div class="eyebrow up"><svg class="ico"><use href="#i-list"/></svg>Формула</div>
+    <h2 class="t up" style="--d:.05s">Сильный промпт <span class="c">по формуле</span></h2>
+    <div class="fla">
+      <div class="fb up" style="--d:.14s"><div class="k">Роль</div><div class="s">кем выступает модель</div></div>
+      <div class="fb up" style="--d:.22s"><div class="k">Контекст</div><div class="s">что важно знать</div></div>
+      <div class="fb up" style="--d:.30s"><div class="k">Задача</div><div class="s">что именно сделать</div></div>
+      <div class="fb up" style="--d:.38s"><div class="k">Формат</div><div class="s">как оформить ответ</div></div>
+      <div class="fb up" style="--d:.46s"><div class="k">Ограничения</div><div class="s">чего нельзя</div></div>
+    </div>
+    <p class="lead up" style="--d:.6s">Не нравится результат, не пишите заново: скажите, что поправить. Это и есть итерации.</p>
+  </section>
+
+  <!-- 11 СЛАБО vs СИЛЬНО -->
+  <section class="slide">
+    <div class="eyebrow up"><svg class="ico"><use href="#i-target"/></svg>Почувствуйте разницу</div>
+    <h2 class="t up" style="--d:.05s">Слабый промпт против сильного</h2>
+    <div class="vs">
+      <div class="vsc bad up" style="--d:.15s"><div class="tag">слабо</div><p>«разбери звонок»</p></div>
+      <div class="vsc good up" style="--d:.28s"><div class="tag">сильно</div><p>Ты РОП в девелопменте загородной недвижимости. Вот транскрипт звонка: [текст]. Найди, где менеджер потерял клиента, какие возражения не отработал, слова-паразиты. Дай 3 рекомендации и следующий шаг.</p></div>
+    </div>
+  </section>
+
+  <!-- 12 ПРИЁМЫ -->
+  <section class="slide">
+    <div class="eyebrow up"><svg class="ico"><use href="#i-bulb"/></svg>Приёмы профи</div>
+    <h2 class="t up" style="--d:.05s">Четыре приёма, которые усиливают всё</h2>
+    <div class="grid g4">
+      <div class="card up" style="--d:.15s"><div class="tile"><svg class="ico"><use href="#i-chat"/></svg></div><h3>Задай мне вопросы</h3><p>Пусть модель сначала уточнит, потом сделает.</p></div>
+      <div class="card up" style="--d:.25s"><div class="tile"><svg class="ico"><use href="#i-brain"/></svg></div><h3>Думай пошагово</h3><p>Для сложных задач проси расписать ход.</p></div>
+      <div class="card up" style="--d:.35s"><div class="tile"><svg class="ico"><use href="#i-arrow"/></svg></div><h3>Итерации</h3><p>Скажи, что поправить, а не переписывай.</p></div>
+      <div class="card up" style="--d:.45s"><div class="tile"><svg class="ico"><use href="#i-wand"/></svg></div><h3>Мета-промпт</h3><p>«Улучши мой промпт для лучшего результата».</p></div>
+    </div>
+  </section>
+
+  <!-- 13 ВАША ОЧЕРЕДЬ -->
+  <section class="slide">
+    <div class="badge up">Ваша очередь</div>
+    <h2 class="t up" style="--d:.12s;margin-top:18px">Берём свой кейс <span class="c">и фигачим</span></h2>
+    <p class="lead up" style="--d:.24s">Откройте шпаргалку, выберите свой отдел и возьмите готовый промпт. Подставьте реальные данные и получите результат прямо сейчас.</p>
+    <div class="qrwrap up" style="--d:.36s">
+      <img src="qr.png" alt="QR на шпаргалку">
+      <div><div class="u">materials.neovida.ai/<span>7-prudov/shpargalka</span></div><div class="sub">Наведите камеру телефона на QR, откроется шпаргалка с промптами по отделам.</div></div>
+    </div>
+  </section>
+
+  <!-- 14 ОТ ПРОМПТА К АССИСТЕНТУ -->
+  <section class="slide">
+    <div class="eyebrow up"><svg class="ico"><use href="#i-robot"/></svg>Следующий уровень</div>
+    <div class="big up" style="--d:.1s">Сохранённый промпт это уже <span class="c">ваш цифровой сотрудник</span>.</div>
+    <p class="lead up" style="--d:.3s">Настроил один раз с ролью и знаниями, дальше просто запускаешь и получаешь готовый результат, не выдумывая заново. Самый удобный вид это Gem в Gemini или Custom GPT, но начать можно с обычного шаблона в любом инструменте.</p>
+  </section>
+
+  <!-- 15 12 АССИСТЕНТОВ -->
+  <section class="slide">
+    <div class="eyebrow up"><svg class="ico"><use href="#i-robot"/></svg>Идеи под вас</div>
+    <h2 class="t up" style="--d:.05s">12 ассистентов для <span class="c">7 Прудов</span></h2>
+    <div class="asg">
+      <div class="ac up" style="--d:.10s"><svg class="ico"><use href="#i-chat"/></svg><div class="n">Разбор звонков</div><p>Транскрипт, и сразу ошибки и след. шаг.</p><span class="role">продажи</span></div>
+      <div class="ac up" style="--d:.14s"><svg class="ico"><use href="#i-shield"/></svg><div class="n">Контрактный ревизор</div><p>Договор, и риски с правками.</p><span class="role">юристы</span></div>
+      <div class="ac up" style="--d:.18s"><svg class="ico"><use href="#i-dollar"/></svg><div class="n">Учётный консультант</div><p>Вопрос, и варианты с опорой.</p><span class="role">бухгалтерия</span></div>
+      <div class="ac up" style="--d:.22s"><svg class="ico"><use href="#i-target"/></svg><div class="n">Генератор КП</div><p>Параметры, и готовое коммерческое.</p><span class="role">продажи</span></div>
+      <div class="ac up" style="--d:.26s"><svg class="ico"><use href="#i-sparkle"/></svg><div class="n">Контент для агентов</div><p>Тема, и пост для канала риэлторов.</p><span class="role">партнёры</span></div>
+      <div class="ac up" style="--d:.30s"><svg class="ico"><use href="#i-check"/></svg><div class="n">Памятка по ипотеке</div><p>Вопрос клиента, и понятный ответ.</p><span class="role">сделки</span></div>
+      <div class="ac up" style="--d:.34s"><svg class="ico"><use href="#i-chat"/></svg><div class="n">Маршрутизатор заявок</div><p>Обращение жителя, задача и ответ.</p><span class="role">УК</span></div>
+      <div class="ac up" style="--d:.38s"><svg class="ico"><use href="#i-list"/></svg><div class="n">Регламент-мейкер</div><p>Описал процесс, готов регламент.</p><span class="role">любой отдел</span></div>
+      <div class="ac up" style="--d:.42s"><svg class="ico"><use href="#i-sparkle"/></svg><div class="n">Ответчик на отзывы</div><p>Негатив, и корректный ответ.</p><span class="role">маркетинг</span></div>
+      <div class="ac up" style="--d:.46s"><svg class="ico"><use href="#i-map"/></svg><div class="n">Аналитик таблиц</div><p>Выгрузка, и сводка с аномалиями.</p><span class="role">руководитель</span></div>
+      <div class="ac up" style="--d:.50s"><svg class="ico"><use href="#i-target"/></svg><div class="n">Конкурент-разведчик</div><p>Данные рынка, и сравнение цен.</p><span class="role">маркетинг</span></div>
+      <div class="ac up" style="--d:.54s"><svg class="ico"><use href="#i-wand"/></svg><div class="n">Письмо-помощник</div><p>Черновик, и чистое деловое письмо.</p><span class="role">все</span></div>
+    </div>
+  </section>
+
+  <!-- 16 ДЕМО -->
+  <section class="slide">
+    <div class="eyebrow up"><svg class="ico"><use href="#i-wand"/></svg>Собираем вместе</div>
+    <h2 class="t up" style="--d:.05s">Демо: <span class="c">Регламент-мейкер</span></h2>
+    <div class="grid g3">
+      <div class="card up" style="--d:.16s"><div class="tile"><svg class="ico"><use href="#i-chat"/></svg></div><h3>1. Описываем процесс</h3><p>Рассказываем ассистенту, как у нас идёт задача, своими словами.</p></div>
+      <div class="card up" style="--d:.28s"><div class="tile pp"><svg class="ico"><use href="#i-list"/></svg></div><h3>2. Получаем регламент</h3><p>Чёткие шаги, по которым сможет работать любой сотрудник.</p></div>
+      <div class="card up" style="--d:.40s"><div class="tile ok"><svg class="ico"><use href="#i-check"/></svg></div><h3>3. Сохраняем как ассистента</h3><p>Дальше любой процесс превращаем в регламент за минуту.</p></div>
+    </div>
+    <p class="lead up" style="--d:.55s">Руководство хочет регламенты, и вот так они собираются за минуты, а не за недели.</p>
+  </section>
+
+  <!-- 17 ФИНАЛ -->
+  <section class="slide dark">
+    <div class="hero-bg"><div class="blob a"></div><div class="blob b"></div><div class="blob c"></div></div>
+    <div class="eyebrow up"><svg class="ico"><use href="#i-rocket"/></svg>Что дальше</div>
+    <h1 class="t up" style="--d:.1s">Сегодня по одному помощнику.<br>Дальше: <span class="c">обложить ассистентами всю команду</span>.</h1>
+    <p class="lead up" style="--d:.3s">Когда у каждого сотрудника свой стек ассистентов и это зашито в регламенты, компания работает на другой скорости. Это следующий шаг: программа обучения для всей команды.</p>
+    <div class="qrwrap up" style="--d:.45s">
+      <img src="qr.png" alt="QR на шпаргалку">
+      <div><div class="u" style="color:#fff">Шпаргалка с промптами</div><div class="sub" style="color:rgba(255,255,255,.7)">materials.neovida.ai/7-prudov/shpargalka</div></div>
+    </div>
+  </section>
+
+</div>
+
+<div class="progress" id="prog"></div>
+<div class="bar">
+  <div class="dots" id="dots"></div>
+  <div class="counter"><span id="cur">1</span> / <span id="tot">17</span></div>
+</div>
+<div class="fs" id="fs" title="На весь экран"><svg class="ico" style="font-size:18px;color:inherit"><use href="#i-arrow"/></svg></div>
+<div class="hint" id="hint">стрелки или пробел, свайп на телефоне</div>
+
+<script>
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var cur=0, tot=slides.length;
+  document.getElementById('tot').textContent=tot;
+  var dotsBox=document.getElementById('dots');
+  slides.forEach(function(_,i){var d=document.createElement('div');d.className='dot'+(i===0?' on':'');d.onclick=function(){show(i)};dotsBox.appendChild(d);});
+  var dots=[].slice.call(document.querySelectorAll('.dot'));
+  function show(i){
+    if(i<0)i=0; if(i>tot-1)i=tot-1;
+    slides[cur].classList.remove('active'); slides[cur].classList.add('prev');
+    slides[i].classList.remove('prev');
+    void slides[i].offsetWidth;
+    slides[i].classList.add('active');
+    dots[cur].classList.remove('on'); dots[i].classList.add('on');
+    cur=i;
+    document.getElementById('cur').textContent=i+1;
+    document.getElementById('prog').style.width=((i)/(tot-1)*100)+'%';
+    var h=document.getElementById('hint'); if(i>0)h.style.display='none';
+  }
+  function next(){show(cur+1);} function prev(){show(cur-1);}
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();next();}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev();}
+    if(e.key==='Home')show(0); if(e.key==='End')show(tot-1);
+  });
+  var sx=0;
+  document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].clientX;},{passive:true});
+  document.addEventListener('touchend',function(e){var dx=e.changedTouches[0].clientX-sx; if(Math.abs(dx)>50){dx<0?next():prev();}},{passive:true});
+  document.getElementById('deck').addEventListener('click',function(e){
+    if(e.target.closest('.dot')||e.target.closest('a'))return;
+    var x=e.clientX/window.innerWidth; if(x>0.62)next(); else if(x<0.38)prev();
+  });
+  document.getElementById('fs').onclick=function(){
+    if(!document.fullscreenElement){document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();}
+    else{document.exitFullscreen&&document.exitFullscreen();}
+  };
+  document.getElementById('prog').style.width='0%';
+</script>
+</body>
+</html>
