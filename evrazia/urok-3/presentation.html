@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Boost ГК Евразия | Урок 3 — Ассистентный подход</title>
+<link rel="icon" href="data:,">
+<style>
+:root {
+  --ink: #0b0c0d;
+  --ink-2: #171a1d;
+  --paper: #ffffff;
+  --paper-2: #f4f5f5;
+  --white: #ffffff;
+  --muted: #68727a;
+  --line: rgba(15, 23, 42, 0.12);
+  --accent: #c77a3a;
+  --accent-dark: #8e5329;
+  --coral: #d28a5f;
+  --teal: #8f9ba3;
+  --green: #6d8c73;
+  --blue: #7b8a96;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--ink);
+  color: var(--paper);
+  letter-spacing: 0;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.032) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255,255,255,0.026) 1px, transparent 1px);
+  background-size: 64px 64px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.deck {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 54px 72px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(28px);
+  transition: opacity 0.28s ease, transform 0.28s ease, visibility 0.28s ease;
+  background: var(--ink);
+}
+
+.slide { overflow: hidden; }
+
+.slide.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+  z-index: 2;
+}
+
+.slide.prev { transform: translateX(-28px); }
+
+.slide.light {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.slide.practice {
+  background:
+    linear-gradient(90deg, rgba(199,122,58,0.10) 0, rgba(199,122,58,0.10) 8px, transparent 8px),
+    var(--paper);
+  color: #111827;
+}
+
+.slide.practice::after {
+  content: "практика";
+  position: absolute;
+  right: 72px;
+  top: 42px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(199,122,58,0.10);
+  color: var(--accent-dark);
+  border: 1px solid rgba(199,122,58,0.22);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.slide.light .eyebrow,
+.slide.light .subtitle,
+.slide.light .caption,
+.slide.light .small,
+.slide.light .muted { color: rgba(21,23,29,0.64); }
+
+.slide.light .card,
+.slide.light .panel,
+.slide.light .timeline-row,
+.slide.light .matrix td,
+.slide.light .matrix th {
+  background: #ffffff;
+  border-color: rgba(21,23,29,0.12);
+  color: var(--ink);
+}
+
+.slide.light .prompt,
+.slide.light .script {
+  background: #14171d;
+  color: #f8fafc;
+}
+
+.title-slide {
+  background:
+    linear-gradient(135deg, #0b0c0d 0%, #171a1d 52%, #0f1315 100%);
+  overflow: hidden;
+}
+
+.title-slide::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 54%;
+  height: 100%;
+  background:
+    linear-gradient(120deg, rgba(199,122,58,0.18), rgba(143,155,163,0.16)),
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.10) 0, rgba(255,255,255,0.10) 1px, transparent 1px, transparent 18px);
+  clip-path: polygon(26% 0, 100% 0, 100% 100%, 0 100%);
+  opacity: 0.85;
+}
+
+.title-content { position: relative; z-index: 2; max-width: 900px; }
+.eyebrow {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.52);
+  margin-bottom: 18px;
+}
+
+h1, .h1 {
+  font-size: 76px;
+  line-height: 0.98;
+  font-weight: 900;
+  max-width: 980px;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+h2, .slide-title {
+  font-size: 46px;
+  line-height: 1.08;
+  font-weight: 900;
+  max-width: 1030px;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+h2 + .prompt,
+h2 + .script {
+  margin-top: 28px;
+}
+
+.subtitle {
+  font-size: 24px;
+  line-height: 1.42;
+  color: rgba(255,255,255,0.72);
+  max-width: 980px;
+  margin-top: 22px;
+}
+
+.accent { color: var(--accent); }
+
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; width: 100%; margin-top: 34px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; width: 100%; margin-top: 30px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; width: 100%; margin-top: 28px; }
+
+.card, .panel {
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.055);
+  border-radius: 8px;
+  padding: 22px;
+  min-height: 150px;
+}
+
+.slide:not(.light) .card,
+.slide:not(.light) .panel,
+.slide:not(.light) .flow-step,
+.slide:not(.light) .timeline-row {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.13);
+}
+
+.card-title {
+  font-size: 19px;
+  line-height: 1.25;
+  font-weight: 850;
+  margin-bottom: 10px;
+  color: var(--paper);
+  text-wrap: balance;
+}
+
+.light .card-title { color: var(--ink); }
+.card-text {
+  font-size: 17px;
+  line-height: 1.43;
+  color: rgba(255,255,255,0.68);
+  overflow-wrap: anywhere;
+}
+.light .card-text { color: rgba(21,23,29,0.68); }
+
+.big-number {
+  font-size: 72px;
+  line-height: 0.9;
+  font-weight: 900;
+  color: var(--accent-dark);
+  margin-bottom: 18px;
+}
+
+.timeline {
+  width: 100%;
+  margin-top: 30px;
+  display: grid;
+  gap: 11px;
+}
+
+.timeline-row {
+  display: grid;
+  grid-template-columns: 126px 1fr 160px;
+  align-items: center;
+  gap: 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 15px 18px;
+}
+
+.time {
+  font-size: 16px;
+  font-weight: 850;
+  color: var(--accent);
+}
+
+.timeline-title {
+  font-size: 22px;
+  font-weight: 850;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.timeline-note {
+  font-size: 15px;
+  line-height: 1.3;
+  color: rgba(255,255,255,0.58);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.72);
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 18px;
+}
+
+.light .tag {
+  color: rgba(21,23,29,0.62);
+  border-color: rgba(21,23,29,0.14);
+}
+
+.flow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 36px;
+  width: 100%;
+}
+
+.flow-step {
+  position: relative;
+  min-height: 188px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.055);
+  padding: 20px;
+}
+
+.flow-step::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -13px;
+  width: 12px;
+  height: 2px;
+  background: rgba(255,255,255,0.22);
+}
+
+.flow-step:last-child::after { display: none; }
+.light .flow-step {
+  background: rgba(255,255,255,0.72);
+  border-color: rgba(21,23,29,0.12);
+}
+.light .flow-step::after { background: rgba(21,23,29,0.22); }
+
+.step-kicker {
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 900;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.step-title {
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 850;
+  margin-bottom: 10px;
+  text-wrap: balance;
+}
+
+.step-text {
+  font-size: 15px;
+  line-height: 1.42;
+  color: rgba(255,255,255,0.62);
+}
+.light .step-text { color: rgba(21,23,29,0.64); }
+
+.matrix {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  margin-top: 28px;
+  font-size: 17px;
+}
+
+.matrix th {
+  text-align: left;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent);
+  padding: 0 16px 7px;
+}
+
+.matrix td {
+  border-top: 1px solid rgba(255,255,255,0.12);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.045);
+  padding: 14px 16px;
+  line-height: 1.34;
+  vertical-align: top;
+}
+
+.matrix td:first-child {
+  border-left: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px 0 0 8px;
+  font-weight: 850;
+}
+
+.matrix td:last-child {
+  border-right: 1px solid rgba(255,255,255,0.12);
+  border-radius: 0 8px 8px 0;
+}
+
+.prompt, .script {
+  border-radius: 8px;
+  background: #111827;
+  border: 1px solid rgba(199,122,58,0.26);
+  padding: 22px 24px;
+  font-size: 18px;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.94);
+  white-space: pre-wrap;
+  overflow: hidden;
+}
+
+.prompt.small {
+  font-size: 15px;
+  line-height: 1.42;
+  max-height: 470px;
+}
+
+.caption {
+  margin-top: 18px;
+  color: rgba(255,255,255,0.52);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 26px;
+  flex-wrap: wrap;
+}
+
+.logo-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.07);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 16px;
+  font-weight: 850;
+}
+
+.light .logo-pill {
+  background: #ffffff;
+  border-color: rgba(21,23,29,0.12);
+  box-shadow: 0 8px 24px rgba(15,23,42,0.08);
+}
+
+.logo-pill img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  display: block;
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 4px;
+  box-shadow: 0 0 0 1px rgba(15,23,42,0.08);
+}
+
+.kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9em;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.light .kbd {
+  background: rgba(21,23,29,0.07);
+  border-color: rgba(21,23,29,0.12);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 34px;
+  align-items: center;
+  width: 100%;
+}
+
+.quote {
+  font-size: 42px;
+  line-height: 1.15;
+  font-weight: 900;
+  max-width: 1000px;
+}
+
+.footer-note {
+  position: absolute;
+  left: 72px;
+  bottom: 30px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.42);
+  z-index: 4;
+}
+
+.counter {
+  position: fixed;
+  right: 30px;
+  bottom: 24px;
+  z-index: 10;
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.46);
+}
+
+.fullscreen-btn {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 20;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.9);
+  color: #111827;
+  cursor: pointer;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.22);
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.fullscreen-btn:hover {
+  transform: translateY(-1px);
+  background: #ffffff;
+  border-color: rgba(199,122,58,0.7);
+}
+
+.fullscreen-btn svg {
+  width: 19px;
+  height: 19px;
+  display: block;
+  stroke-width: 2.3;
+}
+
+.progress {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--accent);
+  width: 0;
+  z-index: 12;
+  transition: width 0.25s ease;
+}
+
+.source {
+  font-size: 13px;
+  color: rgba(255,255,255,0.46);
+  margin-top: 18px;
+  line-height: 1.45;
+}
+
+.light .source { color: rgba(21,23,29,0.52); }
+
+.small { font-size: 15px; line-height: 1.42; color: rgba(255,255,255,0.56); }
+
+/* Lesson 7 master pass: stronger blocks, clean practice mode, visible identity assets. */
+.slide:not(.light):not(.title-slide) {
+  background:
+    linear-gradient(135deg, #0b0c0d 0%, #171a1d 52%, #0f1315 100%);
+}
+
+.slide:not(.light):not(.title-slide)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.034) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255,255,255,0.026) 1px, transparent 1px);
+  background-size: 64px 64px;
+  pointer-events: none;
+}
+
+.slide > * {
+  position: relative;
+  z-index: 1;
+}
+
+.slide.light {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f7f7f5 100%);
+}
+
+.slide.practice {
+  background: #fffdf9;
+}
+
+.slide.practice::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(199,122,58,0.12) 0, rgba(199,122,58,0.12) 10px, transparent 10px),
+    linear-gradient(90deg, rgba(199,122,58,0.08), transparent);
+  pointer-events: none;
+}
+
+.slide.practice::after {
+  background: var(--accent-dark);
+  color: #ffffff;
+  border: 0;
+  box-shadow: 0 14px 34px rgba(199,122,58,0.24);
+}
+
+.tag {
+  border: 2px solid rgba(199,122,58,0.36);
+  background: rgba(199,122,58,0.10);
+  color: rgba(255,255,255,0.86);
+}
+
+.light .tag {
+  background: rgba(199,122,58,0.09);
+  border-color: rgba(199,122,58,0.24);
+  color: var(--accent-dark);
+}
+
+.card,
+.panel,
+.flow-step,
+.timeline-row {
+  border-width: 2px;
+  box-shadow: 0 18px 42px rgba(15,23,42,0.10);
+}
+
+.slide:not(.light) .card,
+.slide:not(.light) .panel,
+.slide:not(.light) .flow-step,
+.slide:not(.light) .timeline-row {
+  background: linear-gradient(145deg, rgba(199,122,58,0.14), rgba(255,255,255,0.06));
+  border-color: rgba(199,122,58,0.30);
+  border-left: 5px solid var(--accent);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.26);
+}
+
+.slide:not(.light) .grid-2 > :nth-child(2n),
+.slide:not(.light) .grid-3 > :nth-child(3n+2),
+.slide:not(.light) .grid-4 > :nth-child(4n+2),
+.slide:not(.light) .flow > :nth-child(2n) {
+  border-left-color: var(--teal);
+  border-color: rgba(20,184,166,0.30);
+}
+
+.slide:not(.light) .grid-3 > :nth-child(3n),
+.slide:not(.light) .grid-4 > :nth-child(4n+3),
+.slide:not(.light) .flow > :nth-child(3n) {
+  border-left-color: var(--coral);
+  border-color: rgba(224,116,97,0.30);
+}
+
+.slide.light .card,
+.slide.light .panel,
+.slide.light .flow-step,
+.slide.light .timeline-row {
+  background: #ffffff;
+  border: 2px solid rgba(199,122,58,0.18);
+  border-left: 5px solid var(--accent-dark);
+  box-shadow: 0 18px 36px rgba(15,23,42,0.09);
+}
+
+.slide.light .grid-2 > :nth-child(2n),
+.slide.light .grid-3 > :nth-child(3n+2),
+.slide.light .grid-4 > :nth-child(4n+2),
+.slide.light .flow > :nth-child(2n) {
+  border-left-color: var(--teal);
+}
+
+.slide.light .grid-3 > :nth-child(3n),
+.slide.light .grid-4 > :nth-child(4n+3),
+.slide.light .flow > :nth-child(3n) {
+  border-left-color: var(--coral);
+}
+
+.slide.practice .card,
+.slide.practice .panel,
+.slide.practice .flow-step,
+.slide.practice .timeline-row {
+  border-color: rgba(199,122,58,0.24);
+  box-shadow: 0 18px 38px rgba(199,122,58,0.12);
+}
+
+.timeline {
+  gap: 9px;
+}
+
+.timeline-row {
+  min-height: 68px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.time {
+  color: var(--accent);
+}
+
+.light .time,
+.practice .time {
+  color: var(--accent-dark);
+}
+
+.matrix {
+  border-spacing: 0 12px;
+}
+
+.matrix th {
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.slide.light .matrix th {
+  color: var(--accent-dark);
+}
+
+.matrix td {
+  border-top-width: 2px;
+  border-bottom-width: 2px;
+  background: rgba(255,255,255,0.08);
+}
+
+.matrix td:first-child {
+  border-left-width: 5px;
+  border-left-color: var(--accent);
+}
+
+.matrix td:last-child {
+  border-right-width: 2px;
+}
+
+.slide.light .matrix td {
+  background: #ffffff;
+  border-top: 2px solid rgba(199,122,58,0.16);
+  border-bottom: 2px solid rgba(199,122,58,0.16);
+  box-shadow: 0 12px 26px rgba(15,23,42,0.06);
+}
+
+.slide.light .matrix td:first-child {
+  border-left: 5px solid var(--accent-dark);
+}
+
+.slide.light .matrix td:last-child {
+  border-right: 2px solid rgba(199,122,58,0.16);
+}
+
+.slide.light .matrix tr:nth-child(2n) td:first-child,
+.slide.light .flow > :nth-child(2n) {
+  border-left-color: var(--teal);
+}
+
+.slide.light .matrix tr:nth-child(3n) td:first-child,
+.slide.light .flow > :nth-child(3n) {
+  border-left-color: var(--coral);
+}
+
+.prompt,
+.script {
+  border: 2px solid rgba(199,122,58,0.34);
+  border-left: 5px solid var(--accent);
+  box-shadow: 0 20px 46px rgba(0,0,0,0.20);
+}
+
+.slide.light .prompt,
+.slide.light .script {
+  border-color: rgba(199,122,58,0.34);
+  border-left-color: var(--accent-dark);
+  box-shadow: 0 18px 36px rgba(15,23,42,0.12);
+}
+
+.logo-pill {
+  min-height: 56px;
+  background: #ffffff !important;
+  color: #111827 !important;
+  border: 2px solid rgba(255,255,255,0.88) !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,0.28), 0 0 0 1px rgba(199,122,58,0.22);
+}
+
+.light .logo-pill {
+  border-color: rgba(199,122,58,0.18) !important;
+  box-shadow: 0 16px 34px rgba(15,23,42,0.10);
+}
+
+.logo-pill img {
+  width: 34px;
+  height: 34px;
+  background: #ffffff;
+  border: 1px solid rgba(15,23,42,0.10);
+  box-shadow: none;
+}
+
+.caption,
+.source {
+  max-width: 980px;
+}
+
+@media (max-width: 900px) {
+  .slide { padding: 34px 24px 52px; overflow-y: auto; justify-content: flex-start; }
+  h1, .h1 { font-size: 42px; line-height: 1.03; }
+  h2, .slide-title { font-size: 32px; }
+  .subtitle { font-size: 18px; }
+  .grid-2, .grid-3, .grid-4, .split, .flow { grid-template-columns: 1fr; }
+  .timeline-row { grid-template-columns: 1fr; gap: 6px; }
+  .flow-step::after { display: none; }
+  .matrix { font-size: 14px; }
+  .matrix th { display: none; }
+  .matrix tr { display: grid; gap: 0; margin-bottom: 12px; }
+  .matrix td { border-radius: 0 !important; border-left: 1px solid rgba(21,23,29,0.12); border-right: 1px solid rgba(21,23,29,0.12); }
+  .title-slide .logo-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .title-slide .logo-pill { min-width: 192px; }
+  .title-slide .footer-note { display: none; }
+  .slide.practice::after { right: 24px; top: 18px; }
+  .fullscreen-btn { top: 16px; right: 16px; width: 38px; height: 38px; }
+}
+</style>
+</head>
+<body>
+<div class="deck">
+  <section class="slide title-slide active">
+    <div class="title-content">
+      <div class="eyebrow">neovida · Нейропросвещение</div>
+      <h1>Ассистентный подход: Gem и база знаний.</h1>
+      <div class="subtitle">AI Boost для ГК «Евразия». Урок 3: прямо на занятии вытаскиваем рабочий процесс, превращаем его в инструкцию, собираем первого Gem и проверяем на реальных кейсах без закрытых данных.</div>
+      <div class="logo-row">
+        <div class="logo-pill"><img src="logo-gemini.svg" alt="Gemini">Gemini / Gems</div>
+        <div class="logo-pill"><img src="logo-notebooklm.svg" alt="NotebookLM">NotebookLM</div>
+        <div class="logo-pill"><img src="logo-manus.svg" alt="Manus">Manus</div>
+      </div>
+    </div>
+    <div class="footer-note">24 июня 2026 · очно · 3 часа</div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Старт</div>
+    <h2>Сегодня не&nbsp;повторяем промптинг. Сегодня собираем <span class="accent">рабочего помощника</span>.</h2>
+    <div class="grid-3">
+      <div class="card"><div class="big-number">1</div><div class="card-title">Вытаскиваем процесс</div><div class="card-text">Если заготовки нет, ИИ задаёт вопросы и помогает выбрать один повторяемый процесс.</div></div>
+      <div class="card"><div class="big-number">2</div><div class="card-title">Собираем Gem</div><div class="card-text">Процесс превращается в инструкцию: роль, входные данные, шаги, запреты и проверка человеком.</div></div>
+      <div class="card"><div class="big-number">3</div><div class="card-title">Подключаем базу</div><div class="card-text">NotebookLM и Knowledge дают ассистенту безопасные источники: шаблоны, FAQ, чек-листы, регламенты.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Мостик без домашки</div>
+    <h2>Нет заготовки — значит, собираем её <span class="accent">в классе</span>.</h2>
+    <div class="flow">
+      <div class="flow-step"><div class="step-kicker">01</div><div class="step-title">Роль</div><div class="step-text">Продажи, ПТО, цех, снабжение, тендеры, документы, руководство.</div></div>
+      <div class="flow-step"><div class="step-kicker">02</div><div class="step-title">Процесс</div><div class="step-text">Одна повторяемая задача, не весь отдел и не «помощник по всему».</div></div>
+      <div class="flow-step"><div class="step-kicker">03</div><div class="step-title">Промпт-пакет</div><div class="step-text">Главный промпт, цепочка 2-3 шагов, список входных данных.</div></div>
+      <div class="flow-step"><div class="step-kicker">04</div><div class="step-title">Gem</div><div class="step-text">Инструкция, Knowledge, формат ответа, запреты и тесты.</div></div>
+      <div class="flow-step"><div class="step-kicker">05</div><div class="step-title">Проверка</div><div class="step-text">Обычная, сложная и неполная задача. Если выдумывает — чиним инструкцию.</div></div>
+    </div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Тайминг</div>
+    <h2>Плотный маршрут на&nbsp;<span class="accent">3 часа</span></h2>
+    <div class="timeline">
+      <div class="timeline-row"><div class="time">0:00-0:20</div><div class="timeline-title">Вытащить процесс</div><div class="timeline-note">Роль, повторяемая задача, входы, результат</div></div>
+      <div class="timeline-row"><div class="time">0:20-0:45</div><div class="timeline-title">Собрать промпт-пакет</div><div class="timeline-note">Главный промпт и цепочка действий</div></div>
+      <div class="timeline-row"><div class="time">0:45-1:25</div><div class="timeline-title">Gem-бот под процесс</div><div class="timeline-note">Instructions, Knowledge, 3 теста</div></div>
+      <div class="timeline-row"><div class="time">1:25-2:00</div><div class="timeline-title">NotebookLM как база знаний</div><div class="timeline-note">Источники, цитаты, справочник</div></div>
+      <div class="timeline-row"><div class="time">2:00-2:10</div><div class="timeline-title">Перерыв</div><div class="timeline-note">Техпауза</div></div>
+      <div class="timeline-row"><div class="time">2:10-2:40</div><div class="timeline-title">Canvas: мини-инструмент</div><div class="timeline-note">КП, ТЗ, цех, отгрузка, снабжение</div></div>
+      <div class="timeline-row"><div class="time">2:40-3:00</div><div class="timeline-title">Manus / Deep Research / финальный чек</div><div class="timeline-note">Где нужен агент, где достаточно Gem</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Логика</div>
+    <h2>Ассистент — это не&nbsp;чат. Это <span class="accent">контур качества</span>.</h2>
+    <div class="grid-4">
+      <div class="card"><div class="card-title">Инструкция</div><div class="card-text">Кто он, какую задачу решает, как отвечает и что запрещено.</div></div>
+      <div class="card"><div class="card-title">Источники</div><div class="card-text">Документы, по которым он имеет право отвечать точнее.</div></div>
+      <div class="card"><div class="card-title">Проверка</div><div class="card-text">Человек видит, что надо перепроверить перед отправкой.</div></div>
+      <div class="card"><div class="card-title">Повторяемость</div><div class="card-text">Одинаковый вход даёт похожий формат результата, а не лотерею.</div></div>
+    </div>
+  </section>
+
+  <section class="slide light practice">
+    <div class="tag">Практика 1</div>
+    <h2>Сначала выбираем процесс, достойный Gem</h2>
+    <table class="matrix">
+      <thead><tr><th>Проверяем</th><th>Хорошо</th><th>Слабо</th><th>Что делаем</th></tr></thead>
+      <tbody>
+        <tr><td>Повторяемость</td><td>Задача возникает каждую неделю</td><td>Разовая странная история</td><td>Берём частый процесс</td></tr>
+        <tr><td>Входные данные</td><td>Есть заявка, ТЗ, размеры, письмо, заметки, таблица</td><td>«Просто помоги»</td><td>Описываем, что вставлять каждый раз</td></tr>
+        <tr><td>Результат</td><td>КП, вопросы, спецификация, чек-лист, письмо, сменное задание</td><td>«Сделай красиво»</td><td>Фиксируем формат результата</td></tr>
+        <tr><td>Контроль</td><td>Понятно, что проверяет человек: цены, сроки, EI, размеры, договоры</td><td>ИИ звучит как финальное решение</td><td>Добавляем блок проверки</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="slide light practice">
+    <div class="tag">Практика 2</div>
+    <h2>Промпт: вытащить рабочий процесс</h2>
+    <div class="prompt small">Куда вставлять: обычный чат Gemini или ChatGPT.
+
+Я работаю в ГК «Евразия». Моя роль: [роль / отдел].
+Компания производит противопожарные и бронированные двери, металлические фасады, работает с объектами, тендерами, металлом, фурнитурой, производством, отгрузкой и документами.
+
+Помоги выбрать один повторяемый рабочий процесс, из которого можно сделать Gem-бота.
+
+Сначала задай мне до 7 коротких вопросов:
+1. какие задачи повторяются чаще всего;
+2. где я трачу больше всего времени;
+3. где часто не хватает данных;
+4. где нужен одинаковый формат результата;
+5. какие ошибки дорого стоят;
+6. какие материалы можно использовать безопасно;
+7. что человек обязан проверять сам.
+
+После моих ответов выбери 3 процесса, оцени пользу и сложность, затем рекомендуй один первый процесс.
+Для выбранного процесса собери карточку: название, цель, входные данные, шаги, формат результата, запреты, проверка человеком, материалы для базы и 3 тестовых примера.</div>
+  </section>
+
+  <section class="slide light practice">
+    <div class="tag">Практика 3</div>
+    <h2>Из процесса делаем <span class="accent">заготовку для Gem</span></h2>
+    <div class="prompt small">Куда вставлять: в тот же чат после карточки процесса.
+
+На основе карточки процесса выше собери заготовку для Gem-бота ГК «Евразия».
+
+Дай 4 блока:
+1. Название Gem — короткое и конкретное.
+2. Главный промпт для разового использования в чате.
+3. Цепочка работы: вход → разбор → черновик → проверка.
+4. Текст Instructions для Gem.
+
+В Instructions обязательно включи:
+- роль ассистента и отдел;
+- контекст ГК «Евразия»;
+- какие входные данные пользователь вставляет;
+- пошаговый алгоритм;
+- вопросы при нехватке данных;
+- формат ответа;
+- запреты: не выдумывать цены, сроки, поставщиков, EI, ГОСТ, размеры, технические характеристики, законы и персональные данные;
+- блок «что проверить человеку»;
+- 3 тестовых запроса.</div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Gem</div>
+    <h2>Создаём Gem-бота под&nbsp;<span class="accent">конкретный процесс</span></h2>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="card-title">Плохой Gem</div>
+        <div class="card-text">«Помощник ГК Евразия». Будет отвечать обо всём, путать отделы, додумывать сроки и быстро станет мусорным чатом.</div>
+      </div>
+      <div class="panel">
+        <div class="card-title">Сильный Gem</div>
+        <div class="card-text">«КП по двери EI 60», «Радар ТЗ объекта», «Сменное задание цеха», «Заявка поставщику металла», «Отгрузка: комплект документов». Один процесс, один результат, понятные ограничения.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Gem · знания</div>
+    <h2>Что добавлять в&nbsp;Knowledge, а&nbsp;что держать за&nbsp;пределами</h2>
+    <table class="matrix">
+      <thead><tr><th>Можно</th><th>Осторожно</th><th>Нельзя в учебной практике</th></tr></thead>
+      <tbody>
+        <tr><td>FAQ по продукции, обезличенные шаблоны КП, чек-листы контроля, публичные описания дверей и фасадов</td><td>Прайсы, внутренние регламенты, примеры заявок и ТЗ только после очистки</td><td>ФИО, телефоны, реквизиты, реальные договоры, выгрузки 1С/CRM/ЭДО, банковские данные</td></tr>
+        <tr><td>Типовые вопросы заказчика, перечень полей для КП, список документов перед отгрузкой</td><td>Юридические, финансовые и тендерные документы только как обезличенный фрагмент</td><td>Персональные данные клиентов и сотрудников без отдельного разрешения</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="slide light practice">
+    <div class="tag">Gem · тест</div>
+    <h2>Проверяем не красоту, а <span class="accent">управляемость</span></h2>
+    <div class="grid-3">
+      <div class="card"><div class="card-title">Обычная задача</div><div class="card-text">Данные полные. Gem быстро отдаёт результат в нужном формате.</div></div>
+      <div class="card"><div class="card-title">Сложная задача</div><div class="card-text">Есть противоречие: размер, EI, срок, комплектность, маржа или условия объекта.</div></div>
+      <div class="card"><div class="card-title">Неполные данные</div><div class="card-text">Не хватает вводных. Gem не отвечает вслепую, а задаёт вопросы.</div></div>
+    </div>
+    <div class="caption">Если Gem уверенно выдумывает цены, сроки, ГОСТ, EI, поставщиков или характеристики — это не «почти готово». Это надо чинить в инструкции.</div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">NotebookLM</div>
+    <h2>NotebookLM — это не&nbsp;чат. Это <span class="accent">рабочая комната источников</span>.</h2>
+    <div class="split">
+      <div>
+        <div class="subtitle">Загружаем документы по одной теме, задаём вопросы, получаем ответы с опорой на источники, вытаскиваем справочники, таблицы, аудио, видео и слайды.</div>
+        <div class="source">По справке Google: NotebookLM использует загруженные источники для ответов; каждый блокнот — отдельный проект, источники нужно держать чистыми и тематическими.</div>
+      </div>
+      <div class="panel">
+        <div class="card-title">Главное правило</div>
+        <div class="card-text">Один блокнот — одна тема. Не смешиваем КП, ПТО, цех, договоры, снабжение и бухгалтерию в один шумный склад.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">NotebookLM · источники</div>
+    <h2>Что можно загрузить</h2>
+    <table class="matrix">
+      <thead><tr><th>Тип</th><th>Подходит для ГК «Евразия»</th><th>Ограничение</th></tr></thead>
+      <tbody>
+        <tr><td>PDF, Word, Markdown, текст</td><td>Регламент, FAQ, шаблон КП, памятка менеджера, чек-лист контроля</td><td>До 500 000 слов или 200 МБ на источник</td></tr>
+        <tr><td>Google Docs, Slides, Sheets</td><td>Таблица спецификаций, презентация продукта, список документов, база вопросов</td><td>Google Slides до 100 слайдов, Sheets ограничены по токенам</td></tr>
+        <tr><td>Web URL</td><td>Публичная страница продукта, сайт поставщика, справочник по требованиям</td><td>Берётся текст страницы, не закрытый контент</td></tr>
+        <tr><td>YouTube URL, аудио</td><td>Обучающее видео, вебинар, запись инструкции</td><td>Нужна речь и доступная расшифровка</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="slide light practice">
+    <div class="tag">NotebookLM · практика</div>
+    <h2>Сборка блокнота за&nbsp;12&nbsp;минут</h2>
+    <div class="flow">
+      <div class="flow-step"><div class="step-kicker">01</div><div class="step-title">Создать</div><div class="step-text">Новый блокнот: «КП двери», «ТЗ объектов», «Цех контроль», «Отгрузка».</div></div>
+      <div class="flow-step"><div class="step-kicker">02</div><div class="step-title">Загрузить</div><div class="step-text">3-5 безопасных источников одной темы.</div></div>
+      <div class="flow-step"><div class="step-kicker">03</div><div class="step-title">Проверить</div><div class="step-text">Задать 2 вопроса и посмотреть цитаты.</div></div>
+      <div class="flow-step"><div class="step-kicker">04</div><div class="step-title">Сжать</div><div class="step-text">Попросить справочник: правила, FAQ, поля, запреты.</div></div>
+      <div class="flow-step"><div class="step-kicker">05</div><div class="step-title">Передать</div><div class="step-text">Использовать выводы для Gem или рабочей памятки.</div></div>
+    </div>
+  </section>
+
+  <section class="slide light practice">
+    <div class="tag">NotebookLM · вопросы</div>
+    <h2>Первые вопросы к базе</h2>
+    <div class="prompt">Куда вставлять: NotebookLM → чат внутри открытого блокнота.
+
+На основе загруженных источников сделай:
+1. краткий справочник по этому процессу;
+2. список типовых вопросов клиента, сотрудника или поставщика;
+3. таблицу: вопрос → где в источниках ответ → как отвечать;
+4. список пробелов: чего в источниках не хватает;
+5. материал, который можно вставить в инструкцию Gem.</div>
+    <div class="caption">Для финансовых, юридических, технических и тендерных выводов: NotebookLM даёт черновик и цитаты, финальную проверку делает профильный сотрудник.</div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Studio</div>
+    <h2>NotebookLM Studio: готовые форматы из базы</h2>
+    <div class="grid-3">
+      <div class="card"><div class="card-title">Reports</div><div class="card-text">FAQ, briefing document, study guide, свой тип отчёта.</div></div>
+      <div class="card"><div class="card-title">Data Tables</div><div class="card-text">Таблица по источникам с экспортом в Google Sheets.</div></div>
+      <div class="card"><div class="card-title">Audio Overview</div><div class="card-text">Аудиообзор по источникам, можно настроить формат и язык.</div></div>
+      <div class="card"><div class="card-title">Video Overview</div><div class="card-text">Видео из источников: слайды, цитаты, числа, визуальный разбор.</div></div>
+      <div class="card"><div class="card-title">Slide Deck</div><div class="card-text">Детальная колода или Presenter Slides по материалам.</div></div>
+      <div class="card"><div class="card-title">Quiz / Flashcards</div><div class="card-text">Быстрая проверка знаний для команды или новичка.</div></div>
+    </div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Gem + NotebookLM</div>
+    <h2>Как связать базу и&nbsp;ассистента без магии</h2>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Вариант A</div><div class="card-text">Если в Gemini доступен Knowledge — добавляем безопасные файлы прямо в Gem и проверяем цитаты/ссылки.</div></div>
+      <div class="card"><div class="card-title">Вариант B</div><div class="card-text">Если прямое подключение нестабильно — в NotebookLM делаем справочник по источникам и добавляем его в Knowledge Gem как файл.</div></div>
+    </div>
+    <div class="caption">Не верим интерфейсу на слово. После подключения просим Gem ответить на вопрос, который есть только в загруженных документах.</div>
+  </section>
+
+  <section class="slide">
+    <div class="tag">Canvas</div>
+    <h2>Canvas — когда нужен не&nbsp;текст, а&nbsp;<span class="accent">инструмент</span></h2>
+    <div class="split">
+      <div class="quote">Мини-приложение должно заменить табличку, памятку или вечное «а как это считать?»</div>
+      <div class="panel">
+        <div class="card-title">Правило мини-приложения</div>
+        <div class="card-text">Один экран, 3-7 полей ввода, понятный результат, кнопка «сформировать», мобильная адаптация. Не делаем ERP, портал или большую CRM.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Canvas · идеи ГК «Евразия»</div>
+    <h2>Что участники могут сделать прямо на&nbsp;уроке</h2>
+    <table class="matrix">
+      <thead><tr><th>Роль</th><th>Мини-приложение</th><th>Результат</th></tr></thead>
+      <tbody>
+        <tr><td>Продажи</td><td>Конструктор КП по заявке</td><td>Сводка, вопросы клиенту, структура предложения, письмо</td></tr>
+        <tr><td>Тендеры / объекты</td><td>Радар ТЗ</td><td>Требования, риски, вопросы заказчику, что проверить</td></tr>
+        <tr><td>ПТО / технолог</td><td>Черновик спецификации</td><td>Поля для размеров, материалов, фурнитуры и ручной проверки</td></tr>
+        <tr><td>Производство / цех</td><td>Сменное задание и контроль</td><td>Задачи участка, чек-лист качества, риски</td></tr>
+        <tr><td>Документы / отгрузка</td><td>Чек-лист комплектности</td><td>Что есть, чего не хватает, кому написать</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="slide light practice">
+    <div class="tag">Canvas · промпт</div>
+    <h2>Canvas-промпт: мини-приложение</h2>
+    <div class="prompt small">Перед стартом: новый чат Gemini → Canvas.
+
+Создай в Gemini Canvas мини-приложение для ГК «Евразия».
+
+Сценарий: [КП по дверям / радар ТЗ / спецификация / сменное задание / отгрузка / снабжение].
+Пользователь вводит: [3-7 полей].
+На выходе приложение выдаёт: [таблица, чек-лист, письмо, оценка, план].
+
+Требования:
+- один HTML-файл без сервера;
+- спокойный современный дизайн, адаптация под телефон;
+- кнопка «Сформировать»;
+- блок «Что проверить человеку»;
+- не выдумывать цены, сроки, ГОСТ, EI, размеры, законы и технические характеристики;
+- если данных мало, показывать список недостающих вводных.
+
+Сначала создай рабочую версию, затем предложи 5 улучшений.</div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Canvas · готовые сценарии</div>
+    <h2>Готовые Canvas-промпты есть в&nbsp;шпаргалке</h2>
+    <div class="grid-3">
+      <div class="card"><div class="card-title">КП по двери EI 60</div><div class="card-text">Форма для заявки, вопросов клиенту и структуры коммерческого предложения.</div></div>
+      <div class="card"><div class="card-title">Радар ТЗ объекта</div><div class="card-text">Риск-оценка требований, неполных данных и вопросов заказчику.</div></div>
+      <div class="card"><div class="card-title">Цех / отгрузка</div><div class="card-text">Сменное задание, чек-лист качества или комплект документов.</div></div>
+    </div>
+  </section>
+
+  <section class="slide light practice">
+    <div class="tag">Canvas · запуск</div>
+    <h2>Два способа начать: промпт или голос</h2>
+    <div class="grid-2">
+      <div class="prompt">Новый чат → Canvas → вставить готовый промпт из шпаргалки.</div>
+      <div class="prompt">Новый чат → микрофон → наговорить задачу → в конце сказать: «Открой это в Canvas как приложение».</div>
+      <div class="prompt">После генерации: проверь Preview, заполни поля и попроси исправить логику результата.</div>
+      <div class="prompt">Если интерфейс расползся: «проверь адаптацию под телефон, поля и кнопки не должны налезать друг на друга».</div>
+    </div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Manus</div>
+    <h2>Manus: агентный режим для&nbsp;многошаговой задачи</h2>
+    <div class="split">
+      <div>
+        <div class="logo-row" style="margin-top:22px"><div class="logo-pill"><img src="logo-manus.svg" alt="Manus">manus.im</div></div>
+        <div class="subtitle">Chat mode — для быстрых ответов и обсуждения. Agent mode — для сложных задач: сайт, слайды, видео, исследование, файлы, многошаговая работа. Агентный режим расходует кредиты.</div>
+        <div class="source">Официальная справка Manus 1.6: Chat Mode не расходует кредиты; Agent Mode автономно планирует и выполняет сложные задачи.</div>
+      </div>
+      <div class="panel">
+        <div class="card-title">Правило безопасности</div>
+        <div class="card-text">Для демо берём только публичную задачу. Никаких внутренних файлов, договоров, клиентских данных и выгрузок.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide light practice">
+    <div class="tag">Manus · задача</div>
+    <h2>Безопасная публичная задача</h2>
+    <div class="prompt">Собери публичное исследование: как производители противопожарных дверей и металлических дверей в России описывают продукты, сертификаты, работу с объектами и B2B-клиентами.
+
+Нужно:
+1. найти 8-10 публичных сайтов;
+2. выделить типовые продукты, офферы и аргументы;
+3. собрать таблицу: компания, продукты, сильные формулировки, что можно улучшить;
+4. предложить 10 идей контента для ГК «Евразия»;
+5. оформить результат как короткий отчёт и таблицу.
+
+Задача публичная: ищи информацию в открытом интернете и не проси загружать внутренние файлы ГК «Евразия».</div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Deep Research</div>
+    <h2>Deep Research нужен не&nbsp;всем задачам. И&nbsp;это нормально.</h2>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Да</div><div class="card-text">Конкуренты, рынок, поставщики, тренды, сравнение решений, обзор практик, подготовка к стратегическому решению.</div></div>
+      <div class="card"><div class="card-title">Нет</div><div class="card-text">Быстрое письмо клиенту, разбор внутреннего документа, срочный ответ, задача с закрытыми данными, простая формулировка.</div></div>
+    </div>
+  </section>
+
+  <section class="slide light practice">
+    <div class="tag">Deep Research · промпт</div>
+    <h2>Исследование для ГК «Евразия»</h2>
+    <div class="prompt small">Роль: B2B-аналитик рынка строительных и промышленных дверей в России.
+
+Контекст: ГК «Евразия» производит противопожарные и бронированные двери, металлические фасады, работает с объектами, тендерами, поставщиками металла, производством и документами.
+
+Задача: исследуй, как в 2025-2026 годах компании в России продвигают противопожарные двери, металлические двери и решения для объектов. Найди рабочие формулировки, офферы, аргументы, каналы продвижения и слабые места конкурентов.
+
+Формат отчёта:
+1. карта рынка;
+2. таблица 10 публичных примеров;
+3. что у них хорошо;
+4. где слабые места;
+5. 10 идей для ГК «Евразия»;
+6. что можно внедрить за 2 недели;
+7. ссылки на источники.
+
+Ограничения: только публичные источники, даты 2025-2026, не выдумывать цены и факты.</div>
+  </section>
+
+  <section class="slide light">
+    <div class="tag">Финальная сборка</div>
+    <h2>К&nbsp;концу урока у&nbsp;участника должно быть</h2>
+    <div class="grid-4">
+      <div class="card"><div class="card-title">Процесс</div><div class="card-text">Выбран один повторяемый рабочий сценарий, не весь отдел.</div></div>
+      <div class="card"><div class="card-title">Gem</div><div class="card-text">Есть инструкция, Knowledge-идея и 3 теста.</div></div>
+      <div class="card"><div class="card-title">База</div><div class="card-text">Понятно, какие 3-5 безопасных источников собрать в NotebookLM.</div></div>
+      <div class="card"><div class="card-title">Инструмент</div><div class="card-text">Есть Canvas-промпт или мини-приложение под процесс.</div></div>
+    </div>
+  </section>
+
+  <section class="slide light practice">
+    <div class="tag">Финал</div>
+    <h2>Домашка после урока</h2>
+    <div class="timeline">
+      <div class="timeline-row"><div class="time">1</div><div class="timeline-title">Довести Gem</div><div class="timeline-note">Улучшить инструкцию после 3 тестов</div></div>
+      <div class="timeline-row"><div class="time">2</div><div class="timeline-title">Дособрать базу</div><div class="timeline-note">Добавить недостающие безопасные источники</div></div>
+      <div class="timeline-row"><div class="time">3</div><div class="timeline-title">Показать результат</div><div class="timeline-note">Скрин Gem, скрин/ссылка Canvas, вывод</div></div>
+    </div>
+    <div class="caption">Главная цель: не «поиграться с ИИ», а получить один инструмент, который можно открыть завтра на работе.</div>
+  </section>
+
+  <section class="slide title-slide">
+    <div class="title-content">
+      <div class="eyebrow">neovida · Нейропросвещение</div>
+      <h1>Один процесс. Один ассистент. Одна база. Один инструмент.</h1>
+      <div class="subtitle">Так ИИ перестаёт быть экспериментом и становится рабочей инфраструктурой отдела.</div>
+    </div>
+  </section>
+</div>
+
+<div class="counter" id="counter"></div>
+<div class="progress" id="progress"></div>
+<button class="fullscreen-btn" id="fsBtn" type="button" aria-label="Полный экран" title="Полный экран">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+    <path d="M8 3H3v5"></path>
+    <path d="M16 3h5v5"></path>
+    <path d="M21 16v5h-5"></path>
+    <path d="M8 21H3v-5"></path>
+  </svg>
+</button>
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+const counter = document.getElementById('counter');
+const progress = document.getElementById('progress');
+const fsBtn = document.getElementById('fsBtn');
+let current = 0;
+
+function show(index) {
+  if (index < 0 || index >= slides.length) return;
+  if (index === current && slides[current].classList.contains('active')) {
+    slides.forEach(slide => slide.classList.remove('prev'));
+    counter.textContent = `${current + 1} / ${slides.length}`;
+    progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+    return;
+  }
+  slides[current].classList.remove('active');
+  slides[current].classList.add('prev');
+  slides.forEach((slide, i) => {
+    if (i !== current) slide.classList.remove('prev');
+  });
+  current = index;
+  slides[current].classList.remove('prev');
+  slides[current].classList.add('active');
+  counter.textContent = `${current + 1} / ${slides.length}`;
+  progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+}
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowRight' || event.key === ' ' || event.key === 'PageDown') show(current + 1);
+  if (event.key === 'ArrowLeft' || event.key === 'PageUp') show(current - 1);
+});
+
+document.addEventListener('click', (event) => {
+  if (event.target.closest('a, button')) return;
+  if (event.clientX > window.innerWidth * 0.66) show(current + 1);
+  if (event.clientX < window.innerWidth * 0.34) show(current - 1);
+});
+
+fsBtn.addEventListener('click', (event) => {
+  event.stopPropagation();
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen();
+  }
+});
+
+show(0);
+</script>
+</body>
+</html>
