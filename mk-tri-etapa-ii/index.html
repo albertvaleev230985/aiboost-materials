@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Три этапа развития ИИ в вашем бизнесе</title>
+<style>
+  :root{
+    --navy:#0E1726; --navy-2:#0A111D;
+    --c1:#E07461; --c2:#B69BE6; --c3:#F2C14E;
+    --accent:var(--c1); --accent-soft:rgba(224,116,97,.16); --accent-d:#c85944;
+    --text:#F4F6FA; --muted:#9FB0C3; --line:rgba(255,255,255,.10);
+    --card:rgba(255,255,255,.05); --ok:#5AD19A;
+    --font:-apple-system,'SF Pro Display','Segoe UI',system-ui,Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--navy-2);font-family:var(--font);color:var(--text);
+    display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .stage{position:relative;width:min(100vw,177.78vh);height:min(56.25vw,100vh);
+    background:radial-gradient(120% 120% at 80% -10%,#15243a 0%,var(--navy) 45%,var(--navy-2) 100%);
+    overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.55)}
+  .stage::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:7.5cqw 7.5cqw;opacity:.18;
+    -webkit-mask-image:radial-gradient(120% 90% at 70% 0%,#000 40%,transparent 85%);mask-image:radial-gradient(120% 90% at 70% 0%,#000 40%,transparent 85%)}
+  /* vertical centering: header/footer absolute, content centered */
+  .slide{position:absolute;inset:0;container-type:size;display:flex;flex-direction:column;justify-content:center;
+    padding:11cqh 7cqw 7.5cqh;opacity:0;visibility:hidden;transition:opacity .5s ease}
+  .slide.active{opacity:1;visibility:visible}
+  .slide.s1{--accent:var(--c1);--accent-soft:rgba(224,116,97,.16);--accent-d:#c85944}
+  .slide.s2{--accent:var(--c2);--accent-soft:rgba(182,155,230,.18);--accent-d:#8b6eb5}
+  .slide.s3{--accent:var(--c3);--accent-soft:rgba(242,193,78,.18);--accent-d:#d9a520}
+  .slide>*{position:relative;z-index:1}
+  .glow{position:absolute;width:44cqw;height:44cqw;right:-10cqw;top:-14cqw;border-radius:50%;z-index:0;
+    background:radial-gradient(circle,var(--accent),transparent 62%);opacity:.14;filter:blur(22px);pointer-events:none}
+
+  .brandbar{position:absolute;top:5cqh;left:7cqw;right:7cqw;display:flex;align-items:center;justify-content:space-between;z-index:4}
+  .wordmark{font-weight:800;letter-spacing:.5px;font-size:1.9cqw}.wordmark .ai{color:var(--c1)}
+  .kicker{display:inline-flex;align-items:center;gap:.6em;font-size:1.1cqw;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .dot{width:.7em;height:.7em;border-radius:50%;background:var(--accent);box-shadow:0 0 0 .35em var(--accent-soft)}
+  .eyebrow{display:inline-flex;align-items:center;gap:.6em;color:var(--accent);font-weight:700;font-size:1.15cqw;letter-spacing:.14em;text-transform:uppercase;margin-bottom:1.4cqh}
+  h2.t{font-size:3.6cqw;font-weight:800;line-height:1.05;letter-spacing:-.5px}h2.t .a{color:var(--accent)}
+  .lead{font-size:1.6cqw;color:var(--muted);line-height:1.5;max-width:70cqw;margin-top:1.6cqh}
+  .big{font-size:4.6cqw;font-weight:800;line-height:1.08;letter-spacing:-1px}.big .a{color:var(--accent)}
+  .src{font-size:1cqw;color:rgba(159,176,195,.55);margin-top:1.6cqh}
+
+  .reveal{opacity:0;transform:translateY(2cqh)}
+  .active .reveal{animation:rise .6s cubic-bezier(.2,.7,.2,1) forwards}
+  .active .reveal.d1{animation-delay:.06s}.active .reveal.d2{animation-delay:.16s}
+  .active .reveal.d3{animation-delay:.26s}.active .reveal.d4{animation-delay:.36s}
+  .active .reveal.d5{animation-delay:.46s}.active .reveal.d6{animation-delay:.56s}
+  @keyframes rise{to{opacity:1;transform:none}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* speaker */
+  .s1-body{display:grid;grid-template-columns:30cqw 1fr;gap:5cqw;align-items:center}
+  .avatar-wrap{position:relative;width:28cqw;height:28cqw;margin:0 auto}
+  .avatar-arc{position:absolute;inset:-1cqw;animation:spin 16s linear infinite}
+  .avatar-arc svg{width:100%;height:100%;display:block}
+  .avatar{position:absolute;inset:1.2cqw;border-radius:50%;overflow:hidden;border:1px solid var(--line);box-shadow:0 22px 55px rgba(0,0,0,.5)}
+  .avatar img{width:100%;height:100%;object-fit:cover;object-position:center 10%;display:block}
+  .s1-name{font-size:4cqw;font-weight:800;line-height:1.02;letter-spacing:-.5px}
+  .s1-role{font-size:1.65cqw;color:var(--accent);font-weight:700;margin-top:1cqh}
+  .s1-slogan{font-size:1.4cqw;color:var(--muted);margin-top:.8cqh;max-width:48cqw;line-height:1.4}
+  .regalia{margin-top:2.4cqh;display:flex;flex-direction:column;gap:1.05cqh}
+  .reg{display:flex;gap:1cqw;align-items:flex-start;font-size:1.32cqw;line-height:1.3}
+  .reg svg{flex:0 0 auto;width:1.8cqw;height:1.8cqw;margin-top:.1cqh;color:var(--accent)}
+
+  /* showcase (text + image) */
+  .showcase{display:grid;grid-template-columns:1fr 45cqw;gap:4.5cqw;align-items:center}
+  .showcase.rev{grid-template-columns:45cqw 1fr}
+  .showcase.rev .sc-text{order:2}
+  .sc-text h2{font-size:3.4cqw;font-weight:800;line-height:1.07;letter-spacing:-.5px}
+  .sc-text h2 .a{color:var(--accent)}
+  .sc-text .lead{font-size:1.55cqw;max-width:100%}
+  .pts{display:flex;flex-direction:column;gap:1cqh;margin-top:1.8cqh}
+  .pt{display:flex;gap:.9cqw;align-items:flex-start;font-size:1.4cqw;line-height:1.32}
+  .pt svg{flex:0 0 auto;width:1.7cqw;height:1.7cqw;margin-top:.15cqh;color:var(--accent)}
+  .imgframe{border-radius:1.4cqw;overflow:hidden;border:1px solid var(--line);box-shadow:0 26px 64px rgba(0,0,0,.5)}
+  .imgframe img{width:100%;display:block;aspect-ratio:3/2;object-fit:cover}
+  .slide.full-img{justify-content:center;align-items:center;padding:4cqh 3cqw}
+  .fullimg{width:100%;display:flex;justify-content:center}
+  .fullimg img{max-width:94cqw;max-height:90cqh;width:auto;object-fit:contain;border-radius:1cqw;border:1px solid var(--line);box-shadow:0 20px 50px rgba(0,0,0,.45)}
+
+  /* cards */
+  .grid{display:grid;gap:1.5cqw;margin-top:2.2cqh}
+  .g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:1.1cqw;padding:2.2cqh 1.6cqw}
+  .card .ic{width:3.2cqw;height:3.2cqw;border-radius:.7cqw;background:var(--accent-soft);display:grid;place-items:center;color:var(--accent);margin-bottom:1.2cqh}
+  .card .ic svg{width:1.9cqw;height:1.9cqw}
+  .card h3{font-size:1.6cqw;font-weight:800;margin-bottom:.5cqh}
+  .card p{font-size:1.28cqw;color:var(--muted);line-height:1.4}
+  .ex{background:var(--card);border:1px solid var(--line);border-radius:.9cqw;padding:1.4cqh 1.3cqw;display:flex;gap:.9cqw;align-items:center}
+  .ex .ic{flex:0 0 auto;width:2.7cqw;height:2.7cqw;border-radius:.6cqw;background:var(--accent-soft);display:grid;place-items:center;color:var(--accent)}
+  .ex .ic svg{width:1.55cqw;height:1.55cqw}.ex span{font-size:1.26cqw;line-height:1.22}
+  .acts{display:grid;grid-template-columns:repeat(4,1fr);gap:1.3cqw;margin-top:1.6cqh}
+  .actcol{background:var(--card);border:1px solid var(--line);border-radius:1cqw;padding:1.8cqh 1.3cqw}
+  .actcol h4{font-size:1.32cqw;color:var(--accent);font-weight:800;margin-bottom:1.1cqh;display:flex;align-items:center;gap:.6cqw}
+  .actcol h4 svg{width:1.5cqw;height:1.5cqw;flex:0 0 auto}
+  .actcol .ai-item{display:flex;gap:.7cqw;align-items:flex-start;font-size:1.08cqw;line-height:1.25;margin-bottom:.85cqh}
+  .actcol .ai-item:last-child{margin-bottom:0}
+  .actcol .ai-item .b{width:.45cqw;height:.45cqw;border-radius:50%;background:var(--accent);flex:0 0 auto;margin-top:.5cqh}
+
+  .statrow{display:flex;gap:1.8cqw;margin-top:2.4cqh}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:1.1cqw;padding:2.6cqh 1.8cqw;flex:1}
+  .stat .n{font-size:4.4cqw;font-weight:800;color:var(--accent);line-height:1}
+  .stat .l{font-size:1.2cqw;color:var(--muted);margin-top:.8cqh;line-height:1.35}
+
+  /* tools */
+  .tools{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4cqw;margin-top:2.4cqh}
+  .tool{background:var(--card);border:1px solid var(--line);border-radius:1cqw;padding:1.9cqh 1.4cqw;display:flex;gap:1cqw;align-items:center}
+  .tool .b{width:2.6cqw;height:2.6cqw;border-radius:.6cqw;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+  .tool .b svg{width:62%;height:62%;fill:#fff}
+  .tool .nm{font-weight:800;font-size:1.45cqw}.tool .d{font-size:1.05cqw;color:var(--muted);margin-top:.2cqh}
+
+  /* stage divider */
+  .stagehead{display:flex;align-items:center;gap:2cqw}
+  .stagenum{font-size:6.5cqw;font-weight:800;line-height:.8;color:var(--accent);text-shadow:0 10px 40px var(--accent-soft)}
+  .stagehead h2{font-size:3.6cqw;font-weight:800;line-height:1;letter-spacing:-.5px}
+  .stagehead .sub{font-size:1.7cqw;color:var(--accent);font-weight:700;margin-top:.6cqh}
+  .meta-pill{display:inline-flex;align-items:center;gap:.7cqw;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:1.4cqw;padding:.8cqh 1.5cqw;border-radius:2cqw;margin-top:1.2cqh}
+  .foot{margin-top:1.6cqh;display:flex;align-items:center;gap:1.2cqw;border-top:1px solid var(--line);padding-top:1.5cqh}
+  .foot .lbl{font-size:1.28cqw;color:var(--muted)}.foot b{color:var(--text)}
+  .card h3 .s{display:block;font-size:1.05cqw;color:var(--accent);font-weight:600;margin-top:.3cqh}
+  /* stage name cover */
+  .slide.namecover{justify-content:center;align-items:flex-start;text-align:left;overflow:hidden}
+  .namecover .cover-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92;z-index:0}
+  .namecover .ov{position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,rgba(10,17,29,.94) 26%,rgba(10,17,29,.55) 60%,rgba(10,17,29,.1))}
+  .nm-wrap{position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-start;gap:1.6cqh}
+  .nm-step{font-size:1.4cqw;letter-spacing:.35em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  .nm-big{font-size:8.5cqw;font-weight:800;letter-spacing:-2px;line-height:.95}.nm-big .a{color:var(--accent)}
+  .nm-meta{font-size:1.6cqw;color:var(--muted);max-width:48ch;line-height:1.4}
+  .nm-meta b{color:var(--text)}
+  /* elite title slide */
+  .title-slide{justify-content:center;align-items:center;text-align:center;overflow:hidden}
+  .title-center{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:2.4cqh}
+  .hero-title{font-size:6.6cqw;font-weight:850;line-height:1.02;letter-spacing:-2px}
+  .hero-title .a{background:linear-gradient(90deg,var(--c1),var(--c2) 55%,var(--c3));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero-sub{font-size:1.95cqw;color:var(--muted);max-width:64ch}
+  .hero-meta{font-size:1.4cqw;color:var(--muted)}.hero-meta b{color:var(--text)}
+  .hero-path{display:flex;align-items:center;gap:1.2cqw}
+  .hero-path .pd{width:1.5cqw;height:1.5cqw;border-radius:50%;opacity:.25}
+  .hero-path .pd.c1{background:var(--c1);color:var(--c1)}.hero-path .pd.c2{background:var(--c2);color:var(--c2)}.hero-path .pd.c3{background:var(--c3);color:var(--c3)}
+  .hero-path .pl{width:6cqw;height:.3cqw;background:rgba(255,255,255,.12);border-radius:2px}
+  .title-slide.active .pd{animation:dotglow 2.6s ease-in-out infinite}
+  .title-slide.active .pd.c2{animation-delay:.45s}.title-slide.active .pd.c3{animation-delay:.9s}
+  @keyframes dotglow{0%,100%{opacity:.25;box-shadow:none}50%{opacity:1;box-shadow:0 0 1.6cqw currentColor}}
+  .blobs{position:absolute;inset:0;z-index:0;overflow:hidden}
+  .blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.34;animation:floatb 18s ease-in-out infinite}
+  .blob.b1{width:34cqw;height:34cqw;left:-6cqw;top:-8cqw;background:radial-gradient(circle,var(--c1),transparent 60%)}
+  .blob.b2{width:30cqw;height:30cqw;left:36cqw;bottom:-12cqw;background:radial-gradient(circle,var(--c2),transparent 60%);animation-delay:-6s}
+  .blob.b3{width:26cqw;height:26cqw;right:-6cqw;top:-6cqw;background:radial-gradient(circle,var(--c3),transparent 60%);animation-delay:-3s;opacity:.26}
+  @keyframes floatb{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(3cqw,3cqh) scale(1.12)}}
+  /* site-wide subtle motion */
+  .namecover .cover-bg{animation:kenburns 26s ease-in-out infinite alternate}
+  @keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.08)}}
+  .glow{animation:glowpulse 9s ease-in-out infinite}
+  @keyframes glowpulse{0%,100%{opacity:.12}50%{opacity:.22}}
+
+  /* compare */
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.6cqw;margin-top:2.4cqh}
+  .cmp .b{border-radius:1.1cqw;padding:2.4cqh 1.8cqw;border:1px solid var(--line)}
+  .cmp .b.no{background:rgba(224,116,97,.08)}.cmp .b.yes{background:rgba(90,209,154,.08);border-color:rgba(90,209,154,.25)}
+  .cmp .b .tag{font-size:1.1cqw;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:.9cqh}
+  .cmp .b.no .tag{color:var(--c1)}.cmp .b.yes .tag{color:var(--ok)}
+  .cmp .b p{font-size:1.42cqw;line-height:1.42}
+
+  /* steps */
+  .steps{display:flex;flex-direction:column;gap:1.3cqh;margin-top:2.2cqh}
+  .st{display:flex;gap:1.3cqw;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:.9cqw;padding:1.6cqh 1.5cqw}
+  .st .num{flex:0 0 auto;width:3cqw;height:3cqw;border-radius:.7cqw;background:linear-gradient(135deg,var(--accent),var(--accent-d));color:#fff;display:grid;place-items:center;font-weight:800;font-size:1.5cqw}
+  .st h3{font-size:1.5cqw;font-weight:800;margin-bottom:.2cqh}.st p{font-size:1.24cqw;color:var(--muted);line-height:1.32}
+
+  /* agent anatomy */
+  .anatomy{display:grid;grid-template-columns:1fr 42cqw;gap:3.5cqw;align-items:center;margin-top:1.5cqh}
+  .formula{display:flex;flex-direction:column;gap:1cqh}
+  .fl{display:flex;gap:1.1cqw;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:.9cqw;padding:1.3cqh 1.3cqw}
+  .fl .i{flex:0 0 auto;width:2.9cqw;height:2.9cqw;border-radius:.6cqw;background:var(--accent-soft);display:grid;place-items:center;color:var(--accent)}
+  .fl .i svg{width:1.6cqw;height:1.6cqw}
+  .fl b{font-size:1.4cqw;display:block}.fl span{font-size:1.1cqw;color:var(--muted)}
+  .amap{position:relative;width:42cqw;height:42cqw;margin:0 auto}
+  .amap svg.lines{position:absolute;inset:0;width:100%;height:100%}
+  .amap .core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:15cqw;height:15cqw;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#2a2140,#171026);border:2px solid var(--c2);display:grid;place-items:center;text-align:center;box-shadow:0 0 5cqw rgba(182,155,230,.3);z-index:2}
+  .amap .core b{font-size:1.7cqw;color:var(--c2)}.amap .core span{font-size:1cqw;color:var(--muted);display:block;margin-top:.3cqh}
+  .atom{position:absolute;width:14cqw;background:var(--card);border:1px solid var(--line);border-radius:.9cqw;padding:1.2cqh 1.2cqw;text-align:center}
+  .atom b{font-size:1.3cqw;display:block;color:var(--c2)}.atom span{font-size:1cqw;color:var(--muted);line-height:1.25}
+  .atom.a1{left:0;top:4cqw}.atom.a2{right:0;top:4cqw}.atom.a3{left:0;bottom:4cqw}.atom.a4{right:0;bottom:4cqw}
+
+  /* case */
+  .case-body{display:grid;grid-template-columns:1fr 40cqw;gap:3.5cqw;align-items:center}
+  .case-head{display:flex;align-items:center;margin-bottom:1cqh}
+  .badge{display:inline-flex;align-items:center;font-size:1.05cqw;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:.6cqh 1.1cqw;border-radius:2cqw}
+  .status{display:inline-flex;align-items:center;gap:.6em;font-size:1.15cqw;color:var(--muted);margin-left:1cqw}
+  .status .g{width:.7em;height:.7em;border-radius:50%;background:var(--ok);box-shadow:0 0 0 .35em rgba(90,209,154,.16)}
+  .status .w{background:var(--c3);box-shadow:0 0 0 .35em rgba(242,193,78,.16)}
+  .case-title{font-size:3.3cqw;font-weight:800;letter-spacing:-.5px;line-height:1.04}
+  .case-sub{font-size:1.4cqw;color:var(--muted);margin-top:.5cqh;line-height:1.35}
+  .case-chips{display:flex;gap:.7cqw;flex-wrap:wrap;margin-top:1.4cqh}
+  .case-chips .c{background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:1.1cqw;padding:.6cqh 1.1cqw;border-radius:2cqw}
+  .clist{display:flex;flex-direction:column;gap:1cqh;margin-top:1.6cqh}
+  .clist .h{font-size:1.3cqw;color:var(--accent);font-weight:700;margin-bottom:.1cqh}
+  .ci{display:flex;gap:1cqw;align-items:flex-start;font-size:1.34cqw;line-height:1.3}
+  .ci svg{flex:0 0 auto;width:1.7cqw;height:1.7cqw;margin-top:.1cqh;color:var(--accent)}
+  .quote{margin-top:1.6cqh;border-left:.35cqw solid var(--accent);padding-left:1.4cqw;font-size:1.45cqw;font-style:italic;line-height:1.38}
+  .collage{display:flex;gap:1cqw;align-items:flex-start}
+  .collage .ph{flex:1 1 0;min-width:0;border-radius:1.1cqw;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 44px rgba(0,0,0,.45)}
+  .collage .ph img{width:100%;display:block}
+  .collage .ph.land img{aspect-ratio:16/9;object-fit:cover;object-position:center}
+  .collage .ph.port img{aspect-ratio:3/4;object-fit:cover;object-position:center 32%}
+  .collage.trio{display:grid;grid-template-columns:.82fr 1fr;grid-template-rows:1fr 1fr;gap:1cqw;height:56cqh;align-items:stretch}
+  .collage.trio .ph{flex:none;border-radius:1.1cqw;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 44px rgba(0,0,0,.45)}
+  .collage.trio .p-tall{grid-row:1/3;grid-column:1}
+  .collage.trio .p-a{grid-column:2;grid-row:1}
+  .collage.trio .p-b{grid-column:2;grid-row:2}
+  .collage.trio .ph img{width:100%;height:100%;object-fit:cover;display:block}
+  .collage.trio .p-tall img{object-position:center 28%}
+  .collage.trio .p-a img{object-position:center 38%}
+  .collage.trio .p-b img{object-position:center 48%}
+  .collage.one .ph img{width:100%;display:block;aspect-ratio:4/3;object-fit:cover;object-position:center 42%}
+  .collage3{display:flex;flex-direction:column;gap:1cqw;align-items:center;width:100%}
+  .collage3 .p-wide{width:86%;border-radius:1.1cqw;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 44px rgba(0,0,0,.45)}
+  .collage3 .p-wide img{width:100%;display:block;aspect-ratio:16/9;object-fit:cover}
+  .collage3 .p-row{display:flex;gap:1cqw;width:100%}
+  .collage3 .p-row .ph{flex:1 1 0;min-width:0;border-radius:1.1cqw;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 44px rgba(0,0,0,.45)}
+  .collage3 .p-row .ph img{width:100%;display:block;aspect-ratio:4/5;object-fit:cover;object-position:center 30%}
+  .qr-card{align-self:center;background:#fff;border-radius:1.6cqw;padding:2cqw 2cqw 1.6cqw;display:flex;flex-direction:column;align-items:center;gap:1.1cqw;box-shadow:0 26px 64px rgba(0,0,0,.55)}
+  .qr-card img{width:17cqw;height:17cqw;display:block;border-radius:.4cqw}
+  .qr-card .qr-cap{color:#0E1726;font-size:1.2cqw;font-weight:600;letter-spacing:.01em}
+  .collage .ph.ph-empty{aspect-ratio:4/3;border-style:dashed;display:grid;place-items:center;text-align:center;color:var(--muted);font-size:1.1cqw;gap:.8cqh;padding:1.6cqw}
+  .collage .ph.ph-empty svg{width:3cqw;height:3cqw;color:var(--accent);opacity:.8}
+
+  /* path */
+  .path{position:relative;display:flex;justify-content:space-between;max-width:80cqw;margin:5cqh auto 3cqh}
+  .path .track{position:absolute;left:8%;right:8%;top:4cqw;height:.7cqw;background:rgba(255,255,255,.1);border-radius:1cqw;overflow:hidden}
+  .path .fill{position:absolute;inset:0;width:0;border-radius:1cqw;background:linear-gradient(90deg,var(--c1),var(--c2) 50%,var(--c3))}
+  .active .path .fill{animation:fillpath 2.8s .3s cubic-bezier(.4,.05,.2,1) forwards}
+  @keyframes fillpath{to{width:100%}}
+  .node{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:1.3cqh;width:26%;opacity:.3;transform:translateY(1.2cqh)}
+  .active .node{animation:nodein .55s forwards}
+  .active .node.n1{animation-delay:.6s}.active .node.n2{animation-delay:1.5s}.active .node.n3{animation-delay:2.4s}
+  @keyframes nodein{to{opacity:1;transform:none}}
+  .node .ball{width:8cqw;height:8cqw;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:3.2cqw;color:#10131a}
+  .node.n1 .ball{background:linear-gradient(135deg,var(--c1),#c85944);color:#fff}
+  .node.n2 .ball{background:linear-gradient(135deg,var(--c2),#8b6eb5);color:#fff}
+  .node.n3 .ball{background:linear-gradient(135deg,var(--c3),#d9a520)}
+  .node .nm{font-weight:800;font-size:1.7cqw}
+  .node.n1 .nm{color:var(--c1)}.node.n2 .nm{color:var(--c2)}.node.n3 .nm{color:var(--c3)}
+  .node .mt{font-size:1cqw;color:var(--muted);margin-top:-.5cqh}
+  .node .ds{font-size:1.18cqw;color:var(--muted);text-align:center;max-width:20ch;line-height:1.3}
+
+  .call{font-size:3.3cqw;font-weight:800;line-height:1.16;letter-spacing:-.5px}.call .a{color:var(--accent)}
+
+  .footmark{position:absolute;bottom:2.3cqh;left:7cqw;z-index:5;font-size:1cqw;color:var(--muted)}.footmark b{color:var(--text)}
+  .nav{position:absolute;bottom:2.2cqh;right:7cqw;z-index:5;display:flex;align-items:center;gap:1.2cqw}
+  .dots{display:flex;gap:.5cqw;flex-wrap:wrap;max-width:50cqw;justify-content:flex-end}
+  .nd{width:.75cqw;height:.75cqw;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:.3s}
+  .nd.on{background:var(--c1);width:1.8cqw;border-radius:1cqw}
+  .count{font-size:1.05cqw;color:var(--muted);font-variant-numeric:tabular-nums}
+  .prog{position:absolute;top:0;left:0;height:.4cqh;z-index:6;width:0;background:linear-gradient(90deg,var(--c1),var(--c2),var(--c3));transition:width .5s cubic-bezier(.2,.7,.2,1)}
+  .fsbtn{position:absolute;top:2.4cqh;right:2.4cqw;z-index:20;width:3.2cqw;height:3.2cqw;border-radius:.7cqw;background:rgba(255,255,255,.06);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);backdrop-filter:blur(6px);transition:.2s}
+  .fsbtn:hover{background:rgba(255,255,255,.13);color:var(--text)}
+  .fsbtn svg{width:1.8cqw;height:1.8cqw}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="prog" id="prog"></div>
+  <div class="fsbtn" id="fsbtn" title="На весь экран"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 00-2 2v3M16 3h3a2 2 0 012 2v3M8 21H5a2 2 0 01-2-2v-3M16 21h3a2 2 0 002-2v-3"/></svg></div>
+
+  <!-- 0 ТИТУЛ -->
+  <section class="slide s1 active title-slide">
+    <div class="blobs"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+    <div class="brandbar"><div class="wordmark">neovida<span class="ai">.ai</span></div><div class="kicker"><span class="dot"></span>Бизнес-мастер-класс</div></div>
+    <div class="title-center">
+      <div class="eyebrow reveal d1" style="margin:0">Мастер-класс для предпринимателей</div>
+      <h1 class="hero-title reveal d2">Три этапа развития <span class="a">ИИ</span><br>в вашем бизнесе</h1>
+      <div class="hero-path reveal d3"><span class="pd c1"></span><span class="pl"></span><span class="pd c2"></span><span class="pl"></span><span class="pd c3"></span></div>
+      <div class="hero-sub reveal d3">Усиливаем команду, отдаём рутину агентам, запускаем полную автоматизацию</div>
+      <div class="hero-meta reveal d4">ведёт <b>Альберт Валеев</b> · neovida.ai</div>
+    </div>
+  </section>
+
+  <!-- 1 SPEAKER -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="wordmark">neovida<span class="ai">.ai</span></div><div class="kicker"><span class="dot"></span>Мастер-класс · Три этапа развития ИИ в бизнесе</div></div>
+    <div class="s1-body">
+      <div class="avatar-wrap reveal d2">
+        <div class="avatar-arc"><svg viewBox="0 0 210 210"><circle cx="105" cy="105" r="101" fill="none" stroke="#E07461" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="430 200"/><circle cx="105" cy="105" r="101" fill="none" stroke="rgba(224,116,97,.14)" stroke-width="2.5"/></svg></div>
+        <div class="avatar"><img src="images/../albert.jpg" alt="Альберт Валеев"></div>
+      </div>
+      <div>
+        <div class="s1-name reveal d2">Альберт Валеев</div>
+        <div class="s1-role reveal d3">Основатель и CEO neovida.ai</div>
+        <div class="s1-slogan reveal d3">Помогаем компаниям любого уровня AI-зрелости внедрить ИИ и выиграть в конкурентной гонке.</div>
+        <div class="regalia">
+          <div class="reg reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Исследователь-практик генеративного ИИ, методолог, преподаватель</div>
+          <div class="reg reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h6"/></svg>Автор курсов AI Boost, «ИИ. Новая реальность», AI Цех</div>
+          <div class="reg reveal d5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20a7 7 0 0114 0"/><circle cx="10" cy="8" r="3.2"/><path d="M16 11l2 2 4-4"/></svg>Обучил более 1000 учеников на своих программах</div>
+          <div class="reg reveal d6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l4 2V3"/><path d="M5 21h6M7 21v-3"/></svg>Концепция «ИИ как экзоскелет»: усиливаем человека, а не заменяем</div>
+        </div>
+      </div>
+    </div>
+    <div class="footmark">Три этапа развития ИИ в вашем бизнесе</div>
+  </section>
+
+  <!-- ЗНАКОМСТВО / ВОПРОСЫ ЗАЛУ -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Знакомство</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">Давайте поймём, <span class="a">на каком вы этапе</span></h2>
+    <p class="lead reveal d2">Поднимите руку, если это про вас. Так я подстрою примеры под ваш уровень и ваши задачи.</p>
+    <div class="grid g3" style="margin-top:1.8cqh">
+      <div class="card reveal d3"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0114 0"/></svg></div><h3>Пользуюсь сам</h3><p>Открываю нейросеть почти каждый день под рабочие задачи.</p></div>
+      <div class="card reveal d3"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3"/><path d="M16 19a4 4 0 00-8 0M20 19a4 4 0 00-3-3.8M4 19a4 4 0 013-3.8"/></svg></div><h3>Команда уже пробует</h3><p>Кто-то из сотрудников использует ИИ, иногда втихую.</p></div>
+      <div class="card reveal d4"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></div><h3>Внедряли осознанно</h3><p>Под конкретные задачи, а не «просто попробовать».</p></div>
+      <div class="card reveal d4"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><h3>Есть система и правила</h3><p>Единые инструменты и регламенты, а не каждый сам по себе.</p></div>
+      <div class="card reveal d5"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3>Вижу, где рутина</h3><p>Знаю процессы, которые съедают время команды.</p></div>
+      <div class="card reveal d5"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15c-1 1-2 5-2 5s4-1 5-2M9 11a8 8 0 016-6c3 0 5 2 5 5a8 8 0 01-6 6l-1.5.8L9.5 13z"/><circle cx="14.5" cy="9.5" r="1.4"/></svg></div><h3>Готов начать</h3><p>Понимаю, что пора, но руки пока не дошли.</p></div>
+    </div>
+    <div class="footmark">Три этапа развития ИИ в вашем бизнесе</div>
+  </section>
+
+  <!-- 2 ЭЛЕКТРИЧЕСТВО -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Почему именно сейчас</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="showcase">
+      <div class="sc-text">
+        <h2 class="reveal d1">ИИ это новое <span class="a">электричество</span></h2>
+        <p class="lead reveal d2">Электричество усилило руки человека: станки, двигатели, конвейер. Искусственный интеллект усиливает голову: анализ, решения, тексты. Это технология общего назначения, и она входит в каждый процесс компании.</p>
+        <div class="pts">
+          <div class="pt reveal d3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 4 14 11 14 10 22 20 9 13 9 13 2"/></svg>Электричество дало физический экзоскелет</div>
+          <div class="pt reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3a4 4 0 00-1 7.9M15 3a4 4 0 011 7.9M8 11a4 4 0 104 4M16 11a4 4 0 11-4 4"/></svg>ИИ даёт когнитивный экзоскелет</div>
+        </div>
+      </div>
+      <div class="imgframe reveal d2"><img src="images/img-electricity.jpg" alt="Электричество и ИИ"></div>
+    </div>
+    <div class="footmark">Три этапа развития ИИ в вашем бизнесе</div>
+  </section>
+
+  <!-- 3 УЖЕ ВНЕДРЯЮТ (Россия) -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Это не будущее, а настоящее</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">Лидеры рынка <span class="a">уже работают так</span></h2>
+    <p class="lead reveal d2">ИИ в ежедневной работе сотрудников это уже норма для крупнейших российских компаний.</p>
+    <div class="grid g3">
+      <div class="card reveal d3"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg></div><h3>Банки и финтех</h3><p>Ассистент слушает обращение клиента и подсказывает оператору следующий шаг в реальном времени.</p></div>
+      <div class="card reveal d4"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-4h16l1 4M5 9v10h14V9M9 13h6"/></svg></div><h3>Ритейл и сервис</h3><p>ИИ помогает в поддержке, продажах и обработке заявок, снимает с людей рутину.</p></div>
+      <div class="card reveal d5"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l5-3 5 3v13M9 12h2M9 16h2"/></svg></div><h3>Производство и девелопмент</h3><p>Внутренние ассистенты на собственных данных компании. Эти проекты мы ведём сами, кейсы дальше.</p></div>
+    </div>
+    <div class="footmark">Три этапа развития ИИ в вашем бизнесе</div>
+  </section>
+
+  <!-- 4 СОТРУДНИК 2027 -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Куда идёт роль человека</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="showcase rev">
+      <div class="imgframe reveal d2"><img src="images/img-employee2027.jpg" alt="Сотрудник 2027"></div>
+      <div class="sc-text">
+        <h2 class="reveal d1">Каким станет сотрудник <span class="a">к 2027 году</span></h2>
+        <p class="lead reveal d2">Не специалист с одной функцией, а человек со своей командой ИИ-агентов. Он перестаёт быть исполнителем рутины и становится тем, кто ставит задачи и отвечает за результат.</p>
+        <div class="pts">
+          <div class="pt reveal d3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Один человек закрывает работу за пятерых</div>
+          <div class="pt reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Узкий специалист уступает универсалу с ИИ</div>
+        </div>
+      </div>
+    </div>
+    <div class="footmark">Три этапа развития ИИ в вашем бизнесе</div>
+  </section>
+
+  <!-- 5 НОВЫЕ ПРАВИЛА РЫНКА -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Зачем это вам</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">Новые правила <span class="a">рынка труда</span></h2>
+    <div class="grid g3">
+      <div class="card reveal d3"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg></div><h3>Один за пятерых</h3><p>Ценность сотрудника не в одной задаче, а в том, сколько он закрывает с помощью ИИ.</p></div>
+      <div class="card reveal d4"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0112 0"/><circle cx="18" cy="9" r="2"/></svg></div><h3>Приходят с командой</h3><p>Брать будут тех, кто приводит с собой готовый набор ассистентов и агентов.</p></div>
+      <div class="card reveal d5"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M8 7h6a3 3 0 010 6H9a3 3 0 000 6h7"/></svg></div><h3>Больше за те же деньги</h3><p>Рынок ждёт кратно большего объёма при той же оплате. Кто не перестроится, проиграет тем, кто перестроился.</p></div>
+    </div>
+    <div class="footmark">Три этапа развития ИИ в вашем бизнесе</div>
+  </section>
+
+  <!-- 6 ВТИХУЮ -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Скорее всего, это уже у вас</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">Самые инициативные <span class="a">уже пользуются. Втихую</span></h2>
+    <div class="cmp">
+      <div class="b no reveal d3"><div class="tag">Как сейчас</div><p>Часть сотрудников уже работает с нейросетями, но скрытно: на случайных сервисах, неизвестно с какими данными и насколько это безопасно. Прежний объём за прежние деньги, хотя могли бы кратно больше.</p></div>
+      <div class="b yes reveal d4"><div class="tag">Что делать</div><p>Вывести это из тени: дать команде единые безопасные инструменты, обучить и поставить на рельсы. С этого начинается путь. Дальше три этапа, по порядку.</p></div>
+    </div>
+    <div class="footmark">Три этапа развития ИИ в вашем бизнесе</div>
+  </section>
+
+  <!-- 7 ПУТЬ -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Дорожная карта</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1" style="text-align:center">Три этапа развития ИИ в бизнесе</h2>
+    <div class="path">
+      <div class="track"><div class="fill"></div></div>
+      <div class="node n1"><div class="ball">1</div><div class="nm">AI-native команда</div><div class="mt">экзоскелет</div><div class="ds">Каждый сотрудник усилен ИИ-ассистентами</div></div>
+      <div class="node n2"><div class="ball">2</div><div class="nm">AI-driven компания</div><div class="mt">второй пилот</div><div class="ds">Точечные агенты под задачи поверх процессов</div></div>
+      <div class="node n3"><div class="ball">3</div><div class="nm">AI-first компания</div><div class="mt">автопилот</div><div class="ds">Единая агентная ОС, агенты всё ведут и учатся</div></div>
+    </div>
+    <p class="lead reveal d6" style="text-align:center;max-width:60cqw;margin:0 auto">Идём снизу вверх. Многим бизнесам хватает уже первого этапа, чтобы почувствовать разницу.</p>
+    <div class="footmark">Три этапа развития ИИ в вашем бизнесе</div>
+  </section>
+
+  <!-- ОБЛОЖКА ЭТАП 1 -->
+  <section class="slide s1 namecover">
+    <img class="cover-bg" src="images/cover-native.jpg" alt=""><div class="ov"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Этап 1 из 3</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="nm-wrap reveal d1">
+      <div class="nm-step">Этап 1</div>
+      <div class="nm-big">AI-<span class="a">native</span></div>
+      <div class="nm-meta"><b>Native значит врождённый.</b> ИИ становится родным, повседневным инструментом каждого сотрудника. Метафора: когнитивный экзоскелет</div>
+    </div>
+  </section>
+
+  <!-- 8 ЭТАП 1 ДИВАЙДЕР -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Этап 1 из 3</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="stagehead reveal d1"><div class="stagenum">1</div><div><h2>AI-native команда</h2><div class="sub">Ассистентный подход</div></div></div>
+    <div class="meta-pill reveal d2">Метафора: когнитивный экзоскелет</div>
+    <p class="lead reveal d3">Обучаем команду и даём каждому набор ИИ-инструментов под его задачи. Человек за рулём, скорость в разы выше. Самый быстрый результат и низкий порог входа. Многим компаниям этого шага уже достаточно.</p>
+    <div class="foot reveal d5"><span class="lbl">Как запустить: <b>обучить команду, собрать стек, прописать регламенты использования.</b></span></div>
+  </section>
+
+  <!-- 9 ЭКЗОСКЕЛЕТ (img) -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Что это такое</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="showcase">
+      <div class="sc-text">
+        <h2 class="reveal d1">Когнитивный <span class="a">экзоскелет</span></h2>
+        <p class="lead reveal d2">У каждой роли свой набор ИИ-помощников. ИИ берёт на себя черновую работу: поиск, анализ, тексты, варианты решений. Человек остаётся автором и принимает финальное решение.</p>
+        <div class="pts">
+          <div class="pt reveal d3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Работает за часы вместо дней</div>
+          <div class="pt reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Без бюджета и своих программистов</div>
+        </div>
+      </div>
+      <div class="imgframe reveal d2"><img src="images/img-exoskeleton.jpg" alt="Когнитивный экзоскелет"></div>
+    </div>
+    <div class="footmark">Этап 1 · AI-native команда</div>
+  </section>
+
+  <!-- 10 ИНСТРУМЕНТЫ -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Инструменты этапа 1</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">Не одна нейросеть, <span class="a">а набор под задачи</span></h2>
+    <p class="lead reveal d2">Под каждую задачу свой инструмент. Достаточно одного-двух основных, чтобы начать.</p>
+    <div class="tools">
+      <div class="tool reveal d3"><div class="b" style="background:#10A37F"><svg viewBox="0 0 256 260"><path d="M239.184 106.203a64.716 64.716 0 0 0-5.576-53.103C219.452 28.459 191 15.784 163.213 21.74A65.586 65.586 0 0 0 52.096 45.22a64.716 64.716 0 0 0-43.23 31.36c-14.31 24.602-11.061 55.634 8.033 76.74a64.665 64.665 0 0 0 5.525 53.102c14.174 24.65 42.644 37.324 70.446 31.36a64.72 64.72 0 0 0 48.754 21.744c28.481.025 53.714-18.361 62.414-45.481a64.767 64.767 0 0 0 43.229-31.36c14.137-24.558 10.875-55.423-8.083-76.483Zm-97.56 136.338a48.397 48.397 0 0 1-31.105-11.255l1.535-.87 51.67-29.825a8.595 8.595 0 0 0 4.247-7.367v-72.85l21.845 12.636c.218.111.37.32.409.563v60.367c-.056 26.818-21.783 48.545-48.601 48.601Zm-104.466-44.61a48.345 48.345 0 0 1-5.781-32.589l1.534.921 51.722 29.826a8.339 8.339 0 0 0 8.441 0l63.181-36.425v25.221a.87.87 0 0 1-.358.665l-52.335 30.184c-23.257 13.398-52.97 5.431-66.404-17.803ZM23.549 85.38a48.499 48.499 0 0 1 25.58-21.333v61.39a8.288 8.288 0 0 0 4.195 7.316l62.874 36.272-21.845 12.636a.819.819 0 0 1-.767 0L41.353 151.53c-23.211-13.454-31.171-43.144-17.804-66.405v.256Zm179.466 41.695-63.08-36.63L161.73 77.86a.819.819 0 0 1 .768 0l52.233 30.184a48.6 48.6 0 0 1-7.316 87.635v-61.391a8.544 8.544 0 0 0-4.4-7.213Zm21.742-32.69-1.535-.922-51.619-30.081a8.39 8.39 0 0 0-8.492 0L99.98 99.808V74.587a.716.716 0 0 1 .307-.665l52.233-30.133a48.652 48.652 0 0 1 72.236 50.391v.205ZM88.061 139.097l-21.845-12.585a.87.87 0 0 1-.41-.614V65.685a48.652 48.652 0 0 1 79.757-37.346l-1.535.87-51.67 29.825a8.595 8.595 0 0 0-4.246 7.367l-.051 72.697Zm11.868-25.58 28.138-16.217 28.188 16.218v32.434l-28.086 16.218-28.188-16.218-.052-32.434Z"/></svg></div><div><div class="nm">ChatGPT</div><div class="d">универсальный, на каждый день</div></div></div>
+      <div class="tool reveal d3"><div class="b" style="background:#D97757"><svg viewBox="0 0 24 24"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg></div><div><div class="nm">Claude</div><div class="d">тексты, анализ, длинные документы</div></div></div>
+      <div class="tool reveal d4"><div class="b" style="background:#4285F4"><svg viewBox="0 0 24 24"><path d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/></svg></div><div><div class="nm">Gemini</div><div class="d">картинки, видео, большой контекст</div></div></div>
+      <div class="tool reveal d4"><div class="b" style="background:linear-gradient(135deg,#19C2A8,#2D7CFF 55%,#8E5BF5)"><svg viewBox="0 0 24 24"><path d="M5 3h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-8.5L5 21v-4a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3z"/></svg></div><div><div class="nm">GigaChat</div><div class="d">российский, данные в стране</div></div></div>
+      <div class="tool reveal d5"><div class="b" style="background:#FC3F1D"><svg viewBox="0 0 24 24"><path d="M12 0C5.38 0 0 5.38 0 12s5.38 12 12 12 12-5.38 12-12S18.62 0 12 0zM7.163 20.618C4.152 18.927 2.12 15.702 2.12 12c0-5.46 4.42-9.88 9.88-9.88 1.429 0 2.496.536 3.029 1.187.534.65.684 1.715.5 3.253l-3.207.631c-2.905.532-4.506 2.148-5.06 5.065-.07.406-.15.812-.226 1.196-.031.157-.062.312-.09.46-.073.396-.143.773-.208 1.124-.093.505-.177.957-.247 1.34-.324 1.884-.06 3.276.672 4.242zm7.986-11.851c-.087.434-.167.867-.247 1.302-.081.434-.16.868-.247 1.301-.396 2.05-1.364 2.996-3.42 3.391l-2.391.474c.059-.296.119-.611.178-.927.022-.12.044-.241.067-.362.078-.421.157-.855.25-1.313.395-2.05 1.344-2.996 3.399-3.391l2.411-.475zM12 21.88c-1.429 0-2.496-.536-3.029-1.187s-.684-1.715-.5-3.253l3.18-.631c2.905-.532 4.507-2.148 5.08-5.046.069-.406.149-.812.226-1.196.031-.157.062-.311.09-.46.087-.471.171-.917.247-1.327.081-.432.154-.822.215-1.156.325-1.884.061-3.275-.671-4.242C19.848 5.073 21.88 8.298 21.88 12c0 5.46-4.42 9.88-9.88 9.88z"/></svg></div><div><div class="nm">YandexGPT</div><div class="d">российский, интеграции с сервисами</div></div></div>
+      <div class="tool reveal d5"><div class="b" style="background:#B69BE6"><svg viewBox="0 0 24 24"><path d="M12 2l2.35 6.32L21 10.5l-6.65 2.18L12 19l-2.35-6.32L3 10.5l6.65-2.18z"/></svg></div><div><div class="nm">Свой ассистент</div><div class="d">настроенный под вашу задачу</div></div></div>
+    </div>
+    <div class="footmark">Этап 1 · AI-native команда</div>
+  </section>
+
+  <!-- 11 ЧТО УМЕЕТ -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Сотрудник плюс ИИ</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">Что сотрудник делает <span class="a">вместе с ИИ</span></h2>
+    <p class="lead reveal d2" style="margin-top:1cqh">Те же задачи, что и раньше, но в разы быстрее. Человек ставит задачу и проверяет, ИИ берёт черновую работу.</p>
+    <div class="acts">
+      <div class="actcol reveal d3">
+        <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 14l3-3 3 2 4-5"/></svg>Продажи</h4>
+        <div class="ai-item"><span class="b"></span>КП за минуты вместо часов</div>
+        <div class="ai-item"><span class="b"></span>Разбор звонка и follow-up</div>
+        <div class="ai-item"><span class="b"></span>Ответы на возражения</div>
+        <div class="ai-item"><span class="b"></span>Досье на клиента к встрече</div>
+        <div class="ai-item"><span class="b"></span>Скрипты и сценарии продаж</div>
+        <div class="ai-item"><span class="b"></span>Квалификация входящих заявок</div>
+      </div>
+      <div class="actcol reveal d4">
+        <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l13-5v12L3 13z"/><path d="M7 13v4l3 1"/></svg>Маркетинг</h4>
+        <div class="ai-item"><span class="b"></span>Контент-план на месяц</div>
+        <div class="ai-item"><span class="b"></span>Посты и рассылки</div>
+        <div class="ai-item"><span class="b"></span>Тексты для лендинга</div>
+        <div class="ai-item"><span class="b"></span>Анализ конкурентов</div>
+        <div class="ai-item"><span class="b"></span>Сценарии и идеи рекламы</div>
+        <div class="ai-item"><span class="b"></span>Заголовки и офферы</div>
+      </div>
+      <div class="actcol reveal d5">
+        <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 16h4a2 2 0 000-4h-4a2 2 0 010-4h4"/></svg>Финансы и право</h4>
+        <div class="ai-item"><span class="b"></span>Разбор P&L и движения денег</div>
+        <div class="ai-item"><span class="b"></span>Поиск аномалий в расходах</div>
+        <div class="ai-item"><span class="b"></span>Черновик финмодели</div>
+        <div class="ai-item"><span class="b"></span>Договор из шаблона</div>
+        <div class="ai-item"><span class="b"></span>Проверка договора на риски</div>
+        <div class="ai-item"><span class="b"></span>Претензии и ответы на них</div>
+      </div>
+      <div class="actcol reveal d6">
+        <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0112 0"/><circle cx="18" cy="9" r="2"/></svg>HR и операции</h4>
+        <div class="ai-item"><span class="b"></span>Вакансия и отбор резюме</div>
+        <div class="ai-item"><span class="b"></span>Вопросы для собеседования</div>
+        <div class="ai-item"><span class="b"></span>Адаптация новичка</div>
+        <div class="ai-item"><span class="b"></span>Протокол встречи и задачи</div>
+        <div class="ai-item"><span class="b"></span>Регламенты и инструкции</div>
+        <div class="ai-item"><span class="b"></span>Саммари длинного документа</div>
+      </div>
+    </div>
+    <div class="footmark">Этап 1 · AI-native команда</div>
+  </section>
+
+  <!-- 12 ОТ АССИСТЕНТА К ЛИЧНОМУ ПОМОЩНИКУ -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Вершина первого этапа</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">От разовых запросов <span class="a">к личному помощнику</span></h2>
+    <div class="cmp">
+      <div class="b no reveal d3"><div class="tag">Разовый запрос</div><p>Каждый раз объясняешь заново, кто ты, что за компания и что нужно. Полезно, но недолговечно.</p></div>
+      <div class="b yes reveal d4"><div class="tag">Личный ассистент</div><p>Настроен под сотрудника: знает его роль, файлы, прайсы и стиль. Отвечает по вашим данным и готовит работу на опережение.</p></div>
+    </div>
+    <p class="lead reveal d5">Удачные сценарии закрепляются в постоянных помощниках. Это и есть мостик ко второму этапу.</p>
+    <div class="footmark">Этап 1 · AI-native команда</div>
+  </section>
+
+  <!-- 13 КЕЙС PRINTMASTER -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Кейс · Этап 1</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="case-body">
+      <div>
+        <div class="case-head reveal d1"><span class="badge">Кейс</span><span class="status"><span class="g"></span>Внедрено</span></div>
+        <div class="case-title reveal d1">Printmaster</div>
+        <div class="case-sub reveal d2">Сервис офисной техники. Обучили команду, у каждой роли свой ИИ-ассистент.</div>
+        <div class="clist">
+          <div class="ci reveal d3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6"/></svg>Финдиректор готовит структуру финплана и вопросы к отделам за минуты</div>
+          <div class="ci reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg>Юрист собирает карту рисков по договору и проверку закупок</div>
+          <div class="ci reveal d5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 16l3-4 3 2 4-6"/></svg>Отдел продаж разбирает тендеры, считает маржу, готовит КП</div>
+          <div class="ci reveal d6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H4z"/><path d="M12 16v4M8 20h8"/></svg>Маркетинг пакует один пост сразу под все площадки</div>
+        </div>
+      </div>
+      <div class="collage3">
+        <div class="p-wide reveal d2"><img src="images/photo-printmaster.jpg" alt="Команда Printmaster"></div>
+        <div class="p-row">
+          <div class="ph reveal d3"><img src="images/photo-printmaster-2.jpg" alt="Команда Printmaster за столом"></div>
+          <div class="ph reveal d4"><img src="images/photo-printmaster-3.jpg" alt="Команда Printmaster на обучении"></div>
+        </div>
+      </div>
+    </div>
+    <div class="footmark">Этап 1 · AI-native команда</div>
+  </section>
+
+  <!-- PRINTMASTER ЧТО СОБРАЛИ -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Кейс · что собрали сами</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">Printmaster: команда <span class="a">собрала ассистентов сама</span></h2>
+    <p class="lead reveal d2" style="margin-top:1cqh">Мы показали как, дальше каждый собрал помощника под свой процесс.</p>
+    <div class="grid g3" style="gap:1.3cqw;margin-top:1.4cqh">
+      <div class="card reveal d3"><h3>Тендеры<span class="s">«Радар тендера»</span></h3><p>Красные флаги, вопросы поставщику, проверка маржи.</p></div>
+      <div class="card reveal d3"><h3>Продажи<span class="s">«КП-конструктор»</span></h3><p>Структура КП, уточняющие вопросы, черновик письма.</p></div>
+      <div class="card reveal d4"><h3>Колл-центр<span class="s">«Контроль звонка»</span></h3><p>Разбор разговора и помощник по скриптам.</p></div>
+      <div class="card reveal d4"><h3>Юрист<span class="s">валидатор договоров</span></h3><p>Карта рисков, проверка закупок, что перепроверить.</p></div>
+      <div class="card reveal d5"><h3>Документы<span class="s">чек-лист ЭДО</span></h3><p>Чего не хватает в комплекте, письмо-напоминание.</p></div>
+      <div class="card reveal d5"><h3>Маркетинг<span class="s">«SMM-планер»</span></h3><p>Пост, видеосценарий и заголовки под площадки.</p></div>
+    </div>
+    <div class="footmark">Этап 1 · AI-native команда</div>
+  </section>
+
+  <!-- 14 КЕЙС ВСЯ УФА -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Кейс · Этап 1</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="case-body">
+      <div>
+        <div class="case-head reveal d1"><span class="badge">Кейс</span><span class="status"><span class="g"></span>Внедрено</span></div>
+        <div class="case-title reveal d1">Телеканал «Вся Уфа»</div>
+        <div class="case-sub reveal d2">У каждой роли в редакции свой набор ассистентов, работающих конвейером.</div>
+        <div class="clist">
+          <div class="ci reveal d3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Корреспондент: тема, вопросы к интервью, структура сюжета, текст</div>
+          <div class="ci reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>Редактор: планирование, вёрстка выпуска, контроль перед эфиром</div>
+          <div class="ci reveal d5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H4z"/><path d="M12 16v4M8 20h8"/></svg>SMM: один текст сразу под все площадки канала</div>
+        </div>
+        <div class="quote reveal d6">«Первая команда телеканала в Башкортостане, прошедшая AI-обучение.»</div>
+      </div>
+      <div class="collage trio">
+        <div class="ph p-tall reveal d2"><img src="images/photo-vsyaufa-alt.jpg" alt="Мастер-класс Вся Уфа"></div>
+        <div class="ph p-a reveal d3"><img src="images/photo-vsyaufa.jpg" alt="Команда Вся Уфа"></div>
+        <div class="ph p-b reveal d4"><img src="images/photo-vsyaufa-sign.jpg" alt="Студия телеканала Вся Уфа"></div>
+      </div>
+    </div>
+    <div class="footmark">Этап 1 · AI-native команда</div>
+  </section>
+
+  <!-- ВСЯ УФА ЧТО СОБРАЛИ -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Кейс · что собрали сами</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">«Вся Уфа»: редакция <span class="a">на конвейере ассистентов</span></h2>
+    <p class="lead reveal d2" style="margin-top:1cqh">Каждая роль собрала свой набор, и все ассистенты связаны в одну цепочку.</p>
+    <div class="grid g3" style="gap:1.3cqw;margin-top:1.4cqh">
+      <div class="card reveal d3"><h3>Корреспондент<span class="s">«Разведка темы»</span></h3><p>Исследует инфоповод и проверяет факты до выезда.</p></div>
+      <div class="card reveal d3"><h3>Корреспондент<span class="s">«Структура»</span></h3><p>Из сырых заметок собирает готовую структуру сюжета.</p></div>
+      <div class="card reveal d4"><h3>Корреспондент<span class="s">«Текстовик»</span></h3><p>Пишет закадровый текст в эфирном стиле по тезисам.</p></div>
+      <div class="card reveal d4"><h3>Редактор<span class="s">«Вёрстка выпуска»</span></h3><p>Порядок сюжетов, баланс тем, выбор открывашки.</p></div>
+      <div class="card reveal d5"><h3>Редактор<span class="s">«Контроль качества»</span></h3><p>Прогоняет материал по чек-листу перед эфиром.</p></div>
+      <div class="card reveal d5"><h3>SMM<span class="s">«Адаптер»</span></h3><p>Одна новость превращается в посты под все площадки.</p></div>
+    </div>
+    <div class="footmark">Этап 1 · AI-native команда</div>
+  </section>
+
+  <!-- ОБЛОЖКА ЭТАП 2 -->
+  <section class="slide s2 namecover">
+    <img class="cover-bg" src="images/cover-driven.jpg" alt=""><div class="ov"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Этап 2 из 3</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="nm-wrap reveal d1">
+      <div class="nm-step">Этап 2</div>
+      <div class="nm-big">AI-<span class="a">driven</span></div>
+      <div class="nm-meta"><b>Driven значит движимый ИИ.</b> Локальные агенты и автоматизации поверх ваших процессов, под отдельные задачи. Не вся компания, а точечно. Метафора: второй пилот</div>
+    </div>
+  </section>
+
+  <!-- 15 ЭТАП 2 ДИВАЙДЕР -->
+  <section class="slide s2">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Этап 2 из 3</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="stagehead reveal d1"><div class="stagenum">2</div><div><h2>AI-driven компания</h2><div class="sub">Точечные агенты и единый контур</div></div></div>
+    <div class="meta-pill reveal d2">Метафора: второй пилот</div>
+    <p class="lead reveal d3">ИИ накладывается поверх ваших процессов: точечные агенты автоматизируют отдельные задачи, а данные живут в едином защищённом контуре с базой знаний. Это локальные автоматизации под конкретные задачи, а не вся компания на агентах.</p>
+    <div class="foot reveal d5"><span class="lbl">Принцип: <b>сначала порядок в знаниях, потом агенты. Куча ботов это ещё не система.</b></span></div>
+  </section>
+
+  <!-- ЧТО ТАКОЕ АГЕНТ (вход) -->
+  <section class="slide s2">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Ключевое понятие</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="showcase rev">
+      <div class="imgframe reveal d2"><img src="images/img-agent.jpg" alt="ИИ-агент"></div>
+      <div class="sc-text">
+        <h2 class="reveal d1">Агент это не чат.<br><span class="a">Это работник</span></h2>
+        <p class="lead reveal d2">Чат отвечает на вопрос. Агент доводит задачу до результата: сам находит информацию, делает, проверяет себя и останавливается на решении человека.</p>
+        <div class="pts">
+          <div class="pt reveal d3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Заточен под одну конкретную задачу</div>
+          <div class="pt reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Работает рядом с человеком, а не вместо него</div>
+        </div>
+      </div>
+    </div>
+    <div class="footmark">Этап 2 · AI-driven компания</div>
+  </section>
+
+  <!-- 16 АГЕНТ: БОЛЬШАЯ ИНФОГРАФИКА -->
+  <section class="slide s2 full-img">
+    <div class="fullimg reveal d1"><img src="images/img-agent-builder.jpg" alt="Из чего состоит агент: модель плюс инструменты"></div>
+  </section>
+
+  <!-- 18 RAG (img) -->
+  <section class="slide s2">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Сердце второго этапа</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="showcase">
+      <div class="sc-text">
+        <h2 class="reveal d1">Единый контур <span class="a">и база знаний</span></h2>
+        <p class="lead reveal d2">Агент отвечает не из головы, а из данных вашей компании, и показывает источник. Всё работает внутри защищённого периметра: модель внутри, данные не покидают компанию, доступ по ролям.</p>
+        <div class="pts">
+          <div class="pt reveal d3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Знания не теряются в головах и чатах</div>
+          <div class="pt reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Новый сотрудник входит в курс за день</div>
+        </div>
+      </div>
+      <div class="imgframe reveal d2"><img src="images/img-rag.jpg" alt="RAG-контур компании"></div>
+    </div>
+    <div class="footmark">Этап 2 · AI-driven компания</div>
+  </section>
+
+  <!-- 19 БЕЗОПАСНОСТЬ -->
+  <section class="slide s2">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Безопасность данных</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">Свой контур это <span class="a">ответ закону</span></h2>
+    <p class="lead reveal d2">Когда модель внутри компании или в российском облаке, данные не уезжают за границу. Это требование 152-ФЗ, а не вопрос моды.</p>
+    <div class="statrow">
+      <div class="stat reveal d3"><div class="n">в периметре</div><div class="l">данные остаются внутри компании</div></div>
+      <div class="stat reveal d4"><div class="n">по ролям</div><div class="l">каждый видит только своё, всё логируется</div></div>
+      <div class="stat reveal d5"><div class="n">152-ФЗ</div><div class="l">штрафы за утечки выросли многократно</div></div>
+    </div>
+    <div class="footmark">Этап 2 · AI-driven компания</div>
+  </section>
+
+  <!-- 20 ЭТО УЖЕ ПРОИСХОДИТ -->
+  <section class="slide s2">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Темп рынка</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">Окно открыто, <span class="a">но не навсегда</span></h2>
+    <div class="statrow">
+      <div class="stat reveal d3"><div class="n">сегодня</div><div class="l">точечные агенты внедряют единицы</div></div>
+      <div class="stat reveal d4"><div class="n">через год</div><div class="l">это станет нормой для большинства</div></div>
+    </div>
+    <p class="lead reveal d5">Кто начал раньше, тот успел навести порядок в данных и обогнать рынок. Кто опоздал, догоняет в спешке.</p>
+    <div class="footmark">Этап 2 · AI-driven компания</div>
+  </section>
+
+  <!-- 21 КЕЙС ИРЕМЕЛЬ -->
+  <section class="slide s2">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Кейс · Этап 2</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="case-body">
+      <div>
+        <div class="case-head reveal d1"><span class="badge">Кейс</span><span class="status"><span class="g"></span>Внедрено</span></div>
+        <div class="case-title reveal d1">Гостиница «Иремель»</div>
+        <div class="case-sub reveal d2">Две разные агентские системы, объединённые единым RAG-контуром с общей базой знаний.</div>
+        <div class="clist">
+          <div class="ci reveal d3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><b style="color:var(--text)">Консьерж-агент для гостей:</b> QR в номере, отвечает на вопросы 24/7, сложное передаёт администратору</div>
+          <div class="ci reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0112 0"/><path d="M16 8a3 3 0 010 6"/><path d="M21 20a6 6 0 00-4-5.6"/></svg><b style="color:var(--text)">Служебный агент для персонала:</b> роли, задачи, регламенты, доска номеров</div>
+          <div class="ci reveal d5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 7l3 3M17 7l-3 3M7 17l3-3M17 17l-3-3"/></svg><b style="color:var(--text)">Единый RAG-контур:</b> обе системы работают на одной защищённой базе знаний</div>
+          <div class="ci reveal d6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M8 8V6a4 4 0 018 0v2"/></svg>Данные на своём сервере, наружу ничего не уходит, ответы строго из базы</div>
+        </div>
+      </div>
+      <div class="collage one">
+        <div class="ph reveal d2"><img src="images/photo-iremel.jpg" alt="Команда гостиницы «Иремель»"></div>
+      </div>
+    </div>
+    <div class="footmark">Этап 2 · AI-driven компания</div>
+  </section>
+
+  <!-- 22 КЕЙС СЕМЬ ПРУДОВ -->
+  <section class="slide s2">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Кейс · Этап 2</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="case-body">
+      <div>
+        <div class="case-head reveal d1"><span class="badge">Кейс</span><span class="status"><span class="w"></span>В работе</span></div>
+        <div class="case-title reveal d1">«Семь Прудов»</div>
+        <div class="case-sub reveal d2">Один из крупнейших девелоперов Екатеринбурга.</div>
+        <div class="case-chips reveal d2"><span class="c">2500 участков</span><span class="c">коттеджные посёлки</span><span class="c">свои управляющие компании</span></div>
+        <div class="clist">
+          <div class="ci reveal d3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>Задача: собрать земельные участки, посёлки и управляющие компании в одну систему</div>
+          <div class="ci reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Чтобы данные были видны, а отделы общались между собой</div>
+          <div class="ci reveal d5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg>Дашборд собственника: проекты, участки, платежи в одном окне</div>
+        </div>
+      </div>
+      <div class="collage two">
+        <div class="ph port reveal d2"><img src="images/photo-7prudov-1.jpg" alt="Обучение команды Семь Прудов"></div>
+        <div class="ph port reveal d3"><img src="images/photo-7prudov-2.jpg" alt="С собственниками Семь Прудов"></div>
+      </div>
+    </div>
+    <div class="footmark">Этап 2 · AI-driven компания</div>
+  </section>
+
+  <!-- 23 МЕТОДОЛОГИЯ -->
+  <section class="slide s2">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Как мы это делаем</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">Почему нельзя <span class="a">перепрыгнуть этап</span></h2>
+    <p class="lead reveal d2">Контур строится не на хаосе. Сначала порядок, потом автоматизация. Так проходит каждая компания.</p>
+    <div class="steps">
+      <div class="st reveal d3"><div class="num">1</div><div><h3>Очное обучение команды</h3><p>Люди начинают пользоваться ИИ и видят пользу на своих задачах.</p></div></div>
+      <div class="st reveal d4"><div class="num">2</div><div><h3>Глубинные интервью и аудит процессов</h3><p>Разбираем, как всё устроено, где сломано, где теряется информация.</p></div></div>
+      <div class="st reveal d5"><div class="num">3</div><div><h3>Наводим порядок, затем строим контур</h3><p>Сначала рабочие процессы и чистые данные, потом единая база и агенты.</p></div></div>
+    </div>
+    <div class="footmark">Этап 2 · AI-driven компания</div>
+  </section>
+
+  <!-- ОБЛОЖКА ЭТАП 3 -->
+  <section class="slide s3 namecover">
+    <img class="cover-bg" src="images/cover-first.jpg" alt=""><div class="ov"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Этап 3 из 3</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="nm-wrap reveal d1">
+      <div class="nm-step">Этап 3</div>
+      <div class="nm-big">AI-<span class="a">first</span></div>
+      <div class="nm-meta"><b>First значит ИИ прежде всего.</b> Все процессы соединены в единую агентную ОС, агенты всё выполняют и обучаются, человек наблюдает и иногда вмешивается. Метафора: автопилот</div>
+    </div>
+  </section>
+
+  <!-- 24 ЭТАП 3 ДИВАЙДЕР -->
+  <section class="slide s3">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Этап 3 из 3</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="stagehead reveal d1"><div class="stagenum">3</div><div><h2>AI-first компания</h2><div class="sub">Процессы выстроены вокруг ИИ</div></div></div>
+    <div class="meta-pill reveal d2">Метафора: автопилот, человек-оператор</div>
+    <p class="lead reveal d3">Все процессы соединены в единую агентную ОС. Агенты сами ведут задачи, ходят по процессам и обучаются. Человек переходит в роль оператора: наблюдает, иногда вмешивается, правит и подтверждает. Это уже не точечные автоматизации, а вся компания вокруг ИИ.</p>
+    <div class="foot reveal d5"><span class="lbl">Сдвиг вопроса: <b>не «как сделать быстрее», а «должен ли процесс вообще выглядеть так».</b></span></div>
+  </section>
+
+  <!-- 25 AI-FIRST (img) -->
+  <section class="slide s3">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Как устроена компания</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="showcase rev">
+      <div class="imgframe reveal d2"><img src="images/img-aifirst.jpg" alt="AI-first компания"></div>
+      <div class="sc-text">
+        <h2 class="reveal d1">Компания с <span class="a">ИИ-мозгом</span></h2>
+        <p class="lead reveal d2">Все сигналы компании сходятся в единый контур. Система сама замечает отклонения и ведёт процесс по циклу: наблюдение, анализ, действие, улучшение.</p>
+        <div class="pts">
+          <div class="pt reveal d3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Сквозные процессы идут без ручного запуска</div>
+          <div class="pt reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Рост без раздувания штата</div>
+        </div>
+      </div>
+    </div>
+    <div class="footmark">Этап 3 · AI-first компания</div>
+  </section>
+
+  <!-- 26 КОМАНДА АГЕНТОВ (img) -->
+  <section class="slide s3">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Сердце третьего этапа</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="showcase">
+      <div class="sc-text">
+        <h2 class="reveal d1">Команда агентов <span class="a">и самоулучшение</span></h2>
+        <p class="lead reveal d2">Не один универсал, а команда узких агентов вокруг человека-оператора: исполнитель, аналитик, контролёр, координатор. Каждое решение человека делает систему умнее.</p>
+        <div class="pts">
+          <div class="pt reveal d3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Под каждую задачу свой агент</div>
+          <div class="pt reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Система учится на каждом действии человека</div>
+        </div>
+      </div>
+      <div class="imgframe reveal d2"><img src="images/img-agents-team.jpg" alt="Команда агентов"></div>
+    </div>
+    <div class="footmark">Этап 3 · AI-first компания</div>
+  </section>
+
+  <!-- 27 ЧЕЛОВЕК-ОПЕРАТОР -->
+  <section class="slide s3">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Новая роль человека</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">Человек становится <span class="a">оператором</span></h2>
+    <div class="grid g3">
+      <div class="card reveal d3"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div><h3>Ставит задачи</h3><p>Определяет, что и зачем делает система, задаёт цели и правила.</p></div>
+      <div class="card reveal d4"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 6-6"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg></div><h3>Проверяет результат</h3><p>Подтверждает важные шаги, ловит ошибки, держит качество.</p></div>
+      <div class="card reveal d5"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3-6.7M21 4v4h-4"/></svg></div><h3>Учит систему</h3><p>Каждое его решение делает ИИ точнее в следующий раз.</p></div>
+    </div>
+    <div class="footmark">Этап 3 · AI-first компания</div>
+  </section>
+
+  <!-- 28 КЕЙС ЗАВОД -->
+  <section class="slide s3">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Кейс · Этап 3</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="case-body">
+      <div>
+        <div class="case-head reveal d1"><span class="badge">Кейс</span><span class="status"><span class="w"></span>В работе</span></div>
+        <div class="case-title reveal d1">Завод «Тесла»</div>
+        <div class="case-sub reveal d2">Производство в Татарстане. Сквозная автоматизация от тендера до отгрузки, переход к агентам.</div>
+        <div class="clist">
+          <div class="ci reveal d3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Агент находит тендеры, оценивает и расставляет приоритеты</div>
+          <div class="ci reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6"/></svg>Локальный контур по ГОСТам, архиву и договорам, ответ со ссылкой</div>
+          <div class="ci reveal d5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Сквозная цепочка: тендер, КП, договор, документы, отгрузка</div>
+          <div class="ci reveal d6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0112 0"/></svg>Человек подтверждает решения, ИИ забирает рутину</div>
+        </div>
+      </div>
+      <div class="collage one">
+        <div class="ph reveal d2"><img src="images/photo-tesla.jpg" alt="Рабочая сессия на заводе"></div>
+      </div>
+    </div>
+    <div class="footmark">Этап 3 · AI-first компания</div>
+  </section>
+
+  <!-- 29 РИСКИ -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Без розовых очков</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">Риски и <span class="a">типовые ошибки</span></h2>
+    <div class="grid g2" style="margin-top:2cqh">
+      <div class="ex reveal d3"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9l-8 14A2 2 0 004 21h16a2 2 0 001.7-3l-8-14a2 2 0 00-3.4 0z"/></svg></div><span>ИИ ошибается уверенно: важное подтверждает человек</span></div>
+      <div class="ex reveal d3"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h10M4 17h7"/></svg></div><span>Не автоматизируйте хаос: сначала порядок</span></div>
+      <div class="ex reveal d4"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0112 0"/></svg></div><span>Не убирайте человека из ответственных шагов</span></div>
+      <div class="ex reveal d4"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l3-3 3 2 4-5"/></svg></div><span>Измеряйте эффект до и после</span></div>
+    </div>
+    <div class="footmark">Три этапа развития ИИ в вашем бизнесе</div>
+  </section>
+
+  <!-- 30 ЧТО ДЕЛАТЬ -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>С чего начать</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <h2 class="t reveal d1">Что сделать <span class="a">уже на этой неделе</span></h2>
+    <div class="steps">
+      <div class="st reveal d3"><div class="num">1</div><div><h3>Выберите один повторяемый процесс</h3><p>Подготовка КП, обработка заявок, проверка договоров, ответы клиентам.</p></div></div>
+      <div class="st reveal d4"><div class="num">2</div><div><h3>Обучите команду первому этапу</h3><p>Дайте людям единые инструменты под их задачи и простые регламенты.</p></div></div>
+      <div class="st reveal d5"><div class="num">3</div><div><h3>Замерьте эффект до и после</h3><p>Один процесс, понятная цифра. Что сработало, то масштабируем.</p></div></div>
+    </div>
+    <div class="footmark">Три этапа развития ИИ в вашем бизнесе</div>
+  </section>
+
+  <!-- 31 ФИНАЛ -->
+  <section class="slide s1">
+    <div class="glow" style="opacity:.22"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Главное</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="call reveal d2">Людей заменят не нейросети.<br>Людей заменят <span class="a">те, кто умеет с ними работать.</span></div>
+    <p class="lead reveal d3">Три этапа это карта: AI-native команда, AI-driven компания, AI-first компания. Лучшее время войти это сегодня.</p>
+    <div class="reveal d4" style="margin-top:3cqh;font-size:1.35cqw;color:var(--muted)"><b style="color:var(--text)">Альберт Валеев</b> · neovida.ai · помогаем внедрить ИИ и выиграть в конкурентной гонке</div>
+  </section>
+
+  <!-- 32 СПАСИБО / QR / КОНСУЛЬТАЦИЯ -->
+  <section class="slide s1">
+    <div class="glow" style="opacity:.22"></div>
+    <div class="brandbar"><div class="kicker"><span class="dot"></span>Спасибо</div><div class="wordmark">neovida<span class="ai">.ai</span></div></div>
+    <div class="showcase">
+      <div class="sc-text">
+        <h2 class="reveal d1">Спасибо <span class="a">за внимание</span></h2>
+        <p class="lead reveal d2">Если захотите разобрать именно вашу компанию, у меня есть личная консультация под ваши задачи и процессы. Сохраните контакт и напишите, когда будет нужно.</p>
+        <div class="pts">
+          <div class="pt reveal d3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Разберём, с какого этапа начать именно вам</div>
+          <div class="pt reveal d4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Подскажу инструменты и быстрые победы под вашу нишу</div>
+        </div>
+        <div class="reveal d5" style="margin-top:2.6cqh;font-size:1.6cqw"><b>Альберт Валеев</b> · Telegram @neovidaAi</div>
+      </div>
+      <div class="qr-card reveal d2">
+        <img src="images/qr-neovida.png" alt="QR Telegram @neovidaAi">
+        <div class="qr-cap">Мой Telegram: @neovidaAi</div>
+      </div>
+    </div>
+    <div class="footmark">Консультация для вас от Альберта Валеева</div>
+  </section>
+
+  <div class="nav">
+    <div class="dots" id="dots"></div>
+    <div class="count"><span id="cur">1</span> / <span id="tot">31</span></div>
+  </div>
+</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const dotsBox=document.getElementById('dots');
+  const cur=document.getElementById('cur'),tot=document.getElementById('tot'),prog=document.getElementById('prog');
+  let i=0;tot.textContent=slides.length;
+  slides.forEach((_,n)=>{const d=document.createElement('div');d.className='nd'+(n===0?' on':'');d.onclick=e=>{e.stopPropagation();go(n);};dotsBox.appendChild(d);});
+  const dots=[...document.querySelectorAll('.nd')];
+  function go(n){i=(n+slides.length)%slides.length;slides.forEach((s,k)=>s.classList.toggle('active',k===i));dots.forEach((d,k)=>d.classList.toggle('on',k===i));cur.textContent=i+1;prog.style.width=(i/(slides.length-1)*100)+'%';}
+  document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}if(e.key==='Home')go(0);if(e.key==='End')go(slides.length-1);});
+  document.getElementById('stage').addEventListener('click',e=>{if(e.target.closest('.nav'))return;const r=document.getElementById('stage').getBoundingClientRect();go((e.clientX-r.left)>r.width*0.4?i+1:i-1);});
+  let sx=0;document.addEventListener('touchstart',e=>{sx=e.changedTouches[0].clientX;},{passive:true});
+  document.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)go(dx<0?i+1:i-1);},{passive:true});
+  const stageEl=document.getElementById('stage');
+  document.getElementById('fsbtn').addEventListener('click',e=>{e.stopPropagation();
+    if(!document.fullscreenElement){(stageEl.requestFullscreen||stageEl.webkitRequestFullscreen||(()=>{})).call(stageEl);}
+    else{document.exitFullscreen&&document.exitFullscreen();}});
+</script>
+</body>
+</html>
