@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Цех — урок 6. Автоматизация и единое окно агента</title>
+<meta name="description" content="Урок 6 курса AI Цех: автоматизация рабочих задач, подключение инструментов и Codex как центр управления.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    --bg: #090a0b;
+    --ink: #0b0c0d;
+    --panel: #111315;
+    --panel-2: #16191c;
+    --panel-3: #1d2125;
+    --text: #f1ece2;
+    --soft: #d8cebf;
+    --muted: #a59c8e;
+    --dim: #756e63;
+    --line: rgba(241, 236, 226, 0.12);
+    --line-2: rgba(241, 236, 226, 0.22);
+    --copper: #c77a3a;
+    --copper-2: #e0aa6f;
+    --copper-3: #f3cf9b;
+    --steel: #9aa6ad;
+    --blue: #78b5d1;
+    --green: #75b889;
+    --red: #d76c5c;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --metal: linear-gradient(176deg, #fbe6c6 2%, #e9b87e 34%, #c77a3a 66%, #f3cf9b 99%);
+    --ease: cubic-bezier(.22, .61, .36, 1);
+    --shadow-md: 0 18px 50px rgba(0,0,0,.32);
+    --shadow-lg: 0 34px 90px rgba(0,0,0,.46);
+  }
+
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; }
+  h1, h2, h3, p { margin: 0; letter-spacing: 0; }
+  b { color: #fff; }
+  .mono { font-family: var(--mono); }
+  .lucide { width: 1em; height: 1em; stroke-width: 1.8; }
+  .metal {
+    background: var(--metal);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .deck { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+  .slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 52px 72px 58px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(46px) scale(.992);
+    transition: opacity .5s var(--ease), transform .5s var(--ease), visibility .5s;
+    overflow: hidden;
+    background:
+      linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px),
+      radial-gradient(circle at 80% 6%, rgba(199,122,58,.20), transparent 40vw),
+      radial-gradient(circle at 4% 96%, rgba(120,181,209,.06), transparent 32vw),
+      linear-gradient(135deg, #0a0b0c 0%, #111416 54%, #08090a 100%);
+    background-size: 46px 46px, 46px 46px, auto, auto, auto;
+  }
+  .slide::before {
+    content: "";
+    position: absolute;
+    inset: 24px;
+    pointer-events: none;
+    z-index: 0;
+    border: 1px solid rgba(241,236,226,.05);
+    border-radius: 6px;
+    -webkit-mask:
+      linear-gradient(#000 0 0) top left/26px 1px no-repeat,
+      linear-gradient(#000 0 0) top left/1px 26px no-repeat,
+      linear-gradient(#000 0 0) top right/26px 1px no-repeat,
+      linear-gradient(#000 0 0) top right/1px 26px no-repeat,
+      linear-gradient(#000 0 0) bottom left/26px 1px no-repeat,
+      linear-gradient(#000 0 0) bottom left/1px 26px no-repeat,
+      linear-gradient(#000 0 0) bottom right/26px 1px no-repeat,
+      linear-gradient(#000 0 0) bottom right/1px 26px no-repeat;
+  }
+  .slide > * { position: relative; z-index: 1; }
+  .slide.active { opacity: 1; visibility: visible; transform: translateX(0) scale(1); }
+  .slide.prev { transform: translateX(-46px) scale(.992); }
+
+  .progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0;
+    z-index: 100;
+    background: var(--metal);
+    box-shadow: 0 0 20px rgba(224,170,111,.5);
+    transition: width .35s var(--ease);
+  }
+  .counter {
+    position: fixed;
+    right: 30px;
+    bottom: 24px;
+    z-index: 100;
+    color: rgba(241,236,226,.5);
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .14em;
+  }
+  .counter b { color: var(--copper-2); }
+  .brandmark {
+    position: fixed;
+    left: 30px;
+    bottom: 24px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: rgba(241,236,226,.42);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+  .brandmark .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--copper-2);
+    box-shadow: 0 0 10px var(--copper-2);
+  }
+  .topctrl { position: fixed; top: 20px; right: 24px; z-index: 101; display: flex; gap: 10px; }
+  .tbtn {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    border: 1px solid rgba(241,236,226,.16);
+    background: rgba(12,14,16,.6);
+    color: rgba(241,236,226,.55);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    opacity: .7;
+    backdrop-filter: blur(12px);
+    transition: .2s var(--ease);
+  }
+  .tbtn:hover, .tbtn.on { opacity: 1; color: var(--copper-2); border-color: rgba(224,170,111,.5); }
+
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(224,170,111,.32);
+    background: rgba(199,122,58,.10);
+    color: var(--copper-2);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+  .kicker::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--copper-2);
+    box-shadow: 0 0 9px var(--copper-2);
+  }
+  .kicker .lucide { width: 15px; height: 15px; }
+
+  .slide-title {
+    max-width: 1240px;
+    margin: 20px 0 22px;
+    font-size: clamp(40px, 4.9vw, 72px);
+    line-height: .98;
+    font-weight: 900;
+    letter-spacing: 0;
+  }
+  .slide-sub {
+    max-width: 1040px;
+    color: var(--soft);
+    font-size: 22px;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+  .panel {
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: linear-gradient(150deg, rgba(255,255,255,.05), rgba(255,255,255,.014));
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(12px);
+    position: relative;
+    overflow: hidden;
+  }
+  .panel::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(243,207,155,.5), transparent);
+  }
+  .panel.pad { padding: 22px; }
+  .panel h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 11px;
+    font-size: 17px;
+    line-height: 1.1;
+    font-weight: 850;
+  }
+  .panel h3 .lucide { color: var(--copper-2); }
+  .panel p, .panel li {
+    color: var(--soft);
+    font-size: 15px;
+    line-height: 1.48;
+    font-weight: 500;
+  }
+  ul.clean {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 8px;
+  }
+  ul.clean li {
+    position: relative;
+    padding-left: 18px;
+  }
+  ul.clean li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: .65em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--copper-2);
+  }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 26px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 26px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 24px; }
+
+  .anim { opacity: 0; transform: translateY(22px); transition: opacity .6s var(--ease), transform .6s var(--ease); }
+  .slide.active .anim { opacity: 1; transform: translateY(0); }
+  .slide.active .d1 { transition-delay: .07s; }
+  .slide.active .d2 { transition-delay: .15s; }
+  .slide.active .d3 { transition-delay: .24s; }
+  .slide.active .d4 { transition-delay: .33s; }
+  .slide.active .d5 { transition-delay: .42s; }
+
+  .cover { padding: 48px 72px; }
+  .cover-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(460px,.9fr); gap: 54px; align-items: center; }
+  .brand-line {
+    color: var(--copper-2);
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+  .cover h1 {
+    margin: 22px 0 24px;
+    font-size: clamp(52px, 5vw, 82px);
+    line-height: .9;
+    font-weight: 900;
+    letter-spacing: 0;
+  }
+  .cover-lead { max-width: 740px; color: var(--soft); font-size: 26px; line-height: 1.34; font-weight: 600; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 11px; margin-top: 30px; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 15px;
+    border-radius: 999px;
+    border: 1px solid rgba(241,236,226,.16);
+    background: rgba(255,255,255,.045);
+    color: var(--soft);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .pill .lucide { width: 17px; height: 17px; color: var(--copper-2); }
+  .cover-card {
+    min-height: 520px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .cover-card .system-title {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .route-stack { display: grid; gap: 14px; margin-top: 24px; }
+  .route-row {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    gap: 14px;
+    align-items: center;
+    padding: 14px;
+    border: 1px solid rgba(241,236,226,.11);
+    border-radius: 10px;
+    background: rgba(255,255,255,.035);
+  }
+  .route-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(224,170,111,.26);
+    background: rgba(199,122,58,.10);
+    color: var(--copper-2);
+  }
+  .route-row strong { display: block; font-size: 15px; font-weight: 850; }
+  .route-row span { display: block; margin-top: 3px; color: var(--muted); font-size: 13px; line-height: 1.3; }
+
+  .formula {
+    margin-top: 28px;
+    width: fit-content;
+    max-width: 1180px;
+    padding: 22px 26px 22px 28px;
+    border-radius: 12px;
+    border: 1px solid rgba(224,170,111,.24);
+    background: linear-gradient(120deg, rgba(199,122,58,.13), rgba(199,122,58,.03));
+    position: relative;
+    color: #efe3d3;
+    font-size: 22px;
+    line-height: 1.4;
+    font-weight: 760;
+  }
+  .formula::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 4px;
+    border-radius: 4px;
+    background: var(--metal);
+  }
+  .big-x {
+    display: inline-grid;
+    place-items: center;
+    width: 62px;
+    height: 62px;
+    border-radius: 16px;
+    border: 1px solid rgba(215,108,92,.42);
+    background: rgba(215,108,92,.10);
+    color: var(--red);
+    font-size: 36px;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .big-check {
+    display: inline-grid;
+    place-items: center;
+    width: 62px;
+    height: 62px;
+    border-radius: 16px;
+    border: 1px solid rgba(117,184,137,.42);
+    background: rgba(117,184,137,.10);
+    color: var(--green);
+  }
+  .big-check .lucide { width: 34px; height: 34px; }
+
+  .map-card {
+    padding: 18px;
+    min-height: 210px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .map-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .map-num {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink);
+    font-weight: 800;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--metal);
+  }
+  .map-card h3 { margin: 0; font-size: 19px; }
+  .map-card p { margin: auto 0 0; color: var(--muted); }
+
+  .prompt {
+    margin-top: 22px;
+    border-radius: 12px;
+    border: 1px solid rgba(224,170,111,.24);
+    background: #08090a;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05), var(--shadow-md);
+    overflow: hidden;
+  }
+  .prompt-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,.035);
+    border-bottom: 1px solid rgba(241,236,226,.10);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .prompt pre {
+    margin: 0;
+    padding: 18px;
+    color: #f7efe3;
+    font-family: var(--mono);
+    font-size: 15px;
+    line-height: 1.52;
+    white-space: pre-wrap;
+  }
+  .prompt.compact pre { font-size: 13.5px; line-height: 1.44; padding: 15px; }
+  .warn {
+    margin-top: 18px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    border: 1px solid rgba(215,108,92,.28);
+    border-radius: 12px;
+    background: rgba(215,108,92,.08);
+    color: #f0cbc5;
+    font-size: 15px;
+    line-height: 1.42;
+    font-weight: 650;
+  }
+  .warn .lucide { flex: none; color: var(--red); margin-top: 1px; }
+  .okline {
+    margin-top: 18px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    border: 1px solid rgba(117,184,137,.28);
+    border-radius: 12px;
+    background: rgba(117,184,137,.08);
+    color: #cbe8d4;
+    font-size: 15px;
+    line-height: 1.42;
+    font-weight: 650;
+  }
+  .okline .lucide { flex: none; color: var(--green); margin-top: 1px; }
+
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-top: 28px;
+    position: relative;
+  }
+  .flow::before {
+    content: "";
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    top: 48px;
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, rgba(224,170,111,.18), rgba(224,170,111,.55), rgba(117,184,137,.55));
+  }
+  .step {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 0 10px;
+  }
+  .step-icon {
+    margin: 0 auto 15px;
+    width: 96px;
+    height: 96px;
+    border-radius: 22px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(241,236,226,.16);
+    background: radial-gradient(circle at 30% 24%, rgba(255,255,255,.07), rgba(8,9,10,.92));
+    box-shadow: var(--shadow-md);
+    color: var(--copper-2);
+  }
+  .step-icon .lucide { width: 36px; height: 36px; }
+  .step strong { display: block; font-size: 18px; line-height: 1.08; font-weight: 850; }
+  .step span { display: block; margin: 8px auto 0; max-width: 230px; color: var(--muted); font-size: 14px; line-height: 1.35; }
+
+  .hub-slide {
+    padding: 34px 46px 44px;
+    justify-content: flex-start;
+  }
+  .hub-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 28px;
+    margin: 12px 28px 18px;
+  }
+  .hub-header h2 {
+    margin-top: 12px;
+    font-size: clamp(40px, 4.7vw, 70px);
+    line-height: .96;
+    font-weight: 900;
+  }
+  .hub-header p {
+    max-width: 480px;
+    color: var(--soft);
+    font-size: 18px;
+    line-height: 1.42;
+    font-weight: 560;
+  }
+  .hub-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    border: 1px solid rgba(241,236,226,.08);
+    border-radius: 14px;
+    overflow: hidden;
+    background: #08090a;
+    box-shadow: var(--shadow-lg);
+  }
+  .hub-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: .92;
+  }
+  .hub-vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 46%, transparent 0 36%, rgba(0,0,0,.35) 68%, rgba(0,0,0,.72) 100%);
+  }
+  .hub-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 218px;
+    padding: 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(224,170,111,.42);
+    background: rgba(8,9,10,.72);
+    backdrop-filter: blur(10px);
+    text-align: center;
+    box-shadow: 0 0 0 1px rgba(199,122,58,.12), 0 22px 70px rgba(0,0,0,.42);
+  }
+  .hub-center .code-mark {
+    margin: 0 auto 10px;
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: var(--metal);
+    color: var(--ink);
+    box-shadow: 0 0 22px rgba(224,170,111,.24);
+  }
+  .hub-center strong { display: block; font-size: 21px; font-weight: 900; }
+  .hub-center span { display: block; margin-top: 5px; color: var(--muted); font-size: 12.5px; line-height: 1.3; }
+  .hub-node {
+    position: absolute;
+    display: grid;
+    grid-template-columns: 38px 1fr;
+    gap: 10px;
+    align-items: center;
+    min-width: 178px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(241,236,226,.13);
+    background: rgba(10,12,14,.70);
+    backdrop-filter: blur(8px);
+    color: var(--soft);
+    box-shadow: 0 12px 40px rgba(0,0,0,.32);
+  }
+  .hub-node .ni {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: rgba(199,122,58,.12);
+    border: 1px solid rgba(224,170,111,.24);
+    color: var(--copper-2);
+  }
+  .hub-node strong { display: block; font-size: 13.5px; line-height: 1.05; font-weight: 850; }
+  .hub-node span { display: block; margin-top: 4px; color: var(--muted); font-size: 11.5px; line-height: 1.2; }
+  .n-mail { left: 23.5%; top: 15.5%; }
+  .n-calendar { left: 44%; top: 7.5%; }
+  .n-telegram { right: 22.5%; top: 15.5%; }
+  .n-files { left: 11%; top: 43%; }
+  .n-browser { right: 11%; top: 43%; }
+  .n-sheets { left: 23%; bottom: 13%; }
+  .n-crm { left: 44%; bottom: 18%; }
+  .n-docs { right: 21.5%; bottom: 13%; }
+  .hub-caption {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: 18px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 18px;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(224,170,111,.22);
+    background: rgba(8,9,10,.78);
+    backdrop-filter: blur(10px);
+  }
+  .hub-caption strong { font-size: 16px; }
+  .hub-caption span { display: block; margin-top: 3px; color: var(--muted); font-size: 13px; }
+  .hub-caption .tag {
+    color: var(--ink);
+    background: var(--metal);
+    border-radius: 999px;
+    padding: 8px 11px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .case-grid {
+    display: grid;
+    grid-template-columns: .92fr 1.08fr;
+    gap: 22px;
+    align-items: stretch;
+    margin-top: 24px;
+  }
+  .case-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .case-title .route-icon { flex: none; }
+  .case-title h3 { font-size: 27px; line-height: 1.05; font-weight: 900; }
+  .mini-flow { display: grid; gap: 10px; margin-top: 16px; }
+  .mini-row {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 11px;
+    align-items: center;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(241,236,226,.10);
+    background: rgba(255,255,255,.032);
+  }
+  .mini-row .lucide { color: var(--copper-2); }
+  .mini-row strong { display: block; font-size: 14px; }
+  .mini-row span { display: block; margin-top: 3px; color: var(--muted); font-size: 12.5px; line-height: 1.25; }
+
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 24px;
+  }
+  .compare-card {
+    min-height: 330px;
+    padding: 24px;
+  }
+  .compare-card h3 { font-size: 28px; }
+  .compare-card .label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    color: var(--copper-2);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .compare-card .label .lucide { width: 15px; height: 15px; }
+
+  .timeline {
+    display: grid;
+    grid-template-columns: 1.15fr .85fr;
+    gap: 24px;
+    align-items: stretch;
+    margin-top: 24px;
+  }
+  .agenda { display: grid; gap: 11px; }
+  .agenda-row {
+    display: grid;
+    grid-template-columns: 88px 1fr;
+    gap: 14px;
+    align-items: center;
+    padding: 13px 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(241,236,226,.10);
+    background: rgba(255,255,255,.035);
+  }
+  .agenda-row time {
+    color: var(--copper-2);
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 750;
+  }
+  .agenda-row strong { display: block; font-size: 16px; }
+  .agenda-row span { display: block; margin-top: 3px; color: var(--muted); font-size: 13px; }
+
+  .final h1 {
+    font-size: clamp(52px, 6vw, 94px);
+    line-height: .92;
+    max-width: 1160px;
+    font-weight: 900;
+  }
+  .final .formula { font-size: 24px; }
+
+  @media (max-width: 1180px) {
+    .slide { padding: 34px 22px 54px; justify-content: flex-start; overflow-y: auto; }
+    .slide::before { inset: 12px; }
+    .brandmark, .counter { display: none; }
+    .cover-grid, .grid2, .grid3, .grid4, .case-grid, .comparison, .timeline { grid-template-columns: 1fr; }
+    .flow { grid-template-columns: 1fr; gap: 18px; }
+    .flow::before { display: none; }
+    .hub-slide { padding: 22px; }
+    .hub-wrap { min-height: auto; display: grid; gap: 10px; padding: 16px; overflow: hidden; }
+    .hub-bg { opacity: .28; }
+    .hub-vignette { background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.84)); }
+    .hub-header { display: block; margin: 0 0 16px; }
+    .hub-header p { margin-top: 12px; }
+    .hub-center,
+    .hub-node,
+    .hub-caption {
+      position: relative;
+      left: auto;
+      right: auto;
+      top: auto;
+      bottom: auto;
+      transform: none;
+      width: auto;
+      min-width: 0;
+    }
+    .hub-center { order: 0; justify-self: stretch; }
+    .hub-node { order: 1; grid-template-columns: 36px 1fr; }
+    .hub-caption { order: 2; }
+    .hub-caption { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="brandmark"><span class="dot"></span><span>neovida · Нейропросвещение</span></div>
+<div class="counter" id="counter"></div>
+<div class="topctrl">
+  <button class="tbtn" id="fsBtn" title="На весь экран"><i data-lucide="maximize"></i></button>
+</div>
+
+<main class="deck" id="deck">
+  <section class="slide cover">
+    <div class="cover-grid">
+      <div>
+        <div class="brand-line anim">neovida · Нейропросвещение</div>
+        <h1 class="anim d1">AI Цех<br><span class="metal">Автоматизация</span></h1>
+        <p class="cover-lead anim d2">Урок 6. Шесть способов, как превратить Codex и ChatGPT в рабочих агентов для повседневных задач: расписание, подключения, сценарии, фон, файлы и браузер.</p>
+        <div class="pill-row anim d3">
+          <span class="pill"><i data-lucide="calendar-clock"></i>6 способов</span>
+          <span class="pill"><i data-lucide="briefcase-business"></i>реальные кейсы</span>
+          <span class="pill"><i data-lucide="copy"></i>готовые промпты</span>
+        </div>
+      </div>
+      <div class="panel cover-card anim d2">
+        <div>
+          <div class="system-title">шесть форматов автоматизации</div>
+          <div class="route-stack">
+            <div class="route-row"><div class="route-icon"><i data-lucide="calendar-clock"></i></div><div><strong>1. По расписанию</strong><span>сводки, напоминания, регулярные проверки.</span></div></div>
+            <div class="route-row"><div class="route-icon"><i data-lucide="plug"></i></div><div><strong>2. Подключения</strong><span>Кодекс — центр управления всем.</span></div></div>
+            <div class="route-row"><div class="route-icon"><i data-lucide="puzzle"></i></div><div><strong>3. Сценарии и skills</strong><span>свой процесс или готовая методика.</span></div></div>
+            <div class="route-row"><div class="route-icon"><i data-lucide="inbox"></i></div><div><strong>4. Работа в фоне</strong><span>агент делает задачу, пока ты занят.</span></div></div>
+            <div class="route-row"><div class="route-icon"><i data-lucide="folder-cog"></i></div><div><strong>5. Порядок в файлах</strong><span>папки, документы, таблицы, сводки.</span></div></div>
+            <div class="route-row"><div class="route-icon"><i data-lucide="globe"></i></div><div><strong>6. Браузер</strong><span>сайты, конкуренты, мониторинг.</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="scissors"></i>главная рамка</div>
+    <h2 class="slide-title anim d1">Программирование <span class="big-x">×</span><br>агент для повседневных задач <span class="big-check"><i data-lucide="check"></i></span></h2>
+    <p class="slide-sub anim d2">Сегодня Codex не «пишет сайт». Он становится рабочим агентом, который читает подключённые источники, собирает контекст, предлагает план и действует только после разрешения.</p>
+    <div class="formula anim d3">Автоматизация теперь начинается не с кода, а с фразы: «Посмотри, что у меня есть, предложи план, ничего не меняй без подтверждения».</div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="map"></i>карта урока</div>
+    <h2 class="slide-title anim d1">Шесть способов автоматизации.<br><span class="metal">Не одна каша, а шесть режимов работы</span></h2>
+    <div class="grid3 anim d2">
+      <div class="panel map-card"><div class="map-top"><span class="map-num">01</span><i data-lucide="calendar-clock"></i></div><h3>По расписанию</h3><p>Агент сам возвращается к задаче в нужный день и время.</p></div>
+      <div class="panel map-card"><div class="map-top"><span class="map-num">02</span><i data-lucide="plug"></i></div><h3>Подключения</h3><p>Почта, Telegram, календарь, файлы, таблицы, CRM, документы.</p></div>
+      <div class="panel map-card"><div class="map-top"><span class="map-num">03</span><i data-lucide="puzzle"></i></div><h3>Сценарии и skills</h3><p>Собираешь свой процесс или берёшь готовую профильную методику.</p></div>
+      <div class="panel map-card"><div class="map-top"><span class="map-num">04</span><i data-lucide="inbox"></i></div><h3>Работа в фоне</h3><p>Поставил задачу, ушёл дальше, забрал готовый результат.</p></div>
+      <div class="panel map-card"><div class="map-top"><span class="map-num">05</span><i data-lucide="folder-cog"></i></div><h3>Порядок в файлах</h3><p>Разложить, переименовать, собрать выжимку, сделать таблицу.</p></div>
+      <div class="panel map-card"><div class="map-top"><span class="map-num">06</span><i data-lucide="globe"></i></div><h3>Браузер</h3><p>Открыть сайты, собрать данные, проверить изменения.</p></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="calendar-clock"></i>способ 1 / 6</div>
+    <h2 class="slide-title anim d1">По расписанию:<br><span class="metal">агент сам возвращается к задаче</span></h2>
+    <div class="comparison anim d2">
+      <div class="panel compare-card">
+        <div class="label"><i data-lucide="message-square-text"></i>ChatGPT</div>
+        <h3>Scheduled Tasks</h3>
+        <ul class="clean" style="margin-top:18px">
+          <li>Запланированные задачи внутри ChatGPT.</li>
+          <li>Создаются обычной фразой в чате или через раздел задач.</li>
+          <li>Подходят для сводок, напоминаний, регулярных проверок.</li>
+          <li>Доступность зависит от тарифа и интерфейса.</li>
+        </ul>
+      </div>
+      <div class="panel compare-card">
+        <div class="label"><i data-lucide="command"></i>Codex</div>
+        <h3>Automations</h3>
+        <ul class="clean" style="margin-top:18px">
+          <li>Повторяемые задачи внутри Codex.</li>
+          <li>Могут использовать проект, файлы и подключённые инструменты.</li>
+          <li>Подходят для рабочего мониторинга и задач по графику.</li>
+          <li>Перед действием просим план и подтверждение.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="copy"></i>способ 1 / практика</div>
+    <h2 class="slide-title anim d1">Три задачи, которые можно поставить <span class="metal">уже сегодня</span></h2>
+    <div class="grid3 anim d2">
+      <div class="prompt compact"><div class="prompt-head"><span>ниша</span><span>9:00</span></div><pre>Каждое утро в 9:00 присылай мне 3 главные новости по теме [моя ниша] и объясняй, что это значит для моего бизнеса.</pre></div>
+      <div class="prompt compact"><div class="prompt-head"><span>день</span><span>8:30</span></div><pre>Каждое утро в 8:30 собирай мой план дня: встречи, дедлайны, письма, где нужен ответ. Ничего не отправляй, только сводка.</pre></div>
+      <div class="prompt compact"><div class="prompt-head"><span>конкуренты</span><span>понедельник</span></div><pre>Каждый понедельник проверяй 5 конкурентов: новые цены, акции, офферы, изменения на сайте. Дай таблицу и 3 вывода.</pre></div>
+    </div>
+    <div class="warn anim d3"><i data-lucide="triangle-alert"></i><span>Если интерфейс Scheduled Tasks или Automations недоступен, сохраняем промпт как ручную команду и возвращаемся к нему завтра.</span></div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="plug"></i>способ 2 / 6</div>
+    <h2 class="slide-title anim d1">Подключения:<br><span class="metal">агент работает с твоими инструментами</span></h2>
+    <p class="slide-sub anim d2">Здесь Codex становится не просто чатом, а рабочим окном: он может читать подключённые источники, собирать контекст и готовить действия.</p>
+    <div class="flow anim d3">
+      <div class="step"><div class="step-icon"><i data-lucide="search-check"></i></div><strong>Проверить доступ</strong><span>Какие apps/plugins/connectors доступны в аккаунте.</span></div>
+      <div class="step"><div class="step-icon"><i data-lucide="plug"></i></div><strong>Подключить</strong><span>Авторизация через интерфейс, не через пароли в чат.</span></div>
+      <div class="step"><div class="step-icon"><i data-lucide="eye"></i></div><strong>Проверить чтение</strong><span>Пусть покажет 3 элемента и объяснит, что видит.</span></div>
+      <div class="step"><div class="step-icon"><i data-lucide="badge-check"></i></div><strong>Дать задачу</strong><span>Сначала план, потом действие после подтверждения.</span></div>
+    </div>
+  </section>
+
+  <section class="slide hub-slide">
+    <div class="hub-header anim">
+      <div>
+        <div class="kicker"><i data-lucide="command"></i>способ 2 / ключевой образ</div>
+        <h2>Кодекс — <span class="metal">центр управления всем</span></h2>
+      </div>
+      <p>Это не весь урок, а один из шести способов: подключить инструменты и управлять задачами из одного окна.</p>
+    </div>
+    <div class="hub-wrap anim d1">
+      <img class="hub-bg" src="assets/images/codex-control-center.png" alt="">
+      <div class="hub-vignette"></div>
+      <div class="hub-center"><div class="code-mark"><i data-lucide="command"></i></div><strong>Codex</strong><span>единое окно задач, контекста и действий</span></div>
+      <div class="hub-node n-mail"><div class="ni"><i data-lucide="mail"></i></div><div><strong>Почта</strong><span>входящие, черновики, сортировка</span></div></div>
+      <div class="hub-node n-calendar"><div class="ni"><i data-lucide="calendar-days"></i></div><div><strong>Календарь</strong><span>план дня, встречи, напоминания</span></div></div>
+      <div class="hub-node n-telegram"><div class="ni"><i data-lucide="message-circle"></i></div><div><strong>Telegram</strong><span>диалоги, вложения, ответы</span></div></div>
+      <div class="hub-node n-files"><div class="ni"><i data-lucide="folder-open"></i></div><div><strong>Файлы</strong><span>папки, документы, вложения</span></div></div>
+      <div class="hub-node n-browser"><div class="ni"><i data-lucide="globe"></i></div><div><strong>Браузер</strong><span>сайты, цены, конкуренты</span></div></div>
+      <div class="hub-node n-sheets"><div class="ni"><i data-lucide="table-2"></i></div><div><strong>Таблицы</strong><span>отчёты, статусы, выгрузки</span></div></div>
+      <div class="hub-node n-crm"><div class="ni"><i data-lucide="database"></i></div><div><strong>CRM</strong><span>клиенты, сделки, задачи</span></div></div>
+      <div class="hub-node n-docs"><div class="ni"><i data-lucide="presentation"></i></div><div><strong>Презентации</strong><span>структура, правки, сценарий</span></div></div>
+      <div class="hub-caption"><div><strong>Формула управления:</strong><span>“прочитай источники → покажи план → дождись моего ок → выполни → отчитайся”.</span></div><div class="tag">способ 2 / 6</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="message-circle"></i>способ 2 / подключение</div>
+    <h2 class="slide-title anim d1">Как подключать Telegram, почту, календарь и CRM</h2>
+    <div class="grid2 anim d2">
+      <div class="panel pad">
+        <h3><i data-lucide="search-check"></i>Сначала карта доступов</h3>
+        <p>Не угадываем, где кнопка. Просим Codex показать, какие инструменты есть в конкретном аккаунте.</p>
+        <div class="prompt compact"><div class="prompt-head"><span>скопировать</span><span>карта</span></div><pre>Покажи, какие приложения, коннекторы, плагины и инструменты у меня сейчас доступны. Ничего не меняй, только покажи список и спроси, что подключать.</pre></div>
+      </div>
+      <div class="panel pad">
+        <h3><i data-lucide="message-circle"></i>Потом конкретный инструмент</h3>
+        <p>Если Telegram доступен — тестируем чтение. Если нет — Codex объясняет, какой app/plugin нужен.</p>
+        <div class="prompt compact"><div class="prompt-head"><span>скопировать</span><span>telegram</span></div><pre>Проверь, доступен ли у меня инструмент Telegram. Если доступен — найди диалог с [имя], покажи последние 5 сообщений и вложения. Ничего не отправляй.</pre></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="brain-circuit"></i>способ 2 / мозговой штурм</div>
+    <h2 class="slide-title anim d1">Не знаешь, что подключать?<br><span class="metal">Пусть Codex вытащит задачи из тебя</span></h2>
+    <p class="slide-sub anim d2">Первый промпт показывает техническую карту доступов. Второй — помогает понять, какие реальные процессы и сервисы вокруг тебя стоит превратить в единое окно.</p>
+    <div class="grid2 anim d3">
+      <div class="panel pad">
+        <h3><i data-lucide="messages-square"></i>Codex сначала спрашивает</h3>
+        <ul class="clean">
+          <li>чем ты занимаешься и какая у тебя роль;</li>
+          <li>какие задачи повторяются каждый день/неделю;</li>
+          <li>где переписки: Telegram, почта, мессенджеры;</li>
+          <li>где файлы, таблицы, документы и презентации;</li>
+          <li>где клиенты: CRM, Notion, Trello, Bitrix24;</li>
+          <li>что нельзя делать без твоего подтверждения.</li>
+        </ul>
+      </div>
+      <div class="panel pad">
+        <h3><i data-lucide="route"></i>Потом выдаёт карту</h3>
+        <ul class="clean">
+          <li>какие инструменты стоит подключить;</li>
+          <li>какие 3 автоматизации дадут быстрый эффект;</li>
+          <li>какой из 6 способов подходит к каждой задаче;</li>
+          <li>какой первый безопасный тест сделать;</li>
+          <li>где будет удобно работать из одного окна Codex.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="prompt compact anim d4">
+      <div class="prompt-head"><span>скопировать в Codex</span><span>личная карта автоматизации</span></div>
+      <pre>Проведи со мной мозговой штурм по автоматизации моей работы. Сначала задай 8-10 вопросов про мои задачи, переписки, файлы, CRM/таблицы, документы, отчёты и ограничения. После моих ответов предложи карту подключений к Codex: какие инструменты подключить, какие 3 автоматизации дадут быстрый эффект, какой из 6 способов подходит и какой безопасный тест сделать первым. Ничего не подключай и не меняй без моего подтверждения.</pre>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="puzzle"></i>способ 3 / 6</div>
+    <h2 class="slide-title anim d1">Свои сценарии:<br><span class="metal">повторяемый процесс одной фразой</span></h2>
+    <div class="grid2 anim d2">
+      <div class="panel pad">
+        <h3><i data-lucide="briefcase-business"></i>Где применять</h3>
+        <ul class="clean">
+          <li>Коммерческое предложение по твоей структуре.</li>
+          <li>Проверка презентации перед отправкой клиенту.</li>
+          <li>Разбор таблицы продаж каждую неделю.</li>
+          <li>Пост или письмо в фирменном стиле.</li>
+        </ul>
+      </div>
+      <div class="prompt compact anim d3">
+        <div class="prompt-head"><span>скопировать</span><span>сценарий</span></div>
+        <pre>Сделай из моего повторяющегося процесса готовый сценарий.
+
+Процесс: [например, подготовка КП].
+На входе: [что я даю].
+На выходе: [что хочу получить].
+Правила качества: [тон, структура, что нельзя].
+
+Сначала задай вопросы, потом предложи сценарий, который я смогу вызывать одной фразой.</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="library"></i>способ 3 / готовые skills</div>
+    <h2 class="slide-title anim d1">Не всё писать с нуля.<br><span class="metal">Можно взять готовую методику</span></h2>
+    <p class="slide-sub anim d2">Skill — это упакованный рабочий процесс: инструкции, проверки, ссылки и иногда скрипты. Plugin может принести с собой skills, apps и MCP-инструменты.</p>
+    <div class="flow anim d3">
+      <div class="step"><div class="step-icon"><i data-lucide="search"></i></div><strong>Найти</strong><span>По задаче: продажи, маркетинг, презентации, исследования.</span></div>
+      <div class="step"><div class="step-icon"><i data-lucide="file-search"></i></div><strong>Прочитать</strong><span>Что делает skill, когда срабатывает, какие доступы нужны.</span></div>
+      <div class="step"><div class="step-icon"><i data-lucide="download"></i></div><strong>Установить</strong><span>Через Skills / Plugins, если доступно в аккаунте.</span></div>
+      <div class="step"><div class="step-icon"><i data-lucide="play"></i></div><strong>Запустить</strong><span>Явно вызвать skill и дать безопасный первый кейс.</span></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="briefcase-business"></i>способ 3 / кейс со skills</div>
+    <h2 class="slide-title anim d1">Продажи, маркетинг, стратегия:<br><span class="metal">подбираем профильный skill под задачу</span></h2>
+    <div class="grid4 anim d2">
+      <div class="panel pad"><h3><i data-lucide="chart-no-axes-combined"></i>Продажи</h3><p>HubSpot: здоровье воронки, подготовка к встрече, чистка CRM.</p></div>
+      <div class="panel pad"><h3><i data-lucide="megaphone"></i>Маркетинг</h3><p>Twilio: промо-кампании, шаблоны сообщений, сегменты и согласия.</p></div>
+      <div class="panel pad"><h3><i data-lucide="radar"></i>Исследования</h3><p>Market research, Notion-доки, бренд-мониторинг, конкурентные выводы.</p></div>
+      <div class="panel pad"><h3><i data-lucide="presentation"></i>Контент</h3><p>Canva, Google Slides, Figma Slides: презентации и визуальные материалы.</p></div>
+    </div>
+    <div class="prompt compact anim d3">
+      <div class="prompt-head"><span>скопировать</span><span>поиск skill</span></div>
+      <pre>Подбери готовый skill или plugin под задачу: [что хочу автоматизировать]. Сначала покажи 3-5 вариантов: название, для чего подходит, какие доступы нужны, риск, первый безопасный тест. Ничего не устанавливай и не подключай без моего подтверждения.</pre>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="presentation"></i>способ 3 / кейс</div>
+    <h2 class="slide-title anim d1">Презентация + голосовые → сценарий правок</h2>
+    <div class="case-grid">
+      <div class="panel pad anim d2">
+        <div class="case-title"><div class="route-icon"><i data-lucide="audio-lines"></i></div><h3>Живой пример с этого урока</h3></div>
+        <p>У агента есть презентация, сценарий и голосовые рекомендации. Он не пересказывает, а превращает это в структуру правок.</p>
+        <div class="mini-flow">
+          <div class="mini-row"><i data-lucide="download"></i><div><strong>Взять материалы</strong><span>презентация, сценарий, переписка</span></div></div>
+          <div class="mini-row"><i data-lucide="audio-lines"></i><div><strong>Расшифровать</strong><span>достать требования из голосовых</span></div></div>
+          <div class="mini-row"><i data-lucide="pen-tool"></i><div><strong>Собрать правки</strong><span>слайды, кейсы, промпты, риски</span></div></div>
+        </div>
+      </div>
+      <div class="prompt compact anim d3">
+        <div class="prompt-head"><span>скопировать</span><span>разбор урока</span></div>
+        <pre>Возьми презентацию [ссылка/файл], сценарий и мои голосовые рекомендации.
+
+Сделай рабочие правки:
+1. Что оставить.
+2. Что убрать.
+3. Какие слайды переписать.
+4. Какие кейсы добавить.
+5. Какие копируемые промпты дать участникам.
+
+Сначала покажи план изменений. Файл не редактируй без подтверждения.</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="inbox"></i>способ 4 / 6</div>
+    <h2 class="slide-title anim d1">Работа в фоне:<br><span class="metal">задача идёт, пока ты занят другим</span></h2>
+    <div class="grid3 anim d2">
+      <div class="panel pad"><h3><i data-lucide="search"></i>Исследование</h3><p>Рынок, конкуренты, поставщики, документы, отзывы, публичные данные.</p></div>
+      <div class="panel pad"><h3><i data-lucide="file-stack"></i>Разбор пачки</h3><p>Много файлов, длинные переписки, несколько таблиц или сайтов.</p></div>
+      <div class="panel pad"><h3><i data-lucide="timer"></i>Длинная задача</h3><p>То, где агенту нужно время: собрать, сравнить, проверить, оформить.</p></div>
+    </div>
+    <div class="prompt anim d3">
+      <div class="prompt-head"><span>скопировать</span><span>фон</span></div>
+      <pre>Сделай эту задачу в фоне: [описание].
+
+Сначала уточни, какие источники использовать. Потом собери результат в структуре: находки → выводы → риски → следующий шаг.
+
+Если для действия нужны мои разрешения, остановись и спроси.</pre>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="handshake"></i>способ 4 / кейс</div>
+    <h2 class="slide-title anim d1">Заявка → исследование → черновик КП</h2>
+    <div class="case-grid">
+      <div class="panel pad anim d2">
+        <div class="case-title"><div class="route-icon"><i data-lucide="building-2"></i></div><h3>Не отвечать наугад</h3></div>
+        <p>Клиент пишет: «Сколько стоит обучение?». Агент в фоне изучает компанию, сайт, масштаб, контекст и готовит черновик ответа.</p>
+        <div class="warn"><i data-lucide="triangle-alert"></i><span>Агент не отправляет КП сам. Он готовит черновик и аргументацию.</span></div>
+      </div>
+      <div class="prompt compact anim d3">
+        <div class="prompt-head"><span>скопировать</span><span>кп</span></div>
+        <pre>В Telegram мне написал потенциальный клиент: [вставить сообщение].
+
+Сделай подготовку в фоне:
+1. Найди сайт и публичную информацию.
+2. Оцени масштаб и возможную потребность.
+3. Предложи 3 варианта ответа.
+4. Подготовь черновик КП: проблема → решение → формат → цена/диапазон → следующий шаг.
+
+Ничего не отправляй клиенту.</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="folder-cog"></i>способ 5 / 6</div>
+    <h2 class="slide-title anim d1">Порядок в файлах:<br><span class="metal">агент наводит систему в материалах</span></h2>
+    <div class="grid2 anim d2">
+      <div class="panel pad">
+        <h3><i data-lucide="folder-open"></i>Что можно сделать</h3>
+        <ul class="clean">
+          <li>Разложить файлы по датам, клиентам, типам.</li>
+          <li>Переименовать по единому шаблону.</li>
+          <li>Собрать таблицу из договоров, актов, КП.</li>
+          <li>Сделать выжимку из папки материалов.</li>
+        </ul>
+      </div>
+      <div class="prompt compact anim d3">
+        <div class="prompt-head"><span>скопировать</span><span>тестовая папка</span></div>
+        <pre>Зайди в эту тестовую папку и предложи план наведения порядка.
+
+Нужно: разложить файлы по подпапкам, переименовать по шаблону ГГГГ-ММ-ДД_тема, собрать краткую сводку.
+
+Сначала покажи план. Оригиналы не трогай без подтверждения.</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="table-2"></i>способ 5 / кейс</div>
+    <h2 class="slide-title anim d1">Папка документов → таблица решений</h2>
+    <div class="case-grid">
+      <div class="panel pad anim d2">
+        <div class="case-title"><div class="route-icon"><i data-lucide="file-spreadsheet"></i></div><h3>Из хаоса в управляемость</h3></div>
+        <p>В папке лежат КП, заявки, договоры, акты и заметки. Агент собирает из них таблицу: клиент, статус, сумма, следующий шаг, риск.</p>
+        <div class="mini-flow">
+          <div class="mini-row"><i data-lucide="files"></i><div><strong>Прочитать папку</strong><span>без изменения оригиналов</span></div></div>
+          <div class="mini-row"><i data-lucide="table-2"></i><div><strong>Собрать таблицу</strong><span>статус, сумма, ответственный</span></div></div>
+          <div class="mini-row"><i data-lucide="alert-triangle"></i><div><strong>Показать риски</strong><span>где нужен человек</span></div></div>
+        </div>
+      </div>
+      <div class="prompt compact anim d3">
+        <div class="prompt-head"><span>скопировать</span><span>сводка</span></div>
+        <pre>Прочитай документы в этой папке и собери таблицу:
+клиент → тип документа → сумма/срок → текущий статус → следующий шаг → риск.
+
+Если данных не хватает, поставь «требует проверки».
+Ничего не переименовывай и не перемещай без подтверждения.</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="globe"></i>способ 6 / 6</div>
+    <h2 class="slide-title anim d1">Браузер:<br><span class="metal">агент сам ходит по сайтам и собирает данные</span></h2>
+    <div class="grid3 anim d2">
+      <div class="panel pad"><h3><i data-lucide="badge-russian-ruble"></i>Цены</h3><p>Собрать тарифы, акции, условия, изменения на сайтах конкурентов.</p></div>
+      <div class="panel pad"><h3><i data-lucide="newspaper"></i>Новости</h3><p>Проверить отрасль, обновления, тендеры, публикации, вакансии.</p></div>
+      <div class="panel pad"><h3><i data-lucide="camera"></i>Скриншоты</h3><p>Снять страницы, сохранить доказательства, сравнить «было/стало».</p></div>
+    </div>
+    <div class="prompt anim d3">
+      <div class="prompt-head"><span>скопировать</span><span>браузер</span></div>
+      <pre>Открой сайт [ссылка] и собери в таблицу: оффер, цены, акции, условия, сильные стороны, слабые места.
+
+Если сайт не открывается или данных нет, скажи честно. Ничего не выдумывай.</pre>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="radar"></i>способ 6 / кейс</div>
+    <h2 class="slide-title anim d1">Мониторинг конкурентов → сигнал руководителю</h2>
+    <div class="case-grid">
+      <div class="panel pad anim d2">
+        <div class="case-title"><div class="route-icon"><i data-lucide="radar"></i></div><h3>Не «посмотри сайт», а система наблюдения</h3></div>
+        <p>Агент регулярно проверяет сайты конкурентов, отмечает изменения и приносит короткий вывод: что изменилось и что делать.</p>
+        <div class="okline"><i data-lucide="route"></i><span>Сильная связка: браузер + расписание = регулярный мониторинг.</span></div>
+      </div>
+      <div class="prompt compact anim d3">
+        <div class="prompt-head"><span>скопировать</span><span>мониторинг</span></div>
+        <pre>Раз в неделю проверяй сайты конкурентов:
+[ссылка 1]
+[ссылка 2]
+[ссылка 3]
+
+Собирай: новые цены, акции, продукты, изменения в оффере.
+В конце дай 3 вывода и 1 рекомендацию для моего бизнеса.</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="shield-check"></i>правило для всех 6 способов</div>
+    <h2 class="slide-title anim d1">Один протокол, который спасает от хаоса</h2>
+    <div class="grid3 anim d2">
+      <div class="panel pad"><h3><i data-lucide="eye"></i>Сначала чтение</h3><p>Пусть агент покажет, что он видит: письма, файлы, строки, сообщения, сайты. Без изменений.</p></div>
+      <div class="panel pad"><h3><i data-lucide="clipboard-list"></i>Потом план</h3><p>Пусть объяснит, что собирается сделать и какие данные использует.</p></div>
+      <div class="panel pad"><h3><i data-lucide="badge-check"></i>Только потом действие</h3><p>Отправка, удаление, CRM, публикация и платежи — только после явного подтверждения.</p></div>
+    </div>
+    <div class="prompt anim d3"><div class="prompt-head"><span>стоп-фраза</span><span>вставлять в рискованные задачи</span></div><pre>Работай в безопасном режиме: сначала прочитай данные и покажи план. Ничего не отправляй, не удаляй, не редактируй, не публикуй и не оплачивай без моего отдельного явного подтверждения.</pre></div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="graduation-cap"></i>практика и домашка</div>
+    <h2 class="slide-title anim d1">Выбери один способ и один реальный процесс</h2>
+    <div class="grid2 anim d2">
+      <div class="panel pad">
+        <h3><i data-lucide="list-ordered"></i>Что сделать</h3>
+        <ul class="clean">
+          <li>Выбрать один из 6 способов автоматизации.</li>
+          <li>Выбрать один рабочий процесс, не всю жизнь сразу.</li>
+          <li>Спросить Codex, какие инструменты нужны и доступны.</li>
+          <li>Проверить на одном безопасном примере.</li>
+        </ul>
+      </div>
+      <div class="panel pad">
+        <h3><i data-lucide="send"></i>Что прислать</h3>
+        <ul class="clean">
+          <li>Номер способа: 1-6.</li>
+          <li>Название процесса.</li>
+          <li>Какие инструменты подключены или нужны.</li>
+          <li>Скрин промпта и первый результат.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="prompt compact anim d3"><div class="prompt-head"><span>домашний старт</span><span>скопировать</span></div><pre>Помоги выбрать одну рабочую задачу для автоматизации.
+
+Сначала спроси меня про мои повторяющиеся процессы. Потом выбери 3 кандидата по формуле: много пользы, мало риска, легко проверить.
+
+После моего выбора предложи, какой из 6 способов автоматизации подходит лучше.</pre></div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker anim"><i data-lucide="arrow-right"></i>следующий шаг курса</div>
+    <h2 class="slide-title anim d1">Сегодня — 6 способов автоматизации.<br><span class="metal">Дальше — автономные агенты</span></h2>
+    <div class="grid2 anim d2">
+      <div class="panel pad"><h3><i data-lucide="command"></i>Сегодня</h3><p>Codex и ChatGPT как инструменты для рабочих процессов: расписания, подключения, сценарии, фон, файлы, браузер.</p></div>
+      <div class="panel pad"><h3><i data-lucide="server-cog"></i>Дальше</h3><p>Личные агенты с памятью, сервером, постоянными ролями, отдельными помощниками и большей автономностью.</p></div>
+    </div>
+    <div class="warn anim d3"><i data-lucide="triangle-alert"></i><span>Серверные агенты не раскрываем глубоко: это следующий уровень после сегодняшних шести способов.</span></div>
+  </section>
+
+  <section class="slide final">
+    <div class="kicker anim"><i data-lucide="flag"></i>финал</div>
+    <h1 class="anim d1">Автоматизация — это не один трюк.<br><span class="metal">Это шесть режимов работы агента</span></h1>
+    <div class="formula anim d2">Расписание · подключения · сценарии/skills · фон · файлы · браузер. Выбираешь режим, даёшь задачу словами, проверяешь результат человеком.</div>
+    <div class="pill-row anim d3">
+      <span class="pill"><i data-lucide="calendar-clock"></i>по расписанию</span>
+      <span class="pill"><i data-lucide="plug"></i>подключения</span>
+      <span class="pill"><i data-lucide="puzzle"></i>сценарии</span>
+      <span class="pill"><i data-lucide="inbox"></i>фон</span>
+      <span class="pill"><i data-lucide="folder-cog"></i>файлы</span>
+      <span class="pill"><i data-lucide="globe"></i>браузер</span>
+    </div>
+  </section>
+</main>
+
+<script>
+const slides = [...document.querySelectorAll('.slide')];
+let current = 0;
+const progress = document.getElementById('progress');
+const counter = document.getElementById('counter');
+const fsBtn = document.getElementById('fsBtn');
+
+function update(next) {
+  current = Math.max(0, Math.min(slides.length - 1, next));
+  slides.forEach((slide, index) => {
+    slide.classList.toggle('active', index === current);
+    slide.classList.toggle('prev', index < current);
+  });
+  counter.innerHTML = '<b>' + String(current + 1).padStart(2, '0') + '</b> / ' + String(slides.length).padStart(2, '0');
+  progress.style.width = ((current + 1) / slides.length * 100) + '%';
+}
+
+document.addEventListener('keydown', (event) => {
+  if (['ArrowRight', 'PageDown', ' '].includes(event.key)) { event.preventDefault(); update(current + 1); }
+  if (['ArrowLeft', 'PageUp'].includes(event.key)) { event.preventDefault(); update(current - 1); }
+  if (event.key === 'Home') update(0);
+  if (event.key === 'End') update(slides.length - 1);
+  if (['f', 'F', 'а', 'А'].includes(event.key)) {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+});
+
+document.getElementById('deck').addEventListener('click', (event) => {
+  if (event.target.closest('button')) return;
+  update(event.clientX / window.innerWidth < 0.18 ? current - 1 : current + 1);
+});
+
+fsBtn.addEventListener('click', () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+
+document.addEventListener('fullscreenchange', () => {
+  fsBtn.classList.toggle('on', Boolean(document.fullscreenElement));
+});
+
+let touchX = 0;
+document.addEventListener('touchstart', (event) => { touchX = event.changedTouches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', (event) => {
+  const dx = event.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) update(dx < 0 ? current + 1 : current - 1);
+}, { passive: true });
+
+const requestedSlide = Number.parseInt(new URLSearchParams(window.location.search).get('slide') || window.location.hash.replace('#', ''), 10);
+update(Number.isFinite(requestedSlide) ? requestedSlide - 1 : 0);
+if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>

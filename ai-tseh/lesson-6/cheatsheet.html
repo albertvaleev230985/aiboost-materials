@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Цех — урок 6. Шпаргалка по промптам</title>
+<meta name="description" content="Шпаргалка участника AI Цеха по уроку 6: промпты для автоматизации, подключений и безопасной работы с Codex.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    --bg: #090a0b;
+    --panel: #111315;
+    --panel-2: #171a1d;
+    --text: #f1ece2;
+    --soft: #d8cebf;
+    --muted: #a59c8e;
+    --dim: #756e63;
+    --line: rgba(241, 236, 226, 0.13);
+    --line-2: rgba(241, 236, 226, 0.22);
+    --copper: #c77a3a;
+    --copper-2: #e0aa6f;
+    --copper-3: #f3cf9b;
+    --steel: #9aa6ad;
+    --blue: #78b5d1;
+    --green: #75b889;
+    --red: #d76c5c;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --metal: linear-gradient(176deg, #fbe6c6 2%, #e9b87e 34%, #c77a3a 66%, #f3cf9b 99%);
+    --shadow: 0 26px 90px rgba(0,0,0,.34);
+  }
+
+  html { scroll-behavior: smooth; background: var(--bg); }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+      linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px),
+      radial-gradient(circle at 86% 0%, rgba(199,122,58,.22), transparent 34vw),
+      radial-gradient(circle at 6% 86%, rgba(120,181,209,.08), transparent 28vw),
+      linear-gradient(135deg, #0a0b0c 0%, #111416 54%, #08090a 100%);
+    background-size: 46px 46px, 46px 46px, auto, auto, auto;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; }
+  h1, h2, h3, p { margin: 0; letter-spacing: 0; }
+  code, pre { font-family: var(--mono); }
+  .lucide { width: 1em; height: 1em; stroke-width: 1.9; }
+  .metal {
+    background: var(--metal);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .page {
+    width: min(1180px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 34px 0 58px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(241,236,226,.56);
+    font-size: 12px;
+    font-weight: 850;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+  .brand::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--copper-2);
+    box-shadow: 0 0 12px var(--copper-2);
+  }
+  .hero {
+    margin-top: 30px;
+    padding: 38px 42px 34px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: linear-gradient(145deg, rgba(255,255,255,.058), rgba(255,255,255,.016));
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: auto -80px -180px auto;
+    width: 460px;
+    height: 460px;
+    background: radial-gradient(circle, rgba(224,170,111,.16), transparent 64%);
+    pointer-events: none;
+  }
+  .label {
+    width: fit-content;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 12px;
+    border: 1px solid rgba(224,170,111,.34);
+    border-radius: 999px;
+    color: var(--copper-2);
+    background: rgba(199,122,58,.10);
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+  }
+  .label::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--copper-2);
+    box-shadow: 0 0 10px var(--copper-2);
+  }
+  .hero h1 {
+    max-width: 920px;
+    margin-top: 22px;
+    font-size: clamp(46px, 7vw, 88px);
+    line-height: .92;
+    font-weight: 930;
+  }
+  .hero p {
+    max-width: 860px;
+    margin-top: 22px;
+    color: var(--soft);
+    font-size: 20px;
+    line-height: 1.48;
+    font-weight: 560;
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 28px;
+  }
+  .btn {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 11px 15px;
+    border-radius: 8px;
+    border: 1px solid var(--line-2);
+    color: var(--text);
+    background: rgba(255,255,255,.045);
+    cursor: pointer;
+    transition: .18s ease;
+  }
+  .btn:hover { border-color: rgba(224,170,111,.46); color: var(--copper-3); transform: translateY(-1px); }
+  .btn.primary {
+    background: linear-gradient(180deg, rgba(224,170,111,.18), rgba(199,122,58,.10));
+    border-color: rgba(224,170,111,.42);
+  }
+
+  .section {
+    margin-top: 34px;
+    padding-top: 8px;
+  }
+  .section-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 18px;
+  }
+  .section h2 {
+    font-size: clamp(28px, 4vw, 48px);
+    line-height: 1;
+    font-weight: 900;
+  }
+  .section-note {
+    max-width: 540px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.48;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .mode {
+    min-height: 126px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: linear-gradient(145deg, rgba(255,255,255,.052), rgba(255,255,255,.014));
+  }
+  .mode strong {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #fff;
+    font-size: 17px;
+    line-height: 1.2;
+  }
+  .mode strong span {
+    color: var(--copper-2);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .08em;
+  }
+  .mode p {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .prompt-list {
+    display: grid;
+    gap: 14px;
+  }
+  .prompt-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: linear-gradient(145deg, rgba(255,255,255,.052), rgba(255,255,255,.014));
+    box-shadow: 0 18px 50px rgba(0,0,0,.24);
+    overflow: hidden;
+  }
+  .prompt-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .prompt-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    font-size: 18px;
+    line-height: 1.25;
+    font-weight: 850;
+  }
+  .prompt-title .lucide { color: var(--copper-2); }
+  .brand-logo {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    object-fit: contain;
+    flex: none;
+  }
+  .prompt-meta p {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .copy {
+    align-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    border: 1px solid rgba(224,170,111,.32);
+    color: var(--copper-3);
+    background: rgba(199,122,58,.09);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 760;
+  }
+  .copy.ok { color: var(--green); border-color: rgba(117,184,137,.45); background: rgba(117,184,137,.10); }
+  pre {
+    margin: 0;
+    padding: 18px;
+    color: #f7efe4;
+    background: rgba(0,0,0,.35);
+    font-size: 13px;
+    line-height: 1.56;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .rules {
+    display: grid;
+    grid-template-columns: 1.1fr .9fr;
+    gap: 14px;
+  }
+  .rule-box {
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: linear-gradient(145deg, rgba(255,255,255,.052), rgba(255,255,255,.014));
+  }
+  .rule-box h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+  }
+  .rule-box h3 .lucide { color: var(--copper-2); }
+  .rule-box ul {
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--soft);
+    font-size: 15px;
+    line-height: 1.48;
+  }
+  .rule-box li {
+    position: relative;
+    padding-left: 18px;
+    margin-top: 8px;
+  }
+  .rule-box li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: .66em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--copper-2);
+  }
+  .links {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .skill-catalog {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .skill-card {
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: linear-gradient(145deg, rgba(255,255,255,.052), rgba(255,255,255,.014));
+  }
+  .skill-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    line-height: 1.22;
+  }
+  .skill-card h3 .lucide { color: var(--copper-2); }
+  .skill-card p {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .skill-card a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 9px;
+    padding: 9px 10px;
+    border: 1px solid rgba(241,236,226,.10);
+    border-radius: 7px;
+    background: rgba(0,0,0,.18);
+    color: var(--soft);
+    font-size: 13px;
+    line-height: 1.25;
+  }
+  .skill-card a:hover { color: #fff; border-color: rgba(224,170,111,.38); }
+  .skill-card a span { color: var(--dim); font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+  .link-card {
+    min-height: 106px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255,255,255,.035);
+    color: var(--soft);
+  }
+  .link-card:hover { border-color: rgba(224,170,111,.42); color: #fff; }
+  .link-card strong {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 15px;
+    color: #fff;
+  }
+  .link-card span {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 40px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    color: rgba(241,236,226,.46);
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.4;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 900px) {
+    .page { width: min(100% - 24px, 760px); padding-top: 24px; }
+    .hero { padding: 28px 22px; }
+    .grid, .rules, .links, .skill-catalog { grid-template-columns: 1fr; }
+    .section-head { display: block; }
+    .section-note { margin-top: 12px; }
+    .prompt-meta { grid-template-columns: 1fr; }
+    .copy { width: fit-content; }
+    .footer { display: block; }
+    .footer div + div { margin-top: 10px; }
+  }
+
+  @page { size: A4; margin: 14mm; }
+  @media print {
+    body { background: #fff; color: #111; }
+    .page { width: 100%; padding: 0; }
+    .hero, .mode, .prompt-card, .rule-box, .link-card {
+      box-shadow: none;
+      background: #fff;
+      border-color: #d7d1c7;
+      break-inside: avoid;
+    }
+    .metal, .label, .brand, .mode strong span { color: #9b5c25; -webkit-text-fill-color: currentColor; background: none; }
+    .hero p, .section-note, .mode p, .prompt-meta p, .rule-box ul, .link-card span { color: #4f4a43; }
+    pre { background: #f5f1eb; color: #111; border-top: 1px solid #d7d1c7; }
+    .copy, .hero-actions { display: none; }
+    .links { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="brand">neovida · Нейропросвещение</div>
+
+  <header class="hero">
+    <div class="label"><i data-lucide="copy-check"></i>AI Цех · урок 6 · шпаргалка участника</div>
+    <h1>Промпты для <span class="metal">автоматизации</span></h1>
+    <p>Здесь собраны команды, которые можно копировать в Codex или ChatGPT во время урока и после него. Подставляй свои данные в квадратные скобки. Пароли, коды входа и ключи доступа в чат не отправляй.</p>
+    <div class="hero-actions">
+      <button class="btn primary" data-copy-all><i data-lucide="copy"></i>Скопировать все промпты</button>
+      <a class="btn" href="presentation.html"><i data-lucide="presentation"></i>Открыть презентацию</a>
+      <a class="btn" href="#skills"><i data-lucide="library"></i>Skills и plugins</a>
+      <a class="btn" href="#links"><i data-lucide="external-link"></i>Официальные ссылки</a>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Шесть способов</h2>
+      <p class="section-note">Выбирай не «магический промпт», а режим работы агента. Один процесс, один способ, один безопасный тест.</p>
+    </div>
+    <div class="grid">
+      <article class="mode"><strong><span>01</span> По расписанию</strong><p>Агент возвращается к задаче по времени: сводка, напоминание, проверка статуса.</p></article>
+      <article class="mode"><strong><span>02</span> Подключения</strong><p>Codex работает с почтой, календарем, Telegram, файлами, таблицами, CRM и браузером.</p></article>
+      <article class="mode"><strong><span>03</span> Сценарии и skills</strong><p>Свой процесс или готовая методика превращается в команду: «собери, проверь, предложи».</p></article>
+      <article class="mode"><strong><span>04</span> Работа в фоне</strong><p>Длинная подготовка идет отдельно: исследование, черновик, сравнение, структура.</p></article>
+      <article class="mode"><strong><span>05</span> Порядок в файлах</strong><p>Агент читает папки, находит версии, собирает таблицы и вытаскивает решения.</p></article>
+      <article class="mode"><strong><span>06</span> Браузер</strong><p>Агент сам ходит по сайтам, собирает данные и возвращает короткий вывод.</p></article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Промпты</h2>
+      <p class="section-note">Начинай с безопасного режима. Действия с отправкой, удалением, публикацией, оплатой и массовыми изменениями только после отдельного подтверждения.</p>
+    </div>
+
+    <div class="prompt-list">
+      <article class="prompt-card" id="safe-mode">
+        <div class="prompt-meta">
+          <div>
+            <h3 class="prompt-title"><i data-lucide="shield-check"></i>0. Безопасный режим</h3>
+            <p>Вставляй перед задачами, где есть чужие данные, переписки, файлы, публикации или деньги.</p>
+          </div>
+          <button class="copy" data-copy="#prompt-safe"><i data-lucide="copy"></i>Копировать</button>
+        </div>
+        <pre id="prompt-safe">Работай в безопасном режиме: сначала прочитай данные и покажи план. Ничего не отправляй, не удаляй, не редактируй, не публикуй и не оплачивай без моего отдельного явного подтверждения.</pre>
+      </article>
+
+      <article class="prompt-card">
+        <div class="prompt-meta">
+          <div>
+            <h3 class="prompt-title"><i data-lucide="search-check"></i>1. Какие инструменты доступны</h3>
+            <p>Первый шаг перед подключениями. Не угадываем интерфейс, просим Codex показать реальную карту аккаунта.</p>
+          </div>
+          <button class="copy" data-copy="#prompt-tools"><i data-lucide="copy"></i>Копировать</button>
+        </div>
+        <pre id="prompt-tools">Покажи, какие приложения, коннекторы, плагины и инструменты у меня сейчас доступны. Ничего не меняй, только покажи список, кратко объясни для чего нужен каждый инструмент и спроси, что подключать первым.</pre>
+      </article>
+
+      <article class="prompt-card">
+        <div class="prompt-meta">
+          <div>
+            <h3 class="prompt-title"><i data-lucide="plug"></i>2. Проверить конкретный инструмент</h3>
+            <p>Для Telegram, почты, календаря, файлов, таблиц или CRM. Главное: сначала тест чтения, без отправки.</p>
+          </div>
+          <button class="copy" data-copy="#prompt-connector"><i data-lucide="copy"></i>Копировать</button>
+        </div>
+        <pre id="prompt-connector">Проверь, доступен ли у меня инструмент [название инструмента]. Если доступен, сделай только безопасный тест чтения: покажи 3-5 объектов, которые ты видишь, и объясни, какие задачи можно автоматизировать через этот инструмент. Ничего не отправляй, не редактируй и не удаляй.</pre>
+      </article>
+
+      <article class="prompt-card">
+        <div class="prompt-meta">
+          <div>
+            <h3 class="prompt-title"><img class="brand-logo" src="assets/images/telegram.svg" alt="">3. Telegram: найти диалог и вложения</h3>
+            <p>Пример для урока: агент ищет нужный диалог, последние сообщения и файлы, но не пишет человеку.</p>
+          </div>
+          <button class="copy" data-copy="#prompt-telegram"><i data-lucide="copy"></i>Копировать</button>
+        </div>
+        <pre id="prompt-telegram">Проверь, доступен ли у меня инструмент Telegram. Если доступен, найди диалог с [имя человека], покажи последние 5 сообщений и список вложений за последние [период]. Ничего не отправляй. Если Telegram недоступен, объясни, какой app/plugin/connector нужен и какой безопасный первый шаг сделать.</pre>
+      </article>
+
+      <article class="prompt-card">
+        <div class="prompt-meta">
+          <div>
+            <h3 class="prompt-title"><i data-lucide="brain-circuit"></i>4. Личная карта автоматизации</h3>
+            <p>Когда непонятно, что подключать. Codex сначала вытаскивает задачи, потом предлагает карту.</p>
+          </div>
+          <button class="copy" data-copy="#prompt-map"><i data-lucide="copy"></i>Копировать</button>
+        </div>
+        <pre id="prompt-map">Проведи со мной мозговой штурм по автоматизации моей работы. Сначала задай 8-10 вопросов про мои задачи, переписки, файлы, CRM/таблицы, документы, отчеты и ограничения. После моих ответов предложи карту подключений к Codex: какие инструменты подключить, какие 3 автоматизации дадут быстрый эффект, какой из 6 способов подходит и какой безопасный тест сделать первым. Ничего не подключай и не меняй без моего подтверждения.</pre>
+      </article>
+
+      <article class="prompt-card">
+        <div class="prompt-meta">
+          <div>
+            <h3 class="prompt-title"><i data-lucide="calendar-clock"></i>5. Способ 1: задача по расписанию</h3>
+            <p>Для сводок, напоминаний и регулярных проверок. Формулировка не зависит от конкретной кнопки в интерфейсе.</p>
+          </div>
+          <button class="copy" data-copy="#prompt-schedule"><i data-lucide="copy"></i>Копировать</button>
+        </div>
+        <pre id="prompt-schedule">Помоги поставить регулярную задачу: [что проверять/готовить], [как часто], [в какое время], [в каком формате нужен результат]. Сначала скажи, доступна ли мне функция расписания или automation в текущем продукте. Если доступна, предложи точную формулировку задачи. Ничего не запускай без моего подтверждения.</pre>
+      </article>
+
+      <article class="prompt-card">
+        <div class="prompt-meta">
+          <div>
+            <h3 class="prompt-title"><i data-lucide="puzzle"></i>6. Способ 3: свой сценарий</h3>
+            <p>Превращает повторяемую работу в шаблон: входные данные, шаги, контроль качества, формат результата.</p>
+          </div>
+          <button class="copy" data-copy="#prompt-scenario"><i data-lucide="copy"></i>Копировать</button>
+        </div>
+        <pre id="prompt-scenario">Помоги собрать повторяемый сценарий для процесса: [описание процесса]. Сначала задай недостающие вопросы. Затем оформи сценарий в формате: входные данные, инструменты, шаги агента, где нужно мое подтверждение, итоговый результат, проверка качества. В конце дай короткий промпт, который я смогу копировать каждый раз.</pre>
+      </article>
+
+      <article class="prompt-card">
+        <div class="prompt-meta">
+          <div>
+            <h3 class="prompt-title"><i data-lucide="library"></i>7. Способ 3: подобрать готовый skill/plugin</h3>
+            <p>Когда задача типовая: продажи, маркетинг, стратегия, презентации, отчеты, исследования.</p>
+          </div>
+          <button class="copy" data-copy="#prompt-skill-find"><i data-lucide="copy"></i>Копировать</button>
+        </div>
+        <pre id="prompt-skill-find">Подбери готовый skill или plugin под задачу: [что хочу автоматизировать]. Сначала покажи 3-5 вариантов: название, для чего подходит, какие доступы нужны, риск, первый безопасный тест. Ничего не устанавливай и не подключай без моего подтверждения.</pre>
+      </article>
+
+      <article class="prompt-card">
+        <div class="prompt-meta">
+          <div>
+            <h3 class="prompt-title"><i data-lucide="file-search"></i>8. Проверить skill перед использованием</h3>
+            <p>Не ставим вслепую. Сначала читаем, что skill делает, какие входные данные просит и где может навредить.</p>
+          </div>
+          <button class="copy" data-copy="#prompt-skill-check"><i data-lucide="copy"></i>Копировать</button>
+        </div>
+        <pre id="prompt-skill-check">Проверь skill/plugin [название или ссылка]. Прочитай описание и скажи: для каких задач он подходит, какие данные или доступы потребуются, какие действия он может выполнять, какие риски есть, какой первый безопасный запуск сделать без изменений в реальных данных.</pre>
+      </article>
+
+      <article class="prompt-card">
+        <div class="prompt-meta">
+          <div>
+            <h3 class="prompt-title"><i data-lucide="chart-no-axes-combined"></i>9. Кейс: продажи или стратегия через skill</h3>
+            <p>Пример: выбрать профильный skill, дать контекст бизнеса и получить стратегию/аудит/план действий.</p>
+          </div>
+          <button class="copy" data-copy="#prompt-skill-business"><i data-lucide="copy"></i>Копировать</button>
+        </div>
+        <pre id="prompt-skill-business">Мне нужно решить бизнес-задачу: [например, улучшить продажи / собрать маркетинговую стратегию / подготовить план работы с CRM]. Найди подходящий skill или plugin из доступных, объясни почему он подходит, попроси недостающий контекст, затем сделай первый безопасный результат: аудит, черновик стратегии, план эксперимента или список быстрых действий. Не меняй данные в CRM/таблицах и ничего не отправляй клиентам без моего подтверждения.</pre>
+      </article>
+
+      <article class="prompt-card">
+        <div class="prompt-meta">
+          <div>
+            <h3 class="prompt-title"><i data-lucide="inbox"></i>10. Способ 4: работа в фоне</h3>
+            <p>Для длинной подготовки: исследование клиента, черновик КП, анализ переписки, подбор аргументов.</p>
+          </div>
+          <button class="copy" data-copy="#prompt-background"><i data-lucide="copy"></i>Копировать</button>
+        </div>
+        <pre id="prompt-background">Возьми задачу в работу в фоне: [описание задачи]. Сначала составь план и список источников, которые тебе нужны. Потом собери информацию, отметь сомнительные места и верни черновик результата. Ничего не отправляй наружу и не меняй в исходных данных без моего отдельного подтверждения.</pre>
+      </article>
+
+      <article class="prompt-card">
+        <div class="prompt-meta">
+          <div>
+            <h3 class="prompt-title"><i data-lucide="folder-cog"></i>11. Способ 5: порядок в файлах</h3>
+            <p>Для папок с документами, презентациями, договорами, домашками, старым хаосом и версиями.</p>
+          </div>
+          <button class="copy" data-copy="#prompt-files"><i data-lucide="copy"></i>Копировать</button>
+        </div>
+        <pre id="prompt-files">Проанализируй папку [путь/название папки] в безопасном режиме. Ничего не переименовывай, не удаляй и не перемещай. Сначала покажи таблицу: файл, что внутри, актуальность, дубли/версии, что требует действия. Затем предложи план наведения порядка и спроси подтверждение перед любыми изменениями.</pre>
+      </article>
+
+      <article class="prompt-card">
+        <div class="prompt-meta">
+          <div>
+            <h3 class="prompt-title"><i data-lucide="globe"></i>12. Способ 6: браузер и сайты</h3>
+            <p>Для мониторинга конкурентов, проверки цен, сбора ссылок, сравнения офферов и подготовки коротких выводов.</p>
+          </div>
+          <button class="copy" data-copy="#prompt-browser"><i data-lucide="copy"></i>Копировать</button>
+        </div>
+        <pre id="prompt-browser">С помощью браузера собери данные по задаче: [что нужно узнать]. Источники: [сайты/категория сайтов]. Верни результат в формате: краткий вывод, таблица фактов, ссылки на источники, что изменилось/на что обратить внимание, какие данные сомнительные. Ничего не публикуй и не заполняй формы на сайтах.</pre>
+      </article>
+
+      <article class="prompt-card">
+        <div class="prompt-meta">
+          <div>
+            <h3 class="prompt-title"><i data-lucide="route"></i>13. Что делать, если инструмента нет</h3>
+            <p>Не застреваем. Просим Codex предложить ближайший доступный путь и ручную замену.</p>
+          </div>
+          <button class="copy" data-copy="#prompt-missing"><i data-lucide="copy"></i>Копировать</button>
+        </div>
+        <pre id="prompt-missing">Если нужный инструмент сейчас недоступен, не останавливайся. Объясни, почему он недоступен, какой app/plugin/connector может понадобиться, какие права он запросит, какой самый безопасный способ подключения, и предложи временный обходной вариант без подключения.</pre>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="skills">
+    <div class="section-head">
+      <h2>Skills и plugins</h2>
+      <p class="section-note">Skills дают методику работы. Plugins могут добавлять skills, apps и MCP-инструменты. Доступность зависит от аккаунта, рабочего пространства и подключенных сервисов.</p>
+    </div>
+    <div class="skill-catalog">
+      <article class="skill-card">
+        <h3><i data-lucide="chart-no-axes-combined"></i>Продажи и CRM</h3>
+        <p>Для аудита воронки, подготовки к звонкам, чистки CRM и prospecting.</p>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/hubspot/skills/hubspot-pipeline-health/SKILL.md" target="_blank" rel="noopener">HubSpot Pipeline Health <span>skill</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/hubspot/skills/hubspot-customer-prep/SKILL.md" target="_blank" rel="noopener">HubSpot Customer Prep <span>skill</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/hubspot/skills/hubspot-crm-data-hygiene/SKILL.md" target="_blank" rel="noopener">HubSpot CRM Data Hygiene <span>skill</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/apollo/.codex-plugin/plugin.json" target="_blank" rel="noopener">Apollo <span>plugin</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/clay/.codex-plugin/plugin.json" target="_blank" rel="noopener">Clay <span>plugin</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/zoominfo/.codex-plugin/plugin.json" target="_blank" rel="noopener">ZoomInfo <span>plugin</span></a>
+      </article>
+
+      <article class="skill-card">
+        <h3><i data-lucide="megaphone"></i>Маркетинг и коммуникации</h3>
+        <p>Для промо-кампаний, шаблонов сообщений, бренда и работы с входящими.</p>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/twilio-developer-kit/skills/twilio-marketing-promotions-advisor/SKILL.md" target="_blank" rel="noopener">Twilio Marketing Promotions Advisor <span>skill</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/twilio-developer-kit/skills/twilio-content-template-builder/SKILL.md" target="_blank" rel="noopener">Twilio Content Template Builder <span>skill</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/brand24/.codex-plugin/plugin.json" target="_blank" rel="noopener">Brand24 Mentions & Sentiment <span>plugin</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/gmail/skills/gmail-inbox-triage/SKILL.md" target="_blank" rel="noopener">Gmail Inbox Triage <span>skill</span></a>
+      </article>
+
+      <article class="skill-card">
+        <h3><i data-lucide="radar"></i>Стратегия и исследования</h3>
+        <p>Для ресёрча, документации, market intelligence и превращения хаоса в план.</p>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/notion/skills/notion-research-documentation/SKILL.md" target="_blank" rel="noopener">Notion Research Documentation <span>skill</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/particl-market-research/.codex-plugin/plugin.json" target="_blank" rel="noopener">Particl Market Research <span>plugin</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/common-room/.codex-plugin/plugin.json" target="_blank" rel="noopener">Common Room Buyer Intelligence <span>plugin</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/build-web-data-visualization/skills/visualization-strategy-and-critique/SKILL.md" target="_blank" rel="noopener">Visualization Strategy & Critique <span>skill</span></a>
+      </article>
+
+      <article class="skill-card">
+        <h3><i data-lucide="presentation"></i>Презентации, таблицы, база знаний</h3>
+        <p>Для материалов, отчетов, слайдов, таблиц и структурирования рабочих данных.</p>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/canva/skills/canva-branded-presentation/SKILL.md" target="_blank" rel="noopener">Canva Branded Presentation <span>skill</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/google-drive/skills/google-slides/SKILL.md" target="_blank" rel="noopener">Google Slides <span>skill</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/google-drive/skills/google-sheets/SKILL.md" target="_blank" rel="noopener">Google Sheets <span>skill</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/figma/skills/figma-use-slides/SKILL.md" target="_blank" rel="noopener">Figma Slides <span>skill</span></a>
+        <a href="https://github.com/openai/plugins/blob/main/plugins/airtable/skills/airtable-overview/SKILL.md" target="_blank" rel="noopener">Airtable Overview <span>skill</span></a>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Правила</h2>
+      <p class="section-note">Эти ограничения держат автоматизацию рабочей, а не хаотичной.</p>
+    </div>
+    <div class="rules">
+      <div class="rule-box">
+        <h3><i data-lucide="badge-check"></i>Формула управления</h3>
+        <ul>
+          <li>Прочитай источники.</li>
+          <li>Покажи план.</li>
+          <li>Дождись моего ок.</li>
+          <li>Выполни.</li>
+          <li>Отчитайся, что изменил и где были сомнения.</li>
+        </ul>
+      </div>
+      <div class="rule-box">
+        <h3><i data-lucide="ban"></i>Не отдавать агенту без подтверждения</h3>
+        <ul>
+          <li>Отправку сообщений и писем.</li>
+          <li>Удаление, перенос и массовые правки файлов.</li>
+          <li>Публикацию постов, страниц и документов.</li>
+          <li>Оплаты, доступы, пароли, коды входа и ключи API.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="links">
+    <div class="section-head">
+      <h2>Ссылки</h2>
+      <p class="section-note">Официальные страницы, если нужно свериться с функциями. Интерфейс и доступность зависят от продукта, аккаунта и рабочего пространства.</p>
+    </div>
+    <div class="links">
+      <a class="link-card" href="https://help.openai.com/en/articles/10291617-tasks-in-chatgpt" target="_blank" rel="noopener">
+        <strong><i data-lucide="calendar-clock"></i>ChatGPT Scheduled Tasks</strong>
+        <span>Запланированные задачи в ChatGPT.</span>
+      </a>
+      <a class="link-card" href="https://developers.openai.com/codex/app/automations" target="_blank" rel="noopener">
+        <strong><i data-lucide="workflow"></i>Codex Automations</strong>
+        <span>Автоматизации в приложении Codex.</span>
+      </a>
+      <a class="link-card" href="https://developers.openai.com/codex/plugins" target="_blank" rel="noopener">
+        <strong><i data-lucide="plug"></i>Codex Plugins</strong>
+        <span>Плагины и расширение возможностей Codex.</span>
+      </a>
+      <a class="link-card" href="https://developers.openai.com/codex/skills" target="_blank" rel="noopener">
+        <strong><i data-lucide="library"></i>Codex Skills</strong>
+        <span>Как Codex использует reusable workflows.</span>
+      </a>
+      <a class="link-card" href="https://github.com/openai/plugins" target="_blank" rel="noopener">
+        <strong><i data-lucide="github"></i>OpenAI Plugins repo</strong>
+        <span>Примеры plugins и skills с исходниками.</span>
+      </a>
+      <a class="link-card" href="presentation.html">
+        <strong><i data-lucide="presentation"></i>Презентация урока</strong>
+        <span>Основная презентация по шести способам автоматизации.</span>
+      </a>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div>AI Цех · урок 6 · шпаргалка участника</div>
+    <div>neovida · Нейропросвещение</div>
+  </footer>
+</main>
+
+<script>
+const copyButtons = [...document.querySelectorAll('[data-copy]')];
+
+async function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const field = document.createElement('textarea');
+  field.value = text;
+  field.setAttribute('readonly', '');
+  field.style.position = 'fixed';
+  field.style.left = '-9999px';
+  document.body.appendChild(field);
+  field.select();
+  document.execCommand('copy');
+  field.remove();
+}
+
+function flash(button, label = 'Скопировано') {
+  const original = button.innerHTML;
+  button.classList.add('ok');
+  button.innerHTML = '<i data-lucide="check"></i>' + label;
+  if (window.lucide) lucide.createIcons();
+  window.setTimeout(() => {
+    button.classList.remove('ok');
+    button.innerHTML = original;
+    if (window.lucide) lucide.createIcons();
+  }, 1400);
+}
+
+copyButtons.forEach((button) => {
+  button.addEventListener('click', async () => {
+    const target = document.querySelector(button.dataset.copy);
+    if (!target) return;
+    await copyText(target.textContent.trim());
+    flash(button);
+  });
+});
+
+const copyAll = document.querySelector('[data-copy-all]');
+copyAll?.addEventListener('click', async () => {
+  const all = [...document.querySelectorAll('.prompt-card pre')]
+    .map((node, index) => `${index}. ${node.textContent.trim()}`)
+    .join('\n\n');
+  await copyText(all);
+  flash(copyAll, 'Все скопировано');
+});
+
+if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>
