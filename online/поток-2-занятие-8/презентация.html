@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность · Занятие 8 — Стратегия (онлайн, Поток 2, финал)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0f0f1e;
+  --bg-2: #1a1a2e;
+  --accent: #A78BFA;
+  --accent-dark: #7C3AED;
+  --accent-glow: rgba(167,139,250,0.35);
+  --coral: #E07461;
+  --coral-glow: rgba(224,116,97,0.32);
+  --white: #ffffff;
+  --white-80: rgba(255,255,255,0.8);
+  --white-60: rgba(255,255,255,0.6);
+  --white-40: rgba(255,255,255,0.4);
+  --white-20: rgba(255,255,255,0.2);
+  --white-10: rgba(255,255,255,0.1);
+  --yellow: #f0c040;
+  --orange: #e8944a;
+  --red: #e05555;
+  --green: #5ec47a;
+  --blue: #4285f4;
+}
+html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--white); -webkit-font-smoothing: antialiased; }
+a { color: var(--accent); text-decoration: underline; cursor: pointer; }
+a:hover { color: var(--coral); }
+
+/* Phosphor helpers */
+.ph, .ph-duotone, .ph-fill { vertical-align: -3px; line-height: 1; display: inline-block; font-style: normal; }
+.icon-violet { color: var(--accent); }
+.icon-coral { color: var(--coral); }
+.icon-green { color: var(--green); }
+.icon-red { color: var(--red); }
+.icon-gold { color: var(--yellow); }
+.icon-blue { color: var(--blue); }
+.icon-white { color: var(--white); }
+
+.deck { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+.slide {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 48px 72px; opacity: 0; visibility: hidden;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translateX(40px); overflow-y: auto;
+}
+.slide.active { opacity: 1; visibility: visible; transform: translateX(0); }
+.slide.prev { transform: translateX(-40px); }
+
+.slide-title { font-size: 44px; font-weight: 800; line-height: 1.15; margin-bottom: 22px; }
+.slide-title .accent { color: var(--accent); }
+.slide-title .coral { color: var(--coral); }
+.slide-subtitle { font-size: 22px; font-weight: 400; color: var(--white-80); margin-bottom: 28px; line-height: 1.4; }
+
+.point { margin-bottom: 12px; padding-left: 8px; font-size: 20px; line-height: 1.5; color: var(--white-80); }
+.point strong { color: var(--white); font-weight: 600; }
+.point .accent { color: var(--accent); font-weight: 700; }
+.point .coral { color: var(--coral); font-weight: 700; }
+
+.quote { margin-top: 16px; padding: 22px 30px; border-left: 4px solid var(--accent); background: var(--white-10); border-radius: 0 12px 12px 0; font-size: 22px; font-weight: 500; line-height: 1.5; font-style: italic; }
+.quote.coral { border-left-color: var(--coral); }
+.quote .src { display: block; margin-top: 8px; font-size: 14px; color: var(--white-40); font-style: normal; }
+
+.card { background: var(--white-10); border-radius: 16px; padding: 22px; margin-bottom: 14px; }
+.card-title { font-size: 19px; font-weight: 700; margin-bottom: 8px; }
+.card-body { font-size: 17px; color: var(--white-80); line-height: 1.5; }
+.cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px; }
+.cards-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 10px; }
+
+.slide-counter { position: fixed; bottom: 20px; right: 28px; font-size: 14px; font-weight: 600; color: var(--white-40); z-index: 100; pointer-events: none; }
+.fullscreen-btn { position: fixed; top: 18px; right: 22px; z-index: 100; background: var(--white-10); border: 1px solid var(--white-20); color: var(--white-60); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.fullscreen-btn:hover { background: var(--white-20); color: var(--white); }
+/* Прогресс-бар отключён: на первом слайде смотрелся как обрезок,
+   на последнем — как полоса наверху. Счётчика 1/27 справа внизу достаточно. */
+.progress-bar { display: none; }
+
+/* TITLE */
+.slide.title-slide { text-align: center; justify-content: center; align-items: center; background: radial-gradient(ellipse at 50% 40%, rgba(167,139,250,0.22) 0%, transparent 60%), radial-gradient(ellipse at 50% 80%, rgba(224,116,97,0.12) 0%, transparent 60%); }
+.title-big { font-size: 86px; font-weight: 900; letter-spacing: -2.5px; margin-bottom: 18px; line-height: 1.05; background: linear-gradient(135deg, var(--accent), var(--coral)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.title-sub { font-size: 30px; font-weight: 500; color: var(--white-80); margin-bottom: 36px; line-height: 1.3; max-width: 800px; }
+.title-meta { font-size: 18px; color: var(--white-40); }
+.title-finale { display: inline-block; padding: 6px 18px; border-radius: 100px; background: rgba(167,139,250,0.18); color: var(--accent); font-size: 14px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px; }
+
+/* TIMELINE */
+.lesson-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
+.lesson-card { background: var(--white-10); border-radius: 14px; padding: 16px 14px; border-left: 4px solid var(--white-20); }
+.lesson-card.done { opacity: 0.55; }
+.lesson-card.today { background: linear-gradient(135deg, rgba(167,139,250,0.22) 0%, rgba(167,139,250,0.06) 100%); border-left-color: var(--accent); border: 2px solid rgba(167,139,250,0.4); box-shadow: 0 8px 30px rgba(167,139,250,0.18); }
+.lesson-card .l-num { font-size: 12px; font-weight: 700; color: var(--white-40); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+.lesson-card.today .l-num { color: var(--accent); }
+.lesson-card .l-name { font-size: 16px; font-weight: 700; color: var(--white); margin-bottom: 3px; }
+.lesson-card .l-desc { font-size: 12px; color: var(--white-60); line-height: 1.35; }
+.lesson-card.today .l-name { color: var(--accent); }
+
+/* AGENDA */
+.agenda-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+.agenda-card { background: linear-gradient(135deg, rgba(167,139,250,0.12) 0%, rgba(167,139,250,0.02) 100%); border: 1.5px solid rgba(167,139,250,0.3); border-radius: 18px; padding: 22px; }
+.agenda-icon-wrap { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--coral)); color: var(--bg); font-size: 22px; margin-bottom: 10px; }
+.agenda-name { font-size: 22px; font-weight: 800; color: var(--white); margin-bottom: 4px; }
+.agenda-desc { font-size: 16px; color: var(--white-60); line-height: 1.5; }
+.agenda-time { font-size: 13px; color: var(--accent); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-top: 10px; }
+
+/* CTA */
+.cta-box { background: linear-gradient(135deg, rgba(167,139,250,0.2) 0%, rgba(224,116,97,0.1) 100%); border: 2px solid rgba(167,139,250,0.4); border-radius: 24px; padding: 36px 44px; margin-top: 20px; text-align: center; }
+.cta-url { font-size: 36px; font-weight: 800; color: var(--accent); padding: 14px 28px; background: rgba(0,0,0,0.3); border-radius: 14px; display: inline-block; margin: 12px 0; font-family: 'SF Mono', Monaco, monospace; letter-spacing: -0.5px; }
+.cta-step { display: flex; gap: 14px; align-items: center; justify-content: center; padding: 8px; }
+.cta-step-num { width: 32px; height: 32px; line-height: 32px; text-align: center; border-radius: 50%; background: var(--coral); color: var(--bg); font-weight: 900; flex-shrink: 0; }
+.cta-step-text { font-size: 18px; color: var(--white-80); }
+
+/* GALAXY */
+.galaxy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 8px; }
+.galaxy-zone { background: var(--white-10); border-radius: 16px; padding: 18px 22px; }
+.galaxy-zone .gz-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.galaxy-zone .gz-icon { font-size: 26px; }
+.galaxy-zone .gz-name { font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+.galaxy-zone.us { border-left: 3px solid var(--blue); }
+.galaxy-zone.cn { border-left: 3px solid var(--red); }
+.galaxy-zone.ru { border-left: 3px solid var(--green); }
+.galaxy-zone.ext { border-left: 3px solid var(--coral); }
+.galaxy-zone.us .gz-name, .galaxy-zone.us .gz-icon { color: var(--blue); }
+.galaxy-zone.cn .gz-name, .galaxy-zone.cn .gz-icon { color: var(--red); }
+.galaxy-zone.ru .gz-name, .galaxy-zone.ru .gz-icon { color: var(--green); }
+.galaxy-zone.ext .gz-name, .galaxy-zone.ext .gz-icon { color: var(--coral); }
+.galaxy-tools { display: flex; flex-wrap: wrap; gap: 6px; }
+.galaxy-tool { font-size: 13px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 100px; color: var(--white-80); }
+
+/* PARADIGMS */
+.paradigm-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 8px; }
+.paradigm-card { background: var(--white-10); border-radius: 12px; padding: 14px 12px; border-top: 3px solid var(--accent); }
+.paradigm-icon { font-size: 28px; color: var(--accent); margin-bottom: 8px; }
+.paradigm-title { font-size: 14px; font-weight: 800; color: var(--white); margin-bottom: 4px; line-height: 1.2; }
+.paradigm-desc { font-size: 11px; color: var(--white-60); line-height: 1.4; }
+
+/* STACK */
+.stack-card { background: linear-gradient(135deg, rgba(167,139,250,0.15) 0%, rgba(167,139,250,0.04) 100%); border: 2px solid rgba(167,139,250,0.35); border-radius: 18px; padding: 26px 30px; margin-top: 8px; }
+.stack-role { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); font-weight: 800; margin-bottom: 6px; }
+.stack-title { font-size: 28px; font-weight: 800; color: var(--white); margin-bottom: 18px; }
+.stack-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+.stack-tool { display: flex; gap: 12px; align-items: flex-start; padding: 10px 14px; background: rgba(0,0,0,0.2); border-radius: 10px; }
+.stack-tool-icon { font-size: 22px; color: var(--accent); flex-shrink: 0; }
+.stack-tool-name { font-weight: 700; color: var(--white); font-size: 15px; }
+.stack-tool-desc { font-size: 13px; color: var(--white-60); line-height: 1.3; }
+.stack-win { background: rgba(94,196,122,0.12); border: 1px solid rgba(94,196,122,0.35); border-radius: 12px; padding: 14px 18px; }
+.stack-win-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--green); font-weight: 800; margin-bottom: 4px; }
+.stack-win-body { font-size: 16px; color: var(--white); line-height: 1.4; }
+
+/* EVO */
+.evo-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-top: 12px; }
+.evo-card { background: var(--white-10); border-radius: 18px; padding: 24px; border: 2px solid var(--white-10); }
+.evo-card.bot { border-color: rgba(96,165,250,0.4); }
+.evo-card.assistant { border-color: rgba(224,116,97,0.4); }
+.evo-card.agent { border-color: rgba(167,139,250,0.5); background: linear-gradient(145deg, rgba(167,139,250,0.15) 0%, rgba(167,139,250,0.04) 100%); }
+.evo-icon { font-size: 44px; margin-bottom: 8px; }
+.evo-card.bot .evo-icon { color: #60A5FA; }
+.evo-card.assistant .evo-icon { color: var(--coral); }
+.evo-card.agent .evo-icon { color: var(--accent); }
+.evo-name { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+.evo-card.bot .evo-name { color: #60A5FA; }
+.evo-card.assistant .evo-name { color: var(--coral); }
+.evo-card.agent .evo-name { color: var(--accent); }
+.evo-tagline { font-size: 13px; color: var(--white-60); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+.evo-body { font-size: 15px; color: var(--white-80); line-height: 1.5; }
+.evo-body strong { color: var(--white); font-weight: 600; }
+
+/* RED LINES */
+.danger-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 10px; }
+.danger-card { background: linear-gradient(135deg, rgba(224,85,85,0.12) 0%, rgba(224,85,85,0.02) 100%); border: 1.5px solid rgba(224,85,85,0.35); border-radius: 16px; padding: 18px; }
+.danger-num { display: inline-block; padding: 2px 10px; border-radius: 100px; background: rgba(224,85,85,0.25); color: var(--red); font-size: 12px; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 8px; }
+.danger-title { font-size: 18px; font-weight: 800; color: var(--white); margin-bottom: 6px; line-height: 1.3; }
+.danger-body { font-size: 14px; color: var(--white-60); line-height: 1.4; }
+
+/* PRINCIPLE */
+.principle-box {
+  background: linear-gradient(135deg, rgba(94,196,122,0.18) 0%, rgba(94,196,122,0.04) 100%);
+  border: 2px solid rgba(94,196,122,0.4);
+  border-radius: 24px; padding: 44px 52px;
+  margin: 16px auto; max-width: 920px; text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.principle-label { font-size: 13px; text-transform: uppercase; letter-spacing: 3px; color: var(--green); font-weight: 800; margin-bottom: 18px; }
+.principle-text { font-size: 32px; line-height: 1.45; color: var(--white); font-weight: 600; }
+.principle-text strong { color: var(--green); font-weight: 800; }
+.principle-text em { color: var(--coral); font-style: normal; font-weight: 700; }
+
+/* ROADMAP */
+.field-preview { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 8px; }
+.fp-card { background: var(--white-10); border-left: 4px solid var(--accent); border-radius: 12px; padding: 16px 22px; }
+.fp-num { font-size: 12px; font-weight: 800; color: var(--accent); letter-spacing: 2px; }
+.fp-title { font-size: 19px; font-weight: 700; color: var(--white); margin: 4px 0; }
+.fp-example { font-size: 14px; color: var(--white-60); font-style: italic; line-height: 1.4; }
+
+/* PATHS */
+.paths-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 12px; }
+.path-card { background: var(--white-10); border-radius: 18px; padding: 24px; border-top: 4px solid var(--accent); }
+.path-card.middle { border-top-color: var(--coral); background: linear-gradient(135deg, rgba(224,116,97,0.1) 0%, rgba(224,116,97,0.02) 100%); }
+.path-card.right { border-top-color: var(--green); }
+.path-icon { font-size: 40px; margin-bottom: 10px; color: var(--accent); }
+.path-card.middle .path-icon { color: var(--coral); }
+.path-card.right .path-icon { color: var(--green); }
+.path-name { font-size: 20px; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+.path-desc { font-size: 14px; color: var(--white-60); line-height: 1.5; }
+
+/* NEXT COURSE */
+.next-hero { background: linear-gradient(135deg, rgba(167,139,250,0.22) 0%, rgba(224,116,97,0.12) 100%); border: 2px solid rgba(167,139,250,0.4); border-radius: 26px; padding: 40px 48px; margin-top: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+.next-tag { display: inline-block; padding: 5px 16px; border-radius: 100px; background: var(--accent); color: var(--bg); font-size: 12px; font-weight: 900; letter-spacing: 2px; margin-bottom: 16px; }
+.next-name { font-size: 48px; font-weight: 900; line-height: 1.1; margin-bottom: 12px; background: linear-gradient(135deg, var(--accent), var(--coral)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.next-promise { font-size: 22px; color: var(--white); line-height: 1.4; margin-bottom: 18px; }
+.next-meta { display: flex; gap: 24px; flex-wrap: wrap; font-size: 15px; color: var(--white-60); }
+.next-meta strong { color: var(--accent); font-weight: 700; }
+
+/* MODULES */
+.modules-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.module-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: var(--white-10); border-radius: 12px; }
+.module-num { width: 28px; height: 28px; line-height: 28px; text-align: center; border-radius: 50%; background: var(--accent); color: var(--bg); font-weight: 800; flex-shrink: 0; font-size: 14px; }
+.module-name { font-weight: 700; color: var(--white); font-size: 16px; line-height: 1.3; }
+.module-desc { font-size: 13px; color: var(--white-60); line-height: 1.3; }
+
+/* BONUSES */
+.bonus-list { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 10px; max-width: 760px; }
+.bonus-item { display: flex; gap: 16px; align-items: center; padding: 14px 22px; background: linear-gradient(135deg, rgba(94,196,122,0.1) 0%, rgba(94,196,122,0.02) 100%); border: 1.5px solid rgba(94,196,122,0.3); border-radius: 14px; }
+.bonus-icon { font-size: 32px; color: var(--green); flex-shrink: 0; }
+.bonus-item.violet { background: linear-gradient(135deg, rgba(167,139,250,0.12) 0%, rgba(167,139,250,0.02) 100%); border-color: rgba(167,139,250,0.3); }
+.bonus-item.violet .bonus-icon { color: var(--accent); }
+.bonus-name { font-weight: 800; color: var(--white); font-size: 18px; }
+.bonus-desc { font-size: 14px; color: var(--white-60); }
+
+/* FOR WHOM cards */
+.who-card.yes { border-left: 4px solid var(--green); background: linear-gradient(135deg, rgba(94,196,122,0.08) 0%, rgba(94,196,122,0.02) 100%); }
+.who-card.no  { border-left: 4px solid var(--red);   background: linear-gradient(135deg, rgba(224,85,85,0.08) 0%, rgba(224,85,85,0.02) 100%); }
+.who-card .who-title { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; margin-bottom: 12px; }
+.who-card.yes .who-title { color: var(--green); }
+.who-card.no  .who-title { color: var(--red); }
+
+/* ORCHESTRATION — концептуальный слайд */
+.orch-hero { display: grid; grid-template-columns: 220px 1fr; gap: 36px; align-items: center; margin-top: 8px; margin-bottom: 18px; }
+.orch-icon-big { width: 220px; height: 220px; border-radius: 50%; background: linear-gradient(135deg, rgba(167,139,250,0.22) 0%, rgba(224,116,97,0.12) 100%); border: 2px solid rgba(167,139,250,0.4); display: flex; align-items: center; justify-content: center; font-size: 110px; color: var(--accent); box-shadow: 0 20px 60px rgba(167,139,250,0.25); }
+.orch-def { font-size: 22px; line-height: 1.45; color: var(--white); }
+.orch-def strong { color: var(--accent); font-weight: 800; }
+.orch-def em { color: var(--coral); font-style: normal; font-weight: 700; }
+.orch-metaphor { display: inline-block; margin-top: 10px; padding: 8px 16px; border-radius: 10px; background: rgba(167,139,250,0.12); color: var(--accent); font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+
+.principles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+.principle-card { background: var(--white-10); border-left: 4px solid var(--accent); border-radius: 12px; padding: 14px 18px; }
+.principle-card .pc-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; background: rgba(167,139,250,0.22); color: var(--accent); font-weight: 800; font-size: 14px; margin-bottom: 6px; }
+.principle-card .pc-title { font-size: 16px; font-weight: 800; color: var(--white); margin-bottom: 4px; }
+.principle-card .pc-body { font-size: 14px; color: var(--white-70); line-height: 1.5; }
+
+.orch-punchline { margin-top: 16px; padding: 18px 24px; background: linear-gradient(135deg, rgba(224,116,97,0.16) 0%, rgba(167,139,250,0.08) 100%); border: 2px solid rgba(224,116,97,0.4); border-radius: 14px; font-size: 22px; color: var(--white); text-align: center; line-height: 1.4; font-weight: 600; }
+.orch-punchline strong { color: var(--coral); font-weight: 800; }
+
+/* ORCHESTRATION — практика, flow */
+.flow-task { display: inline-block; padding: 6px 16px; border-radius: 100px; background: rgba(167,139,250,0.18); color: var(--accent); font-size: 13px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 14px; }
+.flow-grid { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; gap: 10px; align-items: stretch; margin-top: 10px; }
+.flow-step { background: var(--white-10); border: 1.5px solid rgba(167,139,250,0.3); border-radius: 14px; padding: 16px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; min-height: 130px; }
+.flow-step .fs-icon { font-size: 28px; color: var(--accent); margin-bottom: 6px; }
+.flow-step .fs-name { font-weight: 800; color: var(--white); font-size: 14px; margin-bottom: 4px; line-height: 1.2; }
+.flow-step .fs-role { font-size: 11px; color: var(--white-60); line-height: 1.3; }
+.flow-arrow { display: flex; align-items: center; justify-content: center; color: var(--coral); font-size: 22px; }
+.flow-result { background: linear-gradient(135deg, rgba(94,196,122,0.18) 0%, rgba(94,196,122,0.04) 100%); border: 2px solid rgba(94,196,122,0.45); border-radius: 14px; padding: 16px 14px; text-align: center; display: flex; flex-direction: column; justify-content: center; min-height: 130px; }
+.flow-result .fs-icon { font-size: 28px; color: var(--green); margin-bottom: 6px; }
+.flow-result .fs-name { font-weight: 800; color: var(--green); font-size: 14px; margin-bottom: 4px; }
+.flow-result .fs-role { font-size: 11px; color: var(--white-80); line-height: 1.3; }
+@media (max-width: 1100px) {
+  .flow-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .flow-arrow { display: none; }
+}
+
+.flow-conclusion { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+.flow-conclusion .fc-card { padding: 14px 18px; border-radius: 12px; font-size: 15px; line-height: 1.5; }
+.flow-conclusion .fc-card.bad { background: rgba(224,85,85,0.08); border: 1px solid rgba(224,85,85,0.3); color: var(--white-80); }
+.flow-conclusion .fc-card.good { background: rgba(94,196,122,0.1); border: 1px solid rgba(94,196,122,0.35); color: var(--white); }
+.flow-conclusion .fc-card strong { color: var(--white); }
+.flow-conclusion .fc-card.good strong { color: var(--green); }
+
+.flow-bridge { margin-top: 16px; padding: 16px 22px; border-left: 4px solid var(--coral); background: rgba(224,116,97,0.08); border-radius: 0 12px 12px 0; font-size: 18px; color: var(--white); line-height: 1.5; font-style: italic; }
+.flow-bridge strong { color: var(--coral); font-style: normal; font-weight: 800; }
+
+/* IDEA HERO — главная идея «3 vs 33» */
+.idea-hero { display: grid; grid-template-columns: 280px 1fr; gap: 40px; align-items: center; margin-top: 8px; padding: 28px 32px; background: linear-gradient(135deg, rgba(167,139,250,0.16) 0%, rgba(224,116,97,0.08) 100%); border: 2px solid rgba(167,139,250,0.4); border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.idea-num { font-size: 220px; font-weight: 900; line-height: 0.85; letter-spacing: -8px; background: linear-gradient(135deg, var(--accent), var(--coral)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-align: center; }
+.idea-list { display: flex; flex-direction: column; gap: 10px; font-size: 19px; }
+.idea-list .il-item { display: flex; gap: 12px; line-height: 1.5; color: var(--white); }
+.idea-list .il-x { color: var(--red); flex-shrink: 0; font-size: 22px; line-height: 1; margin-top: 2px; }
+.idea-list .il-c { color: var(--green); flex-shrink: 0; font-size: 22px; line-height: 1; margin-top: 2px; }
+.idea-list strong { color: var(--accent); font-weight: 700; }
+.idea-bottom { margin-top: 14px; padding: 12px 22px; border-left: 3px solid var(--coral); font-size: 18px; color: var(--white-80); font-style: italic; line-height: 1.4; }
+.idea-bottom strong { color: var(--coral); font-style: normal; font-weight: 800; }
+
+/* TOOLS GRID — 3 инструмента карточки */
+.tools-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-top: 14px; }
+.tool-card { background: var(--white-10); border-radius: 18px; padding: 22px 20px; border: 2px solid var(--white-10); transition: transform 0.3s; }
+.tool-card:hover { transform: translateY(-4px); }
+.tool-card.codex { border-color: rgba(94,196,122,0.4); background: linear-gradient(145deg, rgba(94,196,122,0.10) 0%, rgba(94,196,122,0.02) 100%); }
+.tool-card.cursor { border-color: rgba(167,139,250,0.5); background: linear-gradient(145deg, rgba(167,139,250,0.12) 0%, rgba(167,139,250,0.02) 100%); }
+.tool-card.antigravity { border-color: rgba(224,116,97,0.5); background: linear-gradient(145deg, rgba(224,116,97,0.12) 0%, rgba(224,116,97,0.02) 100%); }
+.tool-icon { font-size: 44px; margin-bottom: 10px; }
+.tool-card.codex .tool-icon { color: var(--green); }
+.tool-card.cursor .tool-icon { color: var(--accent); }
+.tool-card.antigravity .tool-icon { color: var(--coral); }
+.tool-name { font-size: 26px; font-weight: 900; margin-bottom: 4px; }
+.tool-card.codex .tool-name { color: var(--green); }
+.tool-card.cursor .tool-name { color: var(--accent); }
+.tool-card.antigravity .tool-name { color: var(--coral); }
+.tool-tagline { font-size: 13px; color: var(--white-60); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+.tool-body { font-size: 15px; color: var(--white-80); line-height: 1.5; }
+.tool-body strong { color: var(--white); font-weight: 600; }
+.tools-bottom { margin-top: 18px; padding: 14px 22px; background: var(--white-10); border-radius: 12px; font-size: 17px; color: var(--white); text-align: center; }
+.tools-bottom strong { color: var(--coral); font-weight: 800; }
+
+/* AGENT TEAM — карточки кейсов агентов */
+.agent-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 12px; }
+.agent-card { background: var(--white-10); border-radius: 14px; padding: 18px 18px 16px; border-top: 3px solid var(--accent); }
+.agent-card .a-icon { font-size: 28px; color: var(--accent); margin-bottom: 8px; }
+.agent-card .a-name { font-weight: 800; color: var(--white); font-size: 16px; margin-bottom: 4px; }
+.agent-card .a-task { font-size: 14px; color: var(--white-70); line-height: 1.4; }
+.agent-bottom { margin-top: 16px; text-align: center; font-size: 19px; color: var(--white); padding: 12px; }
+.agent-bottom strong { color: var(--accent); font-weight: 800; }
+
+/* CAREER PATHS — 2 пути после курса */
+.career-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 14px; }
+.career-card { background: linear-gradient(135deg, rgba(167,139,250,0.12) 0%, rgba(167,139,250,0.02) 100%); border: 2px solid rgba(167,139,250,0.35); border-radius: 18px; padding: 24px 26px; }
+.career-card.right { background: linear-gradient(135deg, rgba(224,116,97,0.12) 0%, rgba(224,116,97,0.02) 100%); border-color: rgba(224,116,97,0.4); }
+.career-icon { font-size: 40px; color: var(--accent); margin-bottom: 12px; }
+.career-card.right .career-icon { color: var(--coral); }
+.career-tag { display: inline-block; padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; background: rgba(167,139,250,0.22); color: var(--accent); }
+.career-card.right .career-tag { background: rgba(224,116,97,0.22); color: var(--coral); }
+.career-name { font-size: 24px; font-weight: 900; color: var(--white); margin-bottom: 12px; line-height: 1.2; }
+.career-list { display: flex; flex-direction: column; gap: 8px; font-size: 15px; color: var(--white-80); line-height: 1.4; }
+.career-list .cl-item { display: flex; gap: 10px; }
+.career-list .cl-bullet { color: var(--accent); flex-shrink: 0; }
+.career-card.right .career-list .cl-bullet { color: var(--coral); }
+.career-bridge { margin-top: 16px; text-align: center; font-size: 17px; color: var(--white); font-style: italic; padding: 10px; }
+.career-bridge strong { color: var(--accent); font-style: normal; font-weight: 800; }
+
+/* AGENTS-5: пять карточек в ряд */
+.agents-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 12px; }
+.agents-5 .a5 { background: var(--white-10); border: 2px solid var(--white-10); border-radius: 14px; padding: 14px 12px; transition: transform 0.2s; }
+.agents-5 .a5:hover { transform: translateY(-3px); }
+.agents-5 .a5.codex { border-color: rgba(94,196,122,0.45); background: linear-gradient(145deg, rgba(94,196,122,0.10) 0%, transparent 100%); }
+.agents-5 .a5.claude { border-color: rgba(224,116,97,0.45); background: linear-gradient(145deg, rgba(224,116,97,0.10) 0%, transparent 100%); }
+.agents-5 .a5.antig { border-color: rgba(167,139,250,0.5); background: linear-gradient(145deg, rgba(167,139,250,0.12) 0%, transparent 100%); }
+.agents-5 .a5.gemini { border-color: rgba(66,133,244,0.45); background: linear-gradient(145deg, rgba(66,133,244,0.10) 0%, transparent 100%); }
+.agents-5 .a5.cline { border-color: rgba(240,192,64,0.45); background: linear-gradient(145deg, rgba(240,192,64,0.10) 0%, transparent 100%); }
+.agents-5 .a5-icon { font-size: 28px; margin-bottom: 6px; }
+.agents-5 .a5.codex .a5-icon { color: var(--green); }
+.agents-5 .a5.claude .a5-icon { color: var(--coral); }
+.agents-5 .a5.antig .a5-icon { color: var(--accent); }
+.agents-5 .a5.gemini .a5-icon { color: var(--blue); }
+.agents-5 .a5.cline .a5-icon { color: var(--yellow); }
+.agents-5 .a5-name { font-size: 17px; font-weight: 800; margin-bottom: 4px; color: var(--white); }
+.agents-5 .a5-from { font-size: 10px; color: var(--white-60); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 600; }
+.agents-5 .a5-body { font-size: 13px; color: var(--white-80); line-height: 1.4; }
+
+/* IDE-row: 4 карточки сред */
+.ide-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
+.ide-card { background: var(--white-10); border-left: 3px solid var(--accent); border-radius: 12px; padding: 14px 16px; }
+.ide-card .ide-icon { font-size: 24px; color: var(--accent); margin-bottom: 6px; }
+.ide-card .ide-name { font-size: 17px; font-weight: 800; color: var(--white); margin-bottom: 4px; }
+.ide-card .ide-body { font-size: 13px; color: var(--white-70); line-height: 1.4; }
+
+/* 5 ШАГОВ ОСВОЕНИЯ */
+.steps-5 { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 12px; max-width: 920px; }
+.step-5-card { display: grid; grid-template-columns: 50px 1fr; gap: 16px; align-items: center; padding: 12px 18px; background: var(--white-10); border-left: 3px solid var(--accent); border-radius: 10px; }
+.step-5-num { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--coral)); color: var(--bg); font-size: 20px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+.step-5-title { font-size: 17px; font-weight: 800; color: var(--white); margin-bottom: 2px; }
+.step-5-desc { font-size: 14px; color: var(--white-70); line-height: 1.4; }
+
+/* ЮРИСТ ПРИМЕР */
+.lawyer-card { background: linear-gradient(135deg, rgba(167,139,250,0.12) 0%, rgba(167,139,250,0.02) 100%); border: 2px solid rgba(167,139,250,0.35); border-radius: 18px; padding: 22px 26px; margin-top: 8px; }
+.lawyer-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.lawyer-icon { font-size: 36px; color: var(--accent); }
+.lawyer-title { font-size: 20px; font-weight: 800; color: var(--white); }
+.lawyer-context { font-size: 14px; color: var(--white-60); margin-top: 2px; }
+.lawyer-agents { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.la-row { display: flex; gap: 12px; padding: 10px 14px; background: rgba(0,0,0,0.25); border-radius: 10px; align-items: flex-start; }
+.la-row .la-icon { font-size: 20px; color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+.la-row .la-name { font-weight: 700; color: var(--white); font-size: 14px; margin-bottom: 2px; }
+.la-row .la-task { font-size: 12px; color: var(--white-60); line-height: 1.4; }
+
+/* СЦЕНАРИЙ С КОФЕ — большая карточка */
+.scenario-hero { margin-top: 16px; padding: 22px 28px; background: linear-gradient(135deg, rgba(224,116,97,0.16) 0%, rgba(167,139,250,0.08) 100%); border: 2px solid rgba(224,116,97,0.4); border-radius: 16px; }
+.scenario-row { display: flex; gap: 14px; align-items: flex-start; }
+.scenario-icon { font-size: 38px; color: var(--coral); flex-shrink: 0; }
+.scenario-text { font-size: 17px; color: var(--white); line-height: 1.5; }
+.scenario-text strong { color: var(--coral); font-weight: 800; }
+.scenario-bottom { margin-top: 12px; font-size: 14px; color: var(--accent); font-weight: 700; text-align: right; }
+
+/* SAAS-BLOCK — отдельный слайд */
+.saas-tag { display: inline-block; padding: 5px 14px; border-radius: 100px; background: rgba(240,192,64,0.18); color: var(--yellow); font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+.saas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.saas-case { background: var(--white-10); border-left: 3px solid var(--yellow); border-radius: 10px; padding: 12px 16px; }
+.saas-case .sc-name { font-weight: 700; color: var(--white); font-size: 15px; margin-bottom: 3px; }
+.saas-case .sc-time { font-size: 12px; color: var(--yellow); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+.saas-bottom { margin-top: 14px; padding: 14px 18px; background: rgba(240,192,64,0.10); border: 1px solid rgba(240,192,64,0.3); border-radius: 12px; font-size: 16px; color: var(--white); text-align: center; line-height: 1.5; }
+.saas-bottom strong { color: var(--yellow); font-weight: 800; }
+
+/* THANKS */
+.thanks-slide { text-align: center; justify-content: center; align-items: center; background: radial-gradient(ellipse at 50% 50%, rgba(167,139,250,0.2) 0%, transparent 60%), radial-gradient(ellipse at 30% 80%, rgba(224,116,97,0.12) 0%, transparent 50%); }
+.thanks-big { font-size: 100px; font-weight: 900; line-height: 1; margin-bottom: 18px; background: linear-gradient(135deg, var(--accent), var(--coral)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.thanks-sub { font-size: 26px; color: var(--white-80); margin-bottom: 24px; max-width: 760px; line-height: 1.4; }
+.highlight-coral { color: var(--coral); font-weight: 700; }
+.highlight-violet { color: var(--accent); font-weight: 700; }
+
+/* LIVE indicator */
+.live-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 14px var(--coral-glow); animation: livepulse 1.5s infinite ease-in-out; vertical-align: middle; margin-right: 10px; }
+@keyframes livepulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+@media (max-height: 800px) {
+  .slide { padding: 36px 56px; }
+  .slide-title { font-size: 36px; margin-bottom: 16px; }
+  .slide-subtitle { font-size: 18px; margin-bottom: 20px; }
+  .point { font-size: 17px; margin-bottom: 8px; }
+  .title-big { font-size: 64px; }
+  .next-name { font-size: 38px; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress-bar"></div>
+<button class="fullscreen-btn" id="fs-btn" title="На весь экран"><i class="ph ph-arrows-out"></i></button>
+<div class="slide-counter" id="counter">1 / 25</div>
+
+<div class="deck">
+
+<!-- 1. TITLE -->
+<section class="slide title-slide active">
+  <span class="title-finale">Финал курса · Занятие 8</span>
+  <h1 class="title-big">Стратегия</h1>
+  <div class="title-sub">Что вы реально освоили за&nbsp;7&nbsp;занятий и&nbsp;куда идти дальше</div>
+  <div class="title-meta">ИИ. Новая реальность · Поток&nbsp;2 · Онлайн · 29&nbsp;июня&nbsp;2026</div>
+</section>
+
+<!-- 2. AGENDA -->
+<section class="slide">
+  <h2 class="slide-title">Что мы&nbsp;сделаем за&nbsp;<span class="accent">~105&nbsp;минут</span></h2>
+  <div class="agenda-grid">
+    <div class="agenda-card">
+      <div class="agenda-icon-wrap"><i class="ph ph-target"></i></div>
+      <div class="agenda-name">Живой тест</div>
+      <div class="agenda-desc">24 вопроса по&nbsp;всему курсу. Темп задаю я, у&nbsp;каждого 30&nbsp;секунд.</div>
+      <div class="agenda-time">~25&nbsp;мин</div>
+    </div>
+    <div class="agenda-card">
+      <div class="agenda-icon-wrap"><i class="ph ph-compass"></i></div>
+      <div class="agenda-name">Ретроспектива</div>
+      <div class="agenda-desc">Карта инструментов, 10&nbsp;парадигм работы с&nbsp;ИИ и&nbsp;типовые стеки.</div>
+      <div class="agenda-time">~20&nbsp;мин</div>
+    </div>
+    <div class="agenda-card">
+      <div class="agenda-icon-wrap"><i class="ph ph-map-trifold"></i></div>
+      <div class="agenda-name">Красные линии и&nbsp;карта</div>
+      <div class="agenda-desc">6&nbsp;«нельзя» + ваш план на&nbsp;30&nbsp;дней (3&nbsp;поля, 5&nbsp;минут).</div>
+      <div class="agenda-time">~22&nbsp;мин</div>
+    </div>
+    <div class="agenda-card">
+      <div class="agenda-icon-wrap"><i class="ph ph-rocket-launch"></i></div>
+      <div class="agenda-name">Куда дальше</div>
+      <div class="agenda-desc">Стратегия, AI-консалтинг и&nbsp;анонс следующего потока: вайбкодинг + AI-агенты.</div>
+      <div class="agenda-time">~28&nbsp;мин</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. PATH -->
+<section class="slide">
+  <h2 class="slide-title">Путь, который вы&nbsp;уже прошли</h2>
+  <div class="slide-subtitle">Семь занятий, которые большинство в&nbsp;стране не&nbsp;проходит вообще.</div>
+  <div class="lesson-grid">
+    <div class="lesson-card done"><div class="l-num">Занятие 1</div><div class="l-name">Погружение</div><div class="l-desc">VPN, навигатор, базовые сервисы</div></div>
+    <div class="lesson-card done"><div class="l-num">Занятие 2</div><div class="l-name">Промпт-инженерия</div><div class="l-desc">РКЗФО, контекст, память</div></div>
+    <div class="lesson-card done"><div class="l-num">Занятие 3</div><div class="l-name">Ассистенты</div><div class="l-desc">Gems, NotebookLM, базы знаний</div></div>
+    <div class="lesson-card done"><div class="l-num">Занятие 4</div><div class="l-name">Google Workspace</div><div class="l-desc">Canvas, NotebookLM</div></div>
+    <div class="lesson-card done"><div class="l-num">Занятие 5</div><div class="l-name">Данные и&nbsp;анализ</div><div class="l-desc">Deep Research, аналитика, отчёты</div></div>
+    <div class="lesson-card done"><div class="l-num">Занятие 6</div><div class="l-name">Визуал</div><div class="l-desc">Шедеврум, Kandinsky, нейрокреатор</div></div>
+    <div class="lesson-card done"><div class="l-num">Занятие 7</div><div class="l-name">Агенты</div><div class="l-desc">Manus, Suvvy, Comet, Lovable</div></div>
+    <div class="lesson-card today"><div class="l-num">Занятие 8 · сегодня</div><div class="l-name">Стратегия</div><div class="l-desc">Финал. Куда дальше.</div></div>
+  </div>
+</section>
+
+<!-- 4. CTA — вход в тест -->
+<section class="slide">
+  <h2 class="slide-title">Достаём ноутбук или&nbsp;телефон</h2>
+  <div class="slide-subtitle">Сейчас откроем живой тест. Вы&nbsp;увидите вопрос — выбираете ответ. Я&nbsp;вижу всех в&nbsp;одном окне.</div>
+  <div class="cta-box">
+    <div style="font-size:14px; color:var(--white-60); letter-spacing:2px; text-transform:uppercase; font-weight:700;">Открой в&nbsp;браузере</div>
+    <div class="cta-url">materials.neovida.ai/online/поток-2-занятие-8/</div>
+    <div class="cta-step"><span class="cta-step-num">1</span><span class="cta-step-text">Введи имя и&nbsp;фамилию — точно как&nbsp;на&nbsp;сертификате</span></div>
+    <div class="cta-step"><span class="cta-step-num">2</span><span class="cta-step-text">Откроется страница — нажми «Открыть тест»</span></div>
+    <div class="cta-step"><span class="cta-step-num">3</span><span class="cta-step-text">Жди вопрос — я&nbsp;запущу</span></div>
+  </div>
+</section>
+
+<!-- 5. LIVE -->
+<section class="slide" style="text-align:center; justify-content:center;">
+  <div style="font-size:13px; color:var(--coral); letter-spacing:6px; font-weight:800; margin-bottom:12px;"><span class="live-dot"></span>LIVE</div>
+  <h2 style="font-size:64px; font-weight:900; line-height:1.1;">Тест идёт</h2>
+  <div style="font-size:24px; color:var(--white-60); margin-top:18px;">24 вопроса · 30 сек&nbsp;на&nbsp;каждый · ~12 мин</div>
+  <div style="font-size:18px; color:var(--white-40); margin-top:36px;">Не&nbsp;экзамен. Это <span class="accent">зеркало</span> того, что&nbsp;вы&nbsp;знаете.</div>
+</section>
+
+<!-- 6. HEATMAP intro -->
+<section class="slide">
+  <h2 class="slide-title">Разбираем по&nbsp;<span class="accent">heatmap</span></h2>
+  <div class="slide-subtitle">У&nbsp;меня на&nbsp;экране — таблица: ваши ответы по&nbsp;каждому вопросу.</div>
+  <div class="cards-grid-3">
+    <div class="card" style="border-left:4px solid var(--green);">
+      <div class="card-title"><i class="ph-fill ph-check-square icon-green"></i> Зелёное</div>
+      <div class="card-body">Правильно. Уверенно идём дальше.</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--red);">
+      <div class="card-title"><i class="ph-fill ph-x-square icon-red"></i> Красное</div>
+      <div class="card-body">Ошибка. Разберём вместе — за&nbsp;1-2&nbsp;минуты освежим.</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--white-40);">
+      <div class="card-title"><i class="ph ph-square icon-muted"></i> Серое</div>
+      <div class="card-body">Не&nbsp;успел ответить. Тоже разберём.</div>
+    </div>
+  </div>
+  <div class="quote coral">
+    Это не&nbsp;«ошибки» — это <strong>темы для&nbsp;быстрого освежения</strong>. Целевой результат курса: 14-16 из&nbsp;20.
+  </div>
+</section>
+
+<!-- 7. GALAXY -->
+<section class="slide">
+  <h2 class="slide-title"><span class="accent">Галактика</span> инструментов, которые вы&nbsp;трогали</h2>
+  <div class="slide-subtitle">30+ сервисов за&nbsp;7&nbsp;занятий. 95% профессионалов знают 2-3 из&nbsp;этого списка.</div>
+  <div class="galaxy-grid">
+    <div class="galaxy-zone us">
+      <div class="gz-head"><i class="ph-fill ph-globe-hemisphere-west gz-icon"></i><div class="gz-name">США · с&nbsp;VPN</div></div>
+      <div class="galaxy-tools">
+        <span class="galaxy-tool">ChatGPT</span><span class="galaxy-tool">Claude</span><span class="galaxy-tool">Gemini</span>
+        <span class="galaxy-tool">NotebookLM</span><span class="galaxy-tool">Canvas</span><span class="galaxy-tool">Deep Research</span>
+        <span class="galaxy-tool">Manus</span><span class="galaxy-tool">v0</span><span class="galaxy-tool">Lovable</span>
+        <span class="galaxy-tool">Comet</span><span class="galaxy-tool">Midjourney</span><span class="galaxy-tool">DALL-E</span>
+      </div>
+    </div>
+    <div class="galaxy-zone cn">
+      <div class="gz-head"><i class="ph-fill ph-globe-hemisphere-east gz-icon"></i><div class="gz-name">Китай · без&nbsp;VPN</div></div>
+      <div class="galaxy-tools">
+        <span class="galaxy-tool">Qwen</span><span class="galaxy-tool">Kimi</span><span class="galaxy-tool">Manus</span>
+        <span class="galaxy-tool">DeepSeek</span>
+      </div>
+    </div>
+    <div class="galaxy-zone ru">
+      <div class="gz-head"><i class="ph-fill ph-map-pin gz-icon"></i><div class="gz-name">Россия · без&nbsp;VPN</div></div>
+      <div class="galaxy-tools">
+        <span class="galaxy-tool">Шедеврум</span><span class="galaxy-tool">Kandinsky</span><span class="galaxy-tool">YandexGPT</span>
+        <span class="galaxy-tool">GigaChat</span><span class="galaxy-tool">Suvvy</span>
+      </div>
+    </div>
+    <div class="galaxy-zone ext">
+      <div class="gz-head"><i class="ph-fill ph-toolbox gz-icon"></i><div class="gz-name">Специализированные</div></div>
+      <div class="galaxy-tools">
+        <span class="galaxy-tool">Gamma</span><span class="galaxy-tool">Kimi Slides</span><span class="galaxy-tool">Pictory</span>
+        <span class="galaxy-tool">HeyGen</span><span class="galaxy-tool">ElevenLabs</span><span class="galaxy-tool">Suno</span>
+        <span class="galaxy-tool">Perplexity</span><span class="galaxy-tool">Replicate</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. 10 PARADIGMS -->
+<section class="slide">
+  <h2 class="slide-title">10 парадигм, которые останутся с&nbsp;вами</h2>
+  <div class="slide-subtitle">Инструменты меняются каждые полгода. Эти подходы — нет.</div>
+  <div class="paradigm-grid">
+    <div class="paradigm-card"><div class="paradigm-icon"><i class="ph ph-target"></i></div><div class="paradigm-title">Роль + Задача + Формат</div><div class="paradigm-desc">Был хаотичный запрос — стала формула</div></div>
+    <div class="paradigm-card"><div class="paradigm-icon"><i class="ph ph-user-circle"></i></div><div class="paradigm-title">Ассистент с&nbsp;ролью</div><div class="paradigm-desc">Был «новый чат» — стал Gem с&nbsp;памятью</div></div>
+    <div class="paradigm-card"><div class="paradigm-icon"><i class="ph ph-books"></i></div><div class="paradigm-title">База знаний</div><div class="paradigm-desc">Были разрозненные файлы — стал NotebookLM</div></div>
+    <div class="paradigm-card"><div class="paradigm-icon"><i class="ph ph-magnifying-glass"></i></div><div class="paradigm-title">Глубокое исследование</div><div class="paradigm-desc">Был Гугл по&nbsp;30 вкладок — стал Deep Research</div></div>
+    <div class="paradigm-card"><div class="paradigm-icon"><i class="ph ph-palette"></i></div><div class="paradigm-title">Описание визуала</div><div class="paradigm-desc">Был «нарисуй красиво» — стал стиль+ракурс+свет</div></div>
+    <div class="paradigm-card"><div class="paradigm-icon"><i class="ph ph-presentation-chart"></i></div><div class="paradigm-title">Слайды по&nbsp;данным</div><div class="paradigm-desc">Был PowerPoint вручную — стал NotebookLM Studio</div></div>
+    <div class="paradigm-card"><div class="paradigm-icon"><i class="ph ph-browsers"></i></div><div class="paradigm-title">Лендинг словами</div><div class="paradigm-desc">Был Тильда 3&nbsp;дня — стал v0 за&nbsp;15&nbsp;минут</div></div>
+    <div class="paradigm-card"><div class="paradigm-icon"><i class="ph ph-robot"></i></div><div class="paradigm-title">Агент с&nbsp;руками</div><div class="paradigm-desc">Был чат — стал Manus, который сам делает</div></div>
+    <div class="paradigm-card"><div class="paradigm-icon"><i class="ph ph-globe"></i></div><div class="paradigm-title">AI-браузер</div><div class="paradigm-desc">Был Хром — стал Comet с&nbsp;агентом в&nbsp;каждой вкладке</div></div>
+    <div class="paradigm-card"><div class="paradigm-icon"><i class="ph ph-link-simple"></i></div><div class="paradigm-title">Связки инструментов</div><div class="paradigm-desc">Был один сервис — стал стек NotebookLM+Gem+Lovable</div></div>
+  </div>
+</section>
+
+<!-- 9. STACK ENTREPRENEUR -->
+<section class="slide">
+  <h2 class="slide-title">Типовой стек: <span class="accent">предприниматель</span></h2>
+  <div class="stack-card">
+    <div class="stack-role">Малый бизнес · 1-30 человек</div>
+    <div class="stack-title">5 инструментов, которые делают 80% работы</div>
+    <div class="stack-tools">
+      <div class="stack-tool"><i class="ph ph-brain stack-tool-icon"></i><div><div class="stack-tool-name">NotebookLM</div><div class="stack-tool-desc">База FAQ, прайс, кейсы — отвечает по&nbsp;вашим документам</div></div></div>
+      <div class="stack-tool"><i class="ph ph-diamond stack-tool-icon"></i><div><div class="stack-tool-name">Gem-продажник в&nbsp;Gemini</div><div class="stack-tool-desc">Готовит КП, ответы клиентам, пост в&nbsp;соцсети</div></div></div>
+      <div class="stack-tool"><i class="ph ph-magnifying-glass stack-tool-icon"></i><div><div class="stack-tool-name">Deep Research</div><div class="stack-tool-desc">Анализ конкурентов, отзывов, ниши</div></div></div>
+      <div class="stack-tool"><i class="ph ph-image-square stack-tool-icon"></i><div><div class="stack-tool-name">Шедеврум&nbsp;/&nbsp;Kandinsky</div><div class="stack-tool-desc">Картинки для&nbsp;соцсетей и&nbsp;маркетинга — без&nbsp;VPN</div></div></div>
+      <div class="stack-tool"><i class="ph ph-robot stack-tool-icon"></i><div><div class="stack-tool-name">Suvvy&nbsp;/&nbsp;Manus</div><div class="stack-tool-desc">Агент-продавец в&nbsp;TG&nbsp;и&nbsp;автоматизация рутин</div></div></div>
+      <div class="stack-tool"><i class="ph ph-projector-screen-chart stack-tool-icon"></i><div><div class="stack-tool-name">Gamma&nbsp;/&nbsp;Kimi Slides</div><div class="stack-tool-desc">Презентации за&nbsp;15&nbsp;минут</div></div></div>
+    </div>
+    <div class="stack-win">
+      <div class="stack-win-label">Главный выигрыш</div>
+      <div class="stack-win-body">Освобождает 10-20&nbsp;часов в&nbsp;неделю на&nbsp;то, что&nbsp;реально приносит деньги — переговоры, стратегия, новые продукты.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. STACK SPECIALIST -->
+<section class="slide">
+  <h2 class="slide-title">Типовой стек: <span class="coral">специалист&nbsp;/&nbsp;сотрудник</span></h2>
+  <div class="stack-card" style="border-color:rgba(224,116,97,0.4); background:linear-gradient(135deg, rgba(224,116,97,0.1) 0%, rgba(224,116,97,0.02) 100%);">
+    <div class="stack-role" style="color:var(--coral);">В&nbsp;найме · фрилансер · эксперт</div>
+    <div class="stack-title">Стек, который делает вас в&nbsp;3-5 раз быстрее коллег</div>
+    <div class="stack-tools">
+      <div class="stack-tool"><i class="ph ph-note-pencil stack-tool-icon" style="color:var(--coral);"></i><div><div class="stack-tool-name">ChatGPT&nbsp;/&nbsp;Claude</div><div class="stack-tool-desc">Тексты, переписка, анализ задач, brainstorm</div></div></div>
+      <div class="stack-tool"><i class="ph ph-diamond stack-tool-icon" style="color:var(--coral);"></i><div><div class="stack-tool-name">Gem с&nbsp;вашей ролью</div><div class="stack-tool-desc">Один раз настроил под&nbsp;свою профессию — дальше быстро</div></div></div>
+      <div class="stack-tool"><i class="ph ph-brain stack-tool-icon" style="color:var(--coral);"></i><div><div class="stack-tool-name">NotebookLM</div><div class="stack-tool-desc">Закидывайте все&nbsp;PDF&nbsp;по&nbsp;проекту — ищет за&nbsp;5&nbsp;сек</div></div></div>
+      <div class="stack-tool"><i class="ph ph-magnifying-glass stack-tool-icon" style="color:var(--coral);"></i><div><div class="stack-tool-name">Deep Research</div><div class="stack-tool-desc">Готовит обзоры рынка, методичек, источников</div></div></div>
+      <div class="stack-tool"><i class="ph ph-pen-nib stack-tool-icon" style="color:var(--coral);"></i><div><div class="stack-tool-name">Canvas</div><div class="stack-tool-desc">Мини-приложения и&nbsp;документы внутри чата</div></div></div>
+      <div class="stack-tool"><i class="ph ph-globe stack-tool-icon" style="color:var(--coral);"></i><div><div class="stack-tool-name">Comet</div><div class="stack-tool-desc">AI-браузер с&nbsp;агентом в&nbsp;каждой вкладке</div></div></div>
+    </div>
+    <div class="stack-win">
+      <div class="stack-win-label">Главный выигрыш</div>
+      <div class="stack-win-body">Перестаёте быть «тем, кто медленно делает» — становитесь «тем, кто закрывает в&nbsp;день недельную задачу команды».</div>
+    </div>
+  </div>
+</section>
+
+<!-- 11. EVO -->
+<section class="slide">
+  <h2 class="slide-title">Бот → Ассистент → <span class="accent">Агент</span></h2>
+  <div class="slide-subtitle">Три слова, которые путают 95% людей. Вы&nbsp;— не&nbsp;путаете.</div>
+  <div class="evo-grid">
+    <div class="evo-card bot">
+      <div class="evo-icon"><i class="ph ph-chats-circle"></i></div>
+      <div class="evo-name">Бот</div>
+      <div class="evo-tagline">Кнопочки</div>
+      <div class="evo-body">Сценарий из&nbsp;5-10 шагов. <strong>Не&nbsp;понимает</strong> — выполняет. Хорош для&nbsp;FAQ&nbsp;и&nbsp;записи.</div>
+    </div>
+    <div class="evo-card assistant">
+      <div class="evo-icon"><i class="ph ph-diamond"></i></div>
+      <div class="evo-name">Ассистент</div>
+      <div class="evo-tagline">Умный собеседник</div>
+      <div class="evo-body">Понимает контекст и&nbsp;роль. <strong>Отвечает в&nbsp;чате</strong>. Gem, GPT, NotebookLM.</div>
+    </div>
+    <div class="evo-card agent">
+      <div class="evo-icon"><i class="ph ph-robot"></i></div>
+      <div class="evo-name">Агент</div>
+      <div class="evo-tagline">Исполнитель с&nbsp;руками</div>
+      <div class="evo-body"><strong>Сам действует</strong>: лазит по&nbsp;сайтам, пишет в&nbsp;Telegram, заполняет формы, строит лендинг. Manus, Suvvy, Comet.</div>
+    </div>
+  </div>
+  <div class="quote" style="margin-top:18px;">
+    Вы&nbsp;ушли с&nbsp;7-го урока <strong>оркестраторами</strong>: знаете, кому&nbsp;что&nbsp;поручить.
+  </div>
+</section>
+
+<!-- 12. RED LINES intro -->
+<section class="slide">
+  <h2 class="slide-title">А&nbsp;теперь — <span style="color:var(--red);">красные линии</span></h2>
+  <div class="slide-subtitle">Вы знаете, что&nbsp;ИИ может. Теперь — что&nbsp;ему нельзя.</div>
+  <div class="quote coral">
+    «Большинство провалов с&nbsp;ИИ — не&nbsp;потому, что&nbsp;технология плохая. А&nbsp;потому, что&nbsp;ей&nbsp;поручили то, что&nbsp;не&nbsp;надо было.»
+  </div>
+</section>
+
+<!-- 13. 6 NELZYA -->
+<section class="slide">
+  <h2 class="slide-title">6&nbsp;«нельзя» работы с&nbsp;ИИ</h2>
+  <div class="danger-grid">
+    <div class="danger-card">
+      <span class="danger-num">№ 1</span>
+      <div class="danger-title">Автоматизировать хаос</div>
+      <div class="danger-body">Если в&nbsp;процессе бардак — ИИ его усилит. Сначала&nbsp;порядок.</div>
+    </div>
+    <div class="danger-card">
+      <span class="danger-num">№ 2</span>
+      <div class="danger-title">Доверять цифрам без&nbsp;проверки</div>
+      <div class="danger-body">Галлюцинации. Цифры, даты, имена, ГОСТы, законы — всегда сверять.</div>
+    </div>
+    <div class="danger-card">
+      <span class="danger-num">№ 3</span>
+      <div class="danger-title">Сливать чужие данные</div>
+      <div class="danger-body">Персональные данные, NDA, медкарты — не&nbsp;в&nbsp;публичный чат.</div>
+    </div>
+    <div class="danger-card">
+      <span class="danger-num">№ 4</span>
+      <div class="danger-title">Отдавать финал</div>
+      <div class="danger-body">Найм, увольнения, крупные сделки, юридические документы — решает человек.</div>
+    </div>
+    <div class="danger-card">
+      <span class="danger-num">№ 5</span>
+      <div class="danger-title">Строить на&nbsp;одном сервисе</div>
+      <div class="danger-body">Если бизнес стоит на&nbsp;ChatGPT и&nbsp;он&nbsp;«лёг» — у&nbsp;вас всё стоит. Дублируйте.</div>
+    </div>
+    <div class="danger-card">
+      <span class="danger-num">№ 6</span>
+      <div class="danger-title">Отключать свой мозг</div>
+      <div class="danger-body">ИИ хорош, но&nbsp;экспертиза остаётся за&nbsp;вами. Иначе вы — пересказчик.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 14. PRINCIPLE -->
+<section class="slide" style="text-align:center;">
+  <h2 class="slide-title">Главное правило финала курса</h2>
+  <div class="principle-box">
+    <div class="principle-label">Принцип</div>
+    <div class="principle-text">
+      <strong>Человек с&nbsp;ИИ</strong> заменит человека без&nbsp;ИИ.<br>
+      Но&nbsp;<em>ИИ сам по&nbsp;себе</em> никого не&nbsp;заменяет — он&nbsp;работает там, где&nbsp;его направляет профессионал.
+    </div>
+  </div>
+</section>
+
+<!-- 15. ROADMAP intro -->
+<section class="slide">
+  <h2 class="slide-title">Ваша <span class="accent">карта на&nbsp;30&nbsp;дней</span></h2>
+  <div class="slide-subtitle">3&nbsp;коротких поля. 5&nbsp;минут тихой работы. Я&nbsp;в&nbsp;это время вижу прогресс у&nbsp;всех.</div>
+  <div class="cta-box">
+    <div style="font-size:14px; color:var(--white-60); letter-spacing:2px; text-transform:uppercase; font-weight:700;">Откройте на&nbsp;своём ноутбуке</div>
+    <div class="cta-url">materials.neovida.ai/online/поток-2-занятие-8/</div>
+    <div style="font-size:18px; color:var(--white-80); margin-top:14px;">→ нажмите кнопку <strong>«Открыть карту»</strong></div>
+  </div>
+</section>
+
+<!-- 16. ROADMAP fields -->
+<section class="slide">
+  <h2 class="slide-title">3 поля карты</h2>
+  <div class="field-preview">
+    <div class="fp-card">
+      <div class="fp-num">ПОЛЕ 1</div>
+      <div class="fp-title">Мой рабочий ИИ-стек</div>
+      <div class="fp-example">«Gem-продажник + NotebookLM (FAQ + прайс) + Шедеврум для&nbsp;соцсетей + Manus раз&nbsp;в&nbsp;неделю на&nbsp;конкурентов»</div>
+    </div>
+    <div class="fp-card">
+      <div class="fp-num">ПОЛЕ 2</div>
+      <div class="fp-title">Главный процесс на&nbsp;автоматизацию в&nbsp;30&nbsp;дней</div>
+      <div class="fp-example">«Анализ 10&nbsp;отзывов конкурентов раз&nbsp;в&nbsp;неделю → Deep Research + Gem-аналитик → Excel»</div>
+    </div>
+    <div class="fp-card">
+      <div class="fp-num">ПОЛЕ 3 · Манифест</div>
+      <div class="fp-title">Что я&nbsp;унесу с&nbsp;курса навсегда</div>
+      <div class="fp-example">«Я больше не&nbsp;делаю руками то, что&nbsp;ИИ делает за&nbsp;минуту»</div>
+    </div>
+  </div>
+  <div class="quote" style="margin-top:14px;">
+    Манифест я&nbsp;<strong>прочитаю вслух</strong>: 2-3 человека по&nbsp;желанию.
+  </div>
+</section>
+
+<!-- 17 — ORCHESTRATION (концепция) -->
+<section class="slide">
+  <h2 class="slide-title"><span class="accent">Оркестрация</span> — главный навык</h2>
+  <div class="slide-subtitle">Главное, что вы освоили за&nbsp;7&nbsp;занятий — и&nbsp;что даёт результат, недостижимый одной моделью в&nbsp;одиночку.</div>
+
+  <div class="orch-hero">
+    <div class="orch-icon-big"><i class="ph-duotone ph-music-notes-plus"></i></div>
+    <div>
+      <div class="orch-def">
+        Умение собирать <strong>разные нейросети и&nbsp;их&nbsp;инструменты</strong> в&nbsp;цепочку, которая&nbsp;даёт <em>качественный результат под&nbsp;вашу задачу</em> — и&nbsp;превращать это в&nbsp;<strong>свой персональный стек</strong>.
+      </div>
+      <div class="orch-metaphor"><i class="ph ph-music-notes"></i> Как дирижёр оркестра</div>
+    </div>
+  </div>
+
+  <div class="principles-grid">
+    <div class="principle-card">
+      <div class="pc-num">1</div>
+      <div class="pc-title">Знать сильные стороны</div>
+      <div class="pc-body">NotebookLM ≠ Gem ≠ Manus ≠ Comet. У&nbsp;каждого инструмента — своя зона силы.</div>
+    </div>
+    <div class="principle-card">
+      <div class="pc-num">2</div>
+      <div class="pc-title">Понимать слабые стороны</div>
+      <div class="pc-body">Шедеврум плох в&nbsp;тексте, ChatGPT выдумывает цифры, Manus стоит токенов. Без&nbsp;этого — провал.</div>
+    </div>
+    <div class="principle-card">
+      <div class="pc-num">3</div>
+      <div class="pc-title">Строить цепочки под&nbsp;задачу</div>
+      <div class="pc-body">Данные → роль → текст → формат → канал. Каждый шаг — свой инструмент. Связки сильнее одной модели.</div>
+    </div>
+    <div class="principle-card">
+      <div class="pc-num">4</div>
+      <div class="pc-title">Дирижировать своим стеком</div>
+      <div class="pc-body">У&nbsp;каждого профессионала свой набор. Универсального «топ-5» нет — есть «топ-5 под&nbsp;вашу работу».</div>
+    </div>
+  </div>
+
+  <div class="orch-punchline">
+    Не «лучший промпт». Не «лучшая модель». <strong>Лучший дирижёр.</strong>
+  </div>
+</section>
+
+<!-- 18 — ORCHESTRATION (практика, flow) -->
+<section class="slide">
+  <h2 class="slide-title">Как выглядит оркестрация на&nbsp;практике</h2>
+  <div class="slide-subtitle">Реальная задача: КП клиенту по&nbsp;его прайсу за&nbsp;30&nbsp;минут.</div>
+  <span class="flow-task"><i class="ph ph-target"></i> Задача · сделать КП клиенту</span>
+
+  <div class="flow-grid">
+    <div class="flow-step">
+      <div class="fs-icon"><i class="ph ph-brain"></i></div>
+      <div class="fs-name">NotebookLM</div>
+      <div class="fs-role">Прайс, FAQ, кейсы — база, по&nbsp;которой не&nbsp;выдумывает</div>
+    </div>
+    <div class="flow-arrow"><i class="ph-fill ph-arrow-right"></i></div>
+    <div class="flow-step">
+      <div class="fs-icon"><i class="ph ph-diamond"></i></div>
+      <div class="fs-name">Gem-продажник</div>
+      <div class="fs-role">Роль, тон, структура убеждения. Один раз настроил</div>
+    </div>
+    <div class="flow-arrow"><i class="ph-fill ph-arrow-right"></i></div>
+    <div class="flow-step">
+      <div class="fs-icon"><i class="ph ph-note-pencil"></i></div>
+      <div class="fs-name">ChatGPT&nbsp;/&nbsp;Claude</div>
+      <div class="fs-role">Финальный текст КП. Адвокат дьявола — критика своего&nbsp;же</div>
+    </div>
+    <div class="flow-arrow"><i class="ph-fill ph-arrow-right"></i></div>
+    <div class="flow-result">
+      <div class="fs-icon"><i class="ph-fill ph-presentation-chart"></i></div>
+      <div class="fs-name">NotebookLM Slide Deck<br>или v0&nbsp;/&nbsp;Lovable</div>
+      <div class="fs-role">Красивая обёртка: PDF, слайды или мини-лендинг</div>
+    </div>
+  </div>
+
+  <div class="flow-conclusion">
+    <div class="fc-card bad">
+      <strong>Один инструмент в&nbsp;лоб</strong> = «общий КП» с&nbsp;возможными выдуманными цифрами и&nbsp;размытым тоном.
+    </div>
+    <div class="fc-card good">
+      <strong>Цепочка из&nbsp;4 инструментов</strong> = персонализированное решение под&nbsp;конкретного клиента, готовое отправить.
+    </div>
+  </div>
+
+  <div class="flow-bridge">
+    Этим навыком теперь можно идти <strong>тремя путями</strong> — посмотрим какими.
+  </div>
+</section>
+
+<!-- 19. WHERE NEXT — три пути применить оркестрацию -->
+<section class="slide">
+  <h2 class="slide-title">Куда применить — <span class="accent">3 пути</span></h2>
+  <div class="slide-subtitle">Один навык — три сценария жизни. Выбирай свой.</div>
+  <div class="paths-grid">
+    <div class="path-card">
+      <div class="path-icon"><i class="ph ph-wrench"></i></div>
+      <div class="path-name">Применять</div>
+      <div class="path-desc">Берёте свой стек, внедряете в&nbsp;свои задачи. Через 30&nbsp;дней — отчёт самому&nbsp;себе.</div>
+    </div>
+    <div class="path-card middle">
+      <div class="path-icon"><i class="ph ph-trend-up"></i></div>
+      <div class="path-name">Углубиться</div>
+      <div class="path-desc">Идёте на&nbsp;следующий поток курса — вайбкодинг и&nbsp;агенты. Делаете полноценные продукты.</div>
+    </div>
+    <div class="path-card right">
+      <div class="path-icon"><i class="ph ph-briefcase"></i></div>
+      <div class="path-name">Стать AI-консультантом</div>
+      <div class="path-desc">Ваше преимущество — вы&nbsp;уже всё это видели. Помогаете компаниям внедрять. Это рынок.</div>
+    </div>
+  </div>
+  <div class="quote coral" style="margin-top:18px;">
+    Третий путь раскроем подробнее — это и&nbsp;есть <strong>AI-консультант</strong>, тот, кто умеет дирижировать.
+  </div>
+</section>
+
+<!-- 20. AI CONSULTING -->
+<section class="slide">
+  <h2 class="slide-title">AI-консалтинг — <span class="coral">самая недооценённая</span> профессия</h2>
+  <div class="point">Компании уже понимают: «надо что-то с&nbsp;ИИ». Но&nbsp;<strong>внутри почти никто не&nbsp;может ответить</strong> — что внедрять, где будет эффект, как это посчитать.</div>
+  <div class="point">Больше всего в&nbsp;ближайшие годы будут нужны не&nbsp;те, кто&nbsp;лучше всех пишет промпты, и&nbsp;не&nbsp;программисты на&nbsp;Python. А&nbsp;те, кто:</div>
+  <div class="cards-grid" style="margin-top:14px;">
+    <div class="card" style="border-left:3px solid var(--accent);">
+      <div class="card-title">Видит бизнес-процессы</div>
+      <div class="card-body">Понимает, где у&nbsp;компании реально утекает время и&nbsp;деньги.</div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--coral);">
+      <div class="card-title">Знает, где ИИ даёт эффект</div>
+      <div class="card-body">А&nbsp;где даёт «вау-эффект» без&nbsp;возврата.</div>
+    </div>
+  </div>
+  <div class="quote coral" style="margin-top:14px;">
+    Это и&nbsp;есть AI-консалтинг. И&nbsp;этот рынок только начинается — большинство компаний даже не&nbsp;знают, что&nbsp;такая помощь им&nbsp;нужна.
+  </div>
+</section>
+
+<!-- 21. NEXT COURSE — тизер -->
+<section class="slide">
+  <h2 class="slide-title">Следующий поток курса · стартуем совсем&nbsp;скоро</h2>
+  <div class="next-hero">
+    <span class="next-tag">Старт совсем скоро · уровень PRO</span>
+    <div class="next-name">Вайбкодинг + AI-агенты</div>
+    <div class="next-promise">Несколько <strong>сильных агентов на&nbsp;выбор</strong>. Своя <strong>команда</strong> под&nbsp;жизнь и&nbsp;работу. <strong>Незаменимый профессионал</strong> — или&nbsp;собственная разработка SaaS&nbsp;под&nbsp;заказ голосом.</div>
+    <div class="next-meta">
+      <span><strong>Старт:</strong> июль 2026</span>
+      <span><strong>Длительность:</strong> 2 месяца, 8 занятий</span>
+      <span><strong>Формат:</strong> онлайн</span>
+      <span><strong>Цена:</strong> для&nbsp;выпускников — особая</span>
+    </div>
+  </div>
+</section>
+
+<!-- 22. ГЛАВНАЯ ИДЕЯ — выбор сильных, не зоопарк -->
+<section class="slide">
+  <h2 class="slide-title">Не зоопарк инструментов. <span class="accent">Сильные агенты</span> на&nbsp;выбор</h2>
+  <div class="slide-subtitle">На&nbsp;этом курсе вы&nbsp;видели десятки сервисов. Здесь — другое.</div>
+  <div class="idea-hero" style="grid-template-columns: 1fr;">
+    <div class="idea-list">
+      <div class="il-item"><span class="il-x"><i class="ph-fill ph-x-circle"></i></span><div>Не <strong>широта</strong> «попробовал 30 сервисов» — а&nbsp;<strong>глубина</strong> до&nbsp;уровня скиллов и&nbsp;плагинов</div></div>
+      <div class="il-item"><span class="il-x"><i class="ph-fill ph-x-circle"></i></span><div>Не зоопарк подписок — а&nbsp;<strong>выбор из&nbsp;нескольких сильных</strong>, ваш основной + 1-2 в&nbsp;запасе</div></div>
+      <div class="il-item"><span class="il-c"><i class="ph-fill ph-check-circle"></i></span><div>Один раз настроил под&nbsp;себя — <strong>работает на&nbsp;вас годами</strong></div></div>
+      <div class="il-item"><span class="il-c"><i class="ph-fill ph-check-circle"></i></span><div>Когда нужно — <strong>агенты работают вместе</strong>, дополняя друг друга</div></div>
+    </div>
+  </div>
+  <div class="idea-bottom">
+    От поверхностного «знакомства» — <strong>к настоящему мастерству.</strong> От пользователя — к творцу.
+  </div>
+</section>
+
+<!-- 23. 5 ТОП-АГЕНТОВ -->
+<section class="slide">
+  <h2 class="slide-title">5 топ-агентов 2026 — <span class="accent">попробуете каждого</span></h2>
+  <div class="slide-subtitle">На&nbsp;курсе работаем со&nbsp;всеми. К&nbsp;концу — выбираете <strong>своего основного</strong>, остальные включаете когда нужны.</div>
+  <div class="agents-5">
+    <div class="a5 codex">
+      <div class="a5-icon"><i class="ph-duotone ph-brain"></i></div>
+      <div class="a5-name">Codex</div>
+      <div class="a5-from">OpenAI</div>
+      <div class="a5-body">Автономный программист. От&nbsp;задачи — до&nbsp;результата сам.</div>
+    </div>
+    <div class="a5 claude">
+      <div class="a5-icon"><i class="ph-duotone ph-cube"></i></div>
+      <div class="a5-name">Claude Code</div>
+      <div class="a5-from">Anthropic</div>
+      <div class="a5-body">CLI-агент с&nbsp;глубоким анализом. Лучший для&nbsp;сложных рефакторингов.</div>
+    </div>
+    <div class="a5 antig">
+      <div class="a5-icon"><i class="ph-duotone ph-arrow-up-right"></i></div>
+      <div class="a5-name">Antigravity</div>
+      <div class="a5-from">Google</div>
+      <div class="a5-body">IDE-агент с&nbsp;управлением браузером и&nbsp;ОС. Голосом.</div>
+    </div>
+    <div class="a5 gemini">
+      <div class="a5-icon"><i class="ph-duotone ph-diamond"></i></div>
+      <div class="a5-name">Gemini CLI</div>
+      <div class="a5-from">Google</div>
+      <div class="a5-body">Долгий контекст 2М токенов. Хорош для&nbsp;больших проектов.</div>
+    </div>
+    <div class="a5 cline">
+      <div class="a5-icon"><i class="ph-duotone ph-terminal-window"></i></div>
+      <div class="a5-name">Cline</div>
+      <div class="a5-from">Open-source</div>
+      <div class="a5-body">VS Code расширение. Бесплатный, работает с&nbsp;любой моделью.</div>
+    </div>
+  </div>
+  <div class="tools-bottom">
+    Не нужно знать всех — нужно <strong>знать своего глубоко</strong>. Остальные подключаются как «второе мнение» когда задача сложная.
+  </div>
+</section>
+
+<!-- 23.5 IDE — где живут агенты -->
+<section class="slide">
+  <h2 class="slide-title">Где они <span class="accent">живут</span> — IDE как&nbsp;рабочий стол</h2>
+  <div class="slide-subtitle">Один экран — несколько агентов параллельно. Один пишет код, второй проверяет, третий пишет тесты.</div>
+  <div class="ide-row">
+    <div class="ide-card">
+      <div class="ide-icon"><i class="ph ph-code"></i></div>
+      <div class="ide-name">VS Code</div>
+      <div class="ide-body">Самый популярный, бесплатный, открытый. Codex / Claude / Cline / Gemini — все работают в&nbsp;нём.</div>
+    </div>
+    <div class="ide-card">
+      <div class="ide-icon"><i class="ph ph-cursor"></i></div>
+      <div class="ide-name">Cursor</div>
+      <div class="ide-body">Форк VS Code, заточен под&nbsp;AI-разработку. Tab-комплит на&nbsp;уровне «угадывает что хотел».</div>
+    </div>
+    <div class="ide-card">
+      <div class="ide-icon"><i class="ph ph-folders"></i></div>
+      <div class="ide-name">OpenCode</div>
+      <div class="ide-body">Open-source альтернатива Cursor. Без&nbsp;подписки, без&nbsp;ограничений.</div>
+    </div>
+    <div class="ide-card">
+      <div class="ide-icon"><i class="ph ph-cloud"></i></div>
+      <div class="ide-name">Hermes (Open Cloud)</div>
+      <div class="ide-body">Платформа для&nbsp;развития своего агента — конфиги, скиллы, история, версии.</div>
+    </div>
+  </div>
+  <div class="orch-punchline" style="margin-top:14px;">
+    Один раз настроил среду — <strong>работаешь в&nbsp;ней годами</strong>.
+  </div>
+</section>
+
+<!-- 24. 5 ШАГОВ ОСВОЕНИЯ -->
+<section class="slide">
+  <h2 class="slide-title">5 шагов от первой команды — <span class="accent">до личного агента</span></h2>
+  <div class="slide-subtitle">Это и&nbsp;есть «филигранно». Не «открыл и&nbsp;попробовал».</div>
+  <div class="steps-5">
+    <div class="step-5-card">
+      <div class="step-5-num">1</div>
+      <div>
+        <div class="step-5-title">Читаешь что&nbsp;он&nbsp;делает</div>
+        <div class="step-5-desc">Учишься следить за&nbsp;процессом. Не «отдал и&nbsp;забыл» — а&nbsp;понимаешь каждое действие, можешь остановить и&nbsp;поправить.</div>
+      </div>
+    </div>
+    <div class="step-5-card">
+      <div class="step-5-num">2</div>
+      <div>
+        <div class="step-5-title">Общаешься правильно</div>
+        <div class="step-5-desc">Точная формулировка, контекст, ограничения. Один вопрос — один точный ответ. Без «попробуй ещё раз».</div>
+      </div>
+    </div>
+    <div class="step-5-card">
+      <div class="step-5-num">3</div>
+      <div>
+        <div class="step-5-title">Даёшь контекст про&nbsp;себя</div>
+        <div class="step-5-desc">Кто ты, чем&nbsp;занимаешься, какие принципы, какие цели. <strong>Один раз</strong> — агент помнит навсегда.</div>
+      </div>
+    </div>
+    <div class="step-5-card">
+      <div class="step-5-num">4</div>
+      <div>
+        <div class="step-5-title">Прописываешь порядок действий</div>
+        <div class="step-5-desc">Workflow, чек-листы, что делать в&nbsp;каких ситуациях. Агент действует по&nbsp;твоим правилам — без&nbsp;импровизаций.</div>
+      </div>
+    </div>
+    <div class="step-5-card">
+      <div class="step-5-num">5</div>
+      <div>
+        <div class="step-5-title">Загружаешь скиллы и&nbsp;плагины</div>
+        <div class="step-5-desc">Расширяешь возможности — следующий слайд раскрывает что это.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 24.5 — 4 уровня настройки: скиллы, плагины, память (Obsidian), MCP -->
+<section class="slide">
+  <h2 class="slide-title">4 уровня настройки агента — <span class="accent">его суперспособности</span></h2>
+  <div class="principles-grid">
+    <div class="principle-card">
+      <div class="pc-num"><i class="ph ph-puzzle-piece"></i></div>
+      <div class="pc-title">Скиллы — что&nbsp;делать</div>
+      <div class="pc-body">Модули поведения. Учат агента <strong>конкретной задаче</strong>: «как писать code review», «как отвечать клиенту», «как готовить отчёт». Загрузил → агент умеет.</div>
+    </div>
+    <div class="principle-card">
+      <div class="pc-num"><i class="ph ph-plugs-connected"></i></div>
+      <div class="pc-title">Плагины — экспертиза в&nbsp;сфере</div>
+      <div class="pc-body">Готовые расширения от&nbsp;сообщества под&nbsp;<strong>сферу</strong>: legal-pack (право), medical-pack (медицина), sales-pack (продажи), dev-pack (разработка), education-pack (преподавание). Подключил — агент стал экспертом в&nbsp;области.</div>
+    </div>
+    <div class="principle-card">
+      <div class="pc-num"><i class="ph ph-brain"></i></div>
+      <div class="pc-title">Память (Obsidian) — кто&nbsp;ты</div>
+      <div class="pc-body">Твоя личная база знаний: документы, прайсы, кейсы, цели на&nbsp;год, заметки. Агент <strong>видит и&nbsp;помнит всё</strong> — ссылается на&nbsp;твои данные каждый раз.</div>
+    </div>
+    <div class="principle-card">
+      <div class="pc-num"><i class="ph ph-hand"></i></div>
+      <div class="pc-title">MCP — руки</div>
+      <div class="pc-body">Универсальный коннектор. Подключает к&nbsp;Gmail, Notion, Slack, Telegram, базам данных, календарю. Агент <strong>действует</strong>, а&nbsp;не&nbsp;только говорит.</div>
+    </div>
+  </div>
+  <div class="orch-punchline">
+    Скиллы — <strong>что делать</strong>. Плагины — <strong>экспертиза</strong>. Память — <strong>кто ты</strong>. MCP — <strong>руки</strong>.
+  </div>
+</section>
+
+<!-- 25. КОМАНДА АГЕНТОВ — пример с юристом + сценарий с кофе -->
+<section class="slide">
+  <h2 class="slide-title">Ваша <span class="accent">команда агентов</span> — под жизнь и работу</h2>
+  <div class="slide-subtitle">Не один универсал. Команда специалистов — каждый закрывает свою задачу.</div>
+  <div class="lawyer-card">
+    <div class="lawyer-head">
+      <div class="lawyer-icon"><i class="ph-duotone ph-scales"></i></div>
+      <div>
+        <div class="lawyer-title">Пример: команда агентов юриста</div>
+        <div class="lawyer-context">50 клиентов, 10 договоров в&nbsp;неделю, дедлайны, претензии</div>
+      </div>
+    </div>
+    <div class="lawyer-agents">
+      <div class="la-row"><i class="ph ph-magnifying-glass-plus la-icon"></i><div><div class="la-name">Агент-аналитик</div><div class="la-task">Читает входящие договоры, выделяет риски, готовит резюме за&nbsp;2&nbsp;мин.</div></div></div>
+      <div class="la-row"><i class="ph ph-pen-nib la-icon"></i><div><div class="la-name">Агент-помощник</div><div class="la-task">Готовит черновики ответов и&nbsp;претензий по&nbsp;вашим шаблонам.</div></div></div>
+      <div class="la-row"><i class="ph ph-bell la-icon"></i><div><div class="la-name">Агент-менеджер</div><div class="la-task">Следит за&nbsp;дедлайнами, напоминает за&nbsp;день, неделю, месяц до&nbsp;срока.</div></div></div>
+      <div class="la-row"><i class="ph ph-target la-icon"></i><div><div class="la-name">Агент-стратег</div><div class="la-task">Раз в&nbsp;неделю: ваш план целей на&nbsp;год → что делать дальше.</div></div></div>
+    </div>
+  </div>
+  <div class="scenario-hero">
+    <div class="scenario-row">
+      <div class="scenario-icon"><i class="ph-duotone ph-coffee"></i></div>
+      <div class="scenario-text">
+        Открыл ноутбук → <strong>поставил задачу голосом</strong> → ушёл за&nbsp;кофе → вернулся: <strong>агент всё сделал</strong>, прислал уведомление на&nbsp;телефон. Передал результат <strong>следующему агенту</strong>, который уже строит следующий шаг.
+      </div>
+    </div>
+    <div class="scenario-bottom">Это реально. Через 2 месяца обучения.</div>
+  </div>
+</section>
+
+<!-- 26. SAAS — отдельная ветка курса -->
+<section class="slide">
+  <h2 class="slide-title">Бонус-направление: <span class="coral">SaaS-разработка голосом</span></h2>
+  <div class="slide-subtitle">Отдельная ветка — для тех, кто&nbsp;хочет делать <strong>продукты под&nbsp;заказ</strong>. Не путать с&nbsp;командой агентов.</div>
+  <span class="saas-tag"><i class="ph ph-storefront"></i> Отдельный трек курса</span>
+  <div style="font-size:17px; color:var(--white-80); line-height:1.5; margin-top:8px;">
+    Любая автоматизация под&nbsp;клиента — <strong>за&nbsp;дни, голосом</strong>. Не&nbsp;нужно быть программистом — нужна стратегия от&nbsp;А до&nbsp;Я.
+  </div>
+  <div class="saas-grid">
+    <div class="saas-case">
+      <div class="sc-name">Калькулятор стоимости услуг для&nbsp;салона красоты</div>
+      <div class="sc-time">за 2 дня</div>
+    </div>
+    <div class="saas-case">
+      <div class="sc-name">Мини-CRM для&nbsp;риелтора с&nbsp;автонапоминалками</div>
+      <div class="sc-time">за 3 дня</div>
+    </div>
+    <div class="saas-case">
+      <div class="sc-name">Парсер вакансий с&nbsp;Telegram-нотификацией</div>
+      <div class="sc-time">за 1 день</div>
+    </div>
+    <div class="saas-case">
+      <div class="sc-name">Дашборд продаж для&nbsp;магазина</div>
+      <div class="sc-time">за 2 дня</div>
+    </div>
+  </div>
+  <div class="saas-bottom">
+    Цена услуги — <strong>от&nbsp;30к</strong>. Цена подписки клиента — <strong>от&nbsp;3к в&nbsp;месяц</strong>.<br>
+    Несколько проектов = серьёзный пассивный доход.
+  </div>
+</section>
+
+<!-- 27. ПРОГРАММА 8 МОДУЛЕЙ — обновлено -->
+<section class="slide">
+  <h2 class="slide-title">8 модулей — от первой команды до своей <span class="accent">команды агентов</span></h2>
+  <div class="modules-list">
+    <div class="module-item"><div class="module-num">1</div><div><div class="module-name">Парадигма вайбкодинга</div><div class="module-desc">Как разработка через речь меняет всё. Чем&nbsp;отличается от&nbsp;классики. Этика и&nbsp;границы.</div></div></div>
+    <div class="module-item"><div class="module-num">2</div><div><div class="module-name">Тур по&nbsp;5 топ-агентам</div><div class="module-desc">Codex, Claude Code, Antigravity, Gemini, Cline. Сильные стороны каждого. Ваш выбор основного.</div></div></div>
+    <div class="module-item"><div class="module-num">3</div><div><div class="module-name">IDE и&nbsp;настройка среды</div><div class="module-desc">VS Code / Cursor / OpenCode / Hermes. Один раз — на&nbsp;годы. Скиллы и&nbsp;плагины подробно.</div></div></div>
+    <div class="module-item"><div class="module-num">4</div><div><div class="module-name">Контекст и&nbsp;роль агента</div><div class="module-desc">Кто ты, какие принципы, какие цели. Прописывание workflow и&nbsp;порядка действий.</div></div></div>
+    <div class="module-item"><div class="module-num">5</div><div><div class="module-name">Память через Obsidian + MCP</div><div class="module-desc">Долгая память агента. Подключение к&nbsp;вашим сервисам через MCP — Gmail, Notion, Telegram.</div></div></div>
+    <div class="module-item"><div class="module-num">6</div><div><div class="module-name">Сборка команды агентов</div><div class="module-desc">Несколько агентов с&nbsp;разными ролями работают вместе. Передача задач между ними.</div></div></div>
+    <div class="module-item"><div class="module-num">7</div><div><div class="module-name">Личный кейс — ваша команда</div><div class="module-desc">Практика на&nbsp;ВАШИХ задачах. Юрист / врач / маркетолог / руководитель — собираем под&nbsp;вашу профессию.</div></div></div>
+    <div class="module-item"><div class="module-num">8</div><div><div class="module-name">Стратегия: компания или&nbsp;SaaS под&nbsp;заказ</div><div class="module-desc">Позиционирование внутри компании или&nbsp;запуск SaaS — голосом, под&nbsp;клиента.</div></div></div>
+  </div>
+</section>
+
+<!-- 28. ДЛЯ КОГО + БОНУСЫ ВЫПУСКНИКАМ -->
+<section class="slide">
+  <h2 class="slide-title">Для кого — и&nbsp;что вы&nbsp;получаете как&nbsp;<span class="accent">выпускник</span></h2>
+  <div class="cards-grid">
+    <div class="card who-card yes">
+      <div class="who-title"><i class="ph-fill ph-check-circle"></i> Для тебя если…</div>
+      <div class="card-body">
+        <div class="point" style="font-size:15px; margin-bottom:6px;">→ Прошёл этот курс и&nbsp;хочешь идти глубже</div>
+        <div class="point" style="font-size:15px; margin-bottom:6px;">→ Хочешь не «знать про&nbsp;ИИ», а&nbsp;<strong>создавать</strong> и&nbsp;автоматизировать</div>
+        <div class="point" style="font-size:15px; margin-bottom:6px;">→ Видишь себя ключевым в&nbsp;компании или&nbsp;своим консультантом</div>
+        <div class="point" style="font-size:15px;">→ Готов вложиться: 4-6&nbsp;часов в&nbsp;неделю на&nbsp;2 месяца</div>
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--coral); background:linear-gradient(135deg, rgba(224,116,97,0.08) 0%, rgba(167,139,250,0.04) 100%);">
+      <div class="who-title" style="color:var(--coral);"><i class="ph-fill ph-gift"></i> Бонусы выпускнику этого потока</div>
+      <div class="card-body">
+        <div class="point" style="font-size:15px; margin-bottom:6px;">→ <strong>Особая цена</strong> — без&nbsp;«цены для&nbsp;всех»</div>
+        <div class="point" style="font-size:15px; margin-bottom:6px;">→ <strong>Гарантия места</strong> — без&nbsp;конкурса с&nbsp;новенькими</div>
+        <div class="point" style="font-size:15px; margin-bottom:6px;">→ <strong>Приоритет в&nbsp;разборах</strong> на&nbsp;каждом занятии</div>
+        <div class="point" style="font-size:15px;">→ <strong>Закрытый чат</strong> с&nbsp;Альбертом — прямая линия</div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center; margin-top:18px; font-size:18px; color:var(--white);">
+    Старт <strong style="color:var(--coral);">уже в&nbsp;июле</strong> · подробности приду в&nbsp;<strong style="color:var(--accent);">личку</strong> в&nbsp;ближайшие дни.
+  </div>
+</section>
+
+<!-- 23. WHAT YOU GET TODAY -->
+<section class="slide">
+  <h2 class="slide-title">Что&nbsp;придёт вам в&nbsp;личку сегодня</h2>
+  <div class="slide-subtitle">После урока — каждому персональное сообщение от&nbsp;меня.</div>
+  <div class="bonus-list">
+    <div class="bonus-item violet"><i class="ph ph-graduation-cap bonus-icon"></i><div><div class="bonus-name">Сертификат</div><div class="bonus-desc">PDF с&nbsp;вашим именем — можно показывать клиентам и&nbsp;партнёрам</div></div></div>
+    <div class="bonus-item violet"><i class="ph ph-books bonus-icon"></i><div><div class="bonus-name">Супер-шпаргалка курса</div><div class="bonus-desc">Все 8&nbsp;презентаций, все шпаргалки, 5&nbsp;дополнительных инструкций — в&nbsp;одной ссылке</div></div></div>
+    <div class="bonus-item violet"><i class="ph ph-globe bonus-icon"></i><div><div class="bonus-name">VPN бесплатно до&nbsp;конца года</div><div class="bonus-desc">Хотя по&nbsp;правилам — только на&nbsp;время курса. Вам — продлеваю до&nbsp;31&nbsp;декабря</div></div></div>
+  </div>
+  <div class="quote coral" style="margin-top:14px;">
+    Взамен — попрошу записать <strong>видеоотзыв 30+ секунд</strong>: что было до, что&nbsp;дало, как&nbsp;всё прошло. Пришлю инструкцию в&nbsp;личку.
+  </div>
+</section>
+
+<!-- 24. Q&A -->
+<section class="slide" style="text-align:center; justify-content:center;">
+  <h2 style="font-size:80px; font-weight:900;">Q&amp;A</h2>
+  <div style="font-size:24px; color:var(--white-60); margin-top:20px;">5&nbsp;минут на&nbsp;вопросы — техника, инструменты, следующий поток.</div>
+</section>
+
+<!-- 27. THANKS -->
+<section class="slide thanks-slide" id="thanks-slide">
+  <div class="thanks-big">Спасибо</div>
+  <div class="thanks-sub">
+    Вы&nbsp;уже не&nbsp;те, кем были 8&nbsp;недель назад.<br>
+    У&nbsp;вас теперь свой&nbsp;стек, свой&nbsp;манифест и&nbsp;навык,<br>которого нет у&nbsp;95% коллег.
+  </div>
+  <div style="font-size:24px; color:var(--white); margin-bottom:18px; font-weight:600;">
+    Вы — большие молодцы. <span class="highlight-coral">Идите и&nbsp;применяйте.</span>
+  </div>
+  <div style="font-size:18px; color:var(--white-40); letter-spacing:1px;">neovida.ai · ИИ. Новая реальность · Поток&nbsp;1 · Финал</div>
+</section>
+
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+const counter = document.getElementById('counter');
+const progressBar = document.getElementById('progress-bar');
+let current = 0;
+
+function show(i) {
+  if (i < 0 || i >= total) return;
+  slides[current].classList.remove('active');
+  if (i < current) slides[current].classList.add('prev');
+  else slides[current].classList.remove('prev');
+  current = i;
+  slides[current].classList.add('active');
+  slides[current].classList.remove('prev');
+  counter.textContent = `${current + 1} / ${total}`;
+  progressBar.style.width = `${((current + 1) / total) * 100}%`;
+
+  // Финальный слайд — конфетти + звук фейерверка
+  if (current === total - 1) runFinaleEffects();
+}
+
+// ===== Финальные эффекты =====
+let lastFinaleAt = 0;
+let audioCtx = null;
+
+function runFinaleEffects() {
+  // Не повторять чаще раза в 3 секунды (защита от спама стрелками)
+  const now = Date.now();
+  if (now - lastFinaleAt < 3000) return;
+  lastFinaleAt = now;
+
+  // Серия залпов конфетти из 3-х точек
+  const colors = ['#A78BFA', '#E07461', '#f0c040', '#5ec47a', '#ffffff'];
+  const duration = 4000;
+  const animationEnd = Date.now() + duration;
+
+  // Большой залп по центру сразу
+  if (window.confetti) {
+    confetti({
+      particleCount: 120,
+      spread: 100,
+      origin: { y: 0.55 },
+      colors,
+      startVelocity: 45,
+      gravity: 0.9,
+      ticks: 220,
+    });
+  }
+
+  // Серия маленьких залпов с краёв 4 секунды
+  const interval = setInterval(() => {
+    if (Date.now() > animationEnd) { clearInterval(interval); return; }
+    if (!window.confetti) return;
+    confetti({
+      particleCount: 4,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0, y: 0.7 },
+      colors,
+    });
+    confetti({
+      particleCount: 4,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1, y: 0.7 },
+      colors,
+    });
+  }, 220);
+
+  // Серия из 4 фейерверков (свист + взрыв) + торжественный аккорд после первого
+  ensureAudio();
+  playFirework({ delayMs: 0,    pitchUp: 1800,  burstFreq: 70, withChord: true,  volume: 0.35 });
+  playFirework({ delayMs: 700,  pitchUp: 2400,  burstFreq: 90, withChord: false, volume: 0.32 });
+  playFirework({ delayMs: 1500, pitchUp: 1600,  burstFreq: 60, withChord: false, volume: 0.34 });
+  playFirework({ delayMs: 2400, pitchUp: 2800,  burstFreq: 100, withChord: true, volume: 0.40 }); // финальный двойной
+}
+
+function ensureAudio() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) { console.log('audio ctx fail', e.message); }
+}
+
+// === Реалистичный фейерверк: WHOOSH (взлёт ракеты) → BANG (взрыв) → опц. CHORD (фанфары) ===
+function playFirework(opts) {
+  const { delayMs = 0, pitchUp = 2000, burstFreq = 80, withChord = false, volume = 0.35 } = opts;
+  const sec = delayMs / 1000;
+  setTimeout(() => {
+    try {
+      if (!audioCtx) ensureAudio();
+      const ctx = audioCtx;
+      const t0 = ctx.currentTime;
+
+      // 1) WHOOSH — свист взлетающей ракеты, 0.45 сек, восходящий sine 200→pitchUp Hz
+      const whooshOsc = ctx.createOscillator();
+      const whooshFilt = ctx.createBiquadFilter();
+      const whooshGain = ctx.createGain();
+      whooshOsc.type = 'sine';
+      whooshOsc.frequency.setValueAtTime(200, t0);
+      whooshOsc.frequency.exponentialRampToValueAtTime(pitchUp, t0 + 0.45);
+      whooshFilt.type = 'lowpass';
+      whooshFilt.frequency.value = 3000;
+      // Шумовая подмешка чтобы свист был «шипящим»
+      const whooshNoise = makeNoiseBuffer(ctx, 0.45);
+      const whooshNoiseSrc = ctx.createBufferSource();
+      whooshNoiseSrc.buffer = whooshNoise;
+      const whooshNoiseFilt = ctx.createBiquadFilter();
+      whooshNoiseFilt.type = 'bandpass';
+      whooshNoiseFilt.frequency.setValueAtTime(800, t0);
+      whooshNoiseFilt.frequency.exponentialRampToValueAtTime(4000, t0 + 0.45);
+      whooshNoiseFilt.Q.value = 2;
+      const whooshNoiseGain = ctx.createGain();
+      whooshNoiseGain.gain.setValueAtTime(0.15 * volume, t0);
+      whooshNoiseGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.45);
+
+      whooshGain.gain.setValueAtTime(0.001, t0);
+      whooshGain.gain.exponentialRampToValueAtTime(0.18 * volume, t0 + 0.05);
+      whooshGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.45);
+      whooshOsc.connect(whooshFilt).connect(whooshGain).connect(ctx.destination);
+      whooshNoiseSrc.connect(whooshNoiseFilt).connect(whooshNoiseGain).connect(ctx.destination);
+      whooshOsc.start(t0); whooshOsc.stop(t0 + 0.45);
+      whooshNoiseSrc.start(t0); whooshNoiseSrc.stop(t0 + 0.45);
+
+      // 2) BANG — взрыв в момент достижения пика (0.45 сек после старта свиста)
+      const bangAt = t0 + 0.45;
+
+      // Низкий бас удара
+      const bass = ctx.createOscillator();
+      const bassGain = ctx.createGain();
+      bass.type = 'sine';
+      bass.frequency.setValueAtTime(burstFreq, bangAt);
+      bass.frequency.exponentialRampToValueAtTime(burstFreq * 0.4, bangAt + 0.18);
+      bassGain.gain.setValueAtTime(volume * 1.2, bangAt);
+      bassGain.gain.exponentialRampToValueAtTime(0.001, bangAt + 0.25);
+      bass.connect(bassGain).connect(ctx.destination);
+      bass.start(bangAt); bass.stop(bangAt + 0.25);
+
+      // Шумовой всплеск — разлёт искр, 0.7 сек с медленным затуханием
+      const burstNoise = makeNoiseBuffer(ctx, 0.7);
+      const burstSrc = ctx.createBufferSource();
+      burstSrc.buffer = burstNoise;
+      const burstFilt = ctx.createBiquadFilter();
+      burstFilt.type = 'highpass';
+      burstFilt.frequency.value = 1500;
+      const burstGain = ctx.createGain();
+      burstGain.gain.setValueAtTime(volume * 0.6, bangAt);
+      burstGain.gain.exponentialRampToValueAtTime(0.001, bangAt + 0.7);
+      burstSrc.connect(burstFilt).connect(burstGain).connect(ctx.destination);
+      burstSrc.start(bangAt); burstSrc.stop(bangAt + 0.7);
+
+      // Потрескивание искр — короткие импульсы шума с затуханием
+      for (let i = 0; i < 8; i++) {
+        const crackleAt = bangAt + 0.2 + Math.random() * 0.5;
+        const crackleBuf = makeNoiseBuffer(ctx, 0.04);
+        const crackleSrc = ctx.createBufferSource();
+        crackleSrc.buffer = crackleBuf;
+        const crackleGain = ctx.createGain();
+        crackleGain.gain.setValueAtTime(volume * 0.25, crackleAt);
+        crackleGain.gain.exponentialRampToValueAtTime(0.001, crackleAt + 0.04);
+        const crackleFilt = ctx.createBiquadFilter();
+        crackleFilt.type = 'highpass';
+        crackleFilt.frequency.value = 3000 + Math.random() * 4000;
+        crackleSrc.connect(crackleFilt).connect(crackleGain).connect(ctx.destination);
+        crackleSrc.start(crackleAt); crackleSrc.stop(crackleAt + 0.04);
+      }
+
+      // 3) CHORD — торжественный мажорный аккорд (До-Ми-Соль-До) после взрыва
+      if (withChord) {
+        const chordAt = bangAt + 0.25;
+        // C5=523.25, E5=659.25, G5=783.99, C6=1046.50
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = 'triangle';
+          o.frequency.value = freq;
+          // Лёгкий вибрато
+          g.gain.setValueAtTime(0.001, chordAt);
+          g.gain.exponentialRampToValueAtTime(volume * 0.18, chordAt + 0.05 + idx * 0.04);
+          g.gain.exponentialRampToValueAtTime(0.001, chordAt + 1.6);
+          o.connect(g).connect(ctx.destination);
+          o.start(chordAt); o.stop(chordAt + 1.7);
+        });
+      }
+    } catch (e) {
+      console.log('audio play fail', e.message);
+    }
+  }, delayMs);
+}
+
+function makeNoiseBuffer(ctx, durationSec) {
+  const len = Math.floor(ctx.sampleRate * durationSec);
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+  return buf;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { show(current + 1); e.preventDefault(); }
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') { show(current - 1); e.preventDefault(); }
+  if (e.key === 'Home') show(0);
+  if (e.key === 'End') show(total - 1);
+});
+
+document.addEventListener('click', (e) => {
+  if (e.target.closest('a') || e.target.closest('button')) return;
+  if (e.clientX > window.innerWidth / 2) show(current + 1);
+  else show(current - 1);
+});
+
+document.getElementById('fs-btn').addEventListener('click', () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+
+counter.textContent = `1 / ${total}`;
+progressBar.style.width = `${(1 / total) * 100}%`;
+</script>
+
+</body>
+</html>
