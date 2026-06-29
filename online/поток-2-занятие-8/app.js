@@ -60,7 +60,7 @@ export function renderHeader(me, opts = {}) {
   if (!el) return;
   const showLogout = opts.showLogout && me;
   el.innerHTML = `
-    <div class="brand"><span class="brand-dot"></span>neovida · AI Boost · занятие 8 · финал</div>
+    <div class="brand"><span class="brand-dot"></span>neovida · Новая реальность · занятие 8 · финал</div>
     ${me ? `
       <div class="user-chip">
         <div class="user-ava">${(me.name[0] || '?').toUpperCase()}</div>
