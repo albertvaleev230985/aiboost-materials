@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Boost ГК Евразия · Урок 4 · Финальный практикум внедрения</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e1414;
+  --bg2: #14201e;
+  --ink: #f7f4ec;
+  --muted: rgba(247,244,236,.68);
+  --soft: rgba(247,244,236,.1);
+  --line: rgba(247,244,236,.18);
+  --teal: #2fb3a3;
+  --copper: #c77a39;
+  --gold: #d6ad5f;
+  --red: #d76757;
+  --green: #67c587;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+body {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+.deck { width: 100vw; height: 100vh; position: relative; }
+.slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 72px 86px;
+  background:
+    linear-gradient(135deg, rgba(20,32,30,.96), rgba(14,20,20,.98)),
+    radial-gradient(circle at 78% 22%, rgba(47,179,163,.22), transparent 36%),
+    radial-gradient(circle at 18% 82%, rgba(199,122,57,.14), transparent 35%);
+  transition: opacity .25s ease;
+}
+.slide.active { opacity: 1; pointer-events: auto; }
+.kicker {
+  color: var(--teal);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+h1, h2 { margin: 0; letter-spacing: 0; line-height: 1.04; }
+h1 { font-size: 82px; max-width: 1040px; font-weight: 900; }
+h2 { font-size: 56px; max-width: 1060px; font-weight: 900; }
+.lead {
+  max-width: 900px;
+  margin-top: 26px;
+  color: var(--muted);
+  font-size: 28px;
+  line-height: 1.42;
+}
+.accent { color: var(--teal); }
+.copper { color: var(--copper); }
+.grid { display: grid; gap: 18px; margin-top: 34px; }
+.grid.two { grid-template-columns: repeat(2, 1fr); }
+.grid.three { grid-template-columns: repeat(3, 1fr); }
+.grid.four { grid-template-columns: repeat(4, 1fr); }
+.card {
+  border: 1px solid var(--line);
+  background: rgba(247,244,236,.065);
+  border-radius: 18px;
+  padding: 24px;
+  min-height: 150px;
+}
+.card strong { color: var(--ink); }
+.num {
+  width: 38px; height: 38px;
+  display: inline-grid; place-items: center;
+  border-radius: 50%;
+  background: rgba(47,179,163,.14);
+  color: var(--teal);
+  font-weight: 900;
+  margin-bottom: 18px;
+}
+.card-title { font-size: 22px; font-weight: 850; margin-bottom: 10px; }
+.card-text { color: var(--muted); font-size: 18px; line-height: 1.48; }
+.timeline { margin-top: 28px; display: grid; gap: 10px; max-width: 1060px; }
+.row {
+  display: grid;
+  grid-template-columns: 132px 1fr 1.2fr;
+  gap: 18px;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: rgba(247,244,236,.06);
+  border-radius: 16px;
+  padding: 14px 18px;
+}
+.time { color: var(--gold); font-weight: 900; font-size: 18px; }
+.row-title { font-weight: 850; font-size: 20px; }
+.row-text { color: var(--muted); font-size: 16px; line-height: 1.36; }
+.quote {
+  margin-top: 34px;
+  max-width: 980px;
+  border-left: 5px solid var(--copper);
+  background: rgba(199,122,57,.12);
+  padding: 24px 30px;
+  border-radius: 0 18px 18px 0;
+  font-size: 28px;
+  line-height: 1.34;
+  font-weight: 750;
+}
+.url {
+  margin-top: 28px;
+  display: inline-flex;
+  width: fit-content;
+  padding: 16px 22px;
+  border-radius: 12px;
+  border: 1px solid rgba(47,179,163,.42);
+  color: var(--ink);
+  background: rgba(47,179,163,.12);
+  font-size: 24px;
+  font-weight: 800;
+}
+.url-stack {
+  margin-top: 28px;
+  display: grid;
+  gap: 12px;
+  width: fit-content;
+}
+.url-stack .url {
+  margin-top: 0;
+}
+.field-list { margin-top: 34px; display: grid; gap: 12px; max-width: 1100px; }
+.field {
+  display: grid;
+  grid-template-columns: 48px 310px 1fr;
+  gap: 18px;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding: 12px 0;
+}
+.field-num { color: var(--teal); font-weight: 900; font-size: 22px; }
+.field-name { font-size: 22px; font-weight: 850; }
+.field-desc { color: var(--muted); font-size: 18px; line-height: 1.38; }
+.footer {
+  position: absolute;
+  left: 86px; right: 86px; bottom: 34px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: rgba(247,244,236,.45);
+  font-size: 13px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.progress { color: rgba(247,244,236,.55); }
+.fullscreen-btn {
+  position: fixed;
+  top: 22px;
+  right: 22px;
+  z-index: 20;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(247,244,236,.22);
+  border-radius: 8px;
+  background: rgba(14,20,20,.72);
+  color: var(--ink);
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+  transition: border-color .18s ease, background .18s ease, transform .18s ease, opacity .18s ease;
+}
+.fullscreen-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(47,179,163,.65);
+  background: rgba(47,179,163,.18);
+}
+.fullscreen-btn svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.small { font-size: 16px; color: var(--muted); line-height: 1.45; }
+.method {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.method .card { min-height: 190px; }
+.stack-table {
+  margin-top: 30px;
+  display: grid;
+  gap: 10px;
+  max-width: 1120px;
+}
+.stack-row {
+  display: grid;
+  grid-template-columns: 230px 1.05fr 1.25fr;
+  gap: 14px;
+  align-items: stretch;
+}
+.stack-cell {
+  border: 1px solid var(--line);
+  background: rgba(247,244,236,.062);
+  border-radius: 8px;
+  padding: 16px 18px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.36;
+}
+.stack-head .stack-cell {
+  min-height: 0;
+  color: rgba(247,244,236,.55);
+  background: transparent;
+  border-color: rgba(247,244,236,.1);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.tool-tag {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 9px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(47,179,163,.14);
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 900;
+}
+.stack-cell strong { color: var(--ink); }
+.note {
+  margin-top: 20px;
+  color: rgba(247,244,236,.58);
+  font-size: 16px;
+  line-height: 1.45;
+  max-width: 940px;
+}
+.big-mark {
+  position: absolute;
+  right: 80px;
+  bottom: 54px;
+  font-size: 180px;
+  line-height: 1;
+  color: rgba(47,179,163,.08);
+  font-weight: 900;
+}
+</style>
+</head>
+<body>
+<main class="deck" id="deck">
+  <section class="slide active">
+    <div class="kicker">ГК Евразия · AI Boost · урок 4</div>
+    <h1>Финальный практикум внедрения</h1>
+    <div class="lead">Сегодня не закрываем курс красивой точкой. Собираем тест, личные мини-отчёты и общий список внедрений, которые команда забирает в июль.</div>
+    <div class="big-mark">04</div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Запрос собственника</div>
+    <h2>Курс не должен остаться набором интересных инструментов. <span class="accent">Нужны реальные внедрения.</span></h2>
+    <div class="quote">На выходе должно быть понятно: кто чему научился, кто начал применять ИИ, где уже есть польза для компании и какие процессы дальше переводим на ИИ.</div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Маршрут на 3 часа</div>
+    <h2>Идём от проверки знаний к рабочему стеку и карте внедрения</h2>
+    <div class="timeline">
+      <div class="row"><div class="time">0:00-0:15</div><div class="row-title">Вход и рамка</div><div class="row-text">Открываем web-app, вводим имя, объясняем: финал про внедрение.</div></div>
+      <div class="row"><div class="time">0:15-0:45</div><div class="row-title">Live-тест</div><div class="row-text">20 вопросов по темам ГК Евразия: промпты, Gems, база знаний, NotebookLM, Canvas.</div></div>
+      <div class="row"><div class="time">0:45-1:10</div><div class="row-title">Heatmap-разбор</div><div class="row-text">Разбираем не все вопросы, а только места, где группа ошиблась.</div></div>
+      <div class="row"><div class="time">1:10-1:40</div><div class="row-title">Стек ГК Евразия</div><div class="row-text">Собираем карту инструментов: что прошли, под какие задачи применять и где подключать альтернативы.</div></div>
+      <div class="row"><div class="time">1:40-2:05</div><div class="row-title">Итоговый мини-отчёт</div><div class="row-text">Каждый фиксирует обратную связь, что уже пробовал, что внедряет в июле и один сценарий для команды.</div></div>
+      <div class="row"><div class="time">2:05-2:40</div><div class="row-title">Клиника кейсов и список 5 внедрений</div><div class="row-text">Берём живые сценарии участников и доводим до формата “задача → было → стало через ИИ → эффект”.</div></div>
+      <div class="row"><div class="time">2:40-3:00</div><div class="row-title">Командный контур и сертификаты</div><div class="row-text">Фиксируем владельцев, материалы, следующие действия на июль и выдаём сертификаты.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Вход в web-app</div>
+    <h2>Откройте финальную страницу</h2>
+    <div class="lead">Введите имя и фамилию ровно так, как хотите видеть на сертификате. Дальше будут тест, итоговый мини-отчёт и финальный экран сертификата.</div>
+    <div class="url-stack">
+      <div class="url">materials.neovida.ai/evrazia/urok-4/</div>
+      <div class="url">materials.neovida.ai/evrazia/urok-4/cheatsheet.html</div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Live-тест</div>
+    <h2>Тест, это зеркало, а не экзамен</h2>
+    <div class="grid three">
+      <div class="card"><div class="num">1</div><div class="card-title">Проверяем ядро</div><div class="card-text">Только то, что реально проходили: промпты, Gem, база знаний, NotebookLM, Canvas, Deep Research.</div></div>
+      <div class="card"><div class="num">2</div><div class="card-title">Смотрим heatmap</div><div class="card-text">Где ошиблась группа, там не “стыдно”, там зона для короткого усиления.</div></div>
+      <div class="card"><div class="num">3</div><div class="card-title">Не тонем в теории</div><div class="card-text">Каждый вопрос должен возвращаться к рабочему процессу ГК Евразия.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Что уже в арсенале</div>
+    <h2>У вас не набор сервисов. У вас связка инструментов</h2>
+    <div class="grid three">
+      <div class="card"><div class="card-title">Промпт</div><div class="card-text">Постановка задачи: контекст, результат, формат, ограничения.</div></div>
+      <div class="card"><div class="card-title">Gem</div><div class="card-text">Сохранённый ассистент под повторяемый процесс.</div></div>
+      <div class="card"><div class="card-title">База знаний</div><div class="card-text">Материалы, на которые ассистент опирается вместо выдумок.</div></div>
+      <div class="card"><div class="card-title">NotebookLM</div><div class="card-text">Рабочая комната источников: документы, цитаты, FAQ, справочники.</div></div>
+      <div class="card"><div class="card-title">Canvas</div><div class="card-text">Маленький инструмент: форма, калькулятор, чек-лист, радар рисков.</div></div>
+      <div class="card"><div class="card-title">Deep Research</div><div class="card-text">Исследование рынка, поставщиков, конкурентов и практик, когда нужен внешний контекст.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Что прошли за курс</div>
+    <h2>От “попробовать ИИ” до рабочего инструмента в процессе</h2>
+    <div class="stack-table">
+      <div class="stack-row stack-head">
+        <div class="stack-cell">Слой</div>
+        <div class="stack-cell">Что это даёт</div>
+        <div class="stack-cell">Как фиксируем в работе</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-cell"><span class="tool-tag">ИИ-грамотность</span><strong>Понимание ограничений</strong></div>
+        <div class="stack-cell">Где ИИ помогает, где врёт, где нужен человек, почему нельзя слепо отправлять ответ клиенту.</div>
+        <div class="stack-cell">Правило: ИИ готовит черновик, сотрудник проверяет смысл, цифры, тон и ответственность.</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-cell"><span class="tool-tag">Промпт-инжиниринг</span><strong>Нормальная постановка задачи</strong></div>
+        <div class="stack-cell">Не “сделай красиво”, а задача, контекст, формат результата, ограничения и критерий качества.</div>
+        <div class="stack-cell">Повторяемые промпты храним рядом с процессом и улучшаем после реальных тестов.</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-cell"><span class="tool-tag">Ассистентный подход</span><strong>Gem под процесс</strong></div>
+        <div class="stack-cell">Один повторяемый процесс превращается в отдельного ассистента с инструкцией и базой знаний.</div>
+        <div class="stack-cell">Название, описание, инструкция, материалы, тестовые кейсы, владелец, дата пересмотра.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Стек ГК Евразия</div>
+    <h2>Какой инструментарий забираем в работу</h2>
+    <div class="stack-table">
+      <div class="stack-row stack-head">
+        <div class="stack-cell">Инструмент</div>
+        <div class="stack-cell">Под какие задачи</div>
+        <div class="stack-cell">Пример рабочего применения</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-cell"><span class="tool-tag">ChatGPT / Gemini</span><strong>Рабочий чат</strong></div>
+        <div class="stack-cell">Разобрать задачу, собрать черновик, проверить формулировку, подготовить письмо, структуру, инструкцию.</div>
+        <div class="stack-cell">Собрать черновик ответа клиенту, план документа, список вопросов к менеджеру или техзадание.</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-cell"><span class="tool-tag">Gems</span><strong>Повторяемый ассистент</strong></div>
+        <div class="stack-cell">Когда задача возвращается каждую неделю: КП, клиентские ответы, регламенты, проверки, подготовка материалов.</div>
+        <div class="stack-cell">Ассистент “проверка КП”: сверяет структуру, риски, недостающие данные и тон общения.</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-cell"><span class="tool-tag">Knowledge / NotebookLM</span><strong>База знаний</strong></div>
+        <div class="stack-cell">Когда ответы должны опираться на документы: прайсы, регламенты, инструкции, условия, FAQ, шаблоны.</div>
+        <div class="stack-cell">Загрузить материалы процесса и получать ответы с опорой на источники, а не на память модели.</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-cell"><span class="tool-tag">Canvas</span><strong>Мини-инструмент</strong></div>
+        <div class="stack-cell">Быстро сделать форму, калькулятор, чек-лист, внутренний радар качества или простую рабочую страницу.</div>
+        <div class="stack-cell">Калькулятор, чек-лист запуска заказа, форма сбора вводных для КП, контрольный лист менеджера.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Как выбирать инструмент</div>
+    <h2>Не “какая нейросеть лучше”, а какой слой нужен задаче</h2>
+    <div class="field-list">
+      <div class="field"><div class="field-num">01</div><div class="field-name">Разовая мыслительная задача</div><div class="field-desc">Открываем ChatGPT или Gemini: разобрать, написать, проверить, сравнить, улучшить.</div></div>
+      <div class="field"><div class="field-num">02</div><div class="field-name">Повторяемый процесс</div><div class="field-desc">Собираем Gem: инструкция, формат ответа, критерии качества, тестовые кейсы.</div></div>
+      <div class="field"><div class="field-num">03</div><div class="field-name">Нужна опора на документы</div><div class="field-desc">Подключаем Knowledge или NotebookLM: прайсы, инструкции, регламенты, FAQ, примеры.</div></div>
+      <div class="field"><div class="field-num">04</div><div class="field-name">Нужна кнопка / форма / калькулятор</div><div class="field-desc">Идём в Canvas: делаем маленький инструмент, которым можно пользоваться без повторного промпта.</div></div>
+      <div class="field"><div class="field-num">05</div><div class="field-name">Нужен внешний рынок</div><div class="field-desc">Подключаем Deep Research, Kimi, Qwen, GLM/Z.ai или Perplexity как исследовательский контур.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Китайский контур</div>
+    <h2>Зачем смотреть на DeepSeek, Qwen, Kimi и GLM/Z.ai</h2>
+    <div class="grid four">
+      <div class="card"><div class="card-title">DeepSeek</div><div class="card-text">Хорош как второй аналитик для логики, кода, проверки рассуждений и альтернативного взгляда на сложную задачу.</div></div>
+      <div class="card"><div class="card-title">Qwen</div><div class="card-text">Экосистема Alibaba: чат, модели для текста, мультимодальности, перевода и рабочих API-сценариев.</div></div>
+      <div class="card"><div class="card-title">Kimi</div><div class="card-text">Сильный кандидат для длинных материалов, поиска, исследования и работы с большим контекстом.</div></div>
+      <div class="card"><div class="card-title">GLM / Z.ai</div><div class="card-text">Полезен как альтернативная модель для рассуждений, кода, агентных и длинных задач.</div></div>
+    </div>
+    <div class="note">Методология блока: показать не “новые игрушки”, а принцип устойчивости. Если один сервис не справился, недоступен или дал сомнительный ответ, берём вторую модель и сравниваем результат.</div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Российский контур</div>
+    <h2>Что можно держать рядом для русскоязычных и доступных сценариев</h2>
+    <div class="grid three">
+      <div class="card"><div class="card-title">GigaChat</div><div class="card-text">Русскоязычный ассистент и API-контур Сбера: тексты, классификация, суммаризация, корпоративные сценарии.</div></div>
+      <div class="card"><div class="card-title">YandexGPT / Алиса</div><div class="card-text">Русский язык, бытовые и рабочие запросы, Yandex Cloud для бизнес-сценариев и API-гипотез.</div></div>
+      <div class="card"><div class="card-title">Kandinsky / YandexART</div><div class="card-text">Визуальные черновики и изображения. Для ГК Евразия это не ядро финала, а дополнительный инструмент.</div></div>
+    </div>
+    <div class="quote">Главное правило стека: один процесс → один инструмент → база знаний → тестовые кейсы → человек проверяет финал.</div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Итоговый мини-отчёт</div>
+    <h2>После теста каждый заполняет отчёт внутри этой же системы</h2>
+    <div class="lead">Это ключевой артефакт для руководителя: короткая обратная связь, реальные попытки применения и конкретный июльский план.</div>
+    <div class="field-list">
+      <div class="field"><div class="field-num">01</div><div class="field-name">Что было полезно</div><div class="field-desc">Какие темы, инструменты или форматы реально помогли.</div></div>
+      <div class="field"><div class="field-num">02</div><div class="field-name">Что глубже / улучшить</div><div class="field-desc">Что осталось непонятным и что стоит усилить в следующих потоках.</div></div>
+      <div class="field"><div class="field-num">03</div><div class="field-name">Что пробовали автоматизировать</div><div class="field-desc">Тексты, отчёты, таблицы, письма, инструкции, анализ, клиентские ответы, документы.</div></div>
+      <div class="field"><div class="field-num">04</div><div class="field-name">Что внедрили или протестировали</div><div class="field-desc">Реальная попытка применения, даже если результат ещё сырой.</div></div>
+      <div class="field"><div class="field-num">05</div><div class="field-name">Что применяют в июле</div><div class="field-desc">Конкретные задачи по своей должности, а не “буду пользоваться ИИ”.</div></div>
+      <div class="field"><div class="field-num">06</div><div class="field-name">Сценарий для команды</div><div class="field-desc">Задача, как раньше, как теперь через ИИ, результат, экономия времени, что доработать.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Методология мини-отчёта</div>
+    <h2>Как провести блок, чтобы это не стало водой</h2>
+    <div class="method">
+      <div class="card"><div class="num">1</div><div class="card-title">Сначала тихая работа</div><div class="card-text">10 минут без обсуждений. Каждый пишет только своё: польза, непонятное, реальные попытки, июль и один сценарий.</div></div>
+      <div class="card"><div class="num">2</div><div class="card-title">Не принимаем абстракции</div><div class="card-text">“Буду пользоваться ChatGPT” не проходит. Нужна задача, вход, выход, инструмент, результат.</div></div>
+      <div class="card"><div class="num">3</div><div class="card-title">Собираем минимум 5 сценариев</div><div class="card-text">На дашборде видно, сколько сценариев команда уже дала. Норма финала, не меньше пяти.</div></div>
+      <div class="card"><div class="num">4</div><div class="card-title">Финал, управленческая картина</div><div class="card-text">У руководителя появляется список применений, пользы, узких мест и следующих действий на июль.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Живая клиника кейсов</div>
+    <h2>Берём 2-3 сценария из отчётов и усиливаем их на экране</h2>
+    <div class="grid three">
+      <div class="card"><div class="num">1</div><div class="card-title">Диагностика</div><div class="card-text">Какая задача? Как раньше делали? Что болит: скорость, ошибки, поиск, структура, контроль?</div></div>
+      <div class="card"><div class="num">2</div><div class="card-title">Доупаковка</div><div class="card-text">Выбираем форму: Gem, база знаний, NotebookLM, Canvas или связка. Улучшаем инструкцию и материалы.</div></div>
+      <div class="card"><div class="num">3</div><div class="card-title">Фиксация эффекта</div><div class="card-text">Что получилось, сколько времени экономится, кто проверяет финал и что нужно доработать.</div></div>
+    </div>
+    <div class="quote">Методология: не показываем “как красиво может ИИ”. Доводим сценарий до языка внедрения, понятного руководителю и команде.</div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Командный контур</div>
+    <h2>Один процесс = одна рабочая папка или проект</h2>
+    <div class="grid two">
+      <div class="card"><div class="card-title">Что внутри</div><div class="card-text">Инструкция Gem, база знаний, ссылки на NotebookLM, тестовые кейсы, примеры хороших ответов, владелец и дата пересмотра.</div></div>
+      <div class="card"><div class="card-title">Зачем это нужно</div><div class="card-text">Чтобы инструмент не умер в личном чате одного сотрудника, а стал частью рабочего процесса отдела.</div></div>
+      <div class="card"><div class="card-title">Google-контур</div><div class="card-text">Drive для материалов, Gemini/Gems для ассистентов, NotebookLM для источников, Canvas для мини-инструментов.</div></div>
+      <div class="card"><div class="card-title">ChatGPT Projects</div><div class="card-text">Опционально для тех, кто работает в ChatGPT: файлы, инструкции, память проекта и совместная работа в одном пространстве.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Методология командного блока</div>
+    <h2>Это не новая тема. Это упаковка внедрения.</h2>
+    <div class="timeline">
+      <div class="row"><div class="time">Шаг 1</div><div class="row-title">Выбрать пилоты</div><div class="row-text">Не 20 идей. 3-5 процессов, где уже есть заготовки и быстрый эффект.</div></div>
+      <div class="row"><div class="time">Шаг 2</div><div class="row-title">Назначить владельцев</div><div class="row-text">У каждого AI-инструмента должен быть человек, который обновляет материалы и тестирует качество.</div></div>
+      <div class="row"><div class="time">Шаг 3</div><div class="row-title">Ввести тестирование</div><div class="row-text">Обычный кейс, сложный кейс, неполные данные. Без тестов инструмент остаётся игрушкой.</div></div>
+      <div class="row"><div class="time">Шаг 4</div><div class="row-title">Раз в неделю докручивать</div><div class="row-text">Фиксировать, где ошибся, что добавить в базу, как изменить инструкцию.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Красные линии</div>
+    <h2>Что нельзя унести из курса как привычку</h2>
+    <div class="grid two">
+      <div class="card"><div class="card-title">Один бот на всё</div><div class="card-text">Так рождается хаос. Один процесс, один ассистент или один инструмент.</div></div>
+      <div class="card"><div class="card-title">Ответ клиенту без проверки</div><div class="card-text">ИИ готовит черновик. Человек отвечает за финал.</div></div>
+      <div class="card"><div class="card-title">База без владельца</div><div class="card-text">Документы устаревают. Нужен человек и дата пересмотра.</div></div>
+      <div class="card"><div class="card-title">Внедрение без процесса</div><div class="card-text">ИИ не чинит хаос. Он ускоряет уже понятный процесс.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Что получает руководитель</div>
+    <h2>На выходе нужна управляемая картина, а не эмоции после курса</h2>
+    <div class="grid two">
+      <div class="card"><div class="num">1</div><div class="card-title">Обратная связь по обучению</div><div class="card-text">Что было полезно, что непонятно, какие темы нужно разобрать глубже.</div></div>
+      <div class="card"><div class="num">2</div><div class="card-title">Кто начал применять</div><div class="card-text">Какие задачи уже пробовали автоматизировать и что получилось протестировать.</div></div>
+      <div class="card"><div class="num">3</div><div class="card-title">Минимум 5 внедрений</div><div class="card-text">Задача, старый способ, новый способ через ИИ, результат, экономия времени, доработка.</div></div>
+      <div class="card"><div class="num">4</div><div class="card-title">Что делать в июле</div><div class="card-text">Не абстрактный “развивать ИИ”, а конкретные задачи по должностям.</div></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Сертификаты</div>
+    <h2>Финал: каждый скачивает сертификат</h2>
+    <div class="lead">Сертификат появляется в этой же системе после команды ведущего. Имя берётся ровно из того поля, которое участник ввёл на входе.</div>
+    <div class="url">materials.neovida.ai/evrazia/urok-4/certificate/</div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Финальная мысль</div>
+    <h2>AI Boost заканчивается тогда, когда инструменты начинают работать без Альберта</h2>
+    <div class="quote">Gem, база знаний, Canvas и список внедрений, это не финальный отчёт для красоты. Это рабочий слой ГК Евразия на июль.</div>
+  </section>
+</main>
+
+<button class="fullscreen-btn" id="fullscreenBtn" type="button" aria-label="Открыть на весь экран" title="Открыть на весь экран"></button>
+
+<div class="footer">
+  <div>neovida.ai · AI Boost для ГК Евразия</div>
+  <div class="progress" id="progress">1 / 15</div>
+</div>
+
+<script>
+const slides = [...document.querySelectorAll('.slide')];
+let current = 0;
+const progress = document.getElementById('progress');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const expandIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5"/><path d="M3 3l6 6"/><path d="M16 3h5v5"/><path d="M21 3l-6 6"/><path d="M8 21H3v-5"/><path d="M3 21l6-6"/><path d="M16 21h5v-5"/><path d="M21 21l-6-6"/></svg>';
+const collapseIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v6H3"/><path d="M3 9l6-6"/><path d="M15 3v6h6"/><path d="M21 9l-6-6"/><path d="M9 21v-6H3"/><path d="M3 15l6 6"/><path d="M15 21v-6h6"/><path d="M21 15l-6 6"/></svg>';
+function show(index) {
+  current = Math.max(0, Math.min(slides.length - 1, index));
+  slides.forEach((slide, i) => slide.classList.toggle('active', i === current));
+  progress.textContent = `${current + 1} / ${slides.length}`;
+}
+function isFullscreen() {
+  return Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+}
+function syncFullscreenButton() {
+  const active = isFullscreen();
+  fullscreenBtn.innerHTML = active ? collapseIcon : expandIcon;
+  fullscreenBtn.setAttribute('aria-label', active ? 'Выйти из полноэкранного режима' : 'Открыть на весь экран');
+  fullscreenBtn.setAttribute('title', active ? 'Выйти из полноэкранного режима' : 'Открыть на весь экран');
+}
+async function toggleFullscreen() {
+  try {
+    if (isFullscreen()) {
+      if (document.exitFullscreen) await document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      return;
+    }
+    const target = document.documentElement;
+    if (target.requestFullscreen) await target.requestFullscreen();
+    else if (target.webkitRequestFullscreen) target.webkitRequestFullscreen();
+  } catch (error) {
+    console.warn('Fullscreen mode is unavailable', error);
+  }
+}
+fullscreenBtn.addEventListener('click', toggleFullscreen);
+document.addEventListener('fullscreenchange', syncFullscreenButton);
+document.addEventListener('webkitfullscreenchange', syncFullscreenButton);
+document.addEventListener('keydown', (event) => {
+  if (['ArrowRight', 'PageDown', ' '].includes(event.key)) show(current + 1);
+  if (['ArrowLeft', 'PageUp'].includes(event.key)) show(current - 1);
+  if (event.key === 'Home') show(0);
+  if (event.key === 'End') show(slides.length - 1);
+});
+syncFullscreenButton();
+show(0);
+</script>
+</body>
+</html>
