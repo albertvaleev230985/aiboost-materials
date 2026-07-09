@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Промпт-интервьюер для Codex · neovida</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  :root {
+    --bg: #0b0c0d;
+    --panel: #111315;
+    --panel-2: #16191c;
+    --line: rgba(232, 226, 214, 0.13);
+    --line-strong: rgba(232, 226, 214, 0.25);
+    --text: #f0ece2;
+    --muted: #9b9488;
+    --accent: #c77a3a;
+    --accent-2: #e0aa6f;
+    --danger: #d76c5c;
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+      linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px),
+      radial-gradient(circle at 82% 12%, rgba(199, 122, 58, 0.18), transparent 34vw),
+      linear-gradient(135deg, #090a0b 0%, #111416 52%, #090a0b 100%);
+    background-size: 42px 42px, 42px 42px, auto, auto;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    width: min(100%, 980px);
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  .brand {
+    margin-bottom: 24px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 850;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  .hero,
+  .prompt-card,
+  .notice {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: rgba(17, 19, 21, .82);
+  }
+
+  .hero {
+    position: relative;
+    overflow: hidden;
+    padding: 34px;
+    background:
+      linear-gradient(rgba(255,255,255,0.024) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.024) 1px, transparent 1px),
+      radial-gradient(circle at 84% 14%, rgba(224,170,111,.18), transparent 36%),
+      linear-gradient(135deg, rgba(22,25,28,.94), rgba(9,10,11,.96));
+    background-size: 36px 36px, 36px 36px, auto, auto;
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-top: 3px solid var(--accent-2);
+    pointer-events: none;
+  }
+
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    padding: 7px 10px;
+    border: 1px solid rgba(224,170,111,.24);
+    border-radius: 999px;
+    color: var(--accent-2);
+    background: rgba(199,122,58,.08);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .10em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    max-width: 760px;
+    margin: 0;
+    font-size: clamp(36px, 7vw, 70px);
+    line-height: .96;
+    font-weight: 900;
+    letter-spacing: 0;
+  }
+
+  .lead {
+    max-width: 740px;
+    margin: 18px 0 0;
+    color: rgba(240,236,226,.82);
+    font-size: 18px;
+    line-height: 1.55;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 44px;
+    padding: 10px 14px;
+    border: 1px solid rgba(224,170,111,.35);
+    border-radius: var(--radius);
+    color: #fff7ec;
+    background: linear-gradient(135deg, #9d5429, #c77a3a);
+    cursor: pointer;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 850;
+    text-decoration: none;
+  }
+
+  .btn.secondary {
+    color: var(--text);
+    background: rgba(9, 10, 11, .62);
+    border-color: var(--line-strong);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .step {
+    min-height: 126px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: rgba(9,10,11,.54);
+  }
+
+  .step .lucide {
+    color: var(--accent-2);
+    width: 23px;
+    height: 23px;
+  }
+
+  .step strong {
+    display: block;
+    margin-top: 12px;
+    font-size: 15px;
+  }
+
+  .step span {
+    display: block;
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .notice {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    margin-top: 18px;
+    padding: 15px;
+    color: rgba(240,236,226,.84);
+    background: rgba(215,108,92,.08);
+    border-color: rgba(215,108,92,.28);
+  }
+
+  .notice .lucide { color: var(--danger); }
+  .notice strong { color: var(--text); }
+
+  .prompt-card {
+    margin-top: 24px;
+    overflow: hidden;
+    background: rgba(9,10,11,.78);
+    border-color: rgba(224,170,111,.28);
+  }
+
+  .prompt-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(199,122,58,.08);
+  }
+
+  .prompt-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .prompt-title strong {
+    display: block;
+    font-size: 15px;
+  }
+
+  .prompt-title span {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  textarea {
+    display: block;
+    width: 100%;
+    min-height: 72vh;
+    resize: vertical;
+    margin: 0;
+    padding: 18px;
+    border: 0;
+    outline: 0;
+    color: rgba(240,236,226,.92);
+    background: linear-gradient(180deg, rgba(7,8,9,.96), rgba(13,15,17,.98));
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.62;
+  }
+
+  .footer {
+    margin-top: 26px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 760px) {
+    .page { padding: 18px 12px 42px; }
+    .hero { padding: 24px 18px; }
+    .grid { grid-template-columns: 1fr; }
+    h1 { font-size: 40px; }
+    .lead { font-size: 16px; }
+    .prompt-head { align-items: stretch; flex-direction: column; }
+    .actions { flex-direction: column; }
+    .btn { width: 100%; }
+    textarea { font-size: 13px; min-height: 82vh; }
+  }
+</style>
+</head>
+<body>
+  <main class="page">
+    <div class="brand">neovida · Нейропросвещение</div>
+
+    <section class="hero">
+      <div class="kicker"><i data-lucide="id-card"></i> Новая реальность · Codex · подготовка к уроку</div>
+      <h1>Интервьюер для Codex</h1>
+      <p class="lead">Открой ChatGPT, вставь промпт ниже и ответь на вопросы. В конце ChatGPT соберёт большой блок “Личный профиль для Codex”. Этот блок понадобится на уроке, чтобы настроить Codex под твои цели, проекты и стиль работы.</p>
+      <div class="actions">
+        <button class="btn" type="button" id="copyTop"><i data-lucide="copy"></i> Скопировать промпт</button>
+        <button class="btn secondary" type="button" id="downloadTop"><i data-lucide="download"></i> Скачать TXT</button>
+        <a class="btn secondary" href="https://chatgpt.com/" target="_blank" rel="noopener"><i data-lucide="external-link"></i> Открыть ChatGPT</a>
+      </div>
+      <div class="grid">
+        <div class="step"><i data-lucide="message-circle-question"></i><strong>1. Вставь в ChatGPT</strong><span>Не в Codex. Это подготовительное интервью перед настройкой.</span></div>
+        <div class="step"><i data-lucide="corner-down-right"></i><strong>2. Отвечай по одному</strong><span>ChatGPT будет задавать один вопрос за раз и уточнять важное.</span></div>
+        <div class="step"><i data-lucide="copy-check"></i><strong>3. Забери финальный блок</strong><span>Скопируй только “Личный профиль для Codex”, не весь диалог.</span></div>
+      </div>
+    </section>
+
+    <div class="notice">
+      <i data-lucide="shield-alert"></i>
+      <div><strong>Безопасность:</strong> не вставляй пароли, токены, API-ключи, банковские данные, паспорт, точный домашний адрес, чужие персональные данные, закрытые договоры и коммерческие тайны.</div>
+    </div>
+
+    <section class="prompt-card">
+      <div class="prompt-head">
+        <div class="prompt-title"><i data-lucide="scroll-text"></i><div><strong>Промпт для ChatGPT</strong><span>Скопируй целиком или скачай TXT-файл</span></div></div>
+        <div class="actions" style="margin-top:0">
+          <button class="btn" type="button" id="copyPrompt"><i data-lucide="copy"></i> Скопировать</button>
+          <button class="btn secondary" type="button" id="downloadPrompt"><i data-lucide="download"></i> Скачать TXT</button>
+        </div>
+      </div>
+      <textarea id="promptText" readonly>Ты мой промпт-интервьюер. Твоя задача - провести меня через короткое, но глубокое интервью и собрать большой структурированный текст “Личный профиль для Codex”.
+
+Зачем это нужно:
+Я прохожу обучение по ИИ и буду работать с Codex. Codex должен лучше понимать меня: чем я занимаюсь, какие у меня проекты, цели, стиль работы, ограничения, вкусы, привычки, личные интересы и какой результат мне нужен. На основе твоего финального текста я потом настрою постоянный контекст Codex.
+
+Главное правило интервью:
+Задавай строго один вопрос за раз.
+После моего ответа коротко зафиксируй, что понял, и задай следующий вопрос.
+Не выдавай сразу список вопросов.
+Не перескакивай к финальному тексту, пока не соберёшь достаточно данных.
+
+Стиль:
+Пиши на русском, на “ты”, понятно и по делу.
+Не используй канцелярит, психологический туман и длинные лекции.
+Если я отвечаю коротко, мягко задай уточняющий вопрос.
+Если я не хочу отвечать на личный вопрос, разреши написать “пропустить” и двигайся дальше.
+Ничего не выдумывай. Если данных нет, в финале напиши “не указано”.
+
+Безопасность:
+Не спрашивай пароли, API-ключи, токены, банковские данные, паспортные данные, точный домашний адрес, чужие персональные данные, закрытые договоры и коммерческие тайны.
+Если я случайно присылаю чувствительные данные, попроси удалить или заменить их обобщением.
+
+Что нужно выяснить:
+1. Кто я и чем занимаюсь сейчас.
+2. Моя сфера, профессия, бизнес, должность или роль.
+3. Какие продукты, услуги, проекты или идеи я хочу развивать.
+4. Кто моя аудитория, клиенты, команда или пользователи.
+5. Какие задачи я хочу поручать Codex.
+6. Какие результаты я хочу получить за ближайшие 1-3 месяца.
+7. Какие результаты важны на горизонте года.
+8. Какие навыки у меня уже есть и в чём я новичок.
+9. Какие инструменты я уже использую: ChatGPT, Gemini, Telegram, Notion, Google Drive, таблицы, сайты, CRM, конструкторы, дизайн, кодовые редакторы.
+10. Как мне удобнее учиться: короткими шагами, через объяснение, через примеры, через практику, через контрольные вопросы.
+11. Какой стиль общения мне подходит: мягко, жёстко, кратко, подробно, с юмором, без юмора, с прямыми рекомендациями.
+12. Что меня раздражает в ответах ИИ.
+13. Какие визуальные, текстовые и продуктовые вкусы у меня есть: что нравится, что выглядит дёшево, какие бренды или работы считаю сильными.
+14. Какие ограничения важно учитывать: время, деньги, техника, уровень навыков, доступы, язык, страна, VPN, платные сервисы.
+15. Какие личные интересы могут помогать в работе: спорт, путешествия, здоровье, семья, хобби, обучение, творчество. Спрашивай это уважительно и только в той глубине, которую я готов дать.
+16. Есть ли цели по здоровью, спорту, режиму, путешествиям или личной жизни, которые Codex может учитывать при планировании задач.
+17. Как мне лучше помогать не бросать начатое: напоминания, маленькие шаги, жёсткий фокус, список рисков, дедлайны, разбор ошибок.
+18. Какие темы нельзя трогать или нужно трогать осторожно.
+
+Логика интервью:
+Начни с вопроса: “Расскажи в 5-7 предложениях, кто ты, чем занимаешься и зачем тебе Codex”.
+Дальше иди по смыслу, а не механически.
+Всего задай примерно 25-40 вопросов, но не растягивай интервью без необходимости.
+После каждого 6-8 ответа делай короткую промежуточную сводку: что уже понятно и какие блоки ещё осталось уточнить.
+
+Финал:
+Когда данных достаточно, скажи: “Профиль собран. Ниже финальный блок для Codex”.
+Затем выдай один большой аккуратный текст в код-блоке, чтобы я мог скопировать его целиком.
+
+Финальный блок должен называться:
+ЛИЧНЫЙ ПРОФИЛЬ ДЛЯ CODEX
+
+Структура финального блока:
+1. Кто я
+2. Чем занимаюсь
+3. Мои продукты, услуги, проекты и идеи
+4. Аудитория, клиенты, команда или пользователи
+5. Цели на 1-3 месяца
+6. Цели на год
+7. Задачи, которые я хочу поручать Codex
+8. Мой уровень навыков и технический контекст
+9. Инструменты и сервисы, которыми я пользуюсь
+10. Как со мной общаться
+11. Как меня обучать
+12. Как принимать решения и предлагать варианты
+13. Мои вкусы: что нравится
+14. Мои антипримеры: что выглядит дёшево или раздражает
+15. Личные интересы, режим, спорт, путешествия и другие важные контексты
+16. Ограничения, риски и стоп-темы
+17. Что Codex должен делать перед началом нетривиальной задачи
+18. Что Codex не должен делать без моего подтверждения
+19. Какой результат для меня считается “готово”
+20. Короткая версия профиля на 10-15 строк
+
+Внутри финального блока пиши так, как будто это инструкция для будущего AI-агента, который будет помогать мне делать реальные проекты. Не украшай, не продавай, не сочиняй. Нужна рабочая точность.</textarea>
+    </section>
+
+    <div class="footer">
+      <strong>neovida · Нейропросвещение</strong><br>
+      Новая реальность · подготовка к мастер-уроку по Codex · 2026
+    </div>
+  </main>
+
+<script>
+  const promptText = document.getElementById('promptText');
+
+  function getPrompt() {
+    return promptText.value.trim();
+  }
+
+  async function copyPrompt(button) {
+    await navigator.clipboard.writeText(getPrompt());
+    const original = button.innerHTML;
+    button.innerHTML = '<i data-lucide="check"></i> Скопировано';
+    if (window.lucide) window.lucide.createIcons();
+    setTimeout(() => {
+      button.innerHTML = original;
+      if (window.lucide) window.lucide.createIcons();
+    }, 1800);
+  }
+
+  function downloadPrompt() {
+    const blob = new Blob([getPrompt() + '\n'], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'prompt-interviewer-codex.txt';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('copyTop').addEventListener('click', (event) => copyPrompt(event.currentTarget));
+  document.getElementById('copyPrompt').addEventListener('click', (event) => copyPrompt(event.currentTarget));
+  document.getElementById('downloadTop').addEventListener('click', downloadPrompt);
+  document.getElementById('downloadPrompt').addEventListener('click', downloadPrompt);
+
+  if (window.lucide) window.lucide.createIcons();
+</script>
+</body>
+</html>
