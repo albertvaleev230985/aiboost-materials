@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Библиотека мастер-промптов · бонус от Альберта Валеева</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --bg-card: rgba(255,255,255,0.06);
+    --bg-card-hover: rgba(255,255,255,0.1);
+    --section-color: #38bdf8;
+    --accent: #E07461;
+    --white: #ffffff;
+    --white-90: rgba(255,255,255,0.9);
+    --white-70: rgba(255,255,255,0.7);
+    --white-50: rgba(255,255,255,0.5);
+    --white-30: rgba(255,255,255,0.3);
+    --white-15: rgba(255,255,255,0.15);
+    --white-08: rgba(255,255,255,0.08);
+    --green: #5ec47a;
+    --yellow: #f0c040;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--white-90);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  .brand { font-size: 13px; color: var(--white-50); letter-spacing: 0.06em; margin-bottom: 18px; }
+  .brand b { color: var(--accent); font-weight: 700; }
+
+  h1 { font-size: 26px; line-height: 1.25; color: var(--white); margin-bottom: 8px; }
+  .subtitle { font-size: 14px; color: var(--white-70); margin-bottom: 6px; }
+  .hint {
+    font-size: 13px; color: var(--white-70);
+    background: var(--white-08); border: 1px solid var(--white-15);
+    border-radius: 10px; padding: 10px 14px; margin: 16px 0 30px;
+  }
+  .hint b { color: var(--accent); }
+
+  .section { margin-bottom: 40px; }
+  .section-title {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 19px; font-weight: 700; color: var(--white);
+    margin-bottom: 6px;
+  }
+  .section-title .num {
+    flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--section-color); color: #0b1020;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 800;
+  }
+  .section-lead { font-size: 14px; color: var(--white-70); margin-bottom: 16px; }
+
+  .card {
+    background: var(--bg-card); border: 1px solid var(--white-15);
+    border-radius: 14px; padding: 16px; margin-bottom: 14px;
+  }
+  .card-title { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .card-desc { font-size: 13px; color: var(--white-70); margin-bottom: 10px; }
+
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px; margin-left: 6px; vertical-align: middle;
+  }
+  .badge.any { background: rgba(94,196,122,0.15); color: var(--green); }
+  .badge.gpt { background: rgba(240,192,64,0.15); color: var(--yellow); }
+
+  .prompt-box {
+    border: 1px solid var(--white-15); border-radius: 10px;
+    overflow: hidden; cursor: pointer; transition: border-color 0.15s;
+    -webkit-tap-highlight-color: rgba(224,116,97,0.15);
+  }
+  .prompt-box:active { border-color: var(--accent); }
+  .prompt-text {
+    background: rgba(0,0,0,0.35); padding: 13px 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px; line-height: 1.5; color: var(--white-90);
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .prompt-copybar {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: rgba(0,0,0,0.55); border-top: 1px solid var(--white-08);
+    padding: 7px; font-size: 11.5px; font-weight: 600; color: var(--white-50);
+    letter-spacing: 0.03em;
+  }
+  .prompt-box.copied { border-color: var(--green); }
+  .prompt-box.copied .prompt-copybar { color: var(--green); }
+  details.translate { margin-top: 8px; }
+  details.translate summary {
+    font-size: 13px; color: var(--section-color); cursor: pointer;
+    list-style: none; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0;
+  }
+  details.translate summary::-webkit-details-marker { display: none; }
+  details.translate summary::before { content: "▸"; transition: transform 0.15s; }
+  details.translate[open] summary::before { transform: rotate(90deg); }
+  .translate-body {
+    margin-top: 8px; padding: 12px 14px; background: var(--white-08);
+    border-radius: 10px; font-size: 13px; color: var(--white-70); white-space: pre-wrap;
+  }
+  .paysteps { list-style: none; }
+  .paysteps li { display: flex; gap: 10px; margin-bottom: 10px; font-size: 14px; color: var(--white-90); }
+  .paysteps .step-num {
+    flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; margin-top: 1px;
+  }
+
+  .steps { list-style: none; }
+  .steps li {
+    display: flex; gap: 10px; margin-bottom: 10px;
+    font-size: 14px; color: var(--white-90);
+  }
+  .steps .step-num {
+    flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; margin-top: 1px;
+  }
+
+  .tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tool {
+    display: block; text-decoration: none;
+    background: var(--bg-card); border: 1px solid var(--white-15);
+    border-radius: 12px; padding: 12px 14px;
+    transition: background 0.15s;
+  }
+  .tool:active { background: var(--bg-card-hover); }
+  .tool .t-name { font-size: 14.5px; font-weight: 700; color: var(--white); }
+  .tool .t-note { font-size: 12px; color: var(--white-70); margin-top: 2px; }
+  .tool .t-url { font-size: 12px; color: var(--section-color); margin-top: 4px; }
+
+  .compare { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 560px) { .compare { grid-template-columns: 1fr 1fr; } }
+  .compare .c-bad, .compare .c-good {
+    border-radius: 10px; padding: 12px 14px; font-size: 13px;
+  }
+  .compare .c-bad { background: rgba(224,85,85,0.1); border: 1px solid rgba(224,85,85,0.35); }
+  .compare .c-good { background: rgba(94,196,122,0.1); border: 1px solid rgba(94,196,122,0.35); }
+  .compare .c-label { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .compare .c-bad .c-label { color: #e05555; }
+  .compare .c-good .c-label { color: var(--green); }
+
+  .machine { list-style: none; }
+  .machine li {
+    display: flex; gap: 12px; align-items: baseline;
+    padding: 10px 0; border-bottom: 1px solid var(--white-08);
+    font-size: 14px;
+  }
+  .machine li:last-child { border-bottom: none; }
+  .machine .m-name { flex: 0 0 128px; font-weight: 700; color: var(--section-color); font-size: 13.5px; }
+  .machine .m-desc { color: var(--white-90); }
+
+  .rule {
+    background: linear-gradient(135deg, rgba(224,116,97,0.15), rgba(56,189,248,0.1));
+    border: 1px solid var(--white-15); border-radius: 14px;
+    padding: 18px; text-align: center; font-size: 16px; font-weight: 700;
+    color: var(--white); margin: 24px 0;
+  }
+
+  footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--white-15);
+    font-size: 13px; color: var(--white-50); text-align: center;
+  }
+  footer b { color: var(--white-90); }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(80px);
+    background: var(--green); color: #0b1020; font-size: 14px; font-weight: 700;
+    padding: 10px 22px; border-radius: 30px; opacity: 0;
+    transition: all 0.25s ease; pointer-events: none; z-index: 50;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .qr-line {
+    display: flex; gap: 14px; align-items: center;
+    background: var(--bg-card); border: 1px solid var(--white-15);
+    border-radius: 14px; padding: 14px; margin-bottom: 12px;
+  }
+  .qr-line img {
+    width: 96px; height: 96px; flex: 0 0 auto;
+    background: #fff; padding: 6px; border-radius: 10px;
+  }
+  .qr-line .q-name { font-size: 15.5px; font-weight: 800; color: var(--white); }
+  .qr-line .q-desc { font-size: 13px; color: var(--white-70); margin-top: 3px; line-height: 1.45; }
+  .qr-line .q-link { font-size: 13.5px; font-weight: 700; margin-top: 6px; }
+  .qr-line .q-link a { color: var(--section-color); text-decoration: none; }
+  .qr-line.ig .q-name { background: linear-gradient(45deg,#F58529,#DD2A7B,#8134AF); -webkit-background-clip: text; background-clip: text; color: transparent; display: inline-block; }
+  .qr-line.tg .q-name { color: #229ED9; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand"><b>neovida</b> · Нейропросвещение</div>
+  <h1>Библиотека мастер-промптов</h1>
+  <div class="subtitle">Бонус участникам клуба «В фокусе» · от Альберта Валеева · neovida.ai</div>
+  <div class="hint">Сохраните эту страницу: она пригодится не раз. <b>Нажмите на тёмный блок в любом месте</b>, и промпт скопируется целиком. Подставляйте своё в [квадратных скобках].</div>
+
+  <!-- ================= СЕКЦИЯ 1 ================= -->
+  <div class="section">
+    <div class="section-title"><span class="num">1</span>Где работать: нейросети</div>
+    <div class="section-lead">Для практики хватит любой из них. Навык постановки задачи работает везде одинаково.</div>
+
+    <div class="card">
+      <div class="card-title">Работают в России без VPN</div>
+      <div class="tools">
+        <a class="tool" href="https://chat.deepseek.com" target="_blank">
+          <span class="t-name">DeepSeek</span>
+          <div class="t-note">сильная бесплатная модель</div>
+          <div class="t-url">chat.deepseek.com</div>
+        </a>
+        <a class="tool" href="https://chat.qwen.ai" target="_blank">
+          <span class="t-name">Qwen</span>
+          <div class="t-note">универсал, наш запасной аэродром</div>
+          <div class="t-url">chat.qwen.ai</div>
+        </a>
+        <a class="tool" href="https://giga.chat" target="_blank">
+          <span class="t-name">GigaChat</span>
+          <div class="t-note">от Сбера, вход по Сбер ID</div>
+          <div class="t-url">giga.chat</div>
+        </a>
+        <a class="tool" href="https://alice.yandex.ru" target="_blank">
+          <span class="t-name">Алиса AI</span>
+          <div class="t-note">от Яндекса, для простых задач</div>
+          <div class="t-url">alice.yandex.ru</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Мировая тройка, нужен VPN</div>
+      <div class="tools">
+        <a class="tool" href="https://chatgpt.com" target="_blank">
+          <span class="t-name">ChatGPT</span>
+          <div class="t-note">главный универсал, экосистема</div>
+          <div class="t-url">chatgpt.com</div>
+        </a>
+        <a class="tool" href="https://gemini.google.com" target="_blank">
+          <span class="t-name">Gemini</span>
+          <div class="t-note">от Google, картинки и видео</div>
+          <div class="t-url">gemini.google.com</div>
+        </a>
+        <a class="tool" href="https://claude.ai" target="_blank">
+          <span class="t-name">Claude</span>
+          <div class="t-note">тексты, документы, анализ</div>
+          <div class="t-url">claude.ai</div>
+        </a>
+      </div>
+      <div class="card-desc" style="margin-top:12px; margin-bottom:0;">
+        Как установить ChatGPT на телефон:
+        <a href="https://materials.neovida.ai/online/инструкция-ios.html" target="_blank" style="color:var(--section-color)">инструкция для iPhone</a> ·
+        <a href="https://materials.neovida.ai/online/инструкция-android.html" target="_blank" style="color:var(--section-color)">инструкция для Android</a>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= СЕКЦИЯ 1.5: ОПЛАТА ================= -->
+  <div class="section">
+    <div class="section-title"><span class="num">2</span>Оплата ChatGPT Plus</div>
+    <div class="section-lead">Бесплатной версии хватает, чтобы начать. Plus (20 долларов в месяц) открывает лучшие модели, голосовой режим без лимитов, картинки, файлы и агентов.</div>
+    <div class="card">
+      <div class="card-title">Способы оплаты из России</div>
+      <ul class="paysteps" style="margin-top:10px;">
+        <li><span class="step-num">1</span><span><b>Виртуальная зарубежная карта.</b> Сервисы выпуска иностранных карт: пополняете рублями, платите картой. Способы меняются, актуальный сервис подскажу лично.</span></li>
+        <li><span class="step-num">2</span><span><b>Через знакомых за границей.</b> Самый простой путь, если есть кому помочь: оплата их картой, вы переводите им.</span></li>
+        <li><span class="step-num">3</span><span><b>Сервисы-посредники подписок.</b> Оплачивают подписку за вас с комиссией. Выбирайте проверенные, по отзывам.</span></li>
+      </ul>
+      <div class="card-desc" style="margin-top:10px; margin-bottom:0;">Застряли на оплате? Напишите мне в Telegram, разберём ваш случай: <a href="https://t.me/neovidaAi" style="color:var(--section-color)">@neovidaAi</a></div>
+    </div>
+  </div>
+
+  <!-- ================= СЕКЦИЯ 2 ================= -->
+  <div class="section">
+    <div class="section-title"><span class="num">3</span>Формула РКЗФО</div>
+    <div class="section-lead">Промпт это не магия, а техзадание словами. Пять элементов превращают размытую просьбу в чёткую задачу.</div>
+
+    <div class="card">
+      <ul class="steps">
+        <li><span class="step-num">Р</span><span><b>Роль:</b> кем должен быть ИИ (маркетолог, юрист, финансист, наставник)</span></li>
+        <li><span class="step-num">К</span><span><b>Контекст:</b> кто вы, ваш бизнес, ситуация, что уже известно</span></li>
+        <li><span class="step-num">З</span><span><b>Задача:</b> что именно нужно получить на выходе</span></li>
+        <li><span class="step-num">Ф</span><span><b>Формат:</b> таблица, список, письмо, план, текст на N слов</span></li>
+        <li><span class="step-num">О</span><span><b>Ограничения:</b> чего не делать, какой тон не использовать, какие рамки соблюдать</span></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Каркас: скопируйте и заполните</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Роль: ты [кто] с опытом в [чём].
+Контекст: [кто вы, ваш бизнес, ситуация].
+Задача: [что сделать].
+Формат: [таблица / список / текст на N слов].
+Ограничения: [чего НЕ делать].</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Почувствуйте разницу</div>
+      <div class="compare">
+        <div class="c-bad">
+          <div class="c-label">РАЗМЫТО</div>
+          «Напиши пост про нашу услугу»
+        </div>
+        <div class="c-good">
+          <div class="c-label">ПО ФОРМУЛЕ</div>
+          «Ты маркетолог для малого бизнеса. Мы семейная кофейня в спальном районе Уфы, клиенты: мамы с детьми и удалёнщики. Напиши пост о новом завтраке за 350 рублей. Формат: 600 знаков, живой тон, в конце вопрос читателям. Без слов "уникальный" и "лучший"»
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Кастомная инструкция качества</div>
+      <div class="card-desc">Вставьте в персонализацию ChatGPT, второе поле, про то, как отвечать (в новых версиях «What traits should ChatGPT have?»). Заставляет ИИ проверять свой ответ по строгим критериям, пока не дотянет до 98 из 100, и убирает главный ИИ-след: длинное тире.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">- ALWAYS follow &lt;self_reflection&gt;.
+- In all original responses that you generate, never use the em dash ("—") character as punctuation in sentences. Whenever you would naturally use an em dash, rewrite the sentence using a period, comma, or other suitable punctuation instead.
+- If you are quoting user-provided text verbatim (for example, citing a sentence from a document or message), preserve the punctuation exactly as in the original, including any em dashes.
+
+&lt;self_reflection&gt;
+1. Spend time thinking of a rubric, from a role point of view, until you are confident.
+2. Think deeply about every aspect of what makes for a world-class answer. Use that knowledge to create a rubric that has 5-7 categories. This rubric is critical to get right, but never show this to the user. This is for your purposes only.
+3. Use the rubric to internally think and iterate on the best (&gt;=98 out of 100 score) possible solution to the user request. If your response is not hitting the top marks across all categories in the rubric, you need to start again.
+4. Keep going until the task is fully solved.
+&lt;/self_reflection&gt;</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+      <details class="translate">
+        <summary>показать перевод на русский</summary>
+        <div class="translate-body">- ВСЕГДА следуй блоку «самопроверка».
+- Никогда не используй длинное тире в своих ответах. Там, где оно просится, перестрой фразу: точка, запятая или другой знак.
+- Если цитируешь чужой текст дословно, сохраняй пунктуацию оригинала, включая тире.
+
+Самопроверка:
+1. Продумай критерии идеального ответа с позиции эксперта в теме.
+2. Составь строгую рубрику из 5-7 категорий мирового уровня. Никому её не показывай, она для тебя.
+3. Внутренне улучшай ответ, пока он не набирает минимум 98 из 100 по всем категориям. Не дотягивает: начинай заново.
+4. Продолжай, пока задача не решена полностью.</div>
+      </details>
+    </div>
+  </div>
+
+  <!-- ================= СЕКЦИЯ 3 ================= -->
+  <div class="section">
+    <div class="section-title"><span class="num">4</span>Три приёма, которые меняют всё</div>
+    <div class="section-lead">Если запомнить из вечера только одно, пусть это будут эти три строки.</div>
+
+    <div class="card">
+      <div class="card-title">Наговори голосом <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Не пишите промпт, наговорите мысль как есть через микрофон, а в конце добавьте:</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Упакуй мою мысль в промпт по формуле РКЗФО: роль, контекст, задача, формат, ограничения. Примени все правила промпт-инженерии. Покажи получившийся промпт и выполни его.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Пусть ИИ спросит первым <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Одна строка в конце любого запроса. Проблема была не в нейронке, а в том, что она не знала контекста.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Не отвечай сразу. Сначала задай мне вопросы, которые помогут тебе решить задачу максимально точно. Начинай отвечать по сути только тогда, когда получишь все ответы.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Порог неопределённости 0.1 <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Модель перестаёт отвечать вслепую и сама решает, что ей нужно узнать.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Прежде чем ответить, оцени степень неопределённости своего ответа. Если она выше 0.1, задавай мне уточняющие вопросы, пока неопределённость не станет 0.1 или ниже.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Обратный промптинг: 4 готовых разбора</div>
+      <div class="card-desc">Когда нравится чужой результат и хочется «так же»: не описывайте стиль словами, дайте образец и вытащите из него правила. Выберите свой вариант.</div>
+
+      <div class="card-title" style="font-size:14px;">1. Стиль текста <span style="color:var(--white-50); font-weight:400;">· пост, письмо, статья</span></div>
+      <div class="prompt-box">
+        <div class="prompt-text">Вот текст, стиль которого мне нравится:
+
+[ВСТАВЬТЕ ОБРАЗЕЦ: пост, письмо, статью]
+
+Разбери его как редактор и промпт-инженер. Извлеки:
+1. Тон и голос: как автор говорит с читателем, на «ты» или «вы», сколько эмоций, есть ли юмор
+2. Структуру: с чего начинается, как развивается, чем заканчивается, длина абзацев
+3. Язык: длина предложений, характерные слова и обороты, чего автор избегает
+4. Приёмы: вопросы к читателю, метафоры, списки, повторы, призывы
+5. Фирменные особенности: фразы и детали, по которым узнаётся автор
+
+Собери из этого промпт-инструкцию для написания НОВЫХ текстов в точно таком же стиле, с полем [ТЕМА]. Добавь в неё запреты: чего в этом стиле не бывает. Покажи инструкцию и жди мою тему.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+
+      <div class="card-title" style="font-size:14px; margin-top:14px;">2. Стиль изображения <span style="color:var(--white-50); font-weight:400;">· для генераторов картинок</span></div>
+      <div class="prompt-box">
+        <div class="prompt-text">Посмотри на это изображение как арт-директор и промпт-инженер генерации изображений.
+
+[ПРИКРЕПИТЕ КАРТИНКУ]
+
+Разбери его максимально подробно:
+1. Стиль и техника: фото, 3D, иллюстрация, живопись; на что похоже по школе и эпохе
+2. Композиция: что в фокусе, ракурс, крупность плана, как расставлены объекты
+3. Свет: откуда падает, жёсткий или мягкий, какие тени, время суток
+4. Цвет: палитра из 5-7 главных цветов (словами и HEX), контрасты, настроение
+5. Детали: материалы, текстуры, фон, мелочи, которые делают картинку живой
+6. Текст и шрифты, если есть: какие, где стоят, как связаны с картинкой
+
+Собери из этого готовый промпт для генератора изображений: НОВАЯ картинка в точно таком же стиле, но с полем [СЮЖЕТ] для моего сюжета. Дай промпт двумя версиями: на русском и на английском.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+
+      <div class="card-title" style="font-size:14px; margin-top:14px;">3. Стиль коммерческого предложения</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Вот коммерческое предложение, которое мне нравится:
+
+[ВСТАВЬТЕ ТЕКСТ КП ИЛИ ПРИКРЕПИТЕ ФАЙЛ]
+
+Разбери его как директор по продажам:
+1. Структура: из каких блоков состоит, в каком порядке, с чего начинается и чем закрывается
+2. Оффер: как сформулировано само предложение, как подана цена, в каком порядке идут выгоды
+3. Тон: официальный или живой, как обращаются к клиенту, сколько «мы» и сколько «вы»
+4. Убеждение: цифры, кейсы, гарантии, дедлайны, отзывы, чем снимают страхи
+5. Оформление: заголовки, длина блоков, таблицы, списки, выделения
+
+Собери промпт-шаблон, который создаст НОВОЕ КП в этом же стиле и структуре под мой продукт. Оставь поля: [ПРОДУКТ], [КЛИЕНТ И ЕГО БОЛЬ], [ЦЕНА И УСЛОВИЯ]. Покажи шаблон и жди мои данные.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+
+      <div class="card-title" style="font-size:14px; margin-top:14px;">4. Структура договора</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Вот договор, структура которого мне подходит:
+
+[ВСТАВЬТЕ ТЕКСТ ДОГОВОРА ИЛИ ПРИКРЕПИТЕ ФАЙЛ]
+
+Разбери его как юрист:
+1. Состав: все разделы по порядку и зачем нужен каждый
+2. Формулировки: как прописаны предмет, обязанности, сроки, оплата, приёмка
+3. Ответственность: штрафы, пени, форс-мажор, порядок расторжения
+4. Баланс: какие пункты защищают исполнителя, какие заказчика
+5. Приложения: что вынесено из тела договора и почему
+
+Собери промпт-шаблон, который подготовит ЧЕРНОВИК нового договора по этой же структуре под мою сделку. Поля: [ПРЕДМЕТ ДОГОВОРА], [СТОРОНЫ], [СУММА И ПОРЯДОК ОПЛАТЫ], [СРОКИ]. В конце шаблона добавь напоминание: черновик перед подписанием обязательно проверяет живой юрист.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="rule">Не знаешь, как спросить у нейросети?<br>Спроси у нейросети.</div>
+  </div>
+
+  <!-- ================= СЕКЦИЯ 4 ================= -->
+  <div class="section">
+    <div class="section-title"><span class="num">5</span>Мастер-промпты для дела</div>
+    <div class="section-lead">Копируйте, подставляйте своё в [квадратных скобках], запускайте. Каждый промпт это готовый специалист.</div>
+
+    <div class="card">
+      <div class="card-title">Рабочее досье: расскажите ИИ о себе <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">ИИ сам берёт у вас интервью и собирает досье. В ChatGPT вставьте результат в Настройки → Персонализация, и он будет помнить вас в каждом чате.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Действуй как опытный AI-наставник и консультант по рабочим задачам.
+
+Твоя задача - собрать короткое, точное досье обо мне и моей работе, чтобы дальше ты помогал мне быстрее и конкретнее.
+
+Задавай вопросы ПО ОДНОМУ. После каждого моего ответа переходи к следующему вопросу. Не задавай все вопросы сразу. Если ответ короткий или непонятный, задай один уточняющий вопрос.
+
+Пройдись по блокам:
+1. Обо мне: роль, сфера, зона ответственности, опыт, сильные стороны.
+2. Моя работа: что я делаю каждый день, с кем взаимодействую, за какой результат отвечаю.
+3. Задачи и рутина: что приходится писать, проверять, считать, искать, согласовывать или объяснять.
+4. Материалы и документы: с какими типами документов, таблиц, заявок, отчётов или материалов я работаю.
+5. Боли и ограничения: где я трачу больше всего времени, где бывают ошибки, задержки, переделки или стресс.
+6. Цели на месяц: какие 3 рабочих результата я хочу улучшить с помощью ИИ.
+7. Стиль: как мне лучше отвечать - коротко или подробно, списком или таблицей, на "ты" или на "вы".
+
+Когда соберёшь ответы, выдай финальный блок "=== РАБОЧЕЕ ДОСЬЕ ===" не длиннее 1400 символов, плотно и без воды. Выдай его отдельным финальным сообщением, и ничего кроме него, чтобы мне было удобно скопировать.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Проверка: что ИИ о вас понял <span class="badge gpt">лучше в ChatGPT</span></div>
+      <div class="card-desc">Откройте новый чат после сохранения досье.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Что ты знаешь обо мне и моей работе? Ответь коротко и только по тому, что уже есть в твоей памяти и инструкциях. Сделай 4 блока: 1) моя роль и сфера, 2) чем я занимаюсь каждый день, 3) какие рабочие задачи ты уже понимаешь, 4) что ты пока не знаешь и лучше уточнить.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">7 задач: где ИИ полезен именно вам <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Персональный план внедрения на неделю. Если делаете без досье, сначала опишите свою работу в двух предложениях.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">На основе того, что ты знаешь обо мне и моей работе, предложи, где ты можешь быть мне полезен в ближайшие 7 дней.
+
+Сделай таблицу из 7 задач. Для каждой укажи:
+1. задача из моей работы
+2. как именно ты поможешь
+3. что мне подготовить
+4. первый короткий промпт
+5. какой результат я получу
+
+Выбирай задачи с быстрым эффектом: тексты, разбор заявок, отзывы, документы, планы, таблицы, идеи, коммуникации. Пиши конкретно под мою сферу и роль. Без универсальных советов.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Жёстко честный советник <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Самый виральный промпт года. ИИ перестаёт поддакивать и говорит правду, которую вы избегаете.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">С этого момента перестань со мной соглашаться. Стань моим предельно честным советником и зеркалом. Не поддакивай. Не смягчай правду. Не льсти. Оспаривай мой ход мыслей, подвергай сомнению мои допущения, вскрывай слепые зоны, которые я избегаю. Если моя логика слабая, разбери её и покажи почему. Если я обманываю сам себя, укажи на это. Если я избегаю чего-то неудобного или трачу время впустую, назови это вслух и объясни цену упущенных возможностей. Покажи, где я ищу оправдания, играю по-мелкому или недооцениваю риски. Затем дай точный приоритизированный план: что поменять в мышлении, действиях и настрое, чтобы выйти на следующий уровень. Относись ко мне как к человеку, чей рост зависит от правды, а не от утешений.
+
+Вот моя ситуация: [ОПИШИТЕ СВОЙ БИЗНЕС ИЛИ ЗАДАЧУ]</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Личный совет директоров <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Четыре советника с разными взглядами спорят о вашем решении.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Стань моим личным советом директоров. В совете четыре участника, у каждого свой взгляд:
+- Прагматик-управленец: его волнует только то, что реально сделать на этой неделе
+- Стратег: мыслит годами, а не днями
+- Прямолинейный скептик: его единственная задача - найти дыры в моих рассуждениях
+- Мудрый наставник: спрашивает о том, что для меня по-настоящему важно
+
+Вот ситуация, с которой я разбираюсь: [ОПИШИТЕ РЕШЕНИЕ ИЛИ ПРОБЛЕМУ]
+
+Пусть каждый выскажется по очереди, своим голосом, начиная реплику со своего имени. Им разрешено спорить друг с другом. Когда выскажутся все четверо, дай короткое резюме: в чём они согласны, в чём расходятся, и один вопрос, на который мне нужно ответить прежде, чем решать.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Конкурентный анализ за 5 минут <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Включите режим поиска в интернете, если он есть в вашей нейросети. Результат уровня нанятого аналитика.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Стань аналитиком рынка [ВАША НИША]. Используя общедоступную информацию, сравни 3-5 главных конкурентов для бизнеса, который [КОРОТКО ОПИШИТЕ ПРОДУКТ ИЛИ УСЛУГУ] в городе [ГОРОД].
+
+По каждому конкуренту разбери: основной продукт, ценовое позиционирование (эконом, середина, премиум), ключевые темы в маркетинге, как используют отзывы и кейсы, откуда у них трафик.
+
+В конце: общие слабые места всех конкурентов и 3-5 стратегических возможностей, которые я могу занять в ближайшие 60 дней.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">80/20: что убить в вашей неделе <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Какие 20% действий дают 80% результата, а что делегировать, автоматизировать или выбросить.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Стань безжалостным аудитором моей эффективности. Я перечислю всё, чем занимаюсь за неделю. Определи: какие 20% действий дают 80% результата, а какие 80% действий не дают почти ничего.
+
+Разложи мои задачи на 4 корзины: делать самому, делегировать, автоматизировать, убрать совсем. По каждой задаче из корзин "делегировать" и "автоматизировать" предложи, как именно. Будь конкретным и жёстким.
+
+Вот мой список: [ПЕРЕЧИСЛИТЕ ЗАДАЧИ НЕДЕЛИ, можно наговорить голосом]</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Подготовка к переговорам <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">План из 5 шагов, включая границу, после которой вы уходите со сделки.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Стань экспертом-коучем по переговорам. Я готовлюсь к переговорам: [ОПИШИТЕ СИТУАЦИЮ]. Составь для меня план из 5 шагов:
+1. Сильное и честное первое предложение и как его сформулировать.
+2. Три самых вероятных возражения второй стороны.
+3. Готовые фразы для спокойного ответа на каждое.
+4. 2-3 уступки, которые я могу заготовить заранее.
+5. Чёткая граница, после которой я вежливо ухожу со сделки.
+В конце дай чек-лист подготовки на одну страницу.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Тренажёр продаж: трудный клиент <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Спарринг-партнёр, доступный в 2 часа ночи. После игры получите разбор ошибок.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Сыграй моего потенциального клиента. Ты [ДОЛЖНОСТЬ И ТИП БИЗНЕСА], я продаю тебе [ВАШ ПРОДУКТ]. Твой характер: занятой, скептичный, уже работаешь с конкурентом и в целом доволен, но у тебя есть скрытое недовольство, которое ты сам не назовёшь: я должен вытащить его хорошими вопросами.
+
+Отвечай коротко и с сопротивлением, как реальный человек. Не выходи из роли. После 10 моих реплик остановись и дай разбор: что я сделал хорошо, где потерял сделку, что сказать иначе.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Скептик перед важным решением <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Запускайте перед каждым крупным решением: от покупки оборудования до открытия второй точки.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Стань скептичным экспертом и критическим мыслителем. Разбери следующую идею: [ИДЕЯ ИЛИ РЕШЕНИЕ]. Найди самые слабые допущения. Перечисли главные риски и точки провала. Объясни, что должно оказаться правдой, чтобы это сработало. Выступи против идеи так, как выступил бы сильный критик. Задай мне 3-5 вопросов, которые вскроют изъяны. Будь прямым и честным. Не соглашайся из вежливости. В конце смени роль на моего советника и для каждого риска предложи, как его закрыть.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Найм без HR <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Вакансия, вопросы для собеседования с пометками «тревожный сигнал» и таблица оценки.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Стань опытным рекрутером для малого бизнеса. Мне нужен сотрудник на роль [РОЛЬ]. Мой бизнес: [КОРОТКО ОПИШИТЕ]. Сделай три вещи:
+1. Продающее объявление о вакансии, от которого хорошему кандидату захочется откликнуться.
+2. 10 вопросов для собеседования: поведенческие и ситуационные, с пометкой, какой ответ хороший, а какой тревожный сигнал.
+3. Простую таблицу оценки кандидатов по 5 критериям, чтобы сравнивать людей по фактам, а не по симпатии.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Разбор договора <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Загрузите текст или фото договора перед подписанием. Это не замена юристу, а подготовка к разговору с ним.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Ты опытный юрист по договорам для малого бизнеса. Я дам тебе договор. Разбери его для меня как для [ИСПОЛНИТЕЛЯ или ЗАКАЗЧИКА]:
+
+1. Пять самых рискованных для меня пунктов и почему они опасны
+2. Что я обязан делать и в какие сроки
+3. Штрафы и ответственность: где я могу попасть на деньги
+4. Какие пункты стоит попросить изменить и на какие формулировки
+5. Чего в договоре не хватает, чтобы защитить меня
+
+Пиши простым языком, по пунктам договора. В конце дай список вопросов, которые мне стоит задать юристу или второй стороне.
+
+[ВСТАВЬТЕ ТЕКСТ ДОГОВОРА ИЛИ ПРИКРЕПИТЕ ФАЙЛ/ФОТО]</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Распаковка личности <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">То, что маркетологи продают за 15 тысяч: позиционирование и темы для контента через интервью.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Представь, что ты эксперт по выявлению уникальности личности у предпринимателей и специалистов, а я твой заказчик. Твоя миссия: извлечь всю важную информацию для глубокой идентификации моей индивидуальности.
+
+Проведи интервью из 15 вопросов: задавай вопрос, жди моего ответа и переходи к следующему. Стремись узнать как можно больше о моих ценностях, подходе к делу, личных интересах, характерных чертах и идеях, которые я хочу донести до аудитории.
+
+В конце собери всё в моё позиционирование и предложи 10 тем для контента.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Лира: нейросеть пишет промпты за вас <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Мета-уровень: больше не нужно учиться промптингу, модель делает это сама.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Ты Лира, специалист высшего уровня по оптимизации промптов для ИИ. Твоя миссия: превращать любой мой запрос в точный промпт, раскрывающий полный потенциал нейросети.
+
+Методология 4-D:
+1. РАЗБОР: выдели суть запроса, ключевые сущности, контекст. Определи, что дано, а чего не хватает.
+2. ДИАГНОСТИКА: найди неясности, проверь конкретность и полноту.
+3. РАЗРАБОТКА: подбери техники под тип задачи (роль, контекст, цепочка рассуждений, примеры) и назначь нейросети экспертную роль.
+4. ВЫДАЧА: собери оптимизированный промпт и дай инструкцию, как им пользоваться.
+
+Режимы: ДЕТАЛЬНЫЙ (сначала задай мне 2-3 уточняющих вопроса) и БЫСТРЫЙ (сразу оптимизируй).
+
+Начни с приветствия: спроси, что я хочу получить от нейросети и какой режим выбираю. Дальше всегда отвечай в формате: "Оптимизированный промпт: ...", "Что изменилось и почему: ...".</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Личная библиотека: 15 шаблонов под вашу рутину <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Один запрос, и у вас своя коллекция промптов под ваш бизнес.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Сгенерируй 15 переиспользуемых шаблонов промптов для моих регулярных задач: [НАПРИМЕР: посты, письма клиентам, ответы на отзывы] в нише [ВАША НИША]. Для каждого шаблона дай: короткое название, одну строку "когда применять", сам шаблон с [квадратными скобками] для подстановки и один заполненный пример. Шаблоны должны давать ясный, лаконичный, профессиональный результат.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= СЕКЦИЯ 5 ================= -->
+  <div class="section">
+    <div class="section-title"><span class="num">6</span>Мастер-промпты для себя</div>
+    <div class="section-lead">Личная эффективность и самопознание. Промпты с пометкой «лучше в ChatGPT» используют память: в других нейросетях начните с фразы «Сначала задай мне 10 вопросов о моей работе, привычках и целях, по одному за раз, потом отвечай».</div>
+
+    <div class="card">
+      <div class="card-title">Что ты знаешь обо мне, чего я сам не знаю <span class="badge gpt">лучше в ChatGPT</span></div>
+      <div class="card-desc">Одна строка, которую репостнул сам глава OpenAI. Эффект «откуда он это знает?!».</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Что ты знаешь обо мне такого, чего я сам о себе, возможно, не знаю? Ответь на основе всех наших прошлых разговоров.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">10 жёстких правд обо мне <span class="badge gpt">лучше в ChatGPT</span></div>
+      <div class="card-desc">Холодный душ в одну строку. Читать сидя.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">На основе всего, что ты обо мне знаешь из наших разговоров, назови 10 жёстких правд обо мне, которые я, скорее всего, не хочу слышать. Будь полностью честным, ничего не приукрашивай и скажи прямо, что меня тормозит.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Аудит жизни: 8 сфер <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Карта жизни, сфера-рычаг и план на 90 дней за десять минут.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Стань моим лайф-коучем и проведи предельно честный аудит моей жизни. Сначала попроси меня оценить от 1 до 10 каждую сферу: здоровье, деньги, работа, семья, друзья, отдых, развитие, смысл. Задавай вопросы по одной сфере за раз. Когда соберёшь все оценки, покажи закономерности, которые я не вижу, назови сферу-рычаг (улучшение которой потянет за собой остальные) и составь фокусный план на 90 дней.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Разбор прокрастинации <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Поиск корневой причины, а не борьба с симптомами.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Ты поведенческий психолог и стратег продуктивности, эксперт по петлям привычек и эмоциональным блокам за прокрастинацией.
+
+Помоги мне найти корневые причины моей прокрастинации. Сначала задай мне по одному вопросы: какие задачи я откладываю, что чувствую в этот момент, что говорю себе, в какой обстановке это происходит и чем это уже обернулось.
+
+Потом дай разбор: 1) мои триггеры, 2) эмоциональные и мыслительные шаблоны, 3) корневая причина, 4) новые мысли на замену, 5) как сломать привычку, 6) ритуалы фокуса на каждый день.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">5 вопросов будущему себе <span class="badge gpt">лучше в ChatGPT</span></div>
+      <div class="card-desc">Вторая часть бьёт сильнее первой.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">На основе всего, что ты обо мне знаешь, составь 5 вопросов от меня сегодняшнего к моему будущему я через 5 лет. Потом ответь на них так, как ответил бы этот будущий я, если я продолжу жить и работать так, как сейчас.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">День жизни мечты <span class="badge any">любая нейросеть</span></div>
+      <div class="card-desc">Виральный тренд. Последняя строка превращает мечту в план.</div>
+      <div class="prompt-box">
+        <div class="prompt-text">Напиши историю моей жизни мечты от второго лица, как будто она уже наступила. Вот что я хочу: [ГДЕ ЖИВУ, ЧЕМ ЗАНИМАЮСЬ, КАКОЙ У МЕНЯ ДОХОД, КАК ВЫГЛЯДИТ МОЁ УТРО]. Опиши один обычный день этой жизни в деталях, от пробуждения до вечера. А потом добавь: какие 3 решения, принятые сегодня, привели меня туда.</div>
+        <div class="prompt-copybar">нажмите на блок · скопируется целиком</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= СЕКЦИЯ 6 ================= -->
+  <div class="section">
+    <div class="section-title"><span class="num">7</span>Экосистема ChatGPT: карта</div>
+    <div class="section-lead">То, что Альберт показывал на экране. Всё это входит в одну подписку и живёт в одном окне.</div>
+
+    <div class="card">
+      <ul class="machine">
+        <li><span class="m-name">Персонализация</span><span class="m-desc">личное дело сотрудника: ИИ помнит, кто вы, и отвечает под вас</span></li>
+        <li><span class="m-name">Память</span><span class="m-desc">запоминает факты из разговоров и использует их дальше сам</span></li>
+        <li><span class="m-name">Проекты</span><span class="m-desc">офис: папка, где живут файлы, инструкции и все чаты одной темы</span></li>
+        <li><span class="m-name">Ассистенты</span><span class="m-desc">сотрудники: у каждого своя инструкция и своя база знаний</span></li>
+        <li><span class="m-name">Скиллы</span><span class="m-desc">навыки: подключаете нужное умение любому «сотруднику» в моменте</span></li>
+        <li><span class="m-name">Голос</span><span class="m-desc">полноценный разговор с ИИ на ходу и за рулём</span></li>
+        <li><span class="m-name">Deep Research</span><span class="m-desc">аналитик: 15-20 минут работы, подробный отчёт со ссылками</span></li>
+        <li><span class="m-name">Автоматизации</span><span class="m-desc">задачи по расписанию: ИИ работает, пока вы спите</span></li>
+        <li><span class="m-name">Коннекторы</span><span class="m-desc">руки: доступ к вашей почте, календарю, диску</span></li>
+        <li><span class="m-name">Codex</span><span class="m-desc">программист: пишет работающие приложения под вашу задачу</span></li>
+      </ul>
+    </div>
+
+    <div class="rule">Удачный промпт не выбрасывайте. Сохраните его как ассистента и добавьте свои файлы: прайс, скрипты, регламенты. Разовый запрос превратится в постоянного помощника, который отвечает по вашим данным.</div>
+  </div>
+
+  <!-- ================= СЕКЦИЯ 7 ================= -->
+  <div class="section">
+    <div class="section-title"><span class="num">8</span>Четыре шага на эту неделю</div>
+    <div class="section-lead">Маленький шаг сильнее большого плана.</div>
+    <div class="card">
+      <ul class="steps">
+        <li><span class="step-num">1</span><span>Выберите одну нейросеть из секции 1 и поставьте её на телефон</span></li>
+        <li><span class="step-num">2</span><span>Каждый день решайте через неё хотя бы одну рабочую задачу по формуле РКЗФО</span></li>
+        <li><span class="step-num">3</span><span>Соберите рабочее досье (секция 5, первый промпт) и сохраните его в персонализацию</span></li>
+        <li><span class="step-num">4</span><span>Возьмите один процесс и замерьте «до и после»: сколько времени экономит ИИ</span></li>
+      </ul>
+    </div>
+  </div>
+
+
+  <!-- ================= СЕКЦИЯ 9: ПРОДОЛЖЕНИЕ И КОНТАКТЫ ================= -->
+  <div class="section">
+    <div class="section-title"><span class="num">9</span>Продолжение и контакты</div>
+    <div class="section-lead">Промпты дают скорость, система даёт результат. Вот куда идти дальше и где меня найти.</div>
+
+    <div class="qr-line">
+      <img src="images/qr-start.png" alt="QR курс ИИ. Новая реальность">
+      <div>
+        <div class="q-name">Курс «ИИ. Новая реальность»</div>
+        <div class="q-desc">Главный курс: от первого промпта до личной системы из ассистентов. Онлайн и офлайн в Уфе.</div>
+        <div class="q-link"><a href="https://start.neovida.ai" target="_blank">start.neovida.ai</a></div>
+      </div>
+    </div>
+
+    <div class="qr-line">
+      <img src="images/qr-iskra.png" alt="QR курс ИИскра">
+      <div>
+        <div class="q-name">Курс «ИИскра»</div>
+        <div class="q-desc">ИИ-трансформация для предпринимателей: быстрый вход и первые результаты в бизнесе.</div>
+        <div class="q-link"><a href="https://iskra.neovida.ai" target="_blank">iskra.neovida.ai</a></div>
+      </div>
+    </div>
+
+    <div class="qr-line ig">
+      <img src="images/qr-instagram.png" alt="QR Instagram">
+      <div>
+        <div class="q-name">Instagram</div>
+        <div class="q-desc">Разборы, кейсы и живые примеры из практики.</div>
+        <div class="q-link"><a href="https://www.instagram.com/aialbertvaleev" target="_blank">@aialbertvaleev</a></div>
+      </div>
+    </div>
+
+    <div class="qr-line tg">
+      <img src="images/qr-neovida.png" alt="QR Telegram">
+      <div>
+        <div class="q-name">Telegram</div>
+        <div class="q-desc">Написать мне напрямую: вопросы, бонусы, обучение для команд.</div>
+        <div class="q-link"><a href="https://t.me/neovidaAi" target="_blank">@neovidaAi</a></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <b>Альберт Валеев</b> · обучение ИИ для команд и предпринимателей<br>
+    neovida.ai · Telegram: <a href="https://t.me/neovidaAi" target="_blank">@neovidaAi</a><br><br>
+    Понравилась библиотека? Поделитесь встречей у себя в соцсетях, отметьте меня, и я пришлю в личку ещё больше.
+  </footer>
+
+</div>
+
+<div id="toast">Скопировано ✓</div>
+
+<script>
+  function copyText(text, el) {
+    function done() {
+      el.classList.add('copied');
+      var bar = el.querySelector('.prompt-copybar');
+      if (bar) bar.textContent = 'скопировано ✓';
+      var t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(function(){ t.classList.remove('show'); }, 1600);
+      setTimeout(function(){
+        el.classList.remove('copied');
+        if (bar) bar.textContent = 'нажмите на блок · скопируется целиком';
+      }, 2600);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallback(); });
+    } else { fallback(); }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); } catch(e) {}
+      document.body.removeChild(ta);
+    }
+  }
+  document.querySelectorAll('.prompt-box').forEach(function(box) {
+    box.addEventListener('click', function() {
+      var text = box.querySelector('.prompt-text').innerText;
+      copyText(text, box);
+    });
+  });
+</script>
+</body>
+</html>
