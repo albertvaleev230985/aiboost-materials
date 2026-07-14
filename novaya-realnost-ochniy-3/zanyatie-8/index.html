@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Boost · занятие 8 · вход</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+</head>
+<body class="app">
+
+<header class="app-header" id="app-header"></header>
+
+<main class="wrap">
+  <div id="content"></div>
+</main>
+
+<script type="module">
+import { renderHeader, getMe, setMe, isValidFullName, nameToSlug, triggerCelebration, certificateScreenHTML } from './app.js';
+import { registerUser, subscribeSession } from './firebase.js';
+
+const me = getMe();
+renderHeader(me);
+
+const content = document.getElementById('content');
+
+if (me) {
+  renderWelcome(me);
+} else {
+  renderRegistration();
+}
+
+function renderWelcome(me) {
+  content.innerHTML = `
+    <div class="h1">Привет, ${escapeHtml(me.name)}!</div>
+    <div class="lead">Это финал курса. Сегодня — живой тест на 24 вопроса, ретроспектива всего пути и твой манифест.</div>
+
+    <div id="active-action"></div>
+
+    <div class="card" id="status-card">
+      <div class="muted small">Загружаем состояние сессии…</div>
+    </div>
+
+    <div style="text-align:center; margin-top:30px;">
+      <button id="logout-btn" class="btn btn-ghost" style="font-size:13px; padding:8px 16px;">сменить имя</button>
+    </div>
+  `;
+
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    if (confirm('Сменить имя? Текущие ответы привязаны к этому имени.')) {
+      localStorage.removeItem('aiboost_l8_offline3:__me');
+      location.reload();
+    }
+  });
+
+  let lastCelebratePhase = null;
+  subscribeSession((session) => {
+    const phase = session.phase;
+    const action = document.getElementById('active-action');
+    const status = document.getElementById('status-card');
+    if (!action || !status) return; // DOM ещё не готов / был заменён — пропускаем
+
+    // Альберт нажал «Выдать сертификаты» — финал с салютами в блоке active-action.
+    if (phase === 'certificate') {
+      action.innerHTML = `<div class="card outline-violet">${certificateScreenHTML(me.name)}</div>`;
+      status.innerHTML = `<div class="card-tag violet"><i class="ph ph-graduation-cap"></i> Финал курса</div><div class="card-body">Альберт вручает сертификаты. Скачай свой выше — и&nbsp;до&nbsp;встречи на&nbsp;следующем потоке.</div>`;
+      if (lastCelebratePhase !== 'certificate') {
+        lastCelebratePhase = 'certificate';
+        requestAnimationFrame(() => triggerCelebration());
+      }
+      return;
+    }
+    lastCelebratePhase = phase;
+
+    // Карта показывается ТОЛЬКО когда Альберт запустил фазу card.
+    // До этого — только тест (или ожидание).
+    if (phase === 'card') {
+      action.innerHTML = `
+        <div class="card outline-coral">
+          <div class="card-tag coral"><i class="ph ph-map-trifold"></i> Сейчас — карта</div>
+          <div class="card-title">Моя карта на 30&nbsp;дней</div>
+          <div class="card-body">
+            3 коротких поля: твой стек, главный процесс на&nbsp;автоматизацию, личный манифест. У&nbsp;тебя 5&nbsp;минут.
+            <div style="margin-top:16px;">
+              <a href="card.html" class="btn btn-primary">Открыть карту <i class="ph ph-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (phase === 'done') {
+      action.innerHTML = `
+        <div class="card outline-violet">
+          <div class="card-tag violet"><i class="ph ph-check-circle"></i> Урок завершён</div>
+          <div class="card-title">Спасибо!</div>
+          <div class="card-body">
+            Сертификат, супер-шпаргалка курса и&nbsp;бонус по&nbsp;VPN придут тебе в&nbsp;личку в&nbsp;Telegram сегодня вечером.
+          </div>
+        </div>
+      `;
+    } else {
+      // lobby, test, discussion — показываем только тест
+      action.innerHTML = `
+        <div class="card outline-violet">
+          <div class="card-tag violet"><i class="ph ph-target"></i> ${phase === 'test' ? 'Сейчас — тест' : 'Шаг 1 · Тест'}</div>
+          <div class="card-title">Живой тест — 24 вопроса</div>
+          <div class="card-body">
+            Темп задаёт Альберт. У&nbsp;каждого вопроса 30&nbsp;секунд. Не&nbsp;экзамен — зеркало того, сколько ты&nbsp;уже знаешь после 7&nbsp;занятий.
+            <div style="margin-top:16px;">
+              <a href="test.html" class="btn btn-primary">Открыть тест <i class="ph ph-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    const phaseText = {
+      lobby: '<i class="ph ph-hourglass icon-violet"></i> Альберт ещё не начал. Можешь зайти в&nbsp;тест заранее — вопрос появится автоматически.',
+      test: '<i class="ph ph-target icon-violet"></i> Идёт живой тест. Открой <strong>тест</strong> и&nbsp;следи за&nbsp;вопросами от&nbsp;Альберта.',
+      discussion: '<i class="ph ph-chat-circle icon-violet"></i> Разбор теста — слушай Альберта. Карта откроется чуть позже.',
+      card: '<i class="ph ph-map-trifold icon-violet"></i> Заполняем карту — открой <strong>карту</strong>, у&nbsp;тебя 5&nbsp;минут.',
+      done: '<i class="ph ph-check-circle icon-green"></i> Урок завершён. Сертификат придёт в&nbsp;личку в&nbsp;Telegram.',
+    }[phase] || '';
+    status.innerHTML = `
+      <div class="card-tag violet">Что сейчас</div>
+      <div class="card-body">${phaseText}</div>
+    `;
+  });
+}
+
+function renderRegistration() {
+  content.innerHTML = `
+    <div class="h1">Финальное занятие</div>
+    <div class="lead">Сегодня — финал курса. Введи своё <strong>имя и&nbsp;фамилию</strong> — точно так, как&nbsp;хочешь увидеть на&nbsp;сертификате.</div>
+
+    <div class="card outline-violet">
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label" for="full-name">Имя и&nbsp;фамилия</label>
+        <div class="field-hint">Например: Иван Иванов. Без эмодзи и&nbsp;никнеймов — это пойдёт прямо в&nbsp;сертификат курса.</div>
+        <input type="text" id="full-name" placeholder="Иван Иванов" autocomplete="name" autofocus>
+        <div id="hint" class="field-hint" style="margin-top:8px; min-height:18px;"></div>
+      </div>
+      <button id="enter-btn" class="btn btn-primary btn-wide btn-big mt-2" disabled>Войти <i class="ph ph-arrow-right"></i></button>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div class="muted small">
+        После входа откроются две страницы: <strong>тест</strong> (24 вопроса, темп задаёт Альберт) и&nbsp;<strong>карта</strong> (3 поля, заполняешь когда скажет Альберт).
+      </div>
+    </div>
+  `;
+
+  const input = document.getElementById('full-name');
+  const btn = document.getElementById('enter-btn');
+  const hint = document.getElementById('hint');
+
+  function validate() {
+    const v = input.value;
+    const ok = isValidFullName(v);
+    btn.disabled = !ok;
+    if (v.trim() && !ok) {
+      hint.style.color = 'var(--coral)';
+      hint.innerHTML = '<i class="ph ph-arrow-fat-up icon-coral"></i> Нужно имя И фамилия. Например: «Иван Иванов»';
+    } else if (ok) {
+      hint.style.color = 'var(--violet)';
+      hint.textContent = `На сертификате будет: «${v.trim()}»`;
+    } else {
+      hint.textContent = '';
+    }
+  }
+  input.addEventListener('input', validate);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !btn.disabled) btn.click(); });
+
+  btn.addEventListener('click', async () => {
+    const name = input.value.trim().replace(/\s+/g, ' ');
+    if (!isValidFullName(name)) return;
+    btn.disabled = true; btn.textContent = 'Сохраняем…';
+    const slug = nameToSlug(name);
+    try {
+      await registerUser(slug, name);
+      setMe({ slug, name });
+      location.reload();
+    } catch (e) {
+      btn.disabled = false; btn.innerHTML = 'Войти <i class="ph ph-arrow-right"></i>';
+      hint.style.color = 'var(--coral)';
+      hint.textContent = 'Ошибка сохранения. Попробуй ещё раз: ' + e.message;
+    }
+  });
+}
+
+function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+
+</body>
+</html>
