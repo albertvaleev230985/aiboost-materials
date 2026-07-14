@@ -34,34 +34,7 @@ import { QUESTIONS, HOST_KEY } from './questions.js';
 import { runTimer } from './app.js';
 import { subscribeSession, subscribeUsers, setSession, resetAll } from './firebase.js';
 
-const params = new URLSearchParams(location.search);
-const LS_HOSTKEY = 'aiboost_l8_offline3:hostkey';
-// Ключ берём из URL или из памяти браузера: один раз вошёл — дальше открывается без параметра
-const key = params.get('key') || localStorage.getItem(LS_HOSTKEY) || '';
 const content = document.getElementById('content');
-if (key !== HOST_KEY) {
-  content.innerHTML = `
-    <div class="card outline-coral" style="max-width:520px; margin:40px auto;"><div class="card-tag coral">Доступ</div>
-      <div class="card-title">Дашборд ведущего</div>
-      <div class="card-body" style="margin-bottom:14px;">Введи ключ ведущего. После первого входа этот браузер запомнит его, и дашборд будет открываться сразу.</div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <input id="hk-input" type="password" placeholder="ключ ведущего" autocomplete="off"
-               style="flex:1; min-width:200px; padding:12px 14px; border-radius:10px; border:1px solid var(--white-20, rgba(255,255,255,0.2)); background:var(--white-10, rgba(255,255,255,0.07)); color:inherit; font-size:16px;">
-        <button id="hk-btn" class="btn">Войти</button>
-      </div>
-      <div id="hk-err" style="margin-top:10px; font-size:13px; color:rgba(224,85,85,0.9);"></div>
-    </div>`;
-  const tryKey = () => {
-    const v = document.getElementById('hk-input').value.trim();
-    if (v === HOST_KEY) { localStorage.setItem(LS_HOSTKEY, v); location.href = 'host.html'; }
-    else document.getElementById('hk-err').textContent = 'Не тот ключ. Подсказка: имя ведущего и год финала, маленькими буквами, слитно.';
-  };
-  document.getElementById('hk-btn').addEventListener('click', tryKey);
-  document.getElementById('hk-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryKey(); });
-  document.getElementById('hk-input').focus();
-  throw new Error('no key');
-}
-localStorage.setItem(LS_HOSTKEY, HOST_KEY);
 
 let session = { phase: 'lobby', currentQuestion: -1, timerStartedAt: null, timerDurationSec: 30, showCorrect: false };
 let users = {};
