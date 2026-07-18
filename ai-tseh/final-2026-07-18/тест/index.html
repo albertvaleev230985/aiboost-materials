@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <meta name="color-scheme" content="dark">
+  <title>AI Цех · финальный тест</title>
+  <style>
+    :root {
+      --bg: #0b0c0d;
+      --bg-deep: #090a0b;
+      --panel: #111315;
+      --panel-2: #16191c;
+      --line: rgba(232, 226, 214, .12);
+      --line-strong: rgba(232, 226, 214, .24);
+      --text: #f0ece2;
+      --muted: #9b9488;
+      --dim: #6f695f;
+      --accent: #c77a3a;
+      --accent-2: #e0aa6f;
+      --steel: #9aa6ad;
+      --danger: #d76c5c;
+      --success: #75b889;
+      --shadow: 0 22px 80px rgba(0, 0, 0, .34);
+      --radius: 12px;
+      --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-height: 100%; background: var(--bg-deep); }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      font-family: var(--sans);
+      background:
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px),
+        radial-gradient(circle at 85% 5%, rgba(199, 122, 58, .18), transparent 38rem),
+        radial-gradient(circle at 5% 95%, rgba(154, 166, 173, .06), transparent 28rem),
+        linear-gradient(135deg, #0a0b0c 0%, #111416 52%, #090a0b 100%);
+      background-size: 44px 44px, 44px 44px, auto, auto, auto;
+    }
+
+    button { font: inherit; }
+
+    button:focus-visible {
+      outline: 2px solid var(--accent-2);
+      outline-offset: 3px;
+    }
+
+    .shell {
+      width: min(100%, 760px);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 18px 16px 36px;
+    }
+
+    .masthead {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 4px 0 24px;
+    }
+
+    .brand {
+      display: grid;
+      gap: 5px;
+    }
+
+    .brand-line {
+      color: var(--accent-2);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .course-name {
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 32px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      white-space: nowrap;
+      background: rgba(255, 255, 255, .025);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px rgba(199, 122, 58, .12);
+    }
+
+    .frame {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(155deg, rgba(255,255,255,.045), rgba(255,255,255,.014));
+      box-shadow: var(--shadow);
+    }
+
+    .screen {
+      display: none;
+      padding: 26px 20px 22px;
+    }
+
+    .screen.is-active { display: block; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 18px;
+      color: var(--accent-2);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 22px;
+      height: 1px;
+      content: "";
+      background: var(--accent);
+    }
+
+    h1, h2, p { margin-top: 0; }
+
+    h1 {
+      max-width: 560px;
+      margin-bottom: 16px;
+      font-size: clamp(34px, 9vw, 56px);
+      font-weight: 900;
+      letter-spacing: -.055em;
+      line-height: .98;
+    }
+
+    h1 span, .score-number span {
+      color: var(--accent-2);
+    }
+
+    .lead {
+      max-width: 580px;
+      margin-bottom: 28px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.55;
+    }
+
+    .facts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 0 0 28px;
+    }
+
+    .fact {
+      min-height: 92px;
+      padding: 14px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(9, 10, 11, .44);
+    }
+
+    .fact strong {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 20px;
+      letter-spacing: -.04em;
+    }
+
+    .fact span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .primary-button, .secondary-button {
+      min-height: 48px;
+      padding: 12px 18px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 800;
+      letter-spacing: -.01em;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .primary-button {
+      width: 100%;
+      color: #19130e;
+      background: linear-gradient(135deg, #f0c18d 0%, var(--accent-2) 52%, var(--accent) 100%);
+    }
+
+    .primary-button:hover { transform: translateY(-1px); }
+
+    .secondary-button {
+      width: 100%;
+      color: var(--text);
+      border-color: var(--line-strong);
+      background: rgba(255,255,255,.035);
+    }
+
+    .secondary-button:hover {
+      border-color: var(--accent-2);
+      background: rgba(199,122,58,.1);
+    }
+
+    .small-print {
+      margin: 14px 0 0;
+      color: var(--dim);
+      font-size: 12px;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .quiz-topline {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .counter {
+      color: var(--steel);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .timer {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 82px;
+      min-height: 34px;
+      padding: 0 9px;
+      border: 1px solid rgba(224, 170, 111, .32);
+      border-radius: 999px;
+      color: var(--accent-2);
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 800;
+      background: rgba(199, 122, 58, .1);
+    }
+
+    .timer.is-urgent {
+      color: #ffd7cf;
+      border-color: rgba(215, 118, 92, .6);
+      background: rgba(215, 118, 92, .12);
+    }
+
+    .progress-track {
+      height: 4px;
+      margin-bottom: 22px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+    }
+
+    .progress-value {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width .3s ease;
+    }
+
+    .topic-tag {
+      display: inline-flex;
+      max-width: 100%;
+      margin-bottom: 12px;
+      padding: 6px 9px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      color: var(--steel);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .08em;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+      background: rgba(154,166,173,.06);
+    }
+
+    .question {
+      margin-bottom: 22px;
+      font-size: clamp(23px, 6.4vw, 34px);
+      font-weight: 800;
+      letter-spacing: -.04em;
+      line-height: 1.08;
+    }
+
+    .options {
+      display: grid;
+      gap: 10px;
+    }
+
+    .option {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 11px;
+      width: 100%;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      background: rgba(255,255,255,.025);
+      transition: border-color .16s ease, background .16s ease, transform .16s ease;
+    }
+
+    .option:hover:not(:disabled) {
+      border-color: rgba(224,170,111,.58);
+      background: rgba(199,122,58,.09);
+      transform: translateX(2px);
+    }
+
+    .option:disabled { cursor: default; }
+
+    .option-key {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 50%;
+      color: var(--accent-2);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .option-text {
+      padding-top: 4px;
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1.38;
+    }
+
+    .option.is-correct {
+      border-color: rgba(117,184,137,.7);
+      background: rgba(117,184,137,.12);
+    }
+
+    .option.is-correct .option-key {
+      color: #d5f5dd;
+      border-color: var(--success);
+      background: rgba(117,184,137,.22);
+    }
+
+    .option.is-wrong {
+      border-color: rgba(215,118,92,.7);
+      background: rgba(215,118,92,.1);
+    }
+
+    .option.is-wrong .option-key {
+      color: #ffdad2;
+      border-color: var(--danger);
+      background: rgba(215,118,92,.18);
+    }
+
+    .feedback {
+      display: none;
+      margin-top: 18px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: rgba(9,10,11,.62);
+    }
+
+    .feedback.is-visible { display: block; }
+
+    .feedback.is-correct { border-color: rgba(117,184,137,.42); }
+    .feedback.is-wrong { border-color: rgba(215,118,92,.42); }
+
+    .feedback-title {
+      margin: 0 0 7px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .feedback.is-correct .feedback-title { color: #bde9c8; }
+    .feedback.is-wrong .feedback-title { color: #ffc6bb; }
+
+    .feedback-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.48;
+    }
+
+    .next-wrap {
+      display: none;
+      margin-top: 14px;
+    }
+
+    .next-wrap.is-visible { display: block; }
+
+    .result-hero {
+      display: grid;
+      gap: 18px;
+      margin-bottom: 26px;
+    }
+
+    .score-number {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: clamp(62px, 18vw, 104px);
+      font-weight: 800;
+      letter-spacing: -.09em;
+      line-height: .78;
+    }
+
+    .score-total {
+      margin-left: 8px;
+      color: var(--dim);
+      font-size: 17px;
+      letter-spacing: -.02em;
+    }
+
+    .result-title {
+      margin-bottom: 9px;
+      font-size: clamp(27px, 8vw, 40px);
+      font-weight: 900;
+      letter-spacing: -.05em;
+      line-height: 1.03;
+    }
+
+    .result-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .result-heading {
+      margin: 0 0 10px;
+      color: var(--steel);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .breakdown {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .breakdown-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.025);
+    }
+
+    .breakdown-row strong {
+      min-width: 0;
+      font-size: 14px;
+      line-height: 1.3;
+    }
+
+    .breakdown-row span {
+      color: var(--accent-2);
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .review {
+      display: grid;
+      gap: 8px;
+      margin: 0 0 24px;
+    }
+
+    .review-item {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 10px;
+      padding: 12px;
+      border-left: 2px solid var(--line-strong);
+      background: rgba(255,255,255,.02);
+    }
+
+    .review-item.is-correct { border-left-color: var(--success); }
+    .review-item.is-wrong { border-left-color: var(--danger); }
+
+    .review-number {
+      display: grid;
+      width: 26px;
+      height: 26px;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 800;
+      background: var(--panel-2);
+    }
+
+    .review-question {
+      margin: 0 0 5px;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .review-answer {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.42;
+    }
+
+    .review-answer b { color: var(--text); }
+
+    .empty {
+      padding: 20px;
+      border: 1px solid rgba(215,118,92,.45);
+      border-radius: 8px;
+      color: #ffcdc2;
+      background: rgba(215,118,92,.1);
+      line-height: 1.45;
+    }
+
+    @media (min-width: 640px) {
+      .shell { padding: 30px 22px 48px; }
+      .masthead { padding-bottom: 32px; }
+      .screen { padding: 38px; }
+      .facts { grid-template-columns: repeat(3, 1fr); gap: 11px; }
+      .primary-button, .secondary-button { width: auto; min-width: 190px; }
+      .next-wrap .primary-button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <div class="brand">
+        <div class="brand-line">neovida · Нейропросвещение</div>
+        <div class="course-name">AI Цех · финальный тест</div>
+      </div>
+      <div class="status-pill"><span class="status-dot"></span>локально</div>
+    </header>
+
+    <section class="frame" aria-live="polite">
+      <section class="screen is-active" id="intro-screen" aria-labelledby="intro-title">
+        <p class="eyebrow">Финальный разбор</p>
+        <h1 id="intro-title">Что осталось <span>в руках</span> после AI Цеха</h1>
+        <p class="lead">30 рабочих ситуаций по маршруту курса. Не экзамен на термины: проверяем, можешь ли ты выбрать следующий шаг в реальной задаче.</p>
+        <div class="facts" aria-label="Условия теста">
+          <div class="fact"><strong>30</strong><span>вопросов по всем урокам</span></div>
+          <div class="fact"><strong>30 сек</strong><span>на каждую рабочую ситуацию</span></div>
+          <div class="fact"><strong>0</strong><span>серверов, записей и публикаций</span></div>
+        </div>
+        <button class="primary-button" id="start-button" type="button">Начать тест</button>
+        <p class="small-print">После каждого ответа сразу увидишь короткий разбор. Результат остаётся только в этом браузере.</p>
+      </section>
+
+      <section class="screen" id="quiz-screen" aria-labelledby="question-text">
+        <div class="quiz-topline">
+          <div class="counter" id="question-counter">Вопрос 01 / 30</div>
+          <div class="timer" id="timer" aria-label="Осталось времени">00:30</div>
+        </div>
+        <div class="progress-track" aria-hidden="true"><div class="progress-value" id="progress-value"></div></div>
+        <div class="topic-tag" id="topic-tag">Тема</div>
+        <h2 class="question" id="question-text">Загрузка вопроса…</h2>
+        <div class="options" id="options" aria-label="Варианты ответа"></div>
+        <div class="feedback" id="feedback" role="status">
+          <p class="feedback-title" id="feedback-title"></p>
+          <p class="feedback-copy" id="feedback-copy"></p>
+        </div>
+        <div class="next-wrap" id="next-wrap">
+          <button class="primary-button" id="next-button" type="button">Следующий вопрос</button>
+        </div>
+      </section>
+
+      <section class="screen" id="result-screen" aria-labelledby="result-title">
+        <p class="eyebrow">Твой маршрут</p>
+        <div class="result-hero">
+          <p class="score-number" id="score-number">0<span>/30</span></p>
+          <div>
+            <h2 class="result-title" id="result-title">Результат</h2>
+            <p class="result-copy" id="result-copy"></p>
+          </div>
+        </div>
+        <h3 class="result-heading">Разбор по темам</h3>
+        <div class="breakdown" id="breakdown"></div>
+        <h3 class="result-heading">Разобрать ещё раз</h3>
+        <div class="review" id="review"></div>
+        <button class="secondary-button" id="restart-button" type="button">Пройти тест заново</button>
+      </section>
+    </section>
+  </main>
+
+  <script src="questions.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      function stableShuffle(question) {
+        var sourceIndexes = [0, 1, 2];
+        var state = (Math.imul(question.id, 0x9e3779b1) ^ 0x148ab7) >>> 0;
+
+        function nextRandom() {
+          state ^= state << 13;
+          state ^= state >>> 17;
+          state ^= state << 5;
+          return state >>> 0;
+        }
+
+        for (var position = sourceIndexes.length - 1; position > 0; position -= 1) {
+          var swapWith = nextRandom() % (position + 1);
+          var current = sourceIndexes[position];
+          sourceIndexes[position] = sourceIndexes[swapWith];
+          sourceIndexes[swapWith] = current;
+        }
+
+        return {
+          id: question.id,
+          topic: question.topic,
+          question: question.question,
+          options: sourceIndexes.map(function (sourceIndex) {
+            return question.options[sourceIndex];
+          }),
+          answer: sourceIndexes.indexOf(question.answer),
+          explanation: question.explanation
+        };
+      }
+
+      // Один порядок на каждый вопрос при каждом запуске: без шаблона «верно всегда А».
+      var questions = window.AI_TSEH_QUESTIONS.map(stableShuffle);
+      var duration = 30;
+      var index = 0;
+      var answers = [];
+      var seconds = duration;
+      var timerId = null;
+      var locked = false;
+
+      var screens = {
+        intro: document.getElementById('intro-screen'),
+        quiz: document.getElementById('quiz-screen'),
+        result: document.getElementById('result-screen')
+      };
+      var counter = document.getElementById('question-counter');
+      var timer = document.getElementById('timer');
+      var progress = document.getElementById('progress-value');
+      var topicTag = document.getElementById('topic-tag');
+      var questionText = document.getElementById('question-text');
+      var options = document.getElementById('options');
+      var feedback = document.getElementById('feedback');
+      var feedbackTitle = document.getElementById('feedback-title');
+      var feedbackCopy = document.getElementById('feedback-copy');
+      var nextWrap = document.getElementById('next-wrap');
+      var nextButton = document.getElementById('next-button');
+
+      function showScreen(name) {
+        Object.keys(screens).forEach(function (key) {
+          screens[key].classList.toggle('is-active', key === name);
+        });
+      }
+
+      function formatSeconds(value) {
+        return '00:' + String(Math.max(0, value)).padStart(2, '0');
+      }
+
+      function renderTimer() {
+        timer.textContent = formatSeconds(seconds);
+        timer.classList.toggle('is-urgent', seconds <= 10);
+      }
+
+      function stopTimer() {
+        if (timerId) {
+          window.clearInterval(timerId);
+          timerId = null;
+        }
+      }
+
+      function startTimer() {
+        stopTimer();
+        timerId = window.setInterval(function () {
+          seconds -= 1;
+          renderTimer();
+          if (seconds <= 0) {
+            submitAnswer(null, true);
+          }
+        }, 1000);
+      }
+
+      function renderQuestion() {
+        var question = questions[index];
+        window.scrollTo(0, 0);
+        locked = false;
+        seconds = duration;
+        counter.textContent = 'Вопрос ' + String(index + 1).padStart(2, '0') + ' / ' + questions.length;
+        topicTag.textContent = question.topic;
+        questionText.textContent = question.question;
+        progress.style.width = (index / questions.length * 100) + '%';
+        feedback.className = 'feedback';
+        nextWrap.className = 'next-wrap';
+        options.innerHTML = '';
+
+        question.options.forEach(function (option, optionIndex) {
+          var button = document.createElement('button');
+          var key = String.fromCharCode(65 + optionIndex);
+          button.type = 'button';
+          button.className = 'option';
+          button.dataset.index = String(optionIndex);
+          button.innerHTML = '<span class="option-key">' + key + '</span><span class="option-text"></span>';
+          button.querySelector('.option-text').textContent = option;
+          button.addEventListener('click', function () {
+            submitAnswer(optionIndex, false);
+          });
+          options.appendChild(button);
+        });
+
+        renderTimer();
+        startTimer();
+      }
+
+      function submitAnswer(selected, timedOut) {
+        if (locked) return;
+
+        var question = questions[index];
+        var isCorrect = selected === question.answer;
+        locked = true;
+        stopTimer();
+        answers.push({
+          questionId: question.id,
+          selected: selected,
+          correct: isCorrect,
+          timedOut: timedOut
+        });
+
+        Array.prototype.forEach.call(options.querySelectorAll('.option'), function (button) {
+          var choiceIndex = Number(button.dataset.index);
+          button.disabled = true;
+          if (choiceIndex === question.answer) button.classList.add('is-correct');
+          if (selected === choiceIndex && !isCorrect) button.classList.add('is-wrong');
+        });
+
+        feedback.className = 'feedback is-visible ' + (isCorrect ? 'is-correct' : 'is-wrong');
+        feedbackTitle.textContent = isCorrect ? 'Верно' : (timedOut ? 'Время вышло' : 'Не совсем');
+        feedbackCopy.textContent = question.explanation;
+        nextButton.textContent = index === questions.length - 1 ? 'Показать результат' : 'Следующий вопрос';
+        nextWrap.className = 'next-wrap is-visible';
+        progress.style.width = ((index + 1) / questions.length * 100) + '%';
+      }
+
+      function resultLevel(score) {
+        if (score >= 28) {
+          return {
+            title: 'Цеховой мастер',
+            copy: 'Ты уверенно видишь маршрут от задачи до работающего результата и можешь собирать связки дальше.'
+          };
+        }
+        if (score >= 23) {
+          return {
+            title: 'Уверенная практика',
+            copy: 'Основа собрана. Посмотри точечный разбор ниже — там остались несколько мест для закрепления.'
+          };
+        }
+        if (score >= 16) {
+          return {
+            title: 'База уже есть',
+            copy: 'Ты знаешь ключевые части маршрута. Повтори слабые темы и пройди тест ещё раз — второй проход будет заметно сильнее.'
+          };
+        }
+        return {
+          title: 'Нужен один рабочий повтор',
+          copy: 'Это не провал, а карта следующего шага. Сначала открой разбор слабых тем, затем пройди тест ещё раз без спешки.'
+        };
+      }
+
+      function renderResults() {
+        window.scrollTo(0, 0);
+        var score = answers.filter(function (answer) { return answer.correct; }).length;
+        var level = resultLevel(score);
+        var topics = [];
+
+        questions.forEach(function (question) {
+          if (topics.indexOf(question.topic) === -1) topics.push(question.topic);
+        });
+
+        document.getElementById('score-number').innerHTML = score + '<span>/30</span>';
+        document.getElementById('result-title').textContent = level.title;
+        document.getElementById('result-copy').textContent = level.copy;
+
+        var breakdown = document.getElementById('breakdown');
+        breakdown.innerHTML = '';
+        topics.forEach(function (topic) {
+          var topicQuestions = questions.filter(function (question) { return question.topic === topic; });
+          var topicScore = topicQuestions.filter(function (question) {
+            return answers[question.id - 1] && answers[question.id - 1].correct;
+          }).length;
+          var row = document.createElement('div');
+          row.className = 'breakdown-row';
+          row.innerHTML = '<strong></strong><span></span>';
+          row.querySelector('strong').textContent = topic;
+          row.querySelector('span').textContent = topicScore + ' / ' + topicQuestions.length;
+          breakdown.appendChild(row);
+        });
+
+        var review = document.getElementById('review');
+        review.innerHTML = '';
+        questions.forEach(function (question, questionIndex) {
+          var answer = answers[questionIndex];
+          var item = document.createElement('article');
+          item.className = 'review-item ' + (answer.correct ? 'is-correct' : 'is-wrong');
+          var selectedText = answer.selected === null ? 'Ответ не выбран' : question.options[answer.selected];
+          item.innerHTML = '<div class="review-number"></div><div><p class="review-question"></p><p class="review-answer"></p></div>';
+          item.querySelector('.review-number').textContent = String(question.id).padStart(2, '0');
+          item.querySelector('.review-question').textContent = question.question;
+          item.querySelector('.review-answer').innerHTML =
+            '<b>' + (answer.correct ? 'Верно.' : 'Разобрать:') + '</b> ' +
+            (answer.correct ? question.explanation : 'Твой ответ: «' + selectedText + '». ' + question.explanation);
+          review.appendChild(item);
+        });
+
+        showScreen('result');
+      }
+
+      function begin() {
+        if (!Array.isArray(questions) || questions.length !== 30) {
+          document.getElementById('intro-screen').innerHTML =
+            '<div class="empty">Тест не запустился: нужен массив ровно из 30 вопросов. Проверь файл questions.js.</div>';
+          return;
+        }
+        index = 0;
+        answers = [];
+        showScreen('quiz');
+        window.scrollTo(0, 0);
+        renderQuestion();
+      }
+
+      document.getElementById('start-button').addEventListener('click', begin);
+      nextButton.addEventListener('click', function () {
+        index += 1;
+        if (index >= questions.length) {
+          renderResults();
+        } else {
+          renderQuestion();
+        }
+      });
+      document.getElementById('restart-button').addEventListener('click', function () {
+        showScreen('intro');
+        index = 0;
+        answers = [];
+        stopTimer();
+      });
+      document.addEventListener('keydown', function (event) {
+        if (!screens.quiz.classList.contains('is-active') || locked) return;
+        if (event.key >= '1' && event.key <= '3') {
+          var choice = Number(event.key) - 1;
+          var button = options.querySelector('[data-index="' + choice + '"]');
+          if (button) button.click();
+        }
+      });
+    }());
+  </script>
+</body>
+</html>
