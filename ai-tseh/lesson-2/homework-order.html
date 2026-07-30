@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Цех · домашка 2 · Заказ на проект</title>
+<style>
+  :root {
+    --bg: #0b0c0d;
+    --bg-deep: #090a0b;
+    --panel: #111315;
+    --panel-2: #16191c;
+    --line: rgba(232, 226, 214, 0.12);
+    --line-strong: rgba(232, 226, 214, 0.24);
+    --text: #f0ece2;
+    --muted: #9b9488;
+    --dim: #6f695f;
+    --accent: #c77a3a;
+    --accent-2: #e0aa6f;
+    --steel: #9aa6ad;
+    --danger: #d76c5c;
+    --success: #75b889;
+    --shadow: 0 22px 80px rgba(0, 0, 0, 0.34);
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    color: var(--text);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.58;
+    background:
+      linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px),
+      radial-gradient(circle at 78% 8%, rgba(199, 122, 58, 0.18), transparent 34vw),
+      radial-gradient(circle at 8% 32%, rgba(154, 166, 173, 0.10), transparent 28vw),
+      linear-gradient(135deg, #0a0b0c 0%, #111416 52%, #090a0b 100%);
+    background-size: 42px 42px, 42px 42px, auto, auto, auto;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent-2); text-decoration: none; }
+  button { font: inherit; }
+
+  .ic { width: 22px; height: 22px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+  .page { width: min(100%, 980px); margin: 0 auto; padding: 28px 22px 70px; }
+
+  .topbar {
+    display: flex; justify-content: space-between; gap: 14px; align-items: center;
+    padding: 12px 0 22px; color: var(--muted);
+    font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+  }
+
+  .print-btn {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 8px 12px;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    color: var(--text); background: rgba(17, 19, 21, 0.78); cursor: pointer;
+  }
+  .print-btn .ic { width: 18px; height: 18px; }
+
+  .hero {
+    position: relative; overflow: hidden; padding: 34px;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    background:
+      linear-gradient(rgba(255,255,255,0.024) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.024) 1px, transparent 1px),
+      radial-gradient(circle at 82% 16%, rgba(224,170,111,.18), transparent 35%),
+      linear-gradient(135deg, rgba(22,25,28,.94), rgba(9,10,11,.96));
+    background-size: 36px 36px, 36px 36px, auto, auto;
+    box-shadow: var(--shadow);
+  }
+  .hero::before {
+    content: ""; position: absolute; inset: 0;
+    border-top: 3px solid var(--accent-2); opacity: .82; pointer-events: none;
+  }
+
+  .kicker {
+    display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px; padding: 7px 10px;
+    border: 1px solid rgba(224,170,111,.22); border-radius: 999px;
+    color: var(--accent-2); background: rgba(199,122,58,.08);
+    font-size: 11px; font-weight: 900; letter-spacing: .10em; text-transform: uppercase;
+  }
+  .kicker .ic { width: 15px; height: 15px; }
+
+  h1 {
+    max-width: 800px; margin: 0; color: var(--text);
+    font-size: clamp(34px, 6vw, 60px); line-height: .98; font-weight: 900;
+  }
+
+  .hero-lead { max-width: 730px; margin: 20px 0 0; color: rgba(240,236,226,.82); font-size: 18px; }
+
+  .hero-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 26px; }
+
+  .hero-card {
+    min-height: 120px; padding: 16px;
+    border: 1px solid var(--line); border-radius: var(--radius); background: rgba(9,10,11,.62);
+  }
+  .hero-card .ic { width: 24px; height: 24px; color: var(--accent-2); }
+  .hero-card strong { display: block; margin-top: 12px; color: var(--text); font-size: 15px; }
+  .hero-card span { display: block; margin-top: 5px; color: var(--muted); font-size: 13px; }
+
+  .section {
+    margin-top: 34px; padding: 28px;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    background: rgba(17,19,21,.78); box-shadow: 0 18px 60px rgba(0,0,0,.18);
+  }
+  .section.utility { background: rgba(14,16,18,.72); }
+
+  .section-header { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; margin-bottom: 18px; }
+
+  .section-num {
+    width: 40px; height: 40px; display: grid; place-items: center;
+    border: 1px solid rgba(224,170,111,.32); border-radius: var(--radius);
+    color: var(--accent-2); background: rgba(199,122,58,.10);
+    font-weight: 900; font-size: 17px;
+  }
+  .section-num.steel {
+    border-color: rgba(154,166,173,.30); color: var(--steel); background: rgba(154,166,173,.08);
+  }
+  .section-num.steel .ic { width: 20px; height: 20px; }
+
+  .eyebrow {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 7px;
+    color: var(--accent-2); font-size: 11px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase;
+  }
+  .eyebrow.steel { color: var(--steel); }
+  .eyebrow .time {
+    display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px;
+    border: 1px solid var(--line); border-radius: 999px; color: var(--muted); letter-spacing: .06em;
+  }
+  .eyebrow .time .ic { width: 13px; height: 13px; }
+
+  h2 { margin: 0; color: var(--text); font-size: clamp(23px, 3.6vw, 32px); line-height: 1.1; font-weight: 900; }
+  .section-sub { margin: 9px 0 0; color: var(--muted); font-size: 15px; }
+
+  .route { display: grid; gap: 10px; margin-top: 4px; }
+  .route-item {
+    display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center;
+    padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(9,10,11,.46);
+  }
+  .route-num {
+    width: 30px; height: 30px; display: grid; place-items: center;
+    border: 1px solid rgba(224,170,111,.28); border-radius: 6px;
+    color: var(--accent-2); background: rgba(199,122,58,.08); font-size: 13px; font-weight: 900;
+  }
+  .route-item strong { display: block; color: var(--text); font-size: 15px; }
+  .route-item span { display: block; color: var(--muted); font-size: 13px; }
+  .route-file {
+    display: inline-flex; align-items: center; gap: 7px; padding: 5px 9px;
+    border: 1px solid var(--line); border-radius: 999px;
+    color: var(--steel); background: rgba(154,166,173,.06); font-size: 12px; white-space: nowrap;
+  }
+  .route-file .ic { width: 14px; height: 14px; }
+
+  .where {
+    display: grid; grid-template-columns: auto 1fr; gap: 11px; margin-top: 16px; padding: 14px;
+    border: 1px solid rgba(224,170,111,.24); border-radius: var(--radius);
+    background: rgba(199,122,58,.07); font-size: 14px;
+  }
+  .where .ic { color: var(--accent-2); }
+  .where strong { color: var(--text); }
+  .where span { color: rgba(240,236,226,.80); }
+
+  .why {
+    margin-top: 14px; padding: 14px 16px;
+    border-left: 2px solid rgba(224,170,111,.45); border-radius: 0 var(--radius) var(--radius) 0;
+    background: rgba(22,25,28,.62); color: rgba(240,236,226,.82); font-size: 14px;
+  }
+  .why strong { color: var(--accent-2); }
+
+  .copy-shell {
+    margin-top: 18px; border: 1px solid rgba(224,170,111,.28); border-radius: var(--radius);
+    overflow: hidden; background: rgba(9,10,11,.72);
+  }
+  .copy-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    padding: 14px 16px; border-bottom: 1px solid var(--line); background: rgba(199,122,58,.08);
+  }
+  .copy-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .copy-title .ic { color: var(--accent-2); }
+  .copy-title strong { display: block; color: var(--text); font-size: 15px; }
+  .copy-title span { display: block; color: var(--muted); font-size: 12px; }
+  .copy-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 38px; padding: 8px 12px;
+    border: 1px solid rgba(224,170,111,.35); border-radius: var(--radius);
+    color: #fff7ec; background: linear-gradient(135deg, #9d5429, #c77a3a);
+    cursor: pointer; white-space: nowrap; font-size: 13px; font-weight: 800;
+  }
+  .copy-btn .ic { width: 16px; height: 16px; }
+  .prompt-box {
+    margin: 0; padding: 18px; color: rgba(240,236,226,.92);
+    font-family: inherit; font-size: 14px; line-height: 1.62;
+    white-space: pre-wrap; overflow-wrap: anywhere; cursor: copy;
+  }
+  .copy-foot {
+    padding: 10px 16px; border-top: 1px solid var(--line);
+    color: var(--dim); background: rgba(9,10,11,.5); font-size: 12px;
+  }
+  .prompt-box:hover { background: rgba(224,170,111,.035); }
+  .copy-shell.copied { border-color: rgba(117,184,137,.52); box-shadow: 0 0 0 1px rgba(117,184,137,.20); }
+  .copy-shell.copied .copy-btn { border-color: rgba(117,184,137,.45); background: linear-gradient(135deg, #477f5a, #75b889); }
+
+  .done {
+    display: grid; grid-template-columns: auto 1fr; gap: 11px; margin-top: 16px; padding: 14px;
+    border: 1px solid rgba(117,184,137,.26); border-radius: var(--radius);
+    background: rgba(117,184,137,.07); font-size: 14px;
+  }
+  .done .ic { color: var(--success); }
+  .done strong { color: var(--text); }
+  .done span { color: rgba(240,236,226,.80); }
+
+  .note {
+    display: grid; grid-template-columns: auto 1fr; gap: 11px; margin-top: 14px; padding: 14px;
+    border: 1px solid rgba(154,166,173,.22); border-radius: var(--radius);
+    color: var(--muted); background: rgba(154,166,173,.06); font-size: 14px;
+  }
+  .note .ic { color: var(--steel); }
+  .note strong { color: rgba(240,236,226,.92); }
+  .note.warning { border-color: rgba(215,108,92,.28); background: rgba(215,108,92,.07); }
+  .note.warning .ic { color: var(--danger); }
+
+  .stop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stop {
+    display: grid; grid-template-columns: auto 1fr; gap: 10px; padding: 13px;
+    border: 1px solid rgba(215,108,92,.22); border-radius: var(--radius);
+    background: rgba(215,108,92,.05); font-size: 14px;
+  }
+  .stop .ic { width: 20px; height: 20px; color: var(--danger); }
+  .stop strong { display: block; color: var(--text); font-size: 14px; }
+  .stop span { display: block; margin-top: 3px; color: var(--muted); font-size: 13px; }
+
+  .bank { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 4px; }
+  .bank-card {
+    padding: 15px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(9,10,11,.48);
+  }
+  .bank-tag {
+    display: inline-flex; align-items: center; min-height: 22px; margin-bottom: 9px; padding: 2px 8px;
+    border: 1px solid rgba(154,166,173,.28); border-radius: 999px;
+    color: var(--steel); font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+  }
+  .bank-card strong { display: block; color: var(--text); font-size: 15px; }
+  .bank-card span { display: block; margin-top: 5px; color: var(--muted); font-size: 13px; }
+
+  .send-list { display: grid; gap: 10px; margin-top: 4px; }
+  .send-item {
+    display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: start; padding: 13px 14px;
+    border: 1px solid var(--line); border-radius: var(--radius); background: rgba(9,10,11,.46);
+  }
+  .send-dot {
+    width: 24px; height: 24px; display: grid; place-items: center;
+    border: 1px solid rgba(154,166,173,.30); border-radius: 6px;
+    color: var(--steel); background: rgba(154,166,173,.07); font-size: 12px; font-weight: 900;
+  }
+  .send-item strong { display: block; color: var(--text); font-size: 15px; }
+  .send-item span { display: block; margin-top: 3px; color: var(--muted); font-size: 13px; }
+
+  .deadline {
+    display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center;
+    margin-top: 16px; padding: 16px;
+    border: 1px solid rgba(224,170,111,.30); border-radius: var(--radius); background: rgba(199,122,58,.09);
+  }
+  .deadline .ic { width: 26px; height: 26px; color: var(--accent-2); }
+  .deadline strong { display: block; color: var(--text); font-size: 17px; }
+  .deadline span { display: block; color: rgba(240,236,226,.80); font-size: 14px; }
+
+  .selfcheck { display: grid; gap: 9px; margin-top: 4px; }
+  .selfcheck-row {
+    display: grid; grid-template-columns: auto 1fr; gap: 11px; padding: 12px 14px;
+    border: 1px solid var(--line); border-radius: var(--radius); background: rgba(9,10,11,.44);
+    color: rgba(240,236,226,.86); font-size: 14px;
+  }
+  .selfcheck-row .ic { width: 20px; height: 20px; color: var(--success); }
+
+  .footer {
+    margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--line);
+    color: var(--dim); text-align: center; font-size: 12px;
+  }
+
+  @media (max-width: 760px) {
+    .page { padding: 18px 14px 48px; }
+    .topbar { align-items: flex-start; flex-direction: column; }
+    .hero { padding: 26px 18px; }
+    .hero-grid, .stop-grid, .bank { grid-template-columns: 1fr; }
+    .section { padding: 22px 16px; }
+    .copy-head { align-items: flex-start; flex-direction: column; }
+    .copy-btn { width: 100%; }
+    .prompt-box { font-size: 13px; }
+    .route-item { grid-template-columns: 30px 1fr; }
+    .route-file { grid-column: 1 / -1; }
+  }
+
+  @media print {
+    body { color: #171310; background: #f4efe6; }
+    .page { width: 100%; max-width: none; padding: 12mm; }
+    .hero, .section, .copy-shell, .route-item, .bank-card, .stop { box-shadow: none; break-inside: avoid; }
+    .print-btn, .copy-btn { display: none; }
+    .prompt-box { color: #171310; background: #fffaf2; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ic-factory" viewBox="0 0 24 24"><path d="M3 21V9l5 3V9l5 3V8l5 3v10z"/><path d="M3 21h18"/><path d="M7 21v-3M12 21v-3M17 21v-3"/></symbol>
+    <symbol id="ic-printer" viewBox="0 0 24 24"><path d="M7 8V3h10v5"/><rect x="3" y="8" width="18" height="8" rx="2"/><path d="M7 16h10v5H7z"/></symbol>
+    <symbol id="ic-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="ic-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M15.5 15.5 20 20"/></symbol>
+    <symbol id="ic-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></symbol>
+    <symbol id="ic-filter" viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4-2v-4z"/></symbol>
+    <symbol id="ic-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></symbol>
+    <symbol id="ic-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></symbol>
+    <symbol id="ic-file-check" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 14.5l2 2 3.5-3.5"/></symbol>
+    <symbol id="ic-chat" viewBox="0 0 24 24"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></symbol>
+    <symbol id="ic-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 5.5A2.5 2.5 0 0 0 12.5 3H6a2 2 0 0 0-2 2v9"/></symbol>
+    <symbol id="ic-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></symbol>
+    <symbol id="ic-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></symbol>
+    <symbol id="ic-alert" viewBox="0 0 24 24"><path d="M12 4l8.5 15H3.5z"/><path d="M12 10v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="ic-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></symbol>
+    <symbol id="ic-money" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 12h.01M17.5 12h.01"/></symbol>
+    <symbol id="ic-send" viewBox="0 0 24 24"><path d="M21 4L3 11l7 3 3 7z"/><path d="M21 4l-8 10"/></symbol>
+    <symbol id="ic-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4-3 7.5-7 9-4-1.5-7-5-7-9V6z"/><path d="M12 9v3.5"/><path d="M12 15.5h.01"/></symbol>
+    <symbol id="ic-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="ic-life" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M5.5 5.5l4 4M18.5 5.5l-4 4M5.5 18.5l4-4M18.5 18.5l-4-4"/></symbol>
+    <symbol id="ic-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h6a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="ic-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="10" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><path d="M12 17v4"/></symbol>
+  </defs>
+</svg>
+
+<div class="page">
+  <div class="topbar">
+    <div>neovida · Нейропросвещение</div>
+    <button class="print-btn" type="button" onclick="window.print()"><svg class="ic"><use href="#ic-printer"/></svg> PDF / печать</button>
+  </div>
+
+  <header class="hero">
+    <div class="kicker"><svg class="ic"><use href="#ic-factory"/></svg> AI Цех · домашка 2 · между уроком 1 и 2</div>
+    <h1>Заказ на проект: находим настоящую боль и выбираем, что собираем семь занятий</h1>
+    <p class="hero-lead">В субботу мы начинаем собирать приложение. Не учебное, а ваше. Эта домашка нужна, чтобы вы пришли не с фразой «ещё не придумал», а с готовым заказом: что делаем, для кого, что это высвобождает. Кодить сегодня не нужно. Нужно вытащить из себя правду и выбрать один проект.</p>
+    <div class="hero-grid">
+      <div class="hero-card"><svg class="ic"><use href="#ic-chat"/></svg><strong>Работаем в Codex</strong><span>Он уже знает ваш личный кодекс из первой домашки. Значит спрашивать «чем вы занимаетесь» не придётся.</span></div>
+      <div class="hero-card"><svg class="ic"><use href="#ic-file-check"/></svg><strong>Каждый шаг даёт файл</strong><span>Не переписка, которая потеряется, а документы в папке проекта. В субботу откроем их и начнём сборку.</span></div>
+      <div class="hero-card"><svg class="ic"><use href="#ic-clock"/></svg><strong>Около 45 минут</strong><span>Из них 20 минут разговор с агентом. Дедлайн: пятница, 22:00.</span></div>
+    </div>
+  </header>
+
+  <section class="section" id="route">
+    <div class="section-header">
+      <div class="section-num steel"><svg class="ic"><use href="#ic-grid"/></svg></div>
+      <div>
+        <div class="eyebrow steel">Маршрут домашки</div>
+        <h2>Шесть шагов, строго по порядку</h2>
+        <p class="section-sub">Каждый следующий шаг читает файл, который сделал предыдущий. Не перескакивайте: без утечек не будет честных идей, без идей нечего фильтровать.</p>
+      </div>
+    </div>
+    <div class="route">
+      <div class="route-item">
+        <div class="route-num">0</div>
+        <div><strong>Разогрев среды</strong><span>Проверяем, что Codex видит ваш кодекс и умеет писать файлы</span></div>
+        <div class="route-file"><svg class="ic"><use href="#ic-file"/></svg> ПРОВЕРКА-СРЕДЫ.md</div>
+      </div>
+      <div class="route-item">
+        <div class="route-num">1</div>
+        <div><strong>Интервью на утечки</strong><span>Агент допрашивает вас по вашей прошедшей неделе и требует цифры</span></div>
+        <div class="route-file"><svg class="ic"><use href="#ic-file"/></svg> УТЕЧКИ.md</div>
+      </div>
+      <div class="route-item">
+        <div class="route-num">2</div>
+        <div><strong>Двадцать идей</strong><span>Каждая идея привязана к конкретной утечке, а не «вообще полезно»</span></div>
+        <div class="route-file"><svg class="ic"><use href="#ic-file"/></svg> ИДЕИ.md</div>
+      </div>
+      <div class="route-item">
+        <div class="route-num">3</div>
+        <div><strong>Честный фильтр</strong><span>Пять критериев, баллы, и отдельный список «за семь занятий не собрать»</span></div>
+        <div class="route-file"><svg class="ic"><use href="#ic-file"/></svg> ФИЛЬТР.md</div>
+      </div>
+      <div class="route-item">
+        <div class="route-num">4</div>
+        <div><strong>Проверка реальностью</strong><span>Есть ли данные на руках и есть ли живой человек, кроме вас</span></div>
+        <div class="route-file"><svg class="ic"><use href="#ic-target"/></svg> один проект</div>
+      </div>
+      <div class="route-item">
+        <div class="route-num">5</div>
+        <div><strong>Заказ на проект</strong><span>Файл, с которым вы приходите в субботу и сразу начинаете сборку</span></div>
+        <div class="route-file"><svg class="ic"><use href="#ic-file-check"/></svg> ЗАКАЗ-НА-ПРОЕКТ.md</div>
+      </div>
+    </div>
+    <div class="note"><svg class="ic"><use href="#ic-mic"/></svg><div><strong>Про голос.</strong> Отвечать агенту голосом быстрее и честнее. На Mac включите диктовку в системных настройках клавиатуры, на Windows нажмите Win и H. Если проще печатать, печатайте коротко, красота ответов не важна.</div></div>
+  </section>
+
+  <section class="section" id="step-0">
+    <div class="section-header">
+      <div class="section-num">0</div>
+      <div>
+        <div class="eyebrow">Шаг 0 · разогрев <span class="time"><svg class="ic"><use href="#ic-clock"/></svg> 3 минуты</span></div>
+        <h2>Проверяем, что среда живая</h2>
+        <p class="section-sub">Сначала убеждаемся, что Codex видит ваш личный кодекс и умеет создавать файлы. Если что-то не так, лучше узнать это сегодня, а не в субботу на уроке.</p>
+      </div>
+    </div>
+    <div class="where"><svg class="ic"><use href="#ic-folder"/></svg><div><strong>Где делать:</strong> <span>приложение Codex, откройте папку своего проекта (ту же, что на уроке, или создайте новую «Мой проект»). Новый чат.</span></div></div>
+    <div class="copy-shell" data-copy-shell>
+      <div class="copy-head">
+        <div class="copy-title"><svg class="ic"><use href="#ic-shield"/></svg><div><strong>Промпт 0. Разогрев</strong><span>Первое сообщение в новом чате</span></div></div>
+        <button class="copy-btn" type="button" data-copy-button><svg class="ic"><use href="#ic-copy"/></svg> Скопировать</button>
+      </div>
+      <pre class="prompt-box" data-copy-text>Прочитай мой личный кодекс из файла ~/.codex/AGENTS.md, а также правила этой папки.
+Скажи своими словами три вещи: чем я занимаюсь, к чему я иду и что тебе со мной запрещено делать.
+Потом создай в этой папке файл ПРОВЕРКА-СРЕДЫ.md и запиши в него одну строку: среда готова к домашке 2.
+Если прочитать кодекс или записать файл не получается, не притворяйся, что всё вышло. Скажи прямо, в чём причина, и предложи решение.</pre>
+      <div class="copy-foot">Нажмите на кнопку или на любое место блока, промпт скопируется целиком.</div>
+    </div>
+    <div class="done"><svg class="ic"><use href="#ic-check-circle"/></svg><div><strong>Шаг пройден, когда:</strong> <span>агент пересказал, чем вы занимаетесь, и в папке появился файл ПРОВЕРКА-СРЕДЫ.md.</span></div></div>
+    <div class="note warning"><svg class="ic"><use href="#ic-alert"/></svg><div><strong>Если агент пишет, что работает в режиме только для чтения</strong> и не может создать файл, не бодайтесь с ним в одиночку: пришлите скриншот в чат, разберём до субботы. Домашку при этом всё равно делайте, просто попросите агента выводить результаты каждого шага в чат, а тексты сохраните себе в заметки.</div></div>
+    <div class="note"><svg class="ic"><use href="#ic-file"/></svg><div><strong>Если агент говорит, что кодекса нет,</strong> значит первая домашка ещё не доделана. Соберите кодекс сначала, это 15 минут, промпты лежат в сообщении от понедельника. Без него агент не знает, чем вы занимаетесь, и весь дальнейший разговор пойдёт в пустоту.</div></div>
+  </section>
+
+  <section class="section" id="step-1">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div>
+        <div class="eyebrow">Шаг 1 · интервью <span class="time"><svg class="ic"><use href="#ic-clock"/></svg> 20 минут</span></div>
+        <h2>Интервью на утечки: где у вас уходят часы и деньги</h2>
+        <p class="section-sub">Самый важный шаг. Агент будет задавать вопросы по одному и добиваться цифр. Ваша задача: отвечать про реальную прошедшую неделю, а не про то, как «в целом бывает».</p>
+      </div>
+    </div>
+    <div class="where"><svg class="ic"><use href="#ic-chat"/></svg><div><strong>Где делать:</strong> <span>тот же чат Codex. Рядом откройте свой календарь и переписки за последние семь дней, они понадобятся уже на первом вопросе.</span></div></div>
+    <div class="why"><strong>Зачем так.</strong> Если спросить себя «а что бы мне автоматизировать», в голову придёт что-то приличное и бесполезное. Настоящие проекты растут не из фантазии, а из того, что уже сожрало ваше время на этой неделе.</div>
+    <div class="copy-shell" data-copy-shell>
+      <div class="copy-head">
+        <div class="copy-title"><svg class="ic"><use href="#ic-search"/></svg><div><strong>Промпт 1. Интервью на утечки</strong><span>Отвечайте по одному вопросу, не торопитесь</span></div></div>
+        <button class="copy-btn" type="button" data-copy-button><svg class="ic"><use href="#ic-copy"/></svg> Скопировать</button>
+      </div>
+      <pre class="prompt-box" data-copy-text>Ты мой бизнес-аналитик. Ты уже знаешь мой личный кодекс: чем я занимаюсь, куда иду и как со мной работать.
+Задача: вытащить из меня список моих настоящих утечек времени, денег и нервов. Это подготовка к выбору проекта, который мы будем собирать вместе семь занятий.
+
+Правила интервью, соблюдай строго:
+Задавай вопросы по одному и жди мой ответ. Не показывай список вопросов заранее.
+Если мой ответ размытый или в нём нет цифры, задай один уточняющий вопрос и добейся конкретики: сколько раз в неделю, сколько часов, сколько рублей.
+Не придумывай ответы за меня. Подсказывай варианты только если я сам сказал «не знаю».
+На этом шаге не предлагай никаких приложений и решений. Сейчас мы собираем только факты.
+
+Начни с того, что попросишь меня открыть календарь и переписки за последние семь дней и назвать, чем я реально занимался.
+Дальше пройди по блокам, по одному вопросу за раз:
+1. Что я делал руками больше трёх раз за эту неделю.
+2. Что мне приходилось искать: где лежит информация, в скольких местах, сколько времени уходит на поиск.
+3. О чём меня спрашивают одно и то же: клиенты, сотрудники, партнёры.
+4. Где я жду другого человека и простаиваю.
+5. Что я считаю в голове, в переписке или в блокноте вместо нормального расчёта.
+6. Что у меня забывается и всплывает в последний момент.
+7. Из-за чего в этом месяце я потерял деньги, время или клиента.
+8. Что я не делаю, хотя надо, просто потому что руками это слишком долго.
+9. Что я отдал бы новому помощнику в первый день, если бы он у меня появился.
+10. Что бесит меня в моей работе прямо сейчас, три вещи.
+
+Когда пройдём все блоки, собери таблицу и сохрани её в файл УТЕЧКИ.md в этой папке.
+Колонки: утечка, как часто, сколько часов в неделю, сколько рублей в месяц, кто от этого страдает.
+Перед записью покажи, что именно собираешься записать, и дождись моего «да».
+После записи скажи одной фразой, какие три утечки у меня самые дорогие и почему именно они.</pre>
+      <div class="copy-foot">Десять блоков вопросов. Пройдите все, даже если на третьем покажется, что уже всё понятно.</div>
+    </div>
+    <div class="done"><svg class="ic"><use href="#ic-check-circle"/></svg><div><strong>Шаг пройден, когда:</strong> <span>в файле УТЕЧКИ.md не меньше десяти строк, и почти в каждой стоит цифра, а не слово «много».</span></div></div>
+  </section>
+
+  <section class="section" id="step-2">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div>
+        <div class="eyebrow">Шаг 2 · идеи <span class="time"><svg class="ic"><use href="#ic-clock"/></svg> 5 минут</span></div>
+        <h2>Двадцать идей, и каждая закрывает вашу утечку</h2>
+        <p class="section-sub">Теперь работает агент, а вы читаете. Насмотренность даёт он: вы не обязаны знать, какие вообще бывают приложения.</p>
+      </div>
+    </div>
+    <div class="where"><svg class="ic"><use href="#ic-chat"/></svg><div><strong>Где делать:</strong> <span>тот же чат Codex, сразу после первого шага.</span></div></div>
+    <div class="copy-shell" data-copy-shell>
+      <div class="copy-head">
+        <div class="copy-title"><svg class="ic"><use href="#ic-list"/></svg><div><strong>Промпт 2. Двадцать идей из утечек</strong><span>Ничего не выбираем, просто смотрим варианты</span></div></div>
+        <button class="copy-btn" type="button" data-copy-button><svg class="ic"><use href="#ic-copy"/></svg> Скопировать</button>
+      </div>
+      <pre class="prompt-box" data-copy-text>Теперь идеи. Прочитай файл УТЕЧКИ.md и держи в голове мой личный кодекс.
+Дай 20 идей небольших приложений, которые я смогу собрать сам вместе с тобой за семь занятий и которыми буду реально пользоваться.
+
+Правила:
+Каждая идея обязана закрывать конкретную утечку из файла. Идею без утечки не предлагай.
+Никаких общих полезных штук. Не предлагай трекер привычек, конвертер валют, список фильмов, погоду, клон известного сервиса и калькулятор на один экран.
+Разнообразь типы инструментов, минимум по одной идее каждого типа:
+справочник или база знаний, считалка под мои расчёты, панель со статусами, генератор документов, чек-лист или регламент, простая CRM под мой процесс, тренажёр или проверка знаний, отчёт для партнёра или руководителя, страница для клиента, внутренний помощник для сотрудников.
+Формат строки: название, какую утечку закрывает, что высвобождает в часах или рублях, тип инструмента.
+
+Сохрани список в файл ИДЕИ.md и покажи его в чате.
+Ничего за меня не выбирай, выбор будет на следующих шагах.</pre>
+      <div class="copy-foot">Десять типов инструментов в одном списке. Половину вы, скорее всего, про себя даже не думали.</div>
+    </div>
+    <div class="done"><svg class="ic"><use href="#ic-check-circle"/></svg><div><strong>Шаг пройден, когда:</strong> <span>появился файл ИДЕИ.md и вы поймали себя на мысли «а вот это мне правда надо».</span></div></div>
+  </section>
+
+  <section class="section" id="step-3">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div>
+        <div class="eyebrow">Шаг 3 · фильтр <span class="time"><svg class="ic"><use href="#ic-clock"/></svg> 5 минут</span></div>
+        <h2>Честный фильтр: пять критериев и правда без вежливости</h2>
+        <p class="section-sub">Из двадцати идей больше половины отвалятся, и это нормально. Считает агент, решаете вы.</p>
+      </div>
+    </div>
+    <div class="where"><svg class="ic"><use href="#ic-chat"/></svg><div><strong>Где делать:</strong> <span>тот же чат Codex.</span></div></div>
+    <div class="why"><strong>Зачем пятый критерий.</strong> Проект чаще всего встаёт не потому, что сложный, а потому что упирается в оплату, в чужую закрытую систему или в персональные данные клиентов. В первой версии мы это обходим, поэтому проверяем заранее.</div>
+    <div class="copy-shell" data-copy-shell>
+      <div class="copy-head">
+        <div class="copy-title"><svg class="ic"><use href="#ic-filter"/></svg><div><strong>Промпт 3. Фильтр по пяти критериям</strong><span>Агент считает баллы и говорит правду</span></div></div>
+        <button class="copy-btn" type="button" data-copy-button><svg class="ic"><use href="#ic-copy"/></svg> Скопировать</button>
+      </div>
+      <pre class="prompt-box" data-copy-text>Теперь честный фильтр. Прочитай файл ИДЕИ.md.
+Оцени каждую идею по пяти критериям, по шкале 0, 1 или 2:
+1. Частота: я буду пользоваться этим каждый день или хотя бы каждую неделю.
+2. Цена вопроса: сколько это реально высвобождает часов в неделю или рублей в месяц.
+3. Есть куда расти: можно начать с простого и докручивать семь занятий.
+4. Данные на руках: у меня уже есть чем это наполнить, прямо сегодня (таблица, папка файлов, прайс, список клиентов, регламент, переписки).
+5. Первая версия без стоп-зон: обходится без приёма оплаты, без персональных данных клиентов, без входа в чужую закрытую систему вроде 1С или банка и без сбора данных с чужих сайтов.
+
+Сделай таблицу с баллами и суммой, отсортируй по сумме и сохрани в файл ФИЛЬТР.md.
+Отдельно, ниже таблицы, напиши список «за семь занятий не собрать» и по каждой идее одну причину. Не смягчай, мне нужна правда, а не вежливость.
+Покажи мне топ-5 по сумме баллов и объясни в одну строку, почему наверху именно они.</pre>
+      <div class="copy-foot">Если агент вдруг оценил всё по максимуму, напишите ему: «оценивай строже, ты мне льстишь».</div>
+    </div>
+    <div class="done"><svg class="ic"><use href="#ic-check-circle"/></svg><div><strong>Шаг пройден, когда:</strong> <span>есть таблица с баллами, топ-5 и отдельный список того, что за курс не собрать.</span></div></div>
+  </section>
+
+  <section class="section" id="step-4">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div>
+        <div class="eyebrow">Шаг 4 · проверка реальностью <span class="time"><svg class="ic"><use href="#ic-clock"/></svg> 10 минут</span></div>
+        <h2>Проверка реальностью: данные на руках и живой человек</h2>
+        <p class="section-sub">Здесь отваливаются красивые фантазии. Проект без данных и без второго пользователя выглядит бодро на бумаге и умирает на третьем занятии.</p>
+      </div>
+    </div>
+    <div class="where"><svg class="ic"><use href="#ic-chat"/></svg><div><strong>Где делать:</strong> <span>тот же чат Codex. Отвечайте по одному вопросу, агент сам поведёт вас по топ-5.</span></div></div>
+    <div class="copy-shell" data-copy-shell>
+      <div class="copy-head">
+        <div class="copy-title"><svg class="ic"><use href="#ic-user"/></svg><div><strong>Промпт 4. Проверка реальностью и выбор</strong><span>Из пяти идей остаётся одна</span></div></div>
+        <button class="copy-btn" type="button" data-copy-button><svg class="ic"><use href="#ic-copy"/></svg> Скопировать</button>
+      </div>
+      <pre class="prompt-box" data-copy-text>Теперь проверка реальностью по моему топ-5. Иди по идеям по одной.
+По каждой идее задай мне ровно три вопроса, по одному за раз, и дожидайся ответа:
+1. Какие данные и материалы у меня есть на руках уже сегодня, чтобы это наполнить.
+2. Кто, кроме меня, будет этим пользоваться. Назови имя конкретного человека, не «менеджеры» и не «клиенты».
+3. Что этот человек скажет, когда увидит рабочую версию.
+
+Если по идее у меня нет данных на руках или нет ни одного живого пользователя, вычеркни её и скажи прямо, что это пока фантазия, а не проект.
+Что останется, сравни между собой: по каждой две строки, чем сильна и чем рискованна.
+Потом задай мне один вопрос: над чем из этого мне хочется сидеть вечером не по обязанности, а потому что интересно довести до конца.
+После моего ответа зафиксируй выбор одной фразой: я делаю такой-то проект, чтобы высвободить такой-то ресурс. Ресурс обязательно с цифрой.</pre>
+      <div class="copy-foot">Имя живого человека, а не роль. Именно ему вы покажете первую версию.</div>
+    </div>
+    <div class="done"><svg class="ic"><use href="#ic-check-circle"/></svg><div><strong>Шаг пройден, когда:</strong> <span>у вас один проект, имя первого пользователя и фраза с цифрой.</span></div></div>
+    <div class="note"><svg class="ic"><use href="#ic-user"/></svg><div><strong>Плюс балл к смелости.</strong> Если человек, которого вы назвали, сегодня на связи, спросите его прямо: «тебе бы такое пригодилось?» Его дословный ответ пришлите вместе с домашкой. Одна фраза от живого человека стоит дороже часа размышлений.</div></div>
+  </section>
+
+  <section class="section" id="step-5">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div>
+        <div class="eyebrow">Шаг 5 · заказ <span class="time"><svg class="ic"><use href="#ic-clock"/></svg> 5 минут</span></div>
+        <h2>Заказ на проект: файл, с которым вы придёте в субботу</h2>
+        <p class="section-sub">Это главный результат домашки. В субботу мы откроем этот файл и начнём собирать по нему, поэтому пишем не для галочки.</p>
+      </div>
+    </div>
+    <div class="where"><svg class="ic"><use href="#ic-file-check"/></svg><div><strong>Где делать:</strong> <span>тот же чат Codex. Файл появится в папке проекта.</span></div></div>
+    <div class="copy-shell" data-copy-shell>
+      <div class="copy-head">
+        <div class="copy-title"><svg class="ic"><use href="#ic-file-check"/></svg><div><strong>Промпт 5. Собрать заказ на проект</strong><span>Девять разделов, ни одного лишнего</span></div></div>
+        <button class="copy-btn" type="button" data-copy-button><svg class="ic"><use href="#ic-copy"/></svg> Скопировать</button>
+      </div>
+      <pre class="prompt-box" data-copy-text>Собери мой заказ на проект и сохрани его в файл ЗАКАЗ-НА-ПРОЕКТ.md в этой папке.
+Структура файла, ровно эти девять разделов:
+1. Замысел одной фразой.
+2. Для кого: кто будет пользоваться и на чём, телефон или компьютер.
+3. Боль: что происходит сейчас и почему так плохо.
+4. Что высвобождает: часов в неделю или рублей в месяц, цифрой.
+5. Данные на руках: что у меня уже есть, чтобы это наполнить.
+6. Ядро первой версии: три экрана или три действия, не больше.
+7. Что не делаем сейчас: список того, что осознанно откладываем.
+8. Готово, когда: признак, по которому я сам увижу, что версия работает.
+9. Куда растём: от трёх до пяти шагов на следующие занятия.
+
+Сначала покажи полный текст в чате и дождись моего «да». Записывай файл только после подтверждения.
+После записи перечитай файл и скажи честно три вещи: что в нём слабое, чего в нём не хватает и где я обманываю себя. Ничего не переписывай без моего разрешения.</pre>
+      <div class="copy-foot">Последний абзац промпта самый ценный: агент имеет право сказать вам, что заказ слабый.</div>
+    </div>
+    <div class="done"><svg class="ic"><use href="#ic-check-circle"/></svg><div><strong>Шаг пройден, когда:</strong> <span>в папке лежит ЗАКАЗ-НА-ПРОЕКТ.md со всеми девятью разделами, и вы прочитали, что агент считает в нём слабым.</span></div></div>
+  </section>
+
+  <section class="section utility" id="stop-zones">
+    <div class="section-header">
+      <div class="section-num steel"><svg class="ic"><use href="#ic-shield"/></svg></div>
+      <div>
+        <div class="eyebrow steel">Рамки</div>
+        <h2>Что не берём в первую версию</h2>
+        <p class="section-sub">Это не «нельзя никогда». Это «не сейчас»: такие куски требуют отдельного разговора, и мы разберём их дальше по курсу. Если ваша идея держится только на одном из этих пунктов, её лучше отложить.</p>
+      </div>
+    </div>
+    <div class="stop-grid">
+      <div class="stop"><svg class="ic"><use href="#ic-money"/></svg><div><strong>Приём оплаты</strong><span>Эквайринг, карты, чеки. Считать деньги можно, принимать пока нет.</span></div></div>
+      <div class="stop"><svg class="ic"><use href="#ic-user"/></svg><div><strong>Персональные данные клиентов</strong><span>Паспорта, договоры, медицинские и кадровые данные живых людей. Работаем на тестовых.</span></div></div>
+      <div class="stop"><svg class="ic"><use href="#ic-grid"/></svg><div><strong>Вход в чужую закрытую систему</strong><span>1С, банк, рабочая CRM, склад компании. Первую версию делаем рядом, а не внутри.</span></div></div>
+      <div class="stop"><svg class="ic"><use href="#ic-alert"/></svg><div><strong>Сбор данных с чужих сайтов</strong><span>Парсинг маркетплейсов и порталов. Это отдельная тема с отдельными рисками.</span></div></div>
+      <div class="stop"><svg class="ic"><use href="#ic-send"/></svg><div><strong>Рассылки от вашего имени</strong><span>Письма и сообщения клиентам без вашей проверки каждого текста.</span></div></div>
+      <div class="stop"><svg class="ic"><use href="#ic-shield"/></svg><div><strong>Пароли и ключи в проекте</strong><span>Ничего секретного в учебной папке, даже если очень удобно.</span></div></div>
+    </div>
+  </section>
+
+  <section class="section utility" id="bank">
+    <div class="section-header">
+      <div class="section-num steel"><svg class="ic"><use href="#ic-life"/></svg></div>
+      <div>
+        <div class="eyebrow steel">Если после интервью пусто</div>
+        <h2>Банк готовых заказов: возьмите и адаптируйте</h2>
+        <p class="section-sub">Сначала честно пройдите шаги 1 и 2, это важнее списка. Но если идей всё равно нет, выбирайте отсюда: двенадцать рабочих заказов из живых сфер. Приходить с пустыми руками нельзя, это единственное правило домашки.</p>
+      </div>
+    </div>
+    <div class="bank">
+      <div class="bank-card"><span class="bank-tag">Производство и склад</span><strong>Панель остатков по позициям</strong><span>Видно, что заканчивается, что зависло мёртвым грузом и что пора заказывать. Для себя и кладовщика.</span></div>
+      <div class="bank-card"><span class="bank-tag">Инвестиции</span><strong>Карточки объектов и расчёт доходности</strong><span>Вместо шести таблиц в разных местах одна панель: вложено, отдача, срок выхода.</span></div>
+      <div class="bank-card"><span class="bank-tag">СРО, лицензии, НОК</span><strong>Справочник требований по видам работ</strong><span>Клиент называет вид работ, инструмент выдаёт состав документов и сроки. Меньше одинаковых ответов руками.</span></div>
+      <div class="bank-card"><span class="bank-tag">Юридические услуги</span><strong>Проверялка комплекта перед подачей</strong><span>Чек-лист по заявке и письмо клиенту со статусом. Ловит недостающие бумаги до отказа.</span></div>
+      <div class="bank-card"><span class="bank-tag">Запчасти и расходники</span><strong>Подборщик по модели устройства</strong><span>Менеджер вбивает модель принтера, получает подходящие картриджи и аналоги. Без звонка «а что подойдёт».</span></div>
+      <div class="bank-card"><span class="bank-tag">Подбор персонала</span><strong>Панель кандидатов по вакансии</strong><span>Статусы, комментарии и готовая карточка кандидата для заказчика в один клик.</span></div>
+      <div class="bank-card"><span class="bank-tag">Отель, база отдыха</span><strong>Пульт загрузки по домикам и датам</strong><span>Видно свободное, занятое и просчёт брони по сезону. Вместо переписки в мессенджере.</span></div>
+      <div class="bank-card"><span class="bank-tag">Отдел продаж</span><strong>Тренажёр возражений для менеджеров</strong><span>Десять типовых возражений, разбор ответа по чек-листу. Новый менеджер входит в работу быстрее.</span></div>
+      <div class="bank-card"><span class="bank-tag">Автобизнес</span><strong>Калькулятор работ и наряд-заказ</strong><span>Считает стоимость по видам работ и сразу печатает документ клиенту.</span></div>
+      <div class="bank-card"><span class="bank-tag">Подрядчики и допуски</span><strong>Реестр подрядчиков со сроками</strong><span>Светофор по просроченным допускам, аттестациям и договорам. Видно проблему заранее, а не после проверки.</span></div>
+      <div class="bank-card"><span class="bank-tag">Наставничество</span><strong>Тренажёр по регламенту для новичков</strong><span>Сотрудник читает правила и сразу проходит проверку. Вы не пересказываете одно и то же десятый раз.</span></div>
+      <div class="bank-card"><span class="bank-tag">Управление</span><strong>Отчёт для партнёра одной страницей</strong><span>Собирает цифры недели в понятный вид, вместо собранной вручную презентации по вечерам.</span></div>
+    </div>
+    <div class="copy-shell" data-copy-shell>
+      <div class="copy-head">
+        <div class="copy-title"><svg class="ic"><use href="#ic-life"/></svg><div><strong>Запасной промпт. Адаптировать готовый заказ</strong><span>Если берёте идею из банка</span></div></div>
+        <button class="copy-btn" type="button" data-copy-button><svg class="ic"><use href="#ic-copy"/></svg> Скопировать</button>
+      </div>
+      <pre class="prompt-box" data-copy-text>Я выбрал идею из банка заказов курса, вот она: [впишите название и описание].
+Задача: адаптировать её под меня, опираясь на мой личный кодекс и на мои утечки из файла УТЕЧКИ.md.
+Задай мне по одному вопросу за раз, пока не соберёшь: кто будет пользоваться кроме меня, какие данные у меня есть на руках, что в этой идее лишнее именно для моего дела и что нужно добавить.
+Не выдумывай за меня факты. Если чего-то не знаешь, спроси.
+Потом собери файл ЗАКАЗ-НА-ПРОЕКТ.md по структуре из шага 5, покажи текст и дождись моего «да» перед записью.</pre>
+      <div class="copy-foot">Взять готовое и переделать под себя это нормальный рабочий ход, а не слабость.</div>
+    </div>
+  </section>
+
+  <section class="section utility" id="send">
+    <div class="section-header">
+      <div class="section-num steel"><svg class="ic"><use href="#ic-send"/></svg></div>
+      <div>
+        <div class="eyebrow steel">Отчёт</div>
+        <h2>Что прислать в чат</h2>
+        <p class="section-sub">Коротко, но по этим следам видно, что вы прошли воронку, а не выбрали наугад.</p>
+      </div>
+    </div>
+    <div class="send-list">
+      <div class="send-item"><div class="send-dot">1</div><div><strong>Пара строк, что сделали</strong><span>Прошёл интервью, собрал идеи, отфильтровал, выбрал проект.</span></div></div>
+      <div class="send-item"><div class="send-dot">2</div><div><strong>Фраза с цифрой</strong><span>«Я делаю такой проект, чтобы высвободить столько часов в неделю или рублей в месяц».</span></div></div>
+      <div class="send-item"><div class="send-dot">3</div><div><strong>Частичный скриншот</strong><span>Таблица фильтра или ответ агента про топ-5. Целиком показывать не нужно, там ваши цифры.</span></div></div>
+      <div class="send-item"><div class="send-dot">4</div><div><strong>Имя первого пользователя</strong><span>Кто, кроме вас, увидит первую версию. Если успели спросить его, приложите ответ дословно.</span></div></div>
+      <div class="send-item"><div class="send-dot">5</div><div><strong>Одна строка: что удивило</strong><span>Что агент сказал про вас или про ваш заказ такого, чего вы не ожидали.</span></div></div>
+    </div>
+    <div class="deadline"><svg class="ic"><use href="#ic-clock"/></svg><div><strong>Дедлайн: пятница, 22:00</strong><span>В субботу на уроке мы начинаем собирать. Кто приходит с заказом, тот к концу занятия видит первую живую версию. Кто без заказа, тот весь урок придумывает идею вместо сборки.</span></div></div>
+    <div class="note warning"><svg class="ic"><use href="#ic-alert"/></svg><div><strong>Если где-то встали,</strong> не молчите до субботы: пришлите скриншот ошибки и номер шага, на котором остановились. Разберём в чате, на это и есть техподдержка курса.</div></div>
+  </section>
+
+  <section class="section utility" id="selfcheck">
+    <div class="section-header">
+      <div class="section-num steel"><svg class="ic"><use href="#ic-check-circle"/></svg></div>
+      <div>
+        <div class="eyebrow steel">Самопроверка</div>
+        <h2>Как понять, что домашка сделана сильно</h2>
+        <p class="section-sub">Пять признаков. Если все пять на месте, в субботу вы будете собирать, а не выбирать.</p>
+      </div>
+    </div>
+    <div class="selfcheck">
+      <div class="selfcheck-row"><svg class="ic"><use href="#ic-check"/></svg><div>В файле УТЕЧКИ.md стоят цифры, а не «много времени» и «часто».</div></div>
+      <div class="selfcheck-row"><svg class="ic"><use href="#ic-check"/></svg><div>Ни одна из идей в топ-5 не начинается словами «вообще было бы полезно».</div></div>
+      <div class="selfcheck-row"><svg class="ic"><use href="#ic-check"/></svg><div>У выбранного проекта есть имя живого человека, кроме вас.</div></div>
+      <div class="selfcheck-row"><svg class="ic"><use href="#ic-check"/></svg><div>Данные для наполнения уже лежат у вас, а не «надо будет как-нибудь собрать».</div></div>
+      <div class="selfcheck-row"><svg class="ic"><use href="#ic-check"/></svg><div>Ядро первой версии влезает в три действия, и вы можете назвать их вслух.</div></div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <strong>neovida · Нейропросвещение</strong><br>
+    AI Цех · домашка 2 между уроком 1 и 2 · «Заказ на проект»: утечки, идеи, фильтр, проверка, заказ
+  </footer>
+</div>
+
+<script>
+  function copyFromShell(shell) {
+    const textNode = shell.querySelector('[data-copy-text]');
+    const button = shell.querySelector('[data-copy-button]');
+    const text = textNode ? textNode.textContent.trim() : '';
+    if (!text) return;
+
+    const markCopied = () => {
+      shell.classList.add('copied');
+      if (button) {
+        const original = button.innerHTML;
+        button.innerHTML = '<svg class="ic"><use href="#ic-check"/></svg> Скопировано';
+        setTimeout(() => { button.innerHTML = original; }, 1800);
+      }
+      setTimeout(() => shell.classList.remove('copied'), 1800);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(markCopied).catch(() => fallbackCopy(text, markCopied));
+    } else {
+      fallbackCopy(text, markCopied);
+    }
+  }
+
+  function fallbackCopy(text, done) {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand('copy'); done(); } catch (e) {}
+    document.body.removeChild(area);
+  }
+
+  document.querySelectorAll('[data-copy-shell]').forEach((shell) => {
+    shell.addEventListener('click', () => copyFromShell(shell));
+  });
+</script>
+</body>
+</html>
