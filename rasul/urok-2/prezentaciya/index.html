@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Расул · урок 2 · оформляем Codex и собираем калькулятор</title>
+<style>
+:root{--coal:#171816;--warm:#f1eee7;--paper:#faf8f3;--muted:#77766f;--line:#d3cfc5;--copper:#a64d2c;--clay:#d58a64;--sage:#395f50;--pad:clamp(28px,5vw,84px)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--coal);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--coal)}button{font:inherit}
+.deck{position:relative;width:100%;height:100%}
+.slide{position:absolute;inset:0;display:grid;grid-template-rows:auto 1fr auto;background:var(--warm);padding:24px var(--pad) 22px;opacity:0;visibility:hidden;transform:translateX(24px);transition:opacity .32s ease,transform .32s ease;overflow:hidden}
+.slide.active{opacity:1;visibility:visible;transform:none;z-index:2}
+.slide.dark{background:var(--coal);color:#fff}.slide.copper{background:var(--copper);color:#fff}
+.slide.photo{background:#111;color:#fff}
+.slide.photo:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,9,8,.95) 0%,rgba(8,9,8,.78) 36%,rgba(8,9,8,.12) 72%),url('assets/hero-concrete.png') center/cover no-repeat}
+.topline,.foot{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:20px;font-size:11px;text-transform:uppercase;letter-spacing:.16em;font-weight:800}
+.topline{min-height:30px}.topline .chapter{color:var(--copper)}.dark .topline .chapter,.photo .topline .chapter{color:var(--clay)}.copper .topline .chapter{color:#f6d4c4}
+.foot{color:var(--muted);padding-right:104px}.dark .foot,.photo .foot,.copper .foot{color:#a8aaa4}
+.body{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;min-height:0;padding:14px 0}.body.wide{max-width:1500px;margin:auto;width:100%}
+.display{font-size:clamp(48px,7vw,116px);font-weight:850;line-height:.9;letter-spacing:-.045em;margin:0}
+.headline{font-size:clamp(40px,5.2vw,82px);font-weight:850;line-height:.95;letter-spacing:-.035em;margin:0 0 clamp(16px,3vh,36px);max-width:1350px}
+.sub{font-size:clamp(17px,1.6vw,29px);line-height:1.35;max-width:900px;color:var(--muted);margin:22px 0 0}.dark .sub,.photo .sub,.copper .sub{color:#cbcfc7}
+.accent{color:var(--copper)}.dark .accent,.photo .accent{color:var(--clay)}.copper .accent{color:#2b1a13}
+.hero-copy{max-width:940px}.stamp{display:inline-flex;margin-top:30px;padding:11px 15px;border:1px solid rgba(255,255,255,.35);font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.cards.two{grid-template-columns:repeat(2,1fr)}
+.card{border:1px solid var(--line);background:var(--paper);padding:clamp(20px,2.2vw,34px);min-height:180px}
+.dark .card{background:#21221f;border-color:#3d3f3a}.copper .card{background:#8e3d22;border-color:#bd7355}
+.card .tag{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--copper);font-weight:800}.dark .card .tag{color:var(--clay)}.copper .card .tag{color:#f4cbb8}
+.card h3{font:800 clamp(23px,2.3vw,40px)/1.03 Inter,sans-serif;margin:14px 0 9px}.card p{margin:0;color:var(--muted);font-size:clamp(14px,1.1vw,19px);line-height:1.42}.dark .card p,.copper .card p{color:#c7c9c2}
+.num{font:800 clamp(15px,1.2vw,20px)/1 Inter,sans-serif;color:var(--copper);letter-spacing:.02em}.dark .num,.copper .num{color:var(--clay)}
+.two-layer{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.layer{padding:clamp(24px,3vw,46px);border:1px solid #3d3f3a;background:#21221f;min-height:340px;display:flex;flex-direction:column;justify-content:space-between}
+.layer .where{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--clay)}
+.layer h3{font:800 clamp(30px,3.2vw,54px)/1 Inter,sans-serif;margin:14px 0 12px}.layer p{color:#c9cbc5;font-size:clamp(16px,1.3vw,22px);line-height:1.4;margin:0}
+.steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+.st{position:relative;border:1px solid var(--line);background:var(--paper);min-height:230px;padding:26px 22px}
+.st:not(:last-child):after{content:"";position:absolute;z-index:2;right:-8px;top:50%;width:14px;height:14px;border-top:2px solid var(--copper);border-right:2px solid var(--copper);transform:rotate(45deg) translateY(-50%)}
+.st .n{color:var(--copper);font-size:12px;font-weight:800;letter-spacing:.12em;margin-bottom:20px}
+.st h3{font:800 clamp(22px,2vw,34px)/1.05 Inter,sans-serif;margin:0 0 10px}.st p{color:var(--muted);font-size:15px;line-height:1.4;margin:0}
+.leaks{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.leak{border-top:4px solid var(--copper);background:var(--paper);padding:24px}.copper .leak{background:#8e3d22;border-color:#f4cbb8}
+.leak b{display:block;font:800 clamp(20px,1.8vw,30px)/1.08 Inter,sans-serif;margin-bottom:8px}.leak span{color:var(--muted);font-size:15px}.copper .leak span{color:#f0d3c6}
+.gh{display:grid;grid-template-columns:150px 1fr;gap:44px;align-items:center}.gh svg{width:120px;height:120px;fill:#fff}
+.big-list{list-style:none;padding:0;margin:16px 0 0;max-width:1000px}
+.big-list li{padding:16px 0;border-top:1px solid var(--line);font-size:clamp(17px,1.5vw,26px);font-weight:600;display:flex;gap:16px}
+.dark .big-list li,.copper .big-list li{border-color:rgba(255,255,255,.16)}
+.big-list li .k{color:var(--copper);font-weight:800;flex:0 0 auto}.dark .big-list .k,.copper .big-list .k{color:var(--clay)}
+.controls{position:fixed;right:20px;bottom:17px;z-index:20;display:flex;gap:8px}
+.controls button{width:42px;height:42px;border:1px solid rgba(128,128,128,.35);background:rgba(20,21,19,.78);color:#fff;cursor:pointer;display:grid;place-items:center}.controls button:hover{background:var(--copper)}
+.progress{position:fixed;z-index:21;left:0;bottom:0;height:4px;background:var(--copper);width:0;transition:width .3s}
+.counter{font-variant-numeric:tabular-nums}
+@media(max-width:640px){.cards,.cards.two,.two-layer,.steps3,.leaks,.gh{grid-template-columns:1fr}.slide{padding-left:22px;padding-right:22px}.foot{display:none}.st:not(:last-child):after{display:none}.gh{gap:20px}.gh svg{width:70px;height:70px}}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <!-- 1 -->
+  <section class="slide photo active">
+    <div class="topline"><span class="chapter">neovida.ai · персональное обучение</span><span>Расул · урок 2</span></div>
+    <div class="body wide"><div class="hero-copy">
+      <h1 class="display">Оформляем Codex,<br>собираем <span class="accent">первый инструмент</span></h1>
+      <p class="sub">Сегодня две вещи. Настраиваем Codex под тебя, а потом прямо на уроке собираем твой калькулятор замера из базы мастера. К концу встречи у тебя рабочая вещь, а не теория.</p>
+      <div class="stamp">28 июля 2026 · Уфа · Иремель Тауэр</div>
+    </div></div>
+    <div class="foot"><span>Оформление · Калькулятор</span><span class="counter">01</span></div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide">
+    <div class="topline"><span class="chapter">План урока</span><span>Расул · урок 2</span></div>
+    <div class="body wide">
+      <h2 class="headline">Две части, один результат</h2>
+      <div class="cards two">
+        <div class="card"><div class="tag">Часть 1</div><h3>Настраиваем Codex</h3><p>Персонализация, мастер-инструкция, личный кодекс проекта и GitHub. Codex перестаёт быть чужим инструментом и становится твоей инженерной командой.</p></div>
+        <div class="card"><div class="tag">Часть 2</div><h3>Собираем калькулятор</h3><p>Первый рабочий инструмент из твоей базы мастера. Считает цену и материалы, отдаёт расчёт клиенту. Тем же вечером им пользуется Рамиль.</p></div>
+      </div>
+      <p class="sub">За тебя всё делать не буду. Делаешь ты, я рядом. Дома докручиваешь сам по шагам.</p>
+    </div>
+    <div class="foot"><span>Оформление · Калькулятор</span><span class="counter">02</span></div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide">
+    <div class="topline"><span class="chapter">Как устроен Codex</span><span>Расул · урок 2</span></div>
+    <div class="body wide">
+      <h2 class="headline">Codex понимает три вещи</h2>
+      <div class="cards">
+        <div class="card"><div class="num">01 · разовая команда</div><h3>Промт</h3><p>Разовая инструкция. «Сделай калькулятор», «почини ошибку». Живёт внутри одного запроса. Сильный промт помогает, но каждый раз пишешь заново.</p></div>
+        <div class="card"><div class="num">02 · повторяемый метод</div><h3>Skill</h3><p>Сохранённый сценарий: как делать определённый тип задач стабильно и по правилам. Промт говорит «что», skill задаёт «как именно».</p></div>
+        <div class="card"><div class="num">03 · новые руки</div><h3>Plugin</h3><p>Расширение возможностей: GitHub, браузер, публикация. Skill учит методике, plugin даёт новые руки: открыть браузер, сохранить код, выложить проект.</p></div>
+      </div>
+    </div>
+    <div class="foot"><span>Оформление · Калькулятор</span><span class="counter">03</span></div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide dark">
+    <div class="topline"><span class="chapter">Настройка · не путать</span><span>Расул · урок 2</span></div>
+    <div class="body wide">
+      <h2 class="headline">Два текста в два разных места</h2>
+      <div class="two-layer">
+        <div class="layer"><div><span class="where">в настройки Codex</span><h3>Персонализация</h3></div><p>Постоянный стиль общения. Как объяснять новичку, как вести через проект, когда тормозить, как не грузить технической кашей.</p></div>
+        <div class="layer"><div><span class="where">в чат Codex</span><h3>Мастер-инструкция</h3></div><p>Стартовая команда. Codex становится агентом-настройщиком: проверяет среду, ставит рабочие режимы и проверки, даёт отчёт простым языком.</p></div>
+      </div>
+    </div>
+    <div class="foot"><span>Оформление · Калькулятор</span><span class="counter">04</span></div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide">
+    <div class="topline"><span class="chapter">Персонализация Codex</span><span>Расул · урок 2</span></div>
+    <div class="body wide">
+      <h2 class="headline">Наставник, а не терминал</h2>
+      <ul class="big-list">
+        <li><span class="k">01</span><span>Общается на «ты», спокойно и по делу, без технического жаргона там, где он не нужен.</span></li>
+        <li><span class="k">02</span><span>Понимает простые запросы. «Хочу», «сделай», «ошибка», «проверь», «продолжай» сам переводит в правильный рабочий процесс.</span></li>
+        <li><span class="k">03</span><span>Ведёт через проект: что делаем, зачем, какие файлы меняются, как проверить. Обучает по ходу.</span></li>
+        <li><span class="k">04</span><span>На риске останавливается и объясняет простым языком, не делает необратимое вслепую.</span></li>
+      </ul>
+    </div>
+    <div class="foot"><span>Оформление · Калькулятор</span><span class="counter">05</span></div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide">
+    <div class="topline"><span class="chapter">Мастер-инструкция</span><span>Расул · урок 2</span></div>
+    <div class="body wide">
+      <h2 class="headline">Что она включает</h2>
+      <div class="cards two">
+        <div class="card"><div class="tag">Рабочие режимы</div><h3>Superpowers</h3><p>Цель, план, диагностика, проверка. Codex сам решает, как двигаться: сначала понять задачу, потом план, потом маленькими шагами, потом проверка.</p></div>
+        <div class="card"><div class="tag">Новые инструменты (MCP)</div><h3>Context7 · Sequential Thinking · Playwright</h3><p>Свежая документация, пошаговое мышление для сложных задач, проверка сайтов и приложений прямо в браузере.</p></div>
+      </div>
+      <p class="sub">Отправляешь одним сообщением. Дальше Codex показывает план и спрашивает подтверждение перед изменениями.</p>
+    </div>
+    <div class="foot"><span>Оформление · Калькулятор</span><span class="counter">06</span></div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide copper">
+    <div class="topline"><span class="chapter">Личный кодекс</span><span>Расул · урок 2</span></div>
+    <div class="body wide">
+      <h2 class="headline">AGENTS.md · правила твоей папки</h2>
+      <p class="sub" style="color:#f3d7ca">Codex видит только выбранную папку. Правила именно этого проекта живут в файле AGENTS.md. Это не память и не замена проверке, а понятные правила.</p>
+      <div class="leaks" style="margin-top:26px">
+        <div class="leak"><b>Язык и темп</b><span>Отвечать по-русски, простыми словами, сначала план, потом действие.</span></div>
+        <div class="leak"><b>Что нельзя</b><span>Не хранить пароли, телефоны и данные клиентов. Не удалять без подтверждения.</span></div>
+        <div class="leak"><b>Про проект</b><span>Калькулятор замера стяжки. Считаем цену и материалы по базе мастера.</span></div>
+      </div>
+    </div>
+    <div class="foot"><span>Оформление · Калькулятор</span><span class="counter">07</span></div>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide dark">
+    <div class="topline"><span class="chapter">Подключаем</span><span>Расул · урок 2</span></div>
+    <div class="body wide">
+      <div class="gh">
+        <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+        <div>
+          <h2 class="headline" style="margin-bottom:18px">GitHub</h2>
+          <p class="sub" style="margin:0">Чтобы то, что ты соберёшь, не терялось, хранилось с историей и потом выкладывалось ссылкой. Рамиль открывает калькулятор с телефона по ссылке. Подключаем плагином, аккаунт заводим вместе.</p>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>Оформление · Калькулятор</span><span class="counter">08</span></div>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide copper">
+    <div class="topline"><span class="chapter">Первый инструмент</span><span>Расул · урок 2</span></div>
+    <div class="body wide">
+      <h2 class="headline">Калькулятор замера</h2>
+      <p class="sub" style="color:#f3d7ca">Твоя же мечта про приложение-калькулятор. База мастера уже готова, садимся и собираем. Он бьёт прямо в деньги, твой приоритет номер один.</p>
+      <div class="leaks" style="margin-top:26px">
+        <div class="leak"><b>Точный материал</b><span>Убирает лишние кубы песка. Сейчас перезаказ в 6 случаях из 10.</span></div>
+        <div class="leak"><b>Один расчёт для всех</b><span>Любой замерщик считает как ты, а не на глаз.</span></div>
+        <div class="leak"><b>Основа для КП</b><span>Красивый расчёт клиенту одной кнопкой. Это доверие и сделки.</span></div>
+      </div>
+    </div>
+    <div class="foot"><span>Оформление · Калькулятор</span><span class="counter">09</span></div>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide">
+    <div class="topline"><span class="chapter">Как собираем</span><span>Расул · урок 2</span></div>
+    <div class="body wide">
+      <h2 class="headline">Три шага, всё в шпаргалке</h2>
+      <div class="steps3">
+        <div class="st"><div class="n">ШАГ 1</div><h3>Цена</h3><p>Вводишь тип, площадь, слой, этаж, утеплитель. Калькулятор считает стоимость по правилам из базы мастера.</p></div>
+        <div class="st"><div class="n">ШАГ 2</div><h3>Материалы</h3><p>Добавляем расчёт песка, цемента, микрофибры по рецепту и разбивку цены, из чего сложилась сумма.</p></div>
+        <div class="st"><div class="n">ШАГ 3</div><h3>Клиенту</h3><p>Красиво, удобно на телефоне, кнопка «Скопировать расчёт» в Telegram и печать. Проверяем в браузере.</p></div>
+      </div>
+      <p class="sub">Промпты для каждого шага готовы в шпаргалке. Копируешь и отправляешь Codex.</p>
+    </div>
+    <div class="foot"><span>Оформление · Калькулятор</span><span class="counter">10</span></div>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide dark">
+    <div class="topline"><span class="chapter">Следующий инструмент</span><span>Расул · урок 2</span></div>
+    <div class="body wide">
+      <h2 class="headline">Ответчик на Авито через <span class="accent">официальный API</span></h2>
+      <p class="sub">Ты уже сам попробовал собрать агента, который читает чаты Авито через браузер. Защита Авито его остановила, и это правильно. Легальный путь один, официальный API, аккаунт остаётся в безопасности. С него и соберём ответчик, это билд номер два.</p>
+      <ul class="big-list">
+        <li><span class="k">Домашка</span><span>Проверь, что у тебя тариф «Профи», возьми в кабинете ключи доступа (client_id и client_secret).</span></li>
+      </ul>
+    </div>
+    <div class="foot"><span>Оформление · Калькулятор</span><span class="counter">11</span></div>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide copper">
+    <div class="topline"><span class="chapter">Домашка и итог</span><span>Расул · урок 2</span></div>
+    <div class="body wide">
+      <h2 class="headline">К следующей встрече</h2>
+      <ul class="big-list">
+        <li><span class="k">01</span><span>Прогнать калькулятор на 3-5 реальных объектах, сравнить с тем, что в голове, поправить коэффициенты.</span></li>
+        <li><span class="k">02</span><span>Выложить калькулятор через GitHub, чтобы открывался ссылкой и Рамиль пользовался с телефона.</span></li>
+        <li><span class="k">03</span><span>Подготовить доступ к Авито API под ответчик, билд номер два.</span></li>
+      </ul>
+      <p class="sub" style="color:#f3d7ca">Все шаги и промпты в шпаргалке урока. Застрянешь, пиши вечером, не тяни.</p>
+    </div>
+    <div class="foot"><span>neovida.ai · Расул</span><span class="counter">12</span></div>
+  </section>
+
+</div>
+
+<div class="progress" id="prog"></div>
+<div class="controls">
+  <button onclick="go(-1)" aria-label="Назад">‹</button>
+  <button onclick="go(1)" aria-label="Вперёд">›</button>
+</div>
+
+<script>
+var slides=[].slice.call(document.querySelectorAll('.slide')),i=0;
+function show(n){slides[i].classList.remove('active');i=Math.max(0,Math.min(slides.length-1,n));slides[i].classList.add('active');document.getElementById('prog').style.width=((i+1)/slides.length*100)+'%';}
+function go(d){show(i+d);}
+document.addEventListener('keydown',function(e){if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){go(1);}else if(e.key==='ArrowLeft'||e.key==='PageUp'){go(-1);}});
+var sx=null;document.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;},{passive:true});
+document.addEventListener('touchend',function(e){if(sx===null)return;var dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)go(dx<0?1:-1);sx=null;},{passive:true});
+show(0);
+</script>
+</body>
+</html>

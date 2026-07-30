@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Расул · урок 2 · шпаргалка · калькулятор замера</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --coal:#171816; --warm:#f1eee7; --paper:#faf8f3; --card:#fff;
+  --muted:#77766f; --line:#d9d5cb; --copper:#a64d2c; --clay:#d58a64; --sage:#395f50;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--warm);color:var(--coal);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;max-width:860px;margin:0 auto;padding:0 0 90px;}
+
+header{padding:max(28px,env(safe-area-inset-top,28px)) 20px 16px;}
+.brand{font-size:11px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;color:var(--muted);}
+.brand b{color:var(--copper);}
+h1{font-size:28px;font-weight:850;margin:9px 0 8px;letter-spacing:-.6px;line-height:1.06;}
+h1 span{color:var(--copper);}
+.lead{font-size:15.5px;color:#55544e;line-height:1.6;}
+.lead b{color:var(--coal);}
+
+nav.jump{position:sticky;top:0;z-index:30;display:flex;gap:7px;overflow-x:auto;padding:11px 20px;
+  background:rgba(241,238,231,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);-webkit-overflow-scrolling:touch;}
+nav.jump a{flex:0 0 auto;padding:7px 13px;border-radius:9px;background:#fff;border:1px solid var(--line);
+  font-weight:700;font-size:13px;color:#55544e;text-decoration:none;transition:.2s;white-space:nowrap;}
+nav.jump a:hover{border-color:var(--copper);color:var(--copper);}
+
+section.blk{margin:20px 16px 0;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:20px;scroll-margin-top:70px;border-top:3px solid var(--copper);}
+section.blk.setup{border-top-color:var(--clay);}
+section.blk.build{border-top-color:var(--copper);}
+section.blk.home{border-top-color:var(--sage);}
+.blk-no{font-size:11.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;
+  padding:2px 9px;border-radius:6px;margin-left:8px;}
+.tag.set{background:rgba(213,138,100,.18);color:#a85c34;}
+.tag.build{background:rgba(166,77,44,.13);color:var(--copper);}
+.tag.home{background:rgba(57,95,80,.14);color:var(--sage);}
+h2{font-size:21px;font-weight:800;margin:5px 0 0;letter-spacing:-.3px;line-height:1.2;}
+.why{font-size:15px;color:#54534d;line-height:1.58;margin:11px 0 0;}
+.why b{color:var(--coal);}
+
+ol.steps{counter-reset:s;list-style:none;margin:12px 0 0;}
+ol.steps li{position:relative;padding:0 0 10px 30px;font-size:15px;line-height:1.5;color:#54534d;counter-increment:s;}
+ol.steps li:last-child{padding-bottom:0;}
+ol.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:21px;height:21px;border-radius:6px;
+  background:var(--copper);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;}
+ol.steps b{color:var(--coal);}
+ul.list{list-style:none;margin:11px 0 0;}
+ul.list li{position:relative;padding:0 0 8px 19px;font-size:14.5px;line-height:1.5;color:#54534d;}
+ul.list li::before{content:'';position:absolute;left:2px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--copper);}
+ul.list b{color:var(--coal);}
+
+.mini{font-size:12.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:16px 0 2px;padding-top:14px;border-top:1px solid var(--line);}
+.mini.first{border-top:none;padding-top:0;}
+.mini .pin{color:var(--copper);}
+
+.prompt{position:relative;background:#f4f1ea;border:1px solid var(--line);border-radius:12px;padding:15px;margin:11px 0 0;
+  cursor:pointer;transition:border-color .2s,background .2s;}
+.prompt:active{background:#efece4;}
+.prompt .plabel{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--copper);
+  margin-bottom:9px;display:flex;align-items:center;gap:7px;justify-content:space-between;}
+.prompt .plabel .where{color:var(--muted);font-weight:700;letter-spacing:.3px;text-transform:none;}
+.prompt .ptext{font-size:14px;line-height:1.6;color:#3f3e39;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+.prompt.copied{border-color:var(--sage);}
+.prompt.copied .plabel{color:var(--sage);}
+.tap-hint{font-size:12px;color:var(--muted);margin-top:9px;}
+
+.callout{margin:12px 0 0;padding:12px 14px;background:rgba(166,77,44,.07);border:1px solid rgba(166,77,44,.22);border-radius:11px;font-size:14px;line-height:1.5;color:#54534d;}
+.callout b{color:var(--copper);}
+.stop{margin:12px 0 0;padding:12px 14px;background:rgba(57,95,80,.07);border:1px solid rgba(57,95,80,.25);border-radius:11px;font-size:13.5px;line-height:1.5;color:#54534d;}
+.stop b{color:var(--sage);}
+
+.footer{text-align:center;padding:34px 22px 0;color:var(--muted);font-size:12.5px;line-height:1.6;}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><b>neovida</b>.ai · урок 2 · шпаргалка</div>
+  <h1>Оформляем Codex и собираем <span>калькулятор замера</span></h1>
+  <p class="lead">Открой эту страницу на уроке. Копируй блоки в нужные места по порядку. Сначала настраиваем Codex под тебя, потом за три шага собираем твой первый рабочий инструмент, калькулятор замера, из твоей же базы мастера.</p>
+</header>
+
+<nav class="jump">
+  <a href="#s0">Настройка Codex</a>
+  <a href="#s1">Проект и правила</a>
+  <a href="#s2">Шаг 1</a>
+  <a href="#s3">Шаг 2</a>
+  <a href="#s4">Шаг 3</a>
+  <a href="#s5">Домашка</a>
+</nav>
+
+<!-- BLOCK 0: SETUP -->
+<section class="blk setup" id="s0">
+  <div class="blk-no">Блок 0<span class="tag set">оформляем Codex</span></div>
+  <h2>Два текста в два разных места</h2>
+  <p class="why">Не путать. <b>Персонализация</b> вставляется в настройки Codex, это постоянный стиль общения с тобой. <b>Мастер-инструкция</b> отправляется сообщением в чат, она запускает агента-настройщика, который ставит рабочие режимы и проверки.</p>
+
+  <div class="mini first"><span class="pin">1.</span> Персонализация Codex</div>
+  <p class="why">Куда: в настройки, блок персонализации Codex. Скопируй целиком.</p>
+  <div class="prompt" onclick="copyPrompt(this)">
+    <div class="plabel"><span>Персонализация · нажми скопировать</span><span class="where">в настройки Codex</span></div>
+    <div class="ptext"># Как работать с Codex: студенческий autopilot neovida.ai
+Этот документ базовые правила для Codex, когда со мной работает студент курса neovida.ai.
+Я не программист. Я могу не знать, что такое терминал, Git, backend, API, package.json, ветка, коммит, тесты, деплой и Superpowers. Я не должен вызывать slash-команды, помнить названия навыков или правильно формулировать технические процессы.
+Если я пишу обычным языком «хочу сайт», «сделай приложение», «помоги с проектом», «ошибка», «проверь», «продолжай», Codex сам переводит это в правильный рабочий процесс.
+
+## Роль Codex
+Ты мой технический наставник и инженерный autopilot. Твоя задача помочь мне создавать реальные проекты для себя: сайты, личные инструменты, MVP, автоматизации, простые прототипы и AI-продукты. Но ты не делаешь всё вслепую. Ты ведёшь меня так, чтобы я постепенно понимал, что происходит: что строим, какие файлы меняются, как запустить, как проверить и где риск. Если для задачи подходят Superpowers-навыки, используй их сам, не проси меня писать slash-команды.
+
+## Главный принцип
+Я говорю как обычный человек, ты работаешь как сильная инженерная команда. Если я сказал «сделай», ты не зависаешь на философии: выясняешь минимум недостающего, планируешь, делаешь маленькими шагами, запускаешь, проверяешь и объясняешь. Если задача рискованная, дорогая, публичная или связана с данными, ты останавливаешься и объясняешь риск простым языком.
+
+## Обращение и тон
+Общайся на «ты». Пиши спокойно, живо и по делу. Не разговаривай со мной как с инженером, если я ещё не инженер. Термины объясняй только когда они нужны для действия. Не сюсюкай, не стыди за незнание, не имитируй уверенность без проверки.
+Запрещены фразы: «отличный вопрос», «несомненно», «важно отметить», «в современном мире», «давайте рассмотрим», «дружище», «как ИИ-модель», «вам следует обратиться к специалисту» как отписка.
+
+## Как понимать мои запросы
+«Хочу проект / сделай сайт / приложение / бота / панель / автоматизацию»: сначала помоги превратить идею в понятную задачу (для кого, зачем, что работает в первой версии, что не делаем сейчас).
+«Продолжай / что дальше»: посмотри текущее состояние проекта и предложи логичный следующий шаг.
+«Ошибка / сломалось / не запускается»: включай диагностику (собери факт, найди причину, исправь, проверь, объясни).
+«Проверь»: запускай доступные проверки (тесты, сборка, приложение, браузер). Нельзя проверить, скажи почему.
+«Выложить / деплой / платежи / логин / база / ключ API»: остановись перед необратимым действием и объясни риск.
+
+## Учебный стиль
+Каждый раз обучай меня через практику, коротко: что делаем, зачем, какие файлы затронуты, как проверить, что я должен понять после шага. Если не понимаю основу, замедлись, дай пример и одно действие руками. Без длинных лекций, но и не тащи дальше, если я не понимаю, что происходит.
+
+## Старт нового проекта
+Сначала собери короткий бриф: что за проект, кто пользуется, какую проблему решает, что в первой версии, какой референс нравится, что точно не нужно сейчас. Не знаю ответ, помоги выбрать, дай 2-3 варианта с плюсами и минусами и рекомендацией.</div>
+    <div class="tap-hint">После этого Codex общается с тобой как наставник, а не как сухой терминал.</div>
+  </div>
+
+  <div class="mini"><span class="pin">2.</span> Мастер-инструкция</div>
+  <p class="why">Куда: прямо в новый чат Codex, одним сообщением. Она ставит Superpowers и рабочие проверки и в конце даёт отчёт простым языком.</p>
+  <div class="prompt" onclick="copyPrompt(this)">
+    <div class="plabel"><span>Мастер-инструкция · нажми скопировать</span><span class="where">в чат Codex</span></div>
+    <div class="ptext">Ты мой AI-агент-настройщик Codex. Я новичок и не знаю программирование. Твоя задача подготовить мою рабочую среду для вайбкодинга через Codex App.
+Работай пошагово. Не требуй от меня slash-команды. Не проси выбирать технические инструменты, если можешь сам выбрать безопасный стандартный вариант. Если нужно моё действие в интерфейсе, дай короткую инструкцию в 1-3 шага.
+
+Цель настройки:
+1. Установить или проверить Superpowers для Codex App.
+2. Настроить MCP-серверы: Context7 (свежая документация), Sequential Thinking (пошаговое мышление), Playwright (проверка сайтов в браузере).
+3. Проверить, что всё работает.
+4. Объяснить простыми словами, что установлено и зачем.
+
+Правила безопасности: не удаляй мои файлы; не трогай реальные проекты без подтверждения; не проси API-ключи, пароли, токены, данные карт; не вставляй секреты в публичные файлы; перед изменением системных настроек коротко объясни, что меняешь; если что-то нельзя сделать автоматически, скажи честно и дай ручной шаг.
+
+Этап 1. Диагностика: определи мою ОС, проверь, установлен ли Codex, доступен ли Node.js/npm/npx, найди файл конфигурации Codex (обычно ~/.codex/config.toml), проверь Superpowers. Ничего не меняй, пока не покажешь короткий план.
+
+Этап 2. Superpowers: если можешь установить сам, установи. Если нет, дай ручную инструкцию (Plugins в боковой панели, найти Superpowers, установить). После установки проверь, что доступен.
+
+Этап 3. MCP: настрой в config.toml эти серверы, не ломая существующие:
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp@latest"]
+[mcp_servers.sequential-thinking]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-sequential-thinking@latest"]
+[mcp_servers.playwright]
+command = "npx"
+args = ["-y", "@playwright/mcp@latest", "--headless", "--browser=firefox"]
+Если сервер уже есть, не дублируй.
+
+Этап 4. Проверка: config.toml валидный, npx запускает пакеты, при наличии команды codex mcp list запусти её. Если нужен перезапуск Codex App, скажи прямо.
+
+Этап 5. Финальный отчёт простыми словами: что установлено, что проверено, что не получилось и что сделать руками, как теперь правильно просить Codex создавать проект, один пример первого запроса. Формат: «Готово / частично готово / нужна ручная настройка».</div>
+    <div class="tap-hint">Дальше Codex сам покажет план и спросит подтверждение перед изменениями.</div>
+  </div>
+
+  <div class="mini"><span class="pin">3.</span> GitHub</div>
+  <p class="why">Зачем: чтобы то, что ты соберёшь, не терялось, хранилось с историей и потом выкладывалось ссылкой. Подключаем плагином.</p>
+  <ol class="steps">
+    <li>Если аккаунта GitHub ещё нет, заводим вместе на уроке (почта и пароль твои).</li>
+    <li>В Codex открываем <b>Plugins</b>, находим <b>GitHub</b>, подключаем.</li>
+    <li>Проверяем, что Codex видит GitHub. Публикацию наружу делаем позже, по шагам.</li>
+  </ol>
+  <div class="stop"><b>Стоп-зоны первого дня:</b> в учебный прототип не вставляем настоящие пароли, ключи, банковские данные, реальные телефоны и данные клиентов. Сначала тестовые данные, потом проверка, только затем рабочие материалы.</div>
+</section>
+
+<!-- BLOCK 1: PROJECT + AGENTS -->
+<section class="blk build" id="s1">
+  <div class="blk-no">Блок 1<span class="tag build">проект</span></div>
+  <h2>Папка проекта и личный кодекс (AGENTS.md)</h2>
+  <p class="why">Codex работает внутри выбранной папки и видит только её. Правила этой папки живут в файле <b>AGENTS.md</b>. Это и есть твой личный кодекс проекта.</p>
+  <ol class="steps">
+    <li>Создай папку <b>«Калькулятор стяжки»</b>, пустую, без реальных данных.</li>
+    <li>Открой её в Codex. Это рабочее место проекта.</li>
+    <li>Отправь первый безопасный запрос (ниже), чтобы Codex осмотрелся.</li>
+    <li>Создай в папке файл <b>AGENTS.md</b> и вставь правила (ниже).</li>
+  </ol>
+  <div class="prompt" onclick="copyPrompt(this)">
+    <div class="plabel"><span>Первый безопасный запрос · нажми скопировать</span><span class="where">в чат Codex</span></div>
+    <div class="ptext">Посмотри, что находится в этой папке. Пока ничего не создавай и не меняй. Объясни простыми словами, как ты будешь работать с проектом.</div>
+  </div>
+  <div class="prompt" onclick="copyPrompt(this)">
+    <div class="plabel"><span>AGENTS.md · нажми скопировать</span><span class="where">в файл AGENTS.md</span></div>
+    <div class="ptext"># Правила проекта: Калькулятор замера стяжки
+Отвечай по-русски и простыми словами. Я не программист.
+Сначала задавай уточняющие вопросы и предлагай план, только потом меняй файлы.
+После каждого действия коротко объясняй, что изменилось и как это проверить.
+Проект: калькулятор для замерщика по механизированной полусухой стяжке пола (Уфа). Считаем стоимость работ и объём материалов по правилам из моей базы мастера.
+Не храни в этой папке пароли, токены, телефоны и данные клиентов.
+Не удаляй файлы без моего подтверждения.
+Перед публикацией наружу остановись и объясни риск.</div>
+  </div>
+</section>
+
+<!-- BLOCK 2: STEP 1 -->
+<section class="blk build" id="s2">
+  <div class="blk-no">Шаг 1<span class="tag build">собираем</span></div>
+  <h2>Калькулятор считает цену</h2>
+  <p class="why">Первый рабочий вид: вводишь параметры объекта, получаешь стоимость работ по твоим правилам. Правила уже вшиты в промпт, тебе останется только подтвердить пару моментов, если Codex спросит.</p>
+  <div class="prompt" onclick="copyPrompt(this)">
+    <div class="plabel"><span>Шаг 1 · нажми скопировать</span><span class="where">в чат Codex</span></div>
+    <div class="ptext">Собери мне локальное веб-приложение «Калькулятор замера стяжки». Я не программист, поэтому сделай всё сам: создай проект, собери страницу, запусти локально и покажи, как открыть.
+
+Это калькулятор для замерщика: он вводит параметры объекта и получает стоимость работ.
+
+Поля ввода:
+- Тип объекта: квартира или дом.
+- Площадь, м².
+- Средний слой, см.
+- Этаж (для квартиры).
+- Утеплитель: нет / Пеноплекс 20-30 мм / Пеноплекс 50 мм / Кумполимер.
+- Удалённость, км (для дома).
+
+Правила расчёта стоимости:
+- Квартира: базовая 1300 руб/м² при слое 7-8 см. Дом: базовая 850 руб/м² при слое до 7 см.
+- За каждый сантиметр слоя сверх базового: плюс 50 руб/м².
+- Этажность (только квартира): до 5 этажа без доплаты, с 6 этажа плюс 1000 руб за каждый этаж выше пятого.
+- Утеплитель: Пеноплекс 20-30 мм плюс 350 руб/м², Пеноплекс 50 мм плюс 450 руб/м², Кумполимер плюс 200 руб/м².
+- Удалённость (только дом): доставка песка плюс 250 руб за километр.
+- Минимальный заказ: квартира 65 000 руб, дом 80 000 руб. Итоговая цена не может быть ниже минимальной.
+
+Работай маленькими шагами. Где правило непонятно (например, с какого сантиметра начинать доплату за слой), сначала задай мне короткие вопросы, а не угадывай. После сборки запусти локально и покажи, как открыть.</div>
+    <div class="tap-hint">Если Codex спросит про порог слоя или минималку, ответь как есть, он подстроит.</div>
+  </div>
+</section>
+
+<!-- BLOCK 3: STEP 2 -->
+<section class="blk build" id="s3">
+  <div class="blk-no">Шаг 2<span class="tag build">материалы</span></div>
+  <h2>Добавляем материалы и разбивку</h2>
+  <p class="why">Теперь калькулятор считает не только цену, но и сколько нужно материала, и показывает, из чего сложилась сумма. Это убирает перезаказ песка и делает расчёт прозрачным для клиента.</p>
+  <div class="prompt" onclick="copyPrompt(this)">
+    <div class="plabel"><span>Шаг 2 · нажми скопировать</span><span class="where">в чат Codex</span></div>
+    <div class="ptext">Теперь добавь в калькулятор две вещи.
+
+1. Расчёт материалов по объёму раствора. Объём раствора равен площадь умножить на средний слой в метрах. Рецепт: один замес это примерно 0,2 м³ песка; на замес цемент М500 25 кг для прочности М100-120 или 37,5 кг для М150-180; микрофибра 600 г на 1 м³ раствора; пластификатор Plitonit Estrich 10 литров на тонну цемента. Посчитай, сколько нужно песка (м³), цемента (кг и мешков по 50 кг), микрофибры (кг), пластификатора (л). По умолчанию считай прочность М150. Если для точного расчёта чего-то не хватает, спроси меня.
+
+2. Показывай разбивку цены: из чего сложилась сумма (работы по площади, доплата за слой, этажность, утеплитель, доставка). Чтобы клиенту было видно, за что он платит.
+
+Двигайся маленькими шагами, после проверь локально и покажи результат.</div>
+  </div>
+  <div class="callout"><b>Зачем:</b> калькулятор сам переводит замер в точный объём материала. Это те самые лишние кубы песка, которые сейчас утекают в 6 случаях из 10.</div>
+</section>
+
+<!-- BLOCK 4: STEP 3 -->
+<section class="blk build" id="s4">
+  <div class="blk-no">Шаг 3<span class="tag build">клиенту</span></div>
+  <h2>Красиво и сразу клиенту</h2>
+  <p class="why">Замерщик работает с калькулятором на объекте, с телефона. Делаем удобно и добавляем то, что усилит воронку: аккуратный расчёт, который одним нажатием уходит клиенту.</p>
+  <div class="prompt" onclick="copyPrompt(this)">
+    <div class="plabel"><span>Шаг 3 · нажми скопировать</span><span class="where">в чат Codex</span></div>
+    <div class="ptext">Сделай калькулятор аккуратным и удобным на телефоне, потому что замерщик работает с него на объекте. Добавь:
+- кнопку «Скопировать расчёт», чтобы одним нажатием скопировать готовый текст расчёта и отправить клиенту в Telegram;
+- возможность распечатать или сохранить расчёт как страницу, это заготовка под красивое коммерческое предложение.
+
+Стиль спокойный и деловой, без шаблонных ИИ-градиентов и без мультяшности. После сборки проверь приложение в браузере: открой страницу, введи тестовый объект, убедись, что цена и материалы считаются правильно. Потом покажи, как открыть результат.</div>
+    <div class="tap-hint">На проверке в браузере Codex использует Playwright, который мы поставили мастер-инструкцией.</div>
+  </div>
+</section>
+
+<!-- BLOCK 5: HOMEWORK -->
+<section class="blk home" id="s5">
+  <div class="blk-no">Домашка<span class="tag home">таска</span></div>
+  <h2>Докрутить и подготовить билд №2</h2>
+  <ul class="list">
+    <li><b>Проверь калькулятор на 3-5 реальных объектах.</b> Сравни, что он посчитал, с тем, что у тебя в голове. Где расходится, скажи Codex поправить коэффициент. Так он становится точным.</li>
+    <li><b>Выложи калькулятор через GitHub</b>, чтобы открывался ссылкой и Рамиль пользовался с телефона. Начнём на уроке, докрутишь дома по шагам от Codex.</li>
+    <li><b>Подготовь доступ к Авито API</b> под следующий инструмент (ответчик на Авито): проверь, что у тебя тариф «Профи», и возьми в личном кабинете ключи доступа (client_id и client_secret). Застрянешь, пиши, подскажу.</li>
+  </ul>
+  <div class="callout"><b>Почему API, а не браузер:</b> ты уже сам попробовал прочитать чаты Авито через агента в браузере, и защита Авито его остановила. Это не баг, так и задумано. Легальный путь один, официальный API. С него и соберём ответчик, чтобы аккаунт был в безопасности.</div>
+</section>
+
+<div class="footer">neovida.ai · персональное обучение Расула Сабирьянова · урок 2 → калькулятор замера</div>
+
+<script>
+function fallbackCopy(t){try{var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);}catch(e){}}
+function flash(el){el.classList.add('copied');var lbl=el.querySelector('.plabel span');var orig=lbl.dataset.orig||lbl.textContent;lbl.dataset.orig=orig;lbl.textContent='Скопировано ✓';setTimeout(function(){el.classList.remove('copied');lbl.textContent=orig;},1900);}
+function copyPrompt(el){var t=el.querySelector('.ptext').innerText;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(el);}).catch(function(){fallbackCopy(t);flash(el);});}else{fallbackCopy(t);flash(el);}}
+</script>
+</body>
+</html>
