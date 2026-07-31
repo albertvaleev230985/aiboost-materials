@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Расул · домашка к уроку 3 · запускаем калькулятор</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --coal:#171816; --warm:#f1eee7; --paper:#faf8f3; --card:#fff;
+  --muted:#77766f; --line:#d9d5cb; --copper:#a64d2c; --clay:#d58a64; --sage:#395f50;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--warm);color:var(--coal);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;max-width:840px;margin:0 auto;padding:0 0 90px;}
+
+header{padding:max(28px,env(safe-area-inset-top,28px)) 20px 16px;}
+.brand{font-size:11px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;color:var(--muted);}
+.brand b{color:var(--copper);}
+h1{font-size:28px;font-weight:850;margin:9px 0 8px;letter-spacing:-.6px;line-height:1.06;}
+h1 span{color:var(--copper);}
+.lead{font-size:15.5px;color:#55544e;line-height:1.6;}
+.lead b{color:var(--coal);}
+.lead+.lead{margin-top:10px;}
+
+.progress-wrap{position:sticky;top:0;z-index:30;background:rgba(241,238,231,.94);backdrop-filter:blur(10px);
+  padding:12px 20px;border-bottom:1px solid var(--line);}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.progress-label{font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);}
+.progress-count{font-size:13px;font-weight:800;color:var(--copper);font-variant-numeric:tabular-nums;}
+.progress-bar{height:7px;background:#e4e0d6;border-radius:6px;overflow:hidden;}
+.progress-fill{height:100%;width:0;background:var(--copper);border-radius:6px;transition:width .35s ease;}
+.progress-done{display:none;margin-top:9px;font-size:13.5px;font-weight:700;color:var(--sage);}
+.progress-done.show{display:block;}
+
+section.task{margin:18px 16px 0;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:20px 20px 18px;scroll-margin-top:80px;border-top:3px solid var(--copper);transition:opacity .25s;}
+section.task.core{border-top-color:var(--clay);}
+section.task.idea{border-top-color:var(--sage);}
+
+.task-head{display:flex;gap:13px;align-items:flex-start;cursor:pointer;user-select:none;}
+.box{flex:0 0 auto;width:28px;height:28px;border:2px solid var(--copper);border-radius:8px;margin-top:2px;
+  display:flex;align-items:center;justify-content:center;transition:.2s;background:transparent;}
+.box svg{width:16px;height:16px;stroke:#fff;stroke-width:3.2;fill:none;opacity:0;transition:.2s;}
+.task.done .box{background:var(--copper);}
+.task.done .box svg{opacity:1;}
+.task.done .task-title{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line);}
+.task.done{opacity:.72;}
+.hd-text{flex:1;min-width:0;}
+.task-no{font-size:11.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;
+  padding:2px 9px;border-radius:6px;margin-left:8px;vertical-align:1px;}
+.tag.core{background:rgba(213,138,100,.18);color:#a85c34;}
+.tag.work{background:rgba(166,77,44,.13);color:var(--copper);}
+.tag.idea{background:rgba(57,95,80,.14);color:var(--sage);}
+.task-title{font-size:20px;font-weight:800;margin:5px 0 0;letter-spacing:-.3px;line-height:1.2;}
+
+.body-in{padding-left:41px;}
+.why{font-size:15px;color:#54534d;line-height:1.58;margin:11px 0 0;}
+.why b{color:var(--coal);}
+.why.pay{margin-top:9px;padding:9px 13px;background:rgba(166,77,44,.07);border:1px solid rgba(166,77,44,.22);
+  border-radius:10px;font-size:14px;}
+.why.pay b{color:var(--copper);}
+
+ol.steps{counter-reset:s;list-style:none;margin:12px 0 0;}
+ol.steps li{position:relative;padding:0 0 10px 30px;font-size:15px;line-height:1.5;color:#54534d;counter-increment:s;}
+ol.steps li:last-child{padding-bottom:0;}
+ol.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:21px;height:21px;border-radius:6px;
+  background:var(--copper);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;}
+ol.steps b{color:var(--coal);}
+ul.list{list-style:none;margin:11px 0 0;}
+ul.list li{position:relative;padding:0 0 8px 19px;font-size:14.5px;line-height:1.5;color:#54534d;}
+ul.list li::before{content:'';position:absolute;left:2px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--copper);}
+ul.list b{color:var(--coal);}
+
+.mini{font-size:12.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:15px 0 2px;}
+.mini .pin{color:var(--copper);}
+
+.prompt{position:relative;background:#f4f1ea;border:1px solid var(--line);border-radius:12px;padding:15px;margin:10px 0 0;
+  cursor:pointer;transition:border-color .2s,background .2s;}
+.prompt:active{background:#efece4;}
+.prompt .plabel{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--copper);
+  margin-bottom:9px;display:flex;align-items:center;gap:7px;justify-content:space-between;}
+.prompt .plabel .where{color:var(--muted);font-weight:700;letter-spacing:.3px;text-transform:none;}
+.prompt .ptext{font-size:14px;line-height:1.6;color:#3f3e39;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+.prompt.copied{border-color:var(--sage);}
+.prompt.copied .plabel{color:var(--sage);}
+.tap-hint{font-size:12px;color:var(--muted);margin-top:9px;}
+
+.meta{font-size:12.5px;color:var(--muted);margin-top:13px;}
+
+.report{margin:20px 16px 0;background:#fff;border:1px solid rgba(166,77,44,.32);border-radius:16px;padding:18px 20px;}
+.report .rlbl{font-size:12.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--copper);margin-bottom:9px;}
+.report p{font-size:15px;line-height:1.55;color:#54534d;}
+.report ul{list-style:none;margin:10px 0 0;}
+.report li{position:relative;padding:0 0 7px 19px;font-size:14.5px;line-height:1.5;color:#54534d;}
+.report li::before{content:'';position:absolute;left:2px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--copper);}
+.report li b{color:var(--coal);}
+
+.footer{text-align:center;padding:34px 22px 0;color:var(--muted);font-size:12.5px;line-height:1.6;}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><b>neovida</b>.ai · домашка к уроку 3</div>
+  <h1>Запускаем калькулятор <span>по-настоящему</span></h1>
+  <p class="lead">На уроке мы собрали калькулятор замера с расчётом и КП. Осталось два хвоста, которые не успели: <b>личный кодекс</b> и <b>вывести калькулятор на ссылку</b>, чтобы Рамиль пользовался с телефона. Плюс накидаешь идеи, куда его развивать.</p>
+  <p class="lead">Пять дел. Галочки отмечай для себя, а всё, что соберёшь, шли мне <b>в Telegram, в наш чат</b>.</p>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-top">
+    <span class="progress-label">Прогресс недели</span>
+    <span class="progress-count" id="pcount">0 из 5</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="pfill"></div></div>
+  <div class="progress-done" id="pdone">Всё готово. К уроку 3 приходим с рабочей ссылкой и списком идей.</div>
+</div>
+
+<!-- TASK 1 -->
+<section class="task core" id="t1" data-id="t1">
+  <div class="task-head" onclick="toggle('t1')">
+    <div class="box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></div>
+    <div class="hd-text">
+      <div class="task-no">Дело 1<span class="tag core">не успели на уроке</span></div>
+      <div class="task-title">Собрать личный кодекс</div>
+    </div>
+  </div>
+  <div class="body-in">
+    <p class="why">Чтобы Codex знал, <b>на кого работает</b>: твои цели, принципы, красные линии. Он ляжет в глобальный файл, и Codex будет учитывать его во всех твоих проектах, а не только в калькуляторе. Два шага.</p>
+    <div class="mini"><span class="pin">Шаг 1.</span> Интервью в ChatGPT</div>
+    <div class="prompt" onclick="copyPrompt(this)">
+      <div class="plabel"><span>Промпт · нажми скопировать</span><span class="where">в чат ChatGPT</span></div>
+      <div class="ptext">Действуй как опытный коуч и редактор личных стратегий.
+Твоя задача: взять у меня интервью и собрать мой личный кодекс, по которому ИИ будет работать со мной в любых задачах.
+Задавай вопросы ПО ОДНОМУ. После каждого моего ответа переходи к следующему. Если ответ размытый, задай один уточняющий вопрос. Не показывай список вопросов заранее.
+Пройди по блокам:
+1. Кто я: чем занимаюсь, за что отвечаю, какие проекты веду сейчас.
+2. Цели: главная цель на год, куда иду за три года, что должно измениться в моей работе.
+3. Ценности: что для меня важно в работе и в людях, чего не прощаю.
+4. Принципы: как я принимаю решения, что для меня сделано хорошо, а что халтура.
+5. Сильные и слабые стороны: где я быстрый, а где мне нужен внешний контроль.
+6. Стиль общения: какой темп, нужны детали или только суть, что меня раздражает в ответах.
+7. Красные линии: что нельзя делать никогда, даже если я попрошу в спешке.
+8. Роль ИИ: в чём помогать, где спорить со мной, а где не лезть.
+Не выдумывай за меня ответы. Когда пройдём все блоки, собери документ «ЛИЧНЫЙ КОДЕКС» в формате Markdown: короткие разделы, живые формулировки, без воды и без пафоса. Выдай его одним финальным сообщением, чтобы мне было удобно скопировать.</div>
+      <div class="tap-hint">Отвечай голосом и честно. Займёт минут 15.</div>
+    </div>
+    <div class="mini"><span class="pin">Шаг 2.</span> Сохранить в Codex</div>
+    <div class="prompt" onclick="copyPrompt(this)">
+      <div class="plabel"><span>Промпт · нажми скопировать</span><span class="where">в чат Codex</span></div>
+      <div class="ptext">Сохрани мой личный кодекс так, чтобы ты руководствовался им во всех моих проектах.
+Положи его в глобальный файл ~/.codex/AGENTS.md. Если файла нет, создай его. Если файл уже есть, ничего не стирай: добавь мой кодекс отдельным разделом «ЛИЧНЫЙ КОДЕКС».
+Сначала покажи, что именно собираешься записать и в какой файл, и дождись моего подтверждения. Меняй файл только после моего «да».
+После сохранения перечитай файл и своими словами скажи, что ты обо мне понял и как это изменит твою работу со мной.
+Вот мой кодекс:
+[вставь сюда текст из шага 1]</div>
+      <div class="tap-hint">Не путать с AGENTS.md калькулятора: тот про проект, этот про тебя и работает везде. В кодекс не вставляй пароли и данные карт.</div>
+    </div>
+    <p class="meta">~20 минут</p>
+  </div>
+</section>
+
+<!-- TASK 2 -->
+<section class="task core" id="t2" data-id="t2">
+  <div class="task-head" onclick="toggle('t2')">
+    <div class="box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></div>
+    <div class="hd-text">
+      <div class="task-no">Дело 2 · главное<span class="tag core">не успели на уроке</span></div>
+      <div class="task-title">Вывести калькулятор на ссылку</div>
+    </div>
+  </div>
+  <div class="body-in">
+    <p class="why">Сейчас калькулятор живёт только у тебя на компьютере. Выведем его в интернет, чтобы открывался по ссылке, и <b>Рамиль пользовался с телефона прямо на замере</b>. GitHub мы не успели показать, поэтому проведёт тебя сам Codex, для этого мы его и настроили.</p>
+    <div class="prompt" onclick="copyPrompt(this)">
+      <div class="plabel"><span>Промпт · нажми скопировать</span><span class="where">в чат Codex</span></div>
+      <div class="ptext">Помоги мне выложить мой калькулятор замера в интернет, чтобы он открывался по ссылке с телефона. Я новичок, программировать не умею, аккаунта GitHub у меня нет.
+Проведи меня по шагам от начала до конца:
+1. Заведи со мной аккаунт GitHub, дай короткую инструкцию, что нажать.
+2. Подключи GitHub к тебе.
+3. Залей туда мой проект калькулятора.
+4. Опубликуй его так, чтобы получилась рабочая ссылка, которую можно открыть с телефона.
+На каждом шаге давай 1-3 понятных действия и жди, пока я их сделаю. Пароли я ввожу сам, ты только подсказываешь. В конце дай мне готовую ссылку и проверь, что она открывается.</div>
+      <div class="tap-hint">Пойдёт не с первого раза, не страшно. Застрянешь, пришли скриншот, где встал, добьём вместе.</div>
+    </div>
+    <div class="why pay"><b>Зачем тебе:</b> как только появится ссылка, калькулятор работает на тебя каждый день, без лишних кубов песка и с расчётом клиенту за минуту.</div>
+    <p class="meta">~30-40 минут</p>
+  </div>
+</section>
+
+<!-- TASK 3 -->
+<section class="task" id="t3" data-id="t3">
+  <div class="task-head" onclick="toggle('t3')">
+    <div class="box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></div>
+    <div class="hd-text">
+      <div class="task-no">Дело 3<span class="tag work">проверка</span></div>
+      <div class="task-title">Прогнать калькулятор на 3-5 объектах</div>
+    </div>
+  </div>
+  <div class="body-in">
+    <p class="why">Возьми 3-5 реальных объектов и посчитай их в калькуляторе. Сравни с тем, что у тебя <b>в голове</b>. Где расходится, скажи Codex поправить коэффициент. Так он станет точным.</p>
+    <div class="why pay"><b>Зачем тебе:</b> калькулятор должен считать как ты, иначе Рамиль опять промахнётся по материалу.</div>
+    <p class="meta">~20 минут</p>
+  </div>
+</section>
+
+<!-- TASK 4 -->
+<section class="task idea" id="t4" data-id="t4">
+  <div class="task-head" onclick="toggle('t4')">
+    <div class="box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></div>
+    <div class="hd-text">
+      <div class="task-no">Дело 4<span class="tag idea">штурм</span></div>
+      <div class="task-title">Накидать идеи, куда развивать калькулятор</div>
+    </div>
+  </div>
+  <div class="body-in">
+    <p class="why">Не кодить, только <b>собрать идеи</b>. На уроке 3 выберем и доработаем. Ты уже говорил про роли: замерщик видит одно, прораб открывает и готовит для работяг другое. Накидай 5-10 идей. Для разгона:</p>
+    <ul class="list">
+      <li>Режим «Замерщик»: считает цену и материалы, отдаёт расчёт клиенту.</li>
+      <li>Режим «Прораб»: из того же объекта готовит карту для бригады.</li>
+      <li>Кнопка «Карта для работяг»: что закупить, сколько, где встречаемся.</li>
+      <li>Кнопка «КП клиенту»: красивый расчёт с гарантией.</li>
+      <li>История объектов: сохранять замеры, чтобы не терять.</li>
+      <li>Поле «нюансы объекта»: вода, электричество, защита двери, зоны «не заливается».</li>
+      <li>Расчёт аванса: 10-15к для физлиц для фиксации.</li>
+      <li>Автоподстановка рецепта по прочности (М150 по умолчанию).</li>
+      <li>Кнопка «Отправить в Telegram» и печать.</li>
+      <li>Отдельная цена для юрлиц и для домов за городом с доставкой.</li>
+    </ul>
+    <p class="why">Возьми эти как затравку и добавь свои. Пришли список.</p>
+    <p class="meta">~20 минут</p>
+  </div>
+</section>
+
+<!-- TASK 5 -->
+<section class="task idea" id="t5" data-id="t5">
+  <div class="task-head" onclick="toggle('t5')">
+    <div class="box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></div>
+    <div class="hd-text">
+      <div class="task-no">Дело 5<span class="tag idea">на будущее</span></div>
+      <div class="task-title">Подготовить доступ к Авито API</div>
+    </div>
+  </div>
+  <div class="body-in">
+    <p class="why">Под следующий инструмент, ответчик на Авито. Проверь, что у тебя тариф <b>«Профи»</b>, и возьми в личном кабинете ключи доступа (client_id и client_secret).</p>
+    <div class="why pay"><b>Зачем тебе:</b> с этого соберём агента, который сам отвечает на Авито через официальный API, легально и без риска для аккаунта.</div>
+    <p class="meta">~15 минут · застрянешь, подскажу</p>
+  </div>
+</section>
+
+<div class="report">
+  <div class="rlbl">Что прислать · Telegram</div>
+  <p>Шли мне в наш чат по мере готовности:</p>
+  <ul>
+    <li><b>Скрин ответа Codex</b> из дела 1, где он рассказывает, что о тебе понял (сам кодекс целиком не нужно, он личный).</li>
+    <li><b>Ссылку на калькулятор</b> из дела 2, как только выложишь.</li>
+    <li><b>Список идей</b> из дела 4.</li>
+  </ul>
+  <p style="margin-top:11px"><b>К субботе, 1 августа</b> пришли главное: ссылку на калькулятор и список идей. Застрянешь, пиши вечером, не тяни.</p>
+  <p style="margin-top:12px;font-weight:800;color:var(--coal)">Урок 3: вторник, 4 августа, 9:00, Иремель Тауэр.</p>
+</div>
+
+<div class="footer">neovida.ai · персональное обучение Расула Сабирьянова · домашка к уроку 3</div>
+
+<script>
+var TASKS=['t1','t2','t3','t4','t5'];
+var KEY='rasul-hw2';
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+function save(s){try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}
+function render(){
+  var s=load(),n=0;
+  TASKS.forEach(function(id){
+    var el=document.getElementById(id);
+    if(s[id]){el.classList.add('done');n++;}else{el.classList.remove('done');}
+  });
+  document.getElementById('pcount').textContent=n+' из '+TASKS.length;
+  document.getElementById('pfill').style.width=(n/TASKS.length*100)+'%';
+  document.getElementById('pdone').classList.toggle('show',n===TASKS.length);
+}
+function toggle(id){var s=load();s[id]=!s[id];save(s);render();}
+function fallbackCopy(t){try{var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);}catch(e){}}
+function flash(el){el.classList.add('copied');var lbl=el.querySelector('.plabel span');var orig=lbl.dataset.orig||lbl.textContent;lbl.dataset.orig=orig;lbl.textContent='Скопировано ✓';setTimeout(function(){el.classList.remove('copied');lbl.textContent=orig;},1900);}
+function copyPrompt(el){var t=el.querySelector('.ptext').innerText;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(el);}).catch(function(){fallbackCopy(t);flash(el);});}else{fallbackCopy(t);flash(el);}}
+render();
+</script>
+</body>
+</html>
