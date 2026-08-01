@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Цех · урок 2 · Шпаргалка участника</title>
+<meta name="description" content="Шпаргалка урока 2 AI Цех: GitHub, Vercel, GitHub Pages, статика и сборка, семь промптов метода правильного старта и чек-лист перед публикацией.">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    --bg: #0a0b0c; --ink: #0b0c0d; --panel: #111315; --panel-2: #16191c;
+    --text: #f1ece2; --soft: #d8cebf; --muted: #a59c8e; --dim: #756e63;
+    --line: rgba(241,236,226,0.12); --line-2: rgba(241,236,226,0.22);
+    --copper: #c77a3a; --copper-2: #e0aa6f; --copper-3: #f3cf9b;
+    --steel: #9aa6ad; --green: #75b889; --red: #d76c5c;
+    --radius: 12px; --radius-lg: 16px;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --metal: linear-gradient(176deg, #fbe6c6 2%, #e9b87e 34%, #c77a3a 66%, #f3cf9b 99%);
+    --ease: cubic-bezier(.22,.61,.36,1);
+    --shadow: 0 22px 70px rgba(0,0,0,.34);
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; color: var(--text); line-height: 1.6;
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    background:
+      linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px),
+      radial-gradient(circle at 82% 4%, rgba(199,122,58,.18), transparent 36vw),
+      radial-gradient(circle at 4% 30%, rgba(154,166,173,.07), transparent 28vw),
+      linear-gradient(135deg, #0a0b0c 0%, #111416 54%, #090a0b 100%);
+    background-size: 44px 44px, 44px 44px, auto, auto, auto;
+    background-attachment: fixed;
+  }
+  a { color: var(--copper-2); text-decoration: none; }
+  a:hover { color: var(--copper-3); }
+  button { font: inherit; }
+  .mono { font-family: var(--mono); }
+  .lucide { width: 1em; height: 1em; stroke-width: 1.8; }
+  .metal { background: var(--metal); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+
+  .page { width: min(100%, 1060px); margin: 0 auto; padding: 30px 24px 80px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 14px;
+    padding: 10px 0 24px; color: var(--muted); font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+  .topbar .brand { display: flex; align-items: center; gap: 9px; }
+  .topbar .brand .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--copper-2); box-shadow: 0 0 10px var(--copper-2); flex: none; }
+  .print-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid var(--line);
+    border-radius: var(--radius); color: var(--text); background: rgba(17,19,21,.8); cursor: pointer; font-family: var(--sans); letter-spacing: 0; text-transform: none; }
+  .print-btn:hover { border-color: rgba(224,170,111,.5); }
+
+  /* hero */
+  .hero { position: relative; overflow: hidden; padding: 40px; border: 1px solid var(--line); border-radius: var(--radius-lg);
+    background: linear-gradient(140deg, rgba(22,25,28,.92), rgba(9,10,11,.96)); box-shadow: var(--shadow); }
+  .hero::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--metal); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(199,122,58,.2), transparent 70%); pointer-events: none; }
+  .kicker { position: relative; display: inline-flex; align-items: center; gap: 9px; margin-bottom: 20px; padding: 8px 13px;
+    border: 1px solid rgba(224,170,111,.3); border-radius: 999px; color: var(--copper-2);
+    background: rgba(199,122,58,.1); font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+  .kicker::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--copper-2); box-shadow: 0 0 9px var(--copper-2); }
+  h1 { position: relative; max-width: 860px; margin: 0; font-size: clamp(34px, 6vw, 58px); line-height: .98; font-weight: 900; letter-spacing: -.03em; }
+  .hero-lead { position: relative; max-width: 800px; margin: 20px 0 0; color: var(--soft); font-size: 18px; }
+  .hero-lead b { color: var(--text); font-weight: 700; }
+
+  .mini-route { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 4px; margin-top: 26px; }
+  .mr-node { display: inline-flex; align-items: center; gap: 9px; padding: 9px 14px; border-radius: 999px;
+    border: 1px solid var(--line); background: rgba(8,9,10,.6); font-size: 14px; font-weight: 700; }
+  .mr-node .lucide { width: 17px; height: 17px; color: var(--copper-2); }
+  .mr-node img { width: 16px; height: 16px; filter: brightness(0) invert(1); opacity: .9; }
+  .mr-node.last { border-color: rgba(117,184,137,.4); color: #dff5e5; }
+  .mr-node.last .lucide { color: var(--green); }
+  .mr-arrow { color: var(--copper-2); opacity: .7; }
+  .mr-arrow .lucide { width: 18px; height: 18px; }
+
+  /* nav */
+  .nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+  .nav a { display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border-radius: 999px;
+    border: 1px solid var(--line); background: rgba(8,9,10,.55); color: var(--soft); font-size: 13.5px; font-weight: 700; transition: .2s var(--ease); }
+  .nav a:hover { border-color: rgba(224,170,111,.5); color: var(--text); }
+  .nav a .n { font-family: var(--mono); color: var(--copper-2); font-size: 12px; }
+
+  /* sections */
+  .section { margin-top: 28px; padding: 30px; border: 1px solid var(--line); border-radius: var(--radius-lg);
+    background: linear-gradient(150deg, rgba(255,255,255,.04), rgba(255,255,255,.012)); box-shadow: var(--shadow); position: relative; overflow: hidden; scroll-margin-top: 20px; }
+  .section::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(243,207,155,.4), transparent); }
+  .sec-head { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; margin-bottom: 22px; }
+  .sec-num { width: 44px; height: 44px; display: grid; place-items: center; border-radius: var(--radius);
+    border: 1px solid rgba(224,170,111,.32); color: var(--copper-2); background: rgba(199,122,58,.1);
+    font-family: var(--mono); font-weight: 700; font-size: 18px; }
+  h2 { margin: 0; font-size: clamp(21px, 3.2vw, 28px); line-height: 1.1; font-weight: 900; letter-spacing: -.025em; }
+  .sec-lead { margin: 6px 0 0; color: var(--muted); font-size: 15px; }
+  h3.sub { margin: 22px 0 12px; font-size: 18px; font-weight: 800; letter-spacing: -.02em; color: var(--soft); }
+
+  /* route list */
+  .route { position: relative; display: grid; gap: 0; padding-left: 36px; }
+  .route::before { content: ""; position: absolute; left: 15px; top: 22px; bottom: 22px; width: 2px;
+    background: linear-gradient(180deg, var(--copper-2), rgba(117,184,137,.7)); border-radius: 2px; }
+  .route-item { position: relative; display: grid; grid-template-columns: 1fr; padding: 12px 0; }
+  .route-item::before { content: ""; position: absolute; left: -29px; top: 17px; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--ink); border: 2px solid var(--copper-2); box-shadow: 0 0 0 4px rgba(199,122,58,.12); }
+  .route-item:last-child::before { border-color: var(--green); box-shadow: 0 0 0 4px rgba(117,184,137,.16); }
+  .route-item strong { font-size: 17px; font-weight: 800; }
+  .route-item span { color: var(--muted); font-size: 14.5px; }
+  .route-item .mono { color: var(--copper-3); font-size: 13.5px; }
+
+  /* compare cards */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .cmp-card { padding: 22px; border-radius: var(--radius); border: 1px solid var(--line); background: rgba(8,9,10,.5); }
+  .cmp-head { display: flex; align-items: center; gap: 13px; margin-bottom: 13px; }
+  .cmp-logo { width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center; border: 1px solid var(--line); background: rgba(8,9,10,.7); }
+  .cmp-logo img { width: 24px; height: 24px; filter: brightness(0) invert(1); opacity: .92; }
+  .cmp-logo .lucide { width: 24px; height: 24px; color: var(--copper-2); }
+  .cmp-head strong { font-size: 21px; font-weight: 900; letter-spacing: -.02em; }
+  .cmp-head .tag { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--copper-2); margin-top: 2px; }
+  .cmp-card p { margin: 0; color: var(--soft); font-size: 14.5px; }
+  .cmp-card p code { font-family: var(--mono); color: var(--copper-3); font-size: 13px; }
+  .cmp-card.neutral .cmp-logo .lucide { color: var(--steel); }
+
+  /* files */
+  .files { display: grid; gap: 10px; margin-top: 14px; }
+  .file { display: grid; grid-template-columns: 150px 1fr; gap: 14px; align-items: baseline; padding: 13px 16px;
+    border: 1px solid var(--line); border-radius: var(--radius); background: rgba(8,9,10,.5); }
+  .file b { font-family: var(--mono); color: var(--copper-3); font-size: 14.5px; }
+  .file span { color: var(--muted); font-size: 14.5px; }
+
+  /* bullets */
+  .bullets { display: grid; gap: 10px; margin-top: 14px; }
+  .bullet { display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: start; color: var(--soft); font-size: 15px; }
+  .bullet .lucide { width: 19px; height: 19px; color: var(--copper-2); margin-top: 3px; }
+  .bullet.green .lucide { color: var(--green); }
+  .bullet.red .lucide { color: var(--red); }
+  .bullet b { color: var(--text); }
+
+  /* table */
+  .tablewrap { margin-top: 14px; border-radius: var(--radius); border: 1px solid var(--line); overflow-x: auto; background: rgba(8,9,10,.5); }
+  table { width: 100%; border-collapse: collapse; min-width: 560px; }
+  th, td { padding: 11px 16px; text-align: left; border-bottom: 1px solid rgba(241,236,226,.07); font-size: 14.5px; }
+  thead th { background: rgba(255,255,255,.04); font-size: 12.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+  tbody tr:last-child td { border-bottom: none; }
+  td:first-child { color: var(--soft); font-weight: 700; }
+  .win { color: var(--green); }
+  .stars { font-family: var(--mono); color: var(--copper-3); }
+  .fresh { color: var(--green); }
+  .stale { color: var(--red); }
+
+  /* copy prompt */
+  .copy-shell { border-radius: var(--radius); border: 1px solid rgba(224,170,111,.26); background: rgba(8,9,10,.8); overflow: hidden; box-shadow: var(--shadow); margin-top: 14px; }
+  .copy-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 13px 18px; border-bottom: 1px solid var(--line); }
+  .copy-title { display: flex; align-items: center; gap: 12px; }
+  .copy-title .dots { display: flex; gap: 6px; }
+  .copy-title .dots i { width: 11px; height: 11px; border-radius: 50%; }
+  .copy-title .dots i:nth-child(1){ background:#d76c5c; } .copy-title .dots i:nth-child(2){ background:#e0aa6f; } .copy-title .dots i:nth-child(3){ background:#75b889; }
+  .copy-title b { font-family: var(--mono); color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: .04em; }
+  .copy-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px; border: 1px solid rgba(224,170,111,.3);
+    border-radius: 9px; color: var(--text); background: rgba(199,122,58,.12); cursor: pointer; white-space: nowrap; font-size: 13px; font-weight: 700; }
+  .copy-btn .lucide { width: 15px; height: 15px; }
+  .prompt-box { margin: 0; padding: 20px 22px; color: #f0e6d6; font: 14px/1.6 var(--mono); white-space: pre-wrap; cursor: copy; }
+  .prompt-box .hl { color: var(--copper-3); }
+  .copy-shell.copied { border-color: rgba(117,184,137,.5); }
+  .copy-shell.copied .copy-btn { border-color: rgba(117,184,137,.5); color: #dff5e5; background: rgba(117,184,137,.12); }
+  .step-label { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; padding: 5px 11px; border-radius: 999px;
+    border: 1px solid rgba(224,170,111,.28); background: rgba(199,122,58,.1); color: var(--copper-2);
+    font-family: var(--mono); font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+
+  /* checklist */
+  .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .check { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; padding: 16px;
+    border: 1px solid var(--line); border-radius: var(--radius); background: rgba(8,9,10,.5); }
+  .check .ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+    border: 1px solid rgba(117,184,137,.3); background: rgba(117,184,137,.1); color: var(--green); }
+  .check .ic .lucide { width: 17px; height: 17px; }
+  .check strong { display: block; color: var(--text); font-size: 15.5px; margin-bottom: 2px; }
+  .check span { color: var(--muted); font-size: 14px; }
+  .check.copper .ic { border-color: rgba(224,170,111,.3); background: rgba(199,122,58,.1); color: var(--copper-2); }
+
+  .warning { display: grid; grid-template-columns: 32px 1fr; gap: 13px; margin-top: 16px; padding: 18px;
+    border: 1px solid rgba(215,108,92,.34); border-radius: var(--radius); background: linear-gradient(140deg, rgba(215,108,92,.1), rgba(215,108,92,.02)); }
+  .warning .ic { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; border: 1px solid rgba(215,108,92,.34); background: rgba(215,108,92,.12); color: var(--red); }
+  .warning .ic .lucide { width: 18px; height: 18px; }
+  .warning div:last-child { color: var(--soft); font-size: 14.5px; align-self: center; }
+  .warning strong { color: var(--text); }
+
+  .note { display: grid; grid-template-columns: 32px 1fr; gap: 13px; margin-top: 16px; padding: 18px;
+    border: 1px solid rgba(224,170,111,.28); border-radius: var(--radius); background: linear-gradient(140deg, rgba(199,122,58,.1), rgba(199,122,58,.02)); }
+  .note .ic { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; border: 1px solid rgba(224,170,111,.3); background: rgba(199,122,58,.12); color: var(--copper-2); }
+  .note .ic .lucide { width: 18px; height: 18px; }
+  .note div:last-child { color: var(--soft); font-size: 14.5px; align-self: center; }
+  .note strong { color: var(--text); }
+
+  /* clicks */
+  .clicks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+  .click { padding: 18px; border-radius: var(--radius); border: 1px solid var(--line); background: rgba(8,9,10,.5); }
+  .click .n { font-family: var(--mono); font-size: 12px; color: var(--copper-2); letter-spacing: .12em; }
+  .click strong { display: block; margin-top: 8px; font-size: 17px; font-weight: 800; }
+  .click span { display: block; margin-top: 6px; color: var(--muted); font-size: 14px; }
+
+  /* terms */
+  .terms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; margin-top: 14px; }
+  .term { padding: 15px 17px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(8,9,10,.5); transition: .25s var(--ease); }
+  .term:hover { border-color: rgba(224,170,111,.34); transform: translateY(-2px); }
+  .term b { display: block; color: var(--text); font-size: 15.5px; font-weight: 800; letter-spacing: -.01em; }
+  .term span { display: block; margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.34; }
+  .term.fresh-term { border-color: rgba(117,184,137,.3); background: rgba(117,184,137,.05); }
+
+  .download { display: grid; grid-template-columns: 52px 1fr auto; gap: 16px; align-items: center; margin-top: 16px;
+    padding: 18px 20px; border: 1px solid rgba(224,170,111,.3); border-radius: var(--radius);
+    background: linear-gradient(120deg, rgba(199,122,58,.14), rgba(199,122,58,.03)); transition: .25s var(--ease); }
+  .download:hover { border-color: rgba(224,170,111,.6); transform: translateY(-2px); }
+  .download .ic { width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center; border: 1px solid rgba(224,170,111,.3); background: rgba(199,122,58,.12); color: var(--copper-2); }
+  .download .ic .lucide { width: 26px; height: 26px; }
+  .download strong { display: block; color: var(--text); font-size: 17px; font-weight: 900; letter-spacing: -.02em; }
+  .download span { color: var(--muted); font-size: 13.5px; }
+  .download .go { color: var(--copper-2); }
+
+  .formula { margin-top: 18px; padding: 20px 22px 20px 24px; border-radius: var(--radius); position: relative;
+    border: 1px solid rgba(224,170,111,.24); background: linear-gradient(120deg, rgba(199,122,58,.13), rgba(199,122,58,.03));
+    color: #efe3d3; font-size: 16px; line-height: 1.55; font-weight: 600; }
+  .formula::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; border-radius: 4px; background: var(--metal); }
+  .formula p { margin: 0; }
+  .formula p + p { margin-top: 6px; }
+
+  .footer { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--dim); font-size: 13px; text-align: center; }
+  .footer b { color: var(--muted); }
+
+  @media (max-width: 760px) {
+    .page { padding: 20px 14px 60px; }
+    .hero, .section { padding: 22px; }
+    .topbar { font-size: 11px; letter-spacing: .08em; gap: 10px; }
+    .print-btn { white-space: nowrap; }
+    .compare, .checks, .terms, .clicks { grid-template-columns: 1fr; }
+    .file { grid-template-columns: 1fr; gap: 4px; }
+    .copy-head { flex-direction: column; align-items: flex-start; }
+    .copy-btn { width: 100%; justify-content: center; }
+    .download { grid-template-columns: 44px 1fr; }
+    .download .go { display: none; }
+    .sec-head { grid-template-columns: 1fr; gap: 10px; }
+
+    /* таблицы на телефоне превращаются в карточки, чтобы не уезжать за экран */
+    .tablewrap { border: none; background: none; overflow: visible; }
+    table { min-width: 0; display: block; }
+    thead { display: none; }
+    tbody, tr, td { display: block; width: 100%; }
+    tr { margin-bottom: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(8,9,10,.5); overflow: hidden; }
+    td { border-bottom: 1px solid rgba(241,236,226,.07); padding: 11px 15px; }
+    tr td:last-child { border-bottom: none; }
+    td:first-child { background: rgba(255,255,255,.04); font-size: 15.5px; }
+    td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 3px;
+      font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--copper-2); }
+  }
+  @media (max-width: 420px) {
+    .topbar .brand { font-size: 10px; }
+    .print-btn { padding: 8px 11px; font-size: 13px; }
+  }
+  @media print {
+    body { background: #fffaf2; color: #15110d; background-image: none; }
+    .page { width: 100%; padding: 0; }
+    .hero, .section, .copy-shell, .cmp-card, .check, .term, .download, .route-item, .file, .click, .tablewrap { box-shadow: none; break-inside: avoid;
+      background: #fffaf2; border-color: #e6dac6; color: #15110d; }
+    .metal { -webkit-text-fill-color: #b06a2c; color: #b06a2c; }
+    .print-btn, .copy-btn, .nav { display: none; }
+    .prompt-box { color: #2a2118; background: #f6efe2; }
+    h1, h2, h3, .term b, .check strong, .cmp-head strong, td:first-child { color: #15110d; }
+    .sec-lead, .term span, .check span, .cmp-card p, .bullet, .file span { color: #5a5044; }
+    thead th { background: #f2e9da; color: #5a5044; }
+    a { color: #b06a2c; }
+  }
+</style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span> neovida · Нейропросвещение</div>
+      <button class="print-btn" type="button" onclick="window.print()"><i data-lucide="printer"></i> PDF / печать</button>
+    </div>
+
+    <header class="hero">
+      <div class="kicker"><i data-lucide="factory"></i> Урок 2 · шпаргалка участника</div>
+      <h1>GitHub, Vercel и <span class="metal">первая публичная ссылка</span></h1>
+      <p class="hero-lead">Здесь всё, что нужно, чтобы <b>не путать, где живёт код, а где открывается сайт</b>, и чтобы пройти свой проект по методу правильного старта: семь промптов, чек-листы и словарь урока.</p>
+      <div class="mini-route">
+        <span class="mr-node"><i data-lucide="folder-code"></i> Папка</span>
+        <span class="mr-arrow"><i data-lucide="chevron-right"></i></span>
+        <span class="mr-node"><i data-lucide="monitor-dot"></i> localhost</span>
+        <span class="mr-arrow"><i data-lucide="chevron-right"></i></span>
+        <span class="mr-node"><i data-lucide="git-commit-horizontal"></i> Git</span>
+        <span class="mr-arrow"><i data-lucide="chevron-right"></i></span>
+        <span class="mr-node"><img src="assets/logos/github.svg" alt=""> GitHub</span>
+        <span class="mr-arrow"><i data-lucide="chevron-right"></i></span>
+        <span class="mr-node"><img src="assets/logos/vercel.svg" alt=""> Vercel</span>
+        <span class="mr-arrow"><i data-lucide="chevron-right"></i></span>
+        <span class="mr-node last"><i data-lucide="globe"></i> Публичная ссылка</span>
+      </div>
+      <nav class="nav">
+        <a href="#s1"><span class="n">01</span> Маршрут</a>
+        <a href="#s2"><span class="n">02</span> Четыре слоя</a>
+        <a href="#s3"><span class="n">03</span> Статика</a>
+        <a href="#s4"><span class="n">04</span> Pages и Vercel</a>
+        <a href="#s5"><span class="n">05</span> Pages в три клика</a>
+        <a href="#s6"><span class="n">06</span> Семь промптов</a>
+        <a href="#s7"><span class="n">07</span> Разведка</a>
+        <a href="#s8"><span class="n">08</span> Чек-лист</a>
+        <a href="#s9"><span class="n">09</span> Домашка</a>
+        <a href="#s10"><span class="n">10</span> Словарь</a>
+      </nav>
+    </header>
+
+    <!-- 01 -->
+    <section class="section" id="s1">
+      <div class="sec-head">
+        <div class="sec-num">01</div>
+        <div>
+          <h2>Главная карта маршрута</h2>
+          <p class="sec-lead">Держишь эту цепочку в голове, и GitHub с Vercel перестают быть кашей.</p>
+        </div>
+      </div>
+      <div class="route">
+        <div class="route-item"><strong>Идея</strong><span>что хотим показать человеку.</span></div>
+        <div class="route-item"><strong>Папка проекта</strong><span>файлы на компьютере: <span class="mono">index.html</span>, <span class="mono">styles.css</span>, <span class="mono">script.js</span>.</span></div>
+        <div class="route-item"><strong>localhost</strong><span>локальный адрес, его видите только вы, пока проект запущен на вашем компьютере.</span></div>
+        <div class="route-item"><strong>Git</strong><span>история сохранений: <span class="mono">status</span>, <span class="mono">add</span>, <span class="mono">commit</span>. Точки, к которым можно вернуться.</span></div>
+        <div class="route-item"><strong>GitHub</strong><span>облачное место для кода и истории проекта. Сайт публичным сам по себе не делает.</span></div>
+        <div class="route-item"><strong>Vercel</strong><span>берёт код из GitHub, собирает проект и публикует сайт.</span></div>
+        <div class="route-item"><strong>Публичная ссылка</strong><span>адрес, который уже можно отправить другому человеку.</span></div>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section class="section" id="s2">
+      <div class="sec-head">
+        <div class="sec-num">02</div>
+        <div>
+          <h2>Четыре слоя, которые путают чаще всего</h2>
+          <p class="sec-lead">Где сайт отдаётся, где размещается, где хранится код и кто делает публикацию.</p>
+        </div>
+      </div>
+      <div class="compare">
+        <div class="cmp-card neutral">
+          <div class="cmp-head"><div class="cmp-logo"><i data-lucide="server"></i></div><div><strong>Сервер</strong><span class="tag">отдаёт сайт</span></div></div>
+          <p>Компьютер или облако, которое отдаёт страницу браузеру, когда человек открывает ссылку. Должен быть включён и доступен из интернета.</p>
+        </div>
+        <div class="cmp-card neutral">
+          <div class="cmp-head"><div class="cmp-logo"><i data-lucide="building-2"></i></div><div><strong>Хостинг</strong><span class="tag">место для сайта</span></div></div>
+          <p>Площадка, где проект размещается и становится доступен другим людям. Vercel и GitHub Pages это хостинги.</p>
+        </div>
+        <div class="cmp-card">
+          <div class="cmp-head"><div class="cmp-logo"><img src="assets/logos/github.svg" alt="GitHub"></div><div><strong>GitHub</strong><span class="tag">хранилище кода</span></div></div>
+          <p>Хранит код, историю изменений и сам репозиторий. Показывает, что и когда менялось. Публичным сайт не делает.</p>
+        </div>
+        <div class="cmp-card">
+          <div class="cmp-head"><div class="cmp-logo"><img src="assets/logos/vercel.svg" alt="Vercel"></div><div><strong>Vercel</strong><span class="tag">публикация</span></div></div>
+          <p>Берёт код из GitHub, собирает проект и выдаёт публичную ссылку вида <code>проект.vercel.app</code>. Обновляет сайт после каждого push.</p>
+        </div>
+      </div>
+      <div class="formula">
+        <p>Commit сохраняет. Push отправляет. Deploy публикует.</p>
+        <p>У коммита есть подпись, и она должна говорить, что изменилось: «добавил кнопку написать в Telegram», а не «правки».</p>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section class="section" id="s3">
+      <div class="sec-head">
+        <div class="sec-num">03</div>
+        <div>
+          <h2>Статика простыми словами</h2>
+          <p class="sec-lead">Первая версия проекта делается статикой специально, и это защита, а не бедность.</p>
+        </div>
+      </div>
+      <p style="color:var(--soft);font-size:15px;margin:0">Статический сайт это набор готовых файлов. Сервер отдаёт их человеку как есть и ничего не вычисляет. Аналогия: статика это распечатанное меню, его печатают один раз и показывают всем одинаковое. Динамика это повар, который готовит блюдо под конкретный заказ.</p>
+      <div class="files">
+        <div class="file"><b>index.html</b><span>текст и структура страницы</span></div>
+        <div class="file"><b>styles.css</b><span>внешний вид: цвета, отступы, шрифты, поведение на телефоне</span></div>
+        <div class="file"><b>script.js</b><span>логика и реакция на действия, работает уже в браузере посетителя</span></div>
+      </div>
+      <h3 class="sub">Что из этого следует</h3>
+      <div class="bullets">
+        <div class="bullet"><i data-lucide="users"></i><span>Все посетители видят одно и то же, персонально ничего не меняется.</span></div>
+        <div class="bullet"><i data-lucide="database-zap"></i><span>Между визитами ничего не хранится, кроме того, что осталось в браузере самого человека.</span></div>
+        <div class="bullet"><i data-lucide="lock"></i><span>Нет личных кабинетов и общей базы, потому что хранить негде.</span></div>
+        <div class="bullet green"><i data-lucide="shield-check"></i><span>Для первой версии это плюс: нечему утечь и нечего сломать.</span></div>
+      </div>
+      <h3 class="sub">Что такое сборка</h3>
+      <p style="color:var(--soft);font-size:15px;margin:0">Пока проект это три файла, его отдают как есть. Как только появляются React, Next или Vite, исходники браузеру не скормишь: их сначала надо собрать, то есть превратить в готовые файлы. Vercel определяет тип проекта и делает это сам, GitHub Pages не умеет.</p>
+    </section>
+
+    <!-- 04 -->
+    <section class="section" id="s4">
+      <div class="sec-head">
+        <div class="sec-num">04</div>
+        <div>
+          <h2>GitHub Pages против Vercel</h2>
+          <p class="sec-lead">Оба хостинга бесплатные для учёбы. Разница в том, что они умеют.</p>
+        </div>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Что сравниваем</th><th>GitHub Pages</th><th>Vercel</th></tr></thead>
+          <tbody>
+            <tr><td>Что умеет раздавать</td><td data-label="GitHub Pages">только готовую статику</td><td class="win" data-label="Vercel">статику и проекты со сборкой</td></tr>
+            <tr><td>Кто собирает проект</td><td data-label="GitHub Pages">никто, либо настраиваете сами</td><td class="win" data-label="Vercel">определяет тип и собирает сам</td></tr>
+            <tr><td>Обновление после правки</td><td data-label="GitHub Pages">до 10 минут, около 10 сборок в час</td><td class="win" data-label="Vercel">автоматически на каждый коммит</td></tr>
+            <tr><td>Черновая версия</td><td data-label="GitHub Pages">нет, сайт один</td><td class="win" data-label="Vercel">своя ссылка на каждую ветку</td></tr>
+            <tr><td>Откат назад</td><td data-label="GitHub Pages">руками через историю</td><td class="win" data-label="Vercel">кнопкой на прошлую версию</td></tr>
+            <tr><td>Серверная часть</td><td data-label="GitHub Pages">нет вообще</td><td class="win" data-label="Vercel">есть функции</td></tr>
+            <tr><td>Размер и трафик</td><td data-label="GitHub Pages">сайт до 1 ГБ, около 100 ГБ в месяц</td><td data-label="Vercel">около 100 ГБ в месяц на бесплатном</td></tr>
+            <tr><td>Свой домен</td><td data-label="GitHub Pages">можно</td><td data-label="Vercel">можно</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note">
+        <div class="ic"><i data-lucide="badge-alert"></i></div>
+        <div><strong>Честно про бесплатное.</strong> GitHub Pages правилами запрещает коммерческие сайты и сервисы. У Vercel бесплатный тариф только для личного некоммерческого использования, и коммерческим считается даже случай, когда вам заплатили за создание сайта. Появился клиент и деньги, переходите на платный тариф или другой хостинг.</div>
+      </div>
+      <div class="formula">
+        <p>Берём Vercel: он не упрётся в потолок, когда проект перестанет быть статикой, даёт черновики и откат, обновляет сайт сам.</p>
+        <p>Pages хорош, когда сайт чисто статический и всё уже лежит в GitHub.</p>
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section class="section" id="s5">
+      <div class="sec-head">
+        <div class="sec-num">05</div>
+        <div>
+          <h2>GitHub Pages включается тремя кликами</h2>
+          <p class="sec-lead">Отдельный хостинг подключать не нужно, GitHub умеет раздавать статику сам.</p>
+        </div>
+      </div>
+      <div class="clicks">
+        <div class="click"><div class="n">КЛИК 01</div><strong>Settings</strong><span>настройки своего репозитория, вкладка сверху</span></div>
+        <div class="click"><div class="n">КЛИК 02</div><strong>Pages</strong><span>раздел в левом меню настроек</span></div>
+        <div class="click"><div class="n">КЛИК 03</div><strong>Ветка main</strong><span>выбираем ветку, папку оставляем корневую, сохраняем</span></div>
+      </div>
+      <div class="formula">
+        <p>Через минуту сайт открывается по адресу вида <span class="mono">имя-пользователя.github.io/название-проекта</span>.</p>
+        <p>Живой пример: материалы этого курса лежат именно на GitHub Pages, <a href="https://materials.neovida.ai" target="_blank" rel="noopener">materials.neovida.ai</a>.</p>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section class="section" id="s6">
+      <div class="sec-head">
+        <div class="sec-num">06</div>
+        <div>
+          <h2>Семь промптов метода</h2>
+          <p class="sec-lead">Порядок не меняем. На уроке идём по ним на общем проекте, дома по ним же на своём заказе: меняется только то, что в первом промпте.</p>
+        </div>
+      </div>
+
+      <div class="step-label"><i data-lucide="circle-play"></i> Разминка · страница-визитка</div>
+      <div class="copy-shell">
+        <div class="copy-head">
+          <div class="copy-title"><span class="dots"><i></i><i></i><i></i></span><b>codex · болванка для деплоя</b></div>
+          <button class="copy-btn" type="button"><i data-lucide="copy"></i> Копировать</button>
+        </div>
+        <pre class="prompt-box">Сделай простую страницу-визитку. Только HTML, CSS и JavaScript в одной папке. Без React, без сборщиков, без backend, без базы и без ключей.
+На странице: моё имя [имя], одна строка чем я занимаюсь [чем], кнопка «написать мне» со ссылкой на мой Telegram [ссылка].
+Сделай аккуратно и чтобы нормально смотрелось на телефоне.
+Сначала покажи, какие файлы создашь и зачем. Потом создай и открой страницу локально, чтобы я увидел результат.</pre>
+      </div>
+
+      <div class="step-label"><i data-lucide="target"></i> Шаги 1-3 · Замысел, контекст, сверка</div>
+      <div class="copy-shell">
+        <div class="copy-head">
+          <div class="copy-title"><span class="dots"><i></i><i></i><i></i></span><b>codex · постановка и сверка</b></div>
+          <button class="copy-btn" type="button"><i data-lucide="copy"></i> Копировать</button>
+        </div>
+        <pre class="prompt-box">Я новичок, без кода, работаю в Codex.
+Хочу собрать: [замысел одной фразой].
+Для кого: [кто будет пользоваться и на чём].
+Решаем боль: [что должно стать проще или быстрее].
+Не нужно: <span class="hl">логин, оплата, база данных, чужие API-ключи, реальные данные клиентов</span>.
+Готово, когда: [признак, по которому видно результат].
+
+<span class="hl">Сначала перескажи задачу своими словами и задай мне вопросы, если что-то непонятно.
+Код не пиши, пока я не подтвержу.</span></pre>
+      </div>
+
+      <div class="step-label"><i data-lucide="search"></i> Шаг 4 · Разведка</div>
+      <div class="copy-shell">
+        <div class="copy-head">
+          <div class="copy-title"><span class="dots"><i></i><i></i><i></i></span><b>codex · поиск готовых решений</b></div>
+          <button class="copy-btn" type="button"><i data-lucide="copy"></i> Копировать</button>
+        </div>
+        <pre class="prompt-box">Задачу подтверждаю. Теперь сходи в интернет и найди готовые открытые решения, похожие на мою задачу.
+Ищи на GitHub и GitLab. Нужны <span class="hl">живые проекты: обновлялись за последний год, есть работающее демо, свободная лицензия</span>.
+Дай список из 5 штук: название, ссылка на репозиторий, ссылка на демо, сколько звёзд, когда обновлялся в последний раз.
+Ничего пока не скачивай и не устанавливай.</pre>
+      </div>
+
+      <div class="step-label"><i data-lucide="table-2"></i> Шаг 4 · Сравнение</div>
+      <div class="copy-shell">
+        <div class="copy-head">
+          <div class="copy-title"><span class="dots"><i></i><i></i><i></i></span><b>codex · таблица сравнения</b></div>
+          <button class="copy-btn" type="button"><i data-lucide="copy"></i> Копировать</button>
+        </div>
+        <pre class="prompt-box">Сравни найденные решения таблицей по колонкам:
+что умеет, насколько просто запустить новичку, свежесть обновлений, лицензия, что хранит и где, чего не хватает под мою задачу.
+Заброшенные проекты отметь отдельно.
+В конце одной фразой скажи, <span class="hl">какое ближе всего к моей задаче и почему</span>.</pre>
+      </div>
+
+      <div class="step-label"><i data-lucide="clipboard-list"></i> Шаг 5 · Решение и чертёж</div>
+      <div class="copy-shell">
+        <div class="copy-head">
+          <div class="copy-title"><span class="dots"><i></i><i></i><i></i></span><b>codex · вытащить лучшее</b></div>
+          <button class="copy-btn" type="button"><i data-lucide="copy"></i> Копировать</button>
+        </div>
+        <pre class="prompt-box">Теперь собери из этих решений мой чертёж. Ответь по четырём пунктам:
+1. Что я беру за основу и у кого именно (какая часть, какая логика, какой экран).
+2. Что режу как лишнее для первой версии.
+3. Что дописываю своё, чего нет ни в одном из них.
+4. Что откладываю на потом (оплата, база, данные клиентов, интеграции).
+<span class="hl">Чужой код не копируй целиком, бери идеи и структуру.</span>
+Покажи чертёж списком, чтобы я подтвердил.</pre>
+      </div>
+
+      <div class="step-label"><i data-lucide="hammer"></i> Шаг 6 · Первый камень</div>
+      <div class="copy-shell">
+        <div class="copy-head">
+          <div class="copy-title"><span class="dots"><i></i><i></i><i></i></span><b>codex · сборка первой версии</b></div>
+          <button class="copy-btn" type="button"><i data-lucide="copy"></i> Копировать</button>
+        </div>
+        <pre class="prompt-box">Чертёж подтверждаю, начинаем собирать.
+Только HTML, CSS и JavaScript. <span class="hl">Без React, без сборщиков, без backend, без базы, без логина, без платежей и без API-ключей.</span> Данные храним в браузере.
+Работай маленькими шагами. После каждого шага останавливайся, коротко объясняй простыми словами, что сделал и что мне проверить.
+Начни с первого шага: файлы проекта и пустой экран, который открывается локально.</pre>
+      </div>
+
+      <div class="step-label"><i data-lucide="scan-search"></i> После сборки · Проверка перед показом</div>
+      <div class="copy-shell">
+        <div class="copy-head">
+          <div class="copy-title"><span class="dots"><i></i><i></i><i></i></span><b>codex · честный отчёт</b></div>
+          <button class="copy-btn" type="button"><i data-lucide="copy"></i> Копировать</button>
+        </div>
+        <pre class="prompt-box">Проверь проект перед тем, как я его покажу.
+Пройди чек-лист: открывается ли локально, работает ли главный сценарий от начала до конца, нет ли в коде секретов и ключей, что осталось заглушкой.
+Дай честный отчёт: что сделано, что не доделано, где риск.
+<span class="hl">Не пиши «готово», пока это не проверено.</span></pre>
+      </div>
+
+      <div class="step-label"><i data-lucide="upload-cloud"></i> После сборки · Публикация</div>
+      <div class="copy-shell">
+        <div class="copy-head">
+          <div class="copy-title"><span class="dots"><i></i><i></i><i></i></span><b>codex · до публичной ссылки</b></div>
+          <button class="copy-btn" type="button"><i data-lucide="copy"></i> Копировать</button>
+        </div>
+        <pre class="prompt-box">Теперь проведи меня до публичной ссылки.
+Сохрани изменения через Git с понятным названием, объясни, что такое коммит на этом примере.
+Отправь проект в мой GitHub, скажи по шагам, что мне нажать, если нужен мой шаг руками.
+Опубликуй через Vercel и дай мне публичную ссылку.
+В конце объясни разницу: <span class="hl">что теперь лежит в GitHub, а что открывается по ссылке.</span></pre>
+      </div>
+
+      <div class="step-label"><i data-lucide="life-buoy"></i> Если сломалось</div>
+      <div class="copy-shell">
+        <div class="copy-head">
+          <div class="copy-title"><span class="dots"><i></i><i></i><i></i></span><b>codex · разбор ошибки</b></div>
+          <button class="copy-btn" type="button"><i data-lucide="copy"></i> Копировать</button>
+        </div>
+        <pre class="prompt-box">Вот ошибка: [вставь текст ошибки] на шаге [на каком остановился].
+<span class="hl">Не переписывай проект целиком.</span> Найди причину, объясни её простыми словами, предложи минимальную правку и покажи, что именно поменяешь.
+Внеси только после моего «ок», потом проверь, что ничего не сломалось.</pre>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section class="section" id="s7">
+      <div class="sec-head">
+        <div class="sec-num">07</div>
+        <div>
+          <h2>Что находит разведка</h2>
+          <p class="sec-lead">Пример по нашему общему проекту: калькулятор заказа с готовым предложением. Ссылки живые, можно открыть и посмотреть.</p>
+        </div>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Проект</th><th>Звёзд</th><th>Обновлялся</th><th>Живое демо</th><th>Лицензия</th></tr></thead>
+          <tbody>
+            <tr><td>invoify</td><td class="stars" data-label="Звёзд">6325</td><td class="fresh" data-label="Обновлялся">июнь 2026</td><td data-label="Живое демо"><a href="https://invoify.vercel.app" target="_blank" rel="noopener">invoify.vercel.app</a></td><td data-label="Лицензия">MIT</td></tr>
+            <tr><td>easy-invoice-pdf</td><td class="stars" data-label="Звёзд">1012</td><td class="fresh" data-label="Обновлялся">июль 2026</td><td data-label="Живое демо"><a href="https://easyinvoicepdf.com" target="_blank" rel="noopener">easyinvoicepdf.com</a></td><td data-label="Лицензия">AGPL</td></tr>
+            <tr><td>invoicely</td><td class="stars" data-label="Звёзд">881</td><td class="fresh" data-label="Обновлялся">май 2026</td><td data-label="Живое демо"><a href="https://invoicely.gg" target="_blank" rel="noopener">invoicely.gg</a></td><td data-label="Лицензия">MIT</td></tr>
+            <tr><td>react-invoice-generator</td><td class="stars" data-label="Звёзд">676</td><td class="stale" data-label="Обновлялся">май 2024</td><td data-label="Живое демо"><a href="https://tuanpham-dev.github.io/react-invoice-generator/" target="_blank" rel="noopener">открыть демо</a></td><td data-label="Лицензия">MIT</td></tr>
+            <tr><td>invoice-generator</td><td class="stars" data-label="Звёзд">335</td><td class="stale" data-label="Обновлялся">сентябрь 2024</td><td data-label="Живое демо"><a href="https://invoice-generator.prolab.sh" target="_blank" rel="noopener">invoice-generator.prolab.sh</a></td><td data-label="Лицензия">MIT</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="formula">
+        <p>В разведке смотрим на три вещи: нужные функции, простоту запуска и свежесть.</p>
+        <p>Проект, заброшенный два года назад, за основу не берём, даже если функций там больше.</p>
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section class="section" id="s8">
+      <div class="sec-head">
+        <div class="sec-num">08</div>
+        <div>
+          <h2>Чек-лист перед публичной ссылкой</h2>
+          <p class="sec-lead">Не публикуем на авось. Сначала простая проверка.</p>
+        </div>
+      </div>
+      <div class="checks">
+        <div class="check"><div class="ic"><i data-lucide="monitor-check"></i></div><div><strong>Проект открыт локально</strong><span>страница реально видна в браузере, а не только «файлы созданы»</span></div></div>
+        <div class="check"><div class="ic"><i data-lucide="file-diff"></i></div><div><strong>Понятны изменения</strong><span>агент объяснил, какие файлы изменил и зачем</span></div></div>
+        <div class="check"><div class="ic"><i data-lucide="key-round"></i></div><div><strong>Нет секретов</strong><span>в коде нет паролей, ключей, токенов, банковских данных</span></div></div>
+        <div class="check"><div class="ic"><i data-lucide="bookmark-check"></i></div><div><strong>Есть коммит</strong><span>название объясняет смысл изменения, а не просто «fix»</span></div></div>
+        <div class="check copper"><div class="ic"><svg class="lucide" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></div><div><strong>GitHub открыт</strong><span>репозиторий содержит нужные файлы, выбран публичный или приватный осознанно</span></div></div>
+        <div class="check copper"><div class="ic"><i data-lucide="link"></i></div><div><strong>Ссылка работает у других</strong><span>открыли с телефона и попросили открыть соседа</span></div></div>
+      </div>
+      <div class="warning">
+        <div class="ic"><i data-lucide="triangle-alert"></i></div>
+        <div><strong>Стоп-сигнал.</strong> Если в проекте появляются логин, платежи, клиентские данные, база данных, API-ключи или реальные пользователи, это уже не «быстро задеплоить». Остановитесь и попросите разбор. Один раз отправленный в GitHub ключ считается скомпрометированным навсегда: удалить файл мало, ключ меняют.</div>
+      </div>
+    </section>
+
+    <!-- 09 -->
+    <section class="section" id="s9">
+      <div class="sec-head">
+        <div class="sec-num">09</div>
+        <div>
+          <h2>Что сдавать после урока</h2>
+          <p class="sec-lead">Дома проходите те же промпты на своём заказе из домашки 2.</p>
+        </div>
+      </div>
+      <div class="checks">
+        <div class="check copper"><div class="ic"><i data-lucide="link"></i></div><div><strong>Публичная ссылка</strong><span>на свой проект, а не на общий калькулятор с урока</span></div></div>
+        <div class="check copper"><div class="ic"><svg class="lucide" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></div><div><strong>Скрин истории коммитов</strong><span>видно, что сохранений несколько и у них человеческие названия</span></div></div>
+        <div class="check copper"><div class="ic"><i data-lucide="table-2"></i></div><div><strong>Таблица разведки</strong><span>что нашли по своей задаче и что взяли за основу</span></div></div>
+        <div class="check copper"><div class="ic"><i data-lucide="message-square-warning"></i></div><div><strong>Если застряли</strong><span>скрин, текст ошибки и шаг, на котором остановились. Это тоже нормальный результат</span></div></div>
+      </div>
+      <div class="formula">
+        <p>Формула недели: один проект, один следующий шаг, одна проверка, один понятный отчёт.</p>
+        <p>Не «весь продукт сразу».</p>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section class="section" id="s10">
+      <div class="sec-head">
+        <div class="sec-num">10</div>
+        <div>
+          <h2>Слова урока</h2>
+          <p class="sec-lead">Их не зубрят. Их узнают в работе и используют, чтобы точнее ставить задачу агенту.</p>
+        </div>
+      </div>
+      <div class="terms">
+        <div class="term"><b>Проект</b><span>папка со всеми файлами будущего сайта</span></div>
+        <div class="term"><b>localhost</b><span>адрес, открытый только на вашем компьютере</span></div>
+        <div class="term"><b>Сервер</b><span>компьютер или облако, которое отдаёт сайт людям</span></div>
+        <div class="term"><b>Хостинг</b><span>место, где сайт размещается и доступен другим</span></div>
+        <div class="term"><b>Git</b><span>история сохранений проекта</span></div>
+        <div class="term"><b>Repository</b><span>проект вместе с историей изменений</span></div>
+        <div class="term"><b>Commit</b><span>осмысленная точка сохранения</span></div>
+        <div class="term"><b>Push</b><span>отправить изменения на GitHub</span></div>
+        <div class="term"><b>Deploy</b><span>публикация проекта в интернет</span></div>
+        <div class="term"><b>Preview</b><span>черновая ссылка для проверки до публикации</span></div>
+        <div class="term"><b>Production</b><span>настоящая публичная версия проекта</span></div>
+        <div class="term"><b>Домен</b><span>человеческий адрес сайта</span></div>
+        <div class="term fresh-term"><b>Статика</b><span>готовые файлы, сервер ничего не считает</span></div>
+        <div class="term fresh-term"><b>Сборка</b><span>исходники превращаются в готовые файлы</span></div>
+        <div class="term fresh-term"><b>Автодеплой</b><span>сайт пересобирается сам после каждого push</span></div>
+        <div class="term fresh-term"><b>GitHub Pages</b><span>раздача статики прямо из репозитория</span></div>
+        <div class="term fresh-term"><b>Приватный репозиторий</b><span>код видите только вы и те, кого позвали</span></div>
+        <div class="term fresh-term"><b>.gitignore</b><span>список того, что Git не отправит в облако</span></div>
+      </div>
+      <a class="download" href="glossary.html" target="_blank" rel="noopener">
+        <div class="ic"><i data-lucide="book-marked"></i></div>
+        <div><strong>Словарь выжившего в Codex</strong><span>полный разбор терминов: что это, где увидите, зачем и какая типичная ошибка</span></div>
+        <i data-lucide="arrow-up-right" class="go"></i>
+      </a>
+      <div class="formula">
+        <p>Пока я смотрел локально, это был localhost. Чтобы сайт увидели другие, нужен хостинг.</p>
+        <p>Код лежит в GitHub. Сайт опубликован на Vercel. Домен это красивый адрес, его подключают позже.</p>
+        <p>База не нужна, пока мы не храним данные людей.</p>
+      </div>
+    </section>
+
+    <div class="footer">
+      <b>neovida · Нейропросвещение</b><br>
+      AI Цех · урок 2 · GitHub, Vercel и первая публичная ссылка
+    </div>
+  </main>
+
+<script>
+  document.querySelectorAll('.copy-shell').forEach((shell) => {
+    const btn = shell.querySelector('.copy-btn');
+    const box = shell.querySelector('.prompt-box');
+    if (!btn || !box) return;
+    const doCopy = async () => {
+      const text = box.innerText.trim();
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (err) {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+      }
+      shell.classList.add('copied');
+      btn.innerHTML = 'Скопировано';
+      setTimeout(() => {
+        shell.classList.remove('copied');
+        btn.innerHTML = '<i data-lucide="copy"></i> Копировать';
+        if (window.lucide) lucide.createIcons();
+      }, 1800);
+    };
+    btn.addEventListener('click', doCopy);
+    box.addEventListener('click', doCopy);
+  });
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>
