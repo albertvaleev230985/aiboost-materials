@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-система Кирилла Колонских | Урок 3 — своя команда ассистентов</title>
+<link rel="icon" href="data:,">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0d0d13;
+  --panel: rgba(255,255,255,0.08);
+  --panel-2: rgba(255,255,255,0.12);
+  --line: rgba(255,255,255,0.18);
+  --white: #ffffff;
+  --white-90: rgba(255,255,255,0.9);
+  --white-78: rgba(255,255,255,0.78);
+  --white-62: rgba(255,255,255,0.62);
+  --white-42: rgba(255,255,255,0.42);
+  --accent: #E07461;
+  --accent-2: #E6A15C;
+  --mint: #10b981;
+  --blue: #5b8def;
+  --violet: #a78bfa;
+  --amber: #f0c040;
+  --red: #e05555;
+}
+
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg); color: var(--white);
+  -webkit-font-smoothing: antialiased;
+}
+
+.deck { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 54px 80px;
+  opacity: 0; visibility: hidden; transform: translateX(36px);
+  transition: opacity .45s ease, transform .45s ease;
+  overflow-y: auto;
+}
+.slide.active { opacity: 1; visibility: visible; transform: translateX(0); }
+.slide.prev { transform: translateX(-36px); }
+/* Пока скрипт не запустился (Quick Look, отключённый JS) показываем первый слайд */
+.deck:not(.ready) > .slide:first-child { opacity: 1; visibility: visible; transform: none; }
+.deck:not(.ready) .nojs-hint { display: block; }
+.nojs-hint { display: none; position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 40; padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(224,116,97,.5); background: rgba(224,116,97,.16); color: #fff; font-size: 15px; font-weight: 700; }
+.slide::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 18% 14%, rgba(224,116,97,.14), transparent 42%),
+    radial-gradient(ellipse at 82% 84%, rgba(16,185,129,.10), transparent 45%);
+}
+.slide.g::before { background: radial-gradient(ellipse at 18% 14%, rgba(91,141,239,.16), transparent 44%), radial-gradient(ellipse at 82% 84%, rgba(224,116,97,.08), transparent 46%); }
+.slide.n::before { background: radial-gradient(ellipse at 18% 14%, rgba(167,139,250,.16), transparent 44%), radial-gradient(ellipse at 82% 84%, rgba(224,116,97,.08), transparent 46%); }
+.slide > * { position: relative; z-index: 1; }
+
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 30; transition: width .35s ease; box-shadow: 0 0 18px rgba(224,116,97,.45); }
+.slide-counter { position: fixed; right: 30px; bottom: 22px; color: var(--white-42); font-weight: 650; font-size: 15px; z-index: 30; pointer-events: none; }
+.fullscreen-btn { position: fixed; top: 18px; right: 22px; z-index: 30; width: 42px; height: 42px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); color: var(--white-78); font-weight: 800; cursor: pointer; }
+.fullscreen-btn:hover { background: var(--panel-2); color: var(--white); }
+.fullscreen-btn svg { width: 19px; height: 19px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+.brand-line { font-size: 14px; letter-spacing: 3px; text-transform: uppercase; color: var(--white-42); font-weight: 750; margin-bottom: 22px; }
+.brand-line b { color: var(--accent); }
+.eyebrow { font-size: 14px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); font-weight: 800; margin-bottom: 16px; }
+.eyebrow.g { color: var(--blue); }
+.eyebrow.n { color: var(--violet); }
+.title-big { font-size: 70px; line-height: 1.03; font-weight: 780; letter-spacing: -2px; margin-bottom: 24px; max-width: 1080px; }
+.title-big .accent, .slide-title .accent, .statement .accent { color: var(--accent); }
+.title-big .mint, .slide-title .mint, .statement .mint { color: var(--mint); }
+.slide-title .blue, .statement .blue { color: var(--blue); }
+.slide-title .violet, .statement .violet { color: var(--violet); }
+.title-sub { font-size: 27px; line-height: 1.35; color: var(--white-78); max-width: 940px; margin-bottom: 40px; }
+.title-meta { font-size: 18px; color: var(--white-42); letter-spacing: .5px; }
+.title-meta b { color: var(--accent-2); }
+.slide-title { font-size: 44px; line-height: 1.13; font-weight: 760; letter-spacing: -.6px; margin-bottom: 22px; max-width: 1140px; }
+.slide-subtitle { font-size: 23px; line-height: 1.45; color: var(--white-78); margin-bottom: 26px; max-width: 1020px; }
+.body { font-size: 21px; line-height: 1.55; color: var(--white-78); max-width: 1100px; }
+.body strong { color: var(--white); }
+
+.title-slide { align-items: center; text-align: center; }
+.title-slide::before { background: radial-gradient(ellipse at 50% 38%, rgba(224,116,97,.22), transparent 60%); }
+
+.statement { font-size: 56px; line-height: 1.14; font-weight: 780; letter-spacing: -1.2px; max-width: 1150px; }
+.statement-sub { font-size: 24px; line-height: 1.45; color: var(--white-62); max-width: 900px; margin-top: 28px; }
+
+.act { align-items: flex-start; justify-content: center; }
+.act .act-num { font-size: 15px; letter-spacing: 3px; text-transform: uppercase; color: var(--white-42); font-weight: 800; margin-bottom: 14px; }
+.act .act-title { font-size: 78px; line-height: 1.02; font-weight: 800; letter-spacing: -2px; margin-bottom: 20px; }
+.act .act-desc { font-size: 26px; color: var(--white-78); max-width: 900px; }
+
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; width: 100%; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; width: 100%; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; width: 100%; }
+.grid-5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; width: 100%; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; box-shadow: 0 18px 44px rgba(0,0,0,.22); }
+.card.hot { border-color: rgba(224,116,97,.48); background: linear-gradient(135deg, rgba(224,116,97,.18), rgba(255,255,255,.06)); }
+.card.mint { border-color: rgba(16,185,129,.42); background: linear-gradient(135deg, rgba(16,185,129,.16), rgba(255,255,255,.05)); }
+.card.blue { border-color: rgba(91,141,239,.42); background: linear-gradient(135deg, rgba(91,141,239,.16), rgba(255,255,255,.05)); }
+.card.violet { border-color: rgba(167,139,250,.42); background: linear-gradient(135deg, rgba(167,139,250,.16), rgba(255,255,255,.05)); }
+.card.bad { border-color: rgba(224,85,85,.42); background: rgba(224,85,85,.10); }
+.card-title { font-size: 21px; line-height: 1.22; font-weight: 760; margin-bottom: 8px; color: var(--white); }
+.card-kicker { font-size: 12px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--accent); font-weight: 850; margin-bottom: 9px; }
+.card-body { font-size: 17px; line-height: 1.45; color: var(--white-78); }
+.card-body strong { color: var(--white); }
+.card-body .ok { color: var(--mint); }
+.card-body .fail { color: #ff9a9a; }
+
+.steps { display: grid; gap: 16px; max-width: 1120px; }
+.steps.tight { gap: 11px; }
+.step { display: grid; grid-template-columns: 50px 1fr; gap: 18px; align-items: flex-start; }
+.step-num { width: 50px; height: 50px; border-radius: 15px; background: linear-gradient(135deg, var(--accent), #c25844); color: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 21px; font-weight: 850; box-shadow: 0 12px 26px rgba(224,116,97,.22); }
+.steps.tight .step { grid-template-columns: 40px 1fr; gap: 14px; }
+.steps.tight .step-num { width: 40px; height: 40px; border-radius: 12px; font-size: 17px; }
+.step-title { font-size: 23px; font-weight: 760; color: var(--white); margin-bottom: 3px; }
+.steps.tight .step-title { font-size: 20px; }
+.step-text { font-size: 17px; color: rgba(255,255,255,.72); line-height: 1.42; }
+
+.prompt { background: rgba(16,185,129,.10); border: 1px solid rgba(16,185,129,.32); border-left: 4px solid var(--mint); border-radius: 0 14px 14px 0; padding: 20px 24px; color: var(--white-90); font-size: 17px; line-height: 1.5; white-space: pre-line; max-width: 1160px; }
+.prompt.compact { font-size: 15px; line-height: 1.42; }
+.prompt.tiny { font-size: 13.5px; line-height: 1.38; }
+.prompt.combine { background: rgba(224,116,97,.10); border-color: rgba(224,116,97,.32); border-left-color: var(--accent); }
+.label { display: inline-block; color: var(--accent); font-size: 12px; letter-spacing: 1.8px; text-transform: uppercase; font-weight: 850; margin-bottom: 10px; }
+
+.table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 17px; }
+.table.small { font-size: 15px; }
+.table th { text-align: left; color: var(--accent); font-weight: 850; padding: 11px 15px; border-bottom: 2px solid rgba(224,116,97,.38); background: rgba(255,255,255,.06); }
+.table td { color: var(--white-78); padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,.10); vertical-align: top; line-height: 1.32; }
+.table.tight th { padding: 8px 14px; }
+.table.tight td { padding: 6px 14px; }
+.table strong { color: var(--white); }
+.table th.yes { color: var(--mint); border-bottom-color: rgba(16,185,129,.4); }
+.table th.care { color: var(--amber); border-bottom-color: rgba(240,192,64,.4); }
+.table th.no { color: #ff8a8a; border-bottom-color: rgba(224,85,85,.4); }
+.table th.blue { color: var(--blue); border-bottom-color: rgba(91,141,239,.4); }
+
+.split { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 22px; width: 100%; }
+.vs-card { border-radius: 18px; padding: 26px; border: 1px solid var(--line); background: var(--panel); }
+.vs-card.bad { border-color: rgba(224,85,85,.42); background: rgba(224,85,85,.10); }
+.vs-card.good { border-color: rgba(16,185,129,.42); background: rgba(16,185,129,.12); }
+.vs-label { font-size: 13px; letter-spacing: 1.8px; text-transform: uppercase; font-weight: 850; color: var(--white-62); margin-bottom: 12px; }
+.bad .vs-label { color: #ff9a9a; }
+.good .vs-label { color: var(--mint); }
+.vs-text { font-size: 20px; line-height: 1.4; color: var(--white-78); }
+.vs-text strong { color: var(--white); }
+
+.flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 12px; align-items: stretch; margin-top: 6px; }
+.flow-box { text-align: center; border-radius: 16px; border: 1px solid var(--line); background: var(--panel); padding: 22px 16px; }
+.flow-tag { font-size: 12px; letter-spacing: 1.4px; color: var(--accent); text-transform: uppercase; font-weight: 850; margin-bottom: 9px; }
+.flow-name { font-size: 21px; font-weight: 780; margin-bottom: 5px; }
+.flow-desc { font-size: 15px; color: var(--white-62); line-height: 1.32; }
+.arrow { display: flex; align-items: center; color: var(--white-42); font-size: 30px; }
+
+.checklist { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 11px 26px; margin-top: 8px; }
+.ci { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: flex-start; }
+.ci b { width: 32px; height: 32px; border-radius: 10px; background: rgba(16,185,129,.16); color: var(--mint); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; }
+.ci span { font-size: 16px; line-height: 1.35; color: var(--white-78); }
+.ci strong { color: var(--white); }
+
+.numlist { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px 30px; margin-top: 10px; }
+.numlist.one { grid-template-columns: 1fr; }
+.nl { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: baseline; }
+.nl b { color: var(--accent-2); font-size: 15px; font-weight: 900; }
+.nl span { font-size: 17px; line-height: 1.35; color: var(--white-78); }
+
+.fields { display: grid; gap: 12px; max-width: 1080px; margin-top: 8px; }
+.fieldrow { display: grid; grid-template-columns: 240px 1fr; gap: 22px; align-items: baseline; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,.10); }
+.fieldrow:last-child { border-bottom: 0; }
+.fieldrow b { font-size: 21px; color: var(--white); font-weight: 780; }
+.fieldrow span { font-size: 17px; color: var(--white-78); line-height: 1.4; }
+
+.quote { max-width: 1060px; border-left: 4px solid var(--accent); background: var(--panel); border-radius: 0 16px 16px 0; padding: 24px 30px; font-size: 25px; line-height: 1.42; color: var(--white); font-weight: 650; }
+.small { font-size: 15px; line-height: 1.4; color: var(--white-42); margin-top: 16px; }
+.note-line { margin-top: 20px; font-size: 18px; color: var(--white-62); }
+.note-line strong { color: var(--accent-2); }
+
+@media (max-width: 1100px) {
+  .slide { padding: 40px 34px; }
+  .title-big { font-size: 46px; }
+  .act .act-title { font-size: 50px; }
+  .statement { font-size: 36px; }
+  .slide-title { font-size: 32px; }
+  .grid-2, .grid-3, .grid-4, .grid-5, .split, .checklist, .numlist { grid-template-columns: 1fr; }
+  .flow { grid-template-columns: 1fr; }
+  .arrow { justify-content: center; transform: rotate(90deg); }
+  .fieldrow { grid-template-columns: 1fr; gap: 4px; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="slide-counter" id="slideCounter">1 / 49</div>
+<button class="fullscreen-btn" id="fsBtn" title="Полный экран">
+  <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+</button>
+
+<div class="deck">
+
+  <!-- 1 -->
+  <section class="slide title-slide">
+    <div class="brand-line"><b>neovida</b> · Нейропросвещение</div>
+    <h1 class="title-big">Своя команда <span class="accent">ассистентов</span></h1>
+    <p class="title-sub">Одна методология, шесть промптов. Первого собираем медленно и руками. Дальше пять минут на каждого следующего.</p>
+    <div class="title-meta">Урок 3 · <b>Кирилл Колонских</b> · 2 августа 2026</div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide">
+    <div class="eyebrow">Где мы находимся</div>
+    <h2 class="slide-title">Промпт вы собирать научились</h2>
+    <div class="grid-3">
+      <div class="card"><div class="card-kicker">Урок 1</div><div class="card-title">Настройка</div><div class="card-body">ChatGPT, персонализация, первые рабочие задачи.</div></div>
+      <div class="card"><div class="card-kicker">Урок 2</div><div class="card-title">Промпт-инженерия</div><div class="card-body">РКЗФО, роль, совет директоров, адвокат дьявола, 16 навыков.</div></div>
+      <div class="card hot"><div class="card-kicker">Сегодня</div><div class="card-title">Ассистенты</div><div class="card-body">Перестаём каждый раз объяснять с нуля, кто вы и чем занимаетесь.</div></div>
+    </div>
+    <div class="note-line">Проблема, которую закрываем: <strong>вы объясняете ИИ одно и то же по двести раз.</strong></div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide">
+    <div class="eyebrow">Обещание урока</div>
+    <div class="statement">Один раз <span class="accent">медленно</span>,<br>чтобы дальше <span class="mint">быстро</span>.</div>
+    <div class="statement-sub">Первого ассистента соберём вместе примерно за сорок минут, по шагам. Дальше вы будете собирать одним промптом за пять минут. Медленно нужно один раз, чтобы вы знали, что проверять.</div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide">
+    <div class="eyebrow">С чего всё ломается</div>
+    <h2 class="slide-title">«Будь моим юристом» и что из этого выходит</h2>
+    <div class="body" style="margin-bottom:26px;">У вас в подчинении сорок человек. Возьмём юриста. Что он делает?</div>
+    <div class="grid-4">
+      <div class="card"><div class="card-body">Проверяет входящие договоры</div></div>
+      <div class="card"><div class="card-body">Составляет свои договоры</div></div>
+      <div class="card"><div class="card-body">Отвечает на претензии</div></div>
+      <div class="card"><div class="card-body">Согласует протоколы разногласий</div></div>
+    </div>
+    <div class="note-line">Это одна работа или четыре? <strong>Четыре.</strong> Разный вход, разный выход, разные документы под рукой, разная цена ошибки.</div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide">
+    <div class="statement">Ассистент это не должность.<br>Ассистент это <span class="accent">одна функция</span>.</div>
+    <div class="statement-sub">Один постоянный вход. Один постоянный выход. Повторяется регулярно. Когда вы просите «будь юристом», вы нанимаете человека сразу на четыре работы и не говорите, какую он делает сейчас. Он угадывает.</div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide">
+    <div class="eyebrow">Проверка на одну функцию</div>
+    <div class="quote">Если меняется вход или меняется выход, это другой ассистент.</div>
+    <div class="split" style="margin-top:34px;">
+      <div class="vs-card bad"><div class="vs-label">Так не работает</div><div class="vs-text">Один ассистент «Юрист» на все четыре работы. Каждый раз угадывает, что вы просите, и отвечает общими словами.</div></div>
+      <div class="vs-card good"><div class="vs-label">Так работает</div><div class="vs-text">Четыре ассистента, у каждого свой вход, свой выход, своя база документов и свои запреты.</div></div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide">
+    <div class="eyebrow">Как должность распадается на функции</div>
+    <h2 class="slide-title">Двенадцать примеров</h2>
+    <table class="table small tight">
+      <tr><th>Должность</th><th>Функция</th><th>Вход</th><th>Выход</th></tr>
+      <tr><td>Юрист</td><td><strong>Проверка чужого договора</strong></td><td>договор контрагента</td><td>риски светофором и правки</td></tr>
+      <tr><td>Юрист</td><td><strong>Составление своего договора</strong></td><td>условия сделки</td><td>проект договора</td></tr>
+      <tr><td>Юрист</td><td><strong>Ответ на претензию</strong></td><td>письмо контрагента</td><td>ответное письмо</td></tr>
+      <tr><td>Финансист</td><td><strong>Разбор план-факта</strong></td><td>выгрузка</td><td>записка с отклонениями</td></tr>
+      <tr><td>Финансист</td><td><strong>Подготовка бюджета</strong></td><td>прошлый бюджет и вводные</td><td>проект бюджета</td></tr>
+      <tr><td>Руководитель</td><td><strong>Подготовка к совещанию</strong></td><td>тема и материалы</td><td>повестка и вопросы</td></tr>
+      <tr><td>Руководитель</td><td><strong>Разбор совещания</strong></td><td>стенограмма</td><td>решения, владельцы, сроки</td></tr>
+      <tr><td>Руководитель</td><td><strong>Трудный разговор</strong></td><td>ситуация с сотрудником</td><td>сценарий разговора</td></tr>
+      <tr><td>HR</td><td><strong>Вакансия</strong></td><td>требования</td><td>текст вакансии</td></tr>
+      <tr><td>HR</td><td><strong>Скрининг откликов</strong></td><td>отклики</td><td>список с обоснованием</td></tr>
+      <tr><td>Продажи</td><td><strong>Работа с возражением</strong></td><td>реплика клиента</td><td>ответ и следующий шаг</td></tr>
+      <tr><td>Продажи</td><td><strong>Коммерческое предложение</strong></td><td>запрос клиента</td><td>готовое КП</td></tr>
+    </table>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide">
+    <div class="eyebrow">Как устроен урок</div>
+    <h2 class="slide-title">Сначала разбираем на части, потом собираем в один ход</h2>
+    <div class="split">
+      <div class="card hot"><div class="card-kicker">Первый час</div><div class="card-title">Промпты 1-5, медленно</div><div class="card-body">Вытащить функции, собрать инструкцию, проверить по чек-листу, дать базу знаний, протестировать. Руками, по шагам, чтобы стало видно устройство.</div></div>
+      <div class="card mint"><div class="card-kicker">После</div><div class="card-title">Промпт 6, комбайн</div><div class="card-body">Тот же путь, свёрнутый в один промпт. Наговорили функцию, получили инструкцию, файлы и тесты. Пять минут на ассистента.</div></div>
+    </div>
+    <div class="note-line">Дальше <strong>Gemini и NotebookLM</strong>: та же методология, другая инфраструктура.</div>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide act">
+    <div class="act-num">Шаг 1</div>
+    <div class="act-title"><span class="accent">Функции</span></div>
+    <div class="act-desc">Вытаскиваем из вашей недели то, что повторяется. И выбираем, с чего начать.</div>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide">
+    <div class="eyebrow">Как вытаскивать</div>
+    <h2 class="slide-title">Не вспоминайте. Смотрите.</h2>
+    <div class="split">
+      <div class="vs-card bad"><div class="vs-label">Вопрос, на который никто не отвечает</div><div class="vs-text">«Какие у вас процессы?»</div></div>
+      <div class="vs-card good"><div class="vs-label">Вопрос, на который отвечают все</div><div class="vs-text">«Что вы делали в прошлый вторник?»</div></div>
+    </div>
+    <div class="note-line">Откройте <strong>календарь за прошлую неделю</strong> и папку <strong>«Отправленные»</strong>. Отвечать голосом, печатать не надо.</div>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide">
+    <div class="label">Промпт 1 · инвентаризация функций</div>
+    <div class="prompt tiny">Ты помогаешь мне разобрать мою работу на отдельные функции, чтобы под каждую собрать своего ИИ-ассистента.
+
+Главное правило: ассистент делается не под должность, а под одну функцию. У функции есть постоянный вход (что я даю), постоянный выход (что получаю) и она повторяется регулярно.
+
+Как работаем: задавай мне вопросы по одному и жди ответа, не выдавай список сразу. Если ответ размытый, уточни. Не предлагай ассистентов, пока не закончится опрос.
+
+Вопросы:
+1. Кто я по должности, за какой результат отвечаю, сколько людей у меня в подчинении.
+2. Из чего состояли мои рабочие дни на прошлой неделе, по календарю.
+3. Что я делал на прошлой неделе больше одного раза.
+4. Что я точно буду делать на следующей неделе в том же виде.
+5. Какие документы, таблицы, письма и отчёты проходят через меня регулярно.
+6. Что я в последний месяц объяснял кому-то из сотрудников, как это делается.
+7. Где я на прошлой неделе тянул, злился или переделывал за другими.
+8. Что у меня каждый раз должно выглядеть одинаково по форме.
+9. Что я обязан проверять сам и никогда никому не отдам.
+10. Какие данные мне нельзя выносить за периметр компании.
+
+После моих ответов сделай две вещи.
+Первое, таблица функций: название | вход | выход | как часто | сколько времени занимает | можно отдать ИИ полностью, частично или нельзя. Одна строка это одна функция, а не должность.
+Второе, оцени каждую строку от 1 до 5 по частоте, цене ошибки и готовности материалов. Покажи топ-3 и объясни, почему первый именно первый.
+
+Ничего не придумывай за меня. Если данных не хватает, спроси.</div>
+    <div class="small">Полный текст с копированием в один тап есть в шпаргалке.</div>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide">
+    <div class="eyebrow">Что появится на экране</div>
+    <h2 class="slide-title">Карта вашей работы, которую вы видите впервые</h2>
+    <table class="table">
+      <tr><th>Функция</th><th>Вход</th><th>Выход</th><th>Частота</th><th>Отдать ИИ</th></tr>
+      <tr><td><strong>Разбор план-факта</strong></td><td>выгрузка</td><td>записка с отклонениями</td><td>каждую неделю</td><td>частично</td></tr>
+      <tr><td><strong>Подготовка к планёрке</strong></td><td>материалы служб</td><td>повестка и вопросы</td><td>каждую неделю</td><td>полностью</td></tr>
+      <tr><td><strong>Разбор совещания</strong></td><td>стенограмма</td><td>решения, владельцы, сроки</td><td>2-3 раза в неделю</td><td>полностью</td></tr>
+      <tr><td><strong>Ответ в головную компанию</strong></td><td>запрос</td><td>письмо со ссылками на данные</td><td>несколько раз в месяц</td><td>частично</td></tr>
+      <tr><td><strong>Проверка отчёта подчинённого</strong></td><td>отчёт</td><td>замечания перед подписью</td><td>постоянно</td><td>частично</td></tr>
+    </table>
+    <div class="note-line">Вопрос, который стоит задать себе вслух: <strong>сколько из этого вы делаете руками каждую неделю?</strong></div>
+  </section>
+
+  <!-- 13 -->
+  <section class="slide">
+    <div class="eyebrow">С чего начинать</div>
+    <h2 class="slide-title">Первым берём не интересное, а расчётливое</h2>
+    <div class="grid-3">
+      <div class="card hot"><div class="card-title">Частота</div><div class="card-body">Чем чаще повторяется, тем быстрее окупится настройка.</div></div>
+      <div class="card hot"><div class="card-title">Цена ошибки</div><div class="card-body">Чем дороже стоит плохой результат, тем важнее одинаковое качество.</div></div>
+      <div class="card hot"><div class="card-title">Готовность материалов</div><div class="card-body">Есть ли уже шаблоны, регламенты и примеры, которые можно дать в базу.</div></div>
+    </div>
+    <div class="note-line">Интересное соберёте третьим, когда механика будет в руках.</div>
+  </section>
+
+  <!-- 14 -->
+  <section class="slide act">
+    <div class="act-num">Шаг 2</div>
+    <div class="act-title"><span class="accent">Инструкция</span></div>
+    <div class="act-desc">Её не пишут руками. Всю фактуру вы уже наговорили.</div>
+  </section>
+
+  <!-- 15 -->
+  <section class="slide">
+    <div class="statement">Инструкцию вы <span class="accent">не пишете</span>.<br>Вы её <span class="mint">принимаете</span>.</div>
+    <div class="statement-sub">Про свою работу вы уже рассказали в первом промпте. ИИ добьёт максимум три вопроса и соберёт инструкцию сам. Ваша часть дальше это приёмка.</div>
+  </section>
+
+  <!-- 16 -->
+  <section class="slide">
+    <div class="eyebrow">Из чего состоит инструкция</div>
+    <h2 class="slide-title">Восемь разделов, ровно в этом порядке</h2>
+    <div class="numlist">
+      <div class="nl"><b>1</b><span><strong>Роль.</strong> Максимально узко: не «юрист», а по праву, стране, отрасли и задаче.</span></div>
+      <div class="nl"><b>2</b><span><strong>Контекст.</strong> Кто вы, что за компания, кому уходит результат.</span></div>
+      <div class="nl"><b>3</b><span><strong>Алгоритм.</strong> Пошагово: сначала это, потом это.</span></div>
+      <div class="nl"><b>4</b><span><strong>Вопросы при нехватке данных.</strong> Что спросить, если во входных дырка.</span></div>
+      <div class="nl"><b>5</b><span><strong>Формат результата.</strong> Структура, объём, что обязательно должно быть.</span></div>
+      <div class="nl"><b>6</b><span><strong>Запреты.</strong> Через «нельзя», это сильнее, чем «постарайся не».</span></div>
+      <div class="nl"><b>7</b><span><strong>Что проверяет человек.</strong> Что вы смотрите глазами перед отправкой.</span></div>
+      <div class="nl"><b>8</b><span><strong>Стиль.</strong> Ты или вы, сухо или тепло, ваши термины и сокращения.</span></div>
+    </div>
+    <div class="note-line">Половину качества закрывает <strong>роль</strong>. Её надо максимально сужать.</div>
+  </section>
+
+  <!-- 17 -->
+  <section class="slide">
+    <div class="label">Промпт 2 · сборка инструкции</div>
+    <div class="prompt compact">Собираем ассистента под одну функцию из моей таблицы. Вот она:
+
+[ВСТАВЬТЕ СТРОКУ ИЗ ТОПА]
+
+Всё, что я рассказывал выше про свою работу, ты уже знаешь. Не переспрашивай то, что я говорил.
+Если для инструкции не хватает чего-то важного, задай не больше трёх вопросов, по одному. Остальное не додумывай.
+
+Потом собери инструкцию по восьми разделам: роль (узко, с отраслью и задачей), контекст, пошаговый алгоритм, вопросы при нехватке данных, формат результата, запреты через «нельзя», что проверяет человек, стиль и тон.
+
+Пиши как обращение к ассистенту, на «ты». Без длинного тире. Без общих фраз вроде «будь полезным».
+Всё, чего не знаешь наверняка, вынеси в конце списком «Требует моего решения».
+Выдай инструкцию одним блоком, готовым к копированию.</div>
+    <div class="note-line">Никуда пока не вставляем. <strong>Сначала аудит.</strong></div>
+  </section>
+
+  <!-- 18 -->
+  <section class="slide act">
+    <div class="act-num">Шаг 3</div>
+    <div class="act-title"><span class="accent">Чек-лист</span></div>
+    <div class="act-desc">Здесь становится видно, чем хорошая инструкция отличается от красивой.</div>
+  </section>
+
+  <!-- 19 -->
+  <section class="slide">
+    <div class="statement">Чего в инструкции нет,<br>того ИИ <span class="accent">не сделает</span>.</div>
+    <div class="statement-sub">Не потому что ленивый, а потому что не знает, что это надо. Инструкция от ИИ выглядит красиво всегда. Отличается она не текстом, а поведением через неделю.</div>
+  </section>
+
+  <!-- 20 -->
+  <section class="slide">
+    <div class="eyebrow">Аудит инструкции</div>
+    <h2 class="slide-title">Десять пунктов, которые обязаны быть внутри</h2>
+    <div class="checklist">
+      <div class="ci"><b>1</b><span><strong>Уточняющие вопросы.</strong> Не хватает данных, спроси, не додумывай.</span></div>
+      <div class="ci"><b>2</b><span><strong>Достоверность.</strong> Не выдумывай факты и цифры.</span></div>
+      <div class="ci"><b>3</b><span><strong>Перепроверка.</strong> Пересмотри ответ перед выдачей.</span></div>
+      <div class="ci"><b>4</b><span><strong>Без воды.</strong> По делу, без вступлений и повторов.</span></div>
+      <div class="ci"><b>5</b><span><strong>Формат текста.</strong> Абзацы, списки, объём, без длинного тире.</span></div>
+      <div class="ci"><b>6</b><span><strong>Пошаговый алгоритм.</strong> Не общая задача, а шаги.</span></div>
+      <div class="ci"><b>7</b><span><strong>Стиль и тон.</strong> Ты или вы, сухо или тепло.</span></div>
+      <div class="ci"><b>8</b><span><strong>Ограничения.</strong> «Нельзя» сильнее, чем «не делай».</span></div>
+      <div class="ci"><b>9</b><span><strong>Ссылки на файлы.</strong> Ссылайся на загруженные документы.</span></div>
+      <div class="ci"><b>10</b><span><strong>Целевая аудитория.</strong> Кому пишем и что человек уже знает.</span></div>
+    </div>
+  </section>
+
+  <!-- 21 -->
+  <section class="slide">
+    <div class="label">Промпт 3 · аудит по чек-листу</div>
+    <div class="prompt compact">Проверь эту инструкцию ассистента по чек-листу из десяти пунктов. Вот инструкция:
+
+[ВСТАВЬТЕ ИНСТРУКЦИЮ ИЗ ПРОМПТА 2]
+
+Чек-лист: 1 уточняющие вопросы при нехватке данных · 2 запрет выдумывать факты и цифры · 3 требование перепроверить ответ · 4 запрет на воду и вступления · 5 формат текста, без длинного тире · 6 пошаговый алгоритм · 7 стиль и тон · 8 прямые запреты через «нельзя» · 9 указание ссылаться на загруженные файлы · 10 кому адресован результат.
+
+Сначала таблица: пункт | есть или нет | если есть, процитируй строку из инструкции.
+Потом выдай исправленную инструкцию целиком, где закрыты все недостающие пункты. Ничего не сокращай из того, что уже было. Без длинного тире.</div>
+    <div class="note-line">В первой версии обычно не хватает <strong>четырёх-пяти пунктов из десяти</strong>. Именно из-за них ассистент потом додумывает и уверенно выдаёт выдуманные цифры.</div>
+  </section>
+
+  <!-- 22 -->
+  <section class="slide act">
+    <div class="act-num">Шаг 4</div>
+    <div class="act-title"><span class="accent">База знаний</span></div>
+    <div class="act-desc">Чтобы он отвечал по вашим документам, а не по общему интернету.</div>
+  </section>
+
+  <!-- 23 -->
+  <section class="slide">
+    <div class="statement">Ассистент без базы это<br><span class="accent">умный человек с улицы</span>.</div>
+    <div class="statement-sub">Он всё понимает, но про вашу компанию не знает ничего. База знаний это то, что делает его вашим.</div>
+  </section>
+
+  <!-- 24 -->
+  <section class="slide">
+    <div class="eyebrow">Что грузить, а что нет</div>
+    <h2 class="slide-title">Можно, осторожно, нельзя</h2>
+    <table class="table">
+      <tr><th class="yes">Можно</th><th class="care">Осторожно</th><th class="no">Нельзя</th></tr>
+      <tr><td>типовые вопросы и ответы</td><td>прайсы</td><td>ФИО и телефоны</td></tr>
+      <tr><td>обезличенные шаблоны</td><td>внутренние инструкции</td><td>договоры с реквизитами</td></tr>
+      <tr><td>чек-листы и регламенты</td><td>примеры заявок после очистки</td><td>выгрузки из учётных систем</td></tr>
+      <tr><td>публичные описания</td><td>статистика без привязки к клиентам</td><td>банковские данные</td></tr>
+      <tr><td>скрипты и формулировки</td><td></td><td>коммерческая тайна</td></tr>
+    </table>
+    <div class="quote" style="margin-top:26px;">В базу идёт форма, а не содержание. Шаблон отчёта можно, отчёт с реальными цифрами нельзя.</div>
+  </section>
+
+  <!-- 25 -->
+  <section class="slide">
+    <div class="eyebrow">Подготовка файлов</div>
+    <h2 class="slide-title">Четыре правила, из-за которых он попадает в нужный файл</h2>
+    <div class="steps tight">
+      <div class="step"><div class="step-num">1</div><div><div class="step-title">Имя файла говорит, что внутри</div><div class="step-text">Не «Документ1», а «Регламент подготовки отчёта в головную компанию».</div></div></div>
+      <div class="step"><div class="step-num">2</div><div><div class="step-title">Один файл, одна тема</div><div class="step-text">Большой документ дробим на части.</div></div></div>
+      <div class="step"><div class="step-num">3</div><div><div class="step-title">Текст или PDF с текстовым слоем</div><div class="step-text">Скан картинкой читается плохо.</div></div></div>
+      <div class="step"><div class="step-num">4</div><div><div class="step-title">Обновление это перезалить файл</div><div class="step-text">Не дописывать поправки в чат.</div></div></div>
+    </div>
+    <div class="note-line">И главное правило: <strong>один ассистент, одна тема.</strong> Смешали две, ответы поплывут.</div>
+  </section>
+
+  <!-- 26 -->
+  <section class="slide">
+    <div class="label">Промпт 4 · какие файлы нужны в базу</div>
+    <div class="prompt compact">Вот инструкция моего ассистента:
+
+[ВСТАВЬТЕ ИСПРАВЛЕННУЮ ИНСТРУКЦИЮ ИЗ ПРОМПТА 3]
+
+Составь список файлов, которые надо загрузить ему в базу знаний, чтобы он отвечал по моим документам, а не из общих знаний.
+
+Для каждого файла укажи: какое имя дать файлу, что должно быть внутри, где я это возьму, что из него надо вычистить перед загрузкой.
+
+Раздели на три группы: без чего он вообще не заработает, что усилит сильнее всего, что можно добавить потом.
+Отдельно предупреди, какие из этих документов нельзя загружать в публичный сервис и чем их заменить.
+Не предлагай больше семи файлов.</div>
+  </section>
+
+  <!-- 27 -->
+  <section class="slide act">
+    <div class="act-num">Шаг 5</div>
+    <div class="act-title"><span class="accent">Приёмка</span></div>
+    <div class="act-desc">Подрядчик сдал акт. Вы идёте смотреть, а не подписываете с ходу.</div>
+  </section>
+
+  <!-- 28 -->
+  <section class="slide">
+    <div class="eyebrow">Четыре теста</div>
+    <h2 class="slide-title">Третий и четвёртый важнее двух первых</h2>
+    <div class="grid-2">
+      <div class="card"><div class="card-kicker">Тест 1</div><div class="card-title">Обычная задача</div><div class="card-body"><span class="ok">Правильно:</span> данные полные, результат приходит быстро и в нужном формате.<br><span class="fail">Провал:</span> формат каждый раз другой.</div></div>
+      <div class="card"><div class="card-kicker">Тест 2</div><div class="card-title">Сложная задача</div><div class="card-body"><span class="ok">Правильно:</span> внутри противоречие или риск, и он его подсвечивает.<br><span class="fail">Провал:</span> проглотил и сделал вид, что всё в порядке.</div></div>
+      <div class="card hot"><div class="card-kicker">Тест 3</div><div class="card-title">Неполные данные</div><div class="card-body"><span class="ok">Правильно:</span> задаёт вопросы, а не отвечает вслепую.<br><span class="fail">Провал:</span> придумал недостающее и отдал с уверенным видом.</div></div>
+      <div class="card hot"><div class="card-kicker">Тест 4</div><div class="card-title">Негативный тест базы</div><div class="card-body"><span class="ok">Правильно:</span> спрашиваем то, чего в файлах нет, и он говорит «этого в документах нет».<br><span class="fail">Провал:</span> сочинил. Доверять нельзя.</div></div>
+    </div>
+  </section>
+
+  <!-- 29 -->
+  <section class="slide">
+    <div class="label">Промпт 5 · генерация тестов, запускать в отдельном чате</div>
+    <div class="prompt compact">Вот инструкция моего ассистента и файлы, которые лежат у него в базе:
+
+[ВСТАВЬТЕ ИНСТРУКЦИЮ ИЗ ПРОМПТА 3]
+[ВСТАВЬТЕ СПИСОК ФАЙЛОВ ИЗ ПРОМПТА 4]
+
+Придумай четыре тестовых запроса, готовых к копированию:
+1. Обычная задача: все данные есть, проверяем формат и скорость.
+2. Сложная задача: внутри спрятано противоречие или риск, проверяем, подсветит ли он его.
+3. Неполные данные: намеренно не хватает важной вводной, проверяем, спросит он или придумает.
+4. Негативный тест: вопрос по теме, ответа на который в загруженных файлах заведомо нет.
+
+Для каждого теста отдельной строкой напиши, что считается правильным поведением, а что провалом.</div>
+  </section>
+
+  <!-- 30 -->
+  <section class="slide">
+    <div class="eyebrow">Если провалил</div>
+    <h2 class="slide-title">Инструкцию заново не пишем</h2>
+    <div class="grid-2">
+      <div class="card bad"><div class="card-title">Провалил тест 3, придумал вместо вопроса</div><div class="card-body">Почти всегда провис <strong>пункт 1</strong> чек-листа: уточняющие вопросы при нехватке данных.</div></div>
+      <div class="card bad"><div class="card-title">Провалил тест 4, сочинил по базе</div><div class="card-body">Провисли <strong>пункты 2 и 9</strong>: запрет выдумывать и требование ссылаться на загруженные файлы.</div></div>
+    </div>
+    <div class="note-line">Возвращаемся к чек-листу, дописываем пункт, прогоняем те же четыре теста снова. <strong>Это и есть настройка.</strong></div>
+  </section>
+
+  <!-- 31 -->
+  <section class="slide">
+    <div class="eyebrow">Куда всё это вставлять</div>
+    <h2 class="slide-title">Ассистент в ChatGPT называется <span class="accent">GPT</span></h2>
+    <div class="slide-subtitle">Левое меню, раздел GPT, кнопка «Создать», вкладка «Настроить». Полей всего четыре, и всё для них у вас уже лежит в чате.</div>
+    <div class="fields">
+      <div class="fieldrow"><b>Название</b><span>Имя функции, не должности. Не «Юрист», а «Проверка входящих договоров».</span></div>
+      <div class="fieldrow"><b>Описание</b><span>Одна строка: что делает и для кого.</span></div>
+      <div class="fieldrow"><b>Инструкции</b><span>Инструкция версии 2 из промпта 3, целиком.</span></div>
+      <div class="fieldrow"><b>База знаний</b><span>Файлы из промпта 4.</span></div>
+      <div class="fieldrow"><b>Возможности</b><span>Поиск, работа с файлами, Canvas, картинки. Включаем только нужное этой функции.</span></div>
+    </div>
+  </section>
+
+  <!-- 32 -->
+  <section class="slide">
+    <div class="eyebrow">Три правила</div>
+    <h2 class="slide-title">Чтобы через месяц это была команда, а не свалка</h2>
+    <div class="grid-3">
+      <div class="card hot"><div class="card-title">Одна функция, один GPT</div><div class="card-body">Свалили три функции в одного, и он снова угадывает. Та же ошибка, что «будь моим юристом».</div></div>
+      <div class="card hot"><div class="card-title">Название по функции</div><div class="card-body">Через месяц их будет десяток. Нужного вы должны находить за секунду, не открывая.</div></div>
+      <div class="card hot"><div class="card-title">Пустая база это не ассистент</div><div class="card-body">Это умный незнакомец: всё понимает, про вашу компанию не знает ничего.</div></div>
+    </div>
+    <div class="note-line">В конструкторе есть вкладка «Создать», где GPT собирается разговором. Мы наговариваем в обычном чате, потому что там <strong>виден весь результат целиком</strong> и его можно поправить до того, как он куда-то встанет.</div>
+  </section>
+
+  <!-- 33 -->
+  <section class="slide">
+    <div class="statement">Час мы потратили,<br>чтобы дальше тратить <span class="mint">пять минут</span>.</div>
+    <div class="statement-sub">Всё, что мы делали руками, лежит в одном промпте. Он нужен был не для скорости, а для того, чтобы вы понимали, что вам выдали и что из этого проверять.</div>
+  </section>
+
+  <!-- 34 -->
+  <section class="slide">
+    <div class="label">Промпт 6 · комбайн, часть 1</div>
+    <div class="prompt combine compact">Собери мне ассистента под одну функцию моей работы.
+
+Сначала прочитай правило: ассистент делается не под должность, а под одну функцию. Один постоянный вход, один постоянный выход, повторяется регулярно.
+
+Вот моя функция, своими словами:
+[НАГОВОРИТЕ ГОЛОСОМ: что за работа, что я даю на входе, что хочу получить на выходе, как часто это бывает, что я проверяю сам, чего делать нельзя, какие данные выносить наружу запрещено]
+
+Работай так:
+1. Если для сборки не хватает чего-то важного, задай мне не больше трёх вопросов, по одному. Остальное не додумывай, а помечай.
+2. Потом выдай три блока, каждый отдельно и готовым к копированию.</div>
+    <div class="note-line">Продолжение на следующем слайде. Целиком с копированием в один тап есть в шпаргалке.</div>
+  </section>
+
+  <!-- 35 -->
+  <section class="slide">
+    <div class="label">Промпт 6 · комбайн, часть 2</div>
+    <div class="prompt combine compact">БЛОК 1. ИНСТРУКЦИЯ АССИСТЕНТА, восемь разделов: роль (узко, с отраслью и конкретной задачей), контекст, пошаговый алгоритм, какие вопросы задавать при нехватке данных, формат результата, запреты через «нельзя», что проверяет человек, стиль и тон.
+Инструкция обязана содержать: требование спрашивать, а не додумывать; запрет выдумывать факты и цифры; требование перепроверять ответ перед выдачей; запрет на воду и вступления; требование ссылаться на загруженные файлы; указание, кому адресован результат.
+Пиши на «ты», без длинного тире, без общих фраз вроде «будь полезным».
+
+БЛОК 2. ФАЙЛЫ В БАЗУ ЗНАНИЙ, до пяти штук. Для каждого: имя файла, что внутри, где взять, что вычистить перед загрузкой. Отдельно отметь, что нельзя грузить в публичный сервис и чем это заменить.
+
+БЛОК 3. ЧЕТЫРЕ ТЕСТА, готовых к копированию: обычная задача, задача с противоречием внутри, задача с намеренно неполными данными, вопрос по теме, ответа на который в файлах заведомо нет. Для каждого напиши, что считается правильным поведением, а что провалом.
+
+В конце отдельным списком «Требует моего решения» перечисли всё, чего ты не знал и не стал придумывать.</div>
+  </section>
+
+  <!-- 36 -->
+  <section class="slide">
+    <div class="eyebrow">Что остаётся вам</div>
+    <h2 class="slide-title">Четыре действия руками, дальше он работает</h2>
+    <div class="flow">
+      <div class="flow-box"><div class="flow-tag">1</div><div class="flow-name">Создать GPT</div><div class="flow-desc">Раздел GPT, кнопка «Создать»</div></div>
+      <div class="arrow">→</div>
+      <div class="flow-box"><div class="flow-tag">2</div><div class="flow-name">Разложить по полям</div><div class="flow-desc">Название, описание, инструкции</div></div>
+      <div class="arrow">→</div>
+      <div class="flow-box"><div class="flow-tag">3</div><div class="flow-name">Загрузить файлы</div><div class="flow-desc">Из блока 2</div></div>
+    </div>
+    <div class="quote" style="margin-top:28px;">И четвёртое, без которого всё остальное не считается: прогнать четыре теста.</div>
+  </section>
+
+  <!-- 37 -->
+  <section class="slide g act">
+    <div class="act-num">Другая инфраструктура</div>
+    <div class="act-title"><span class="blue">Gemini</span></div>
+    <div class="act-desc">Это не второй чатбот. Это вход туда, где ваши файлы уже лежат.</div>
+  </section>
+
+  <!-- 38 -->
+  <section class="slide g">
+    <div class="eyebrow g">Шаг первый, до всего остального</div>
+    <h2 class="slide-title">Перенесите знания о себе</h2>
+    <div class="slide-subtitle">Иначе вы начинаете с чистого листа, и Gemini отвечает вам как незнакомцу. Промпт запускаем в ChatGPT.</div>
+    <div class="prompt compact">Собери всё, что ты знаешь обо мне: кто я, чем занимаюсь, за какой результат отвечаю, как со мной надо разговаривать, в каком формате давать ответы, что мне не нравится в ответах, какие у меня ограничения по данным.
+
+Оформи это как готовый текст, который я вставлю в другой ИИ, чтобы он знал меня так же, как ты. Пиши от третьего лица, до 1400 знаков, без длинного тире.</div>
+    <div class="note-line">Вставляем в Gemini с фразой <strong>«Запомни это обо мне и учитывай во всех дальнейших ответах»</strong>, проверяем вопросом <strong>«Что ты обо мне знаешь?»</strong></div>
+  </section>
+
+  <!-- 39 -->
+  <section class="slide g">
+    <div class="eyebrow g">Что внутри</div>
+    <h2 class="slide-title">Из чего состоит Gemini</h2>
+    <div class="grid-5">
+      <div class="card"><div class="card-title">Чат</div><div class="card-body">Выбор модели и режим размышления.</div></div>
+      <div class="card blue"><div class="card-title">Gem-боты</div><div class="card-body">Ассистенты. То же самое, что GPT.</div></div>
+      <div class="card"><div class="card-title">Блокноты</div><div class="card-body">NotebookLM встроен внутрь.</div></div>
+      <div class="card"><div class="card-title">Canvas</div><div class="card-body">Мини-приложения прямо в чате.</div></div>
+      <div class="card blue"><div class="card-title">Значок @</div><div class="card-body">Документы, Диск, Gmail, Календарь.</div></div>
+    </div>
+    <div class="quote" style="margin-top:30px;">В ChatGPT вы приносите файлы в чат. В Gemini ассистент живёт там, где ваши файлы уже лежат.</div>
+  </section>
+
+  <!-- 40 -->
+  <section class="slide g">
+    <div class="eyebrow g">Главное открытие урока</div>
+    <h2 class="slide-title">Поля совпадают один в один</h2>
+    <table class="table">
+      <tr><th>ChatGPT, GPT</th><th class="blue">Gemini, Gem-бот</th></tr>
+      <tr><td><strong>Название</strong></td><td><strong>Название</strong></td></tr>
+      <tr><td><strong>Описание</strong></td><td><strong>Описание</strong></td></tr>
+      <tr><td><strong>Инструкции</strong></td><td><strong>Инструкции</strong></td></tr>
+      <tr><td><strong>База знаний, файлы</strong></td><td><strong>База знаний, файлы</strong></td></tr>
+      <tr><td>Возможности</td><td>Инструмент по умолчанию</td></tr>
+    </table>
+    <div class="quote" style="margin-top:26px;">Вы не учите второй инструмент. Вы берёте свою инструкцию и вставляете в другое окно.</div>
+  </section>
+
+  <!-- 41 -->
+  <section class="slide g">
+    <div class="statement">Эту галочку<br><span class="blue">не ставим никогда</span>.</div>
+    <div class="statement-sub">«Не указывать источники из базы знаний». Когда она снята, Gemini сам показывает, из какого файла взял ответ. Это встроенный детектор врак, в ChatGPT такого нет. Негативный тест остаётся, но становится вторым уровнем проверки.</div>
+  </section>
+
+  <!-- 42 -->
+  <section class="slide g">
+    <div class="eyebrow g">Ради чего сюда идти</div>
+    <h2 class="slide-title">Два отличия, которых нет в ChatGPT</h2>
+    <div class="split">
+      <div class="card blue"><div class="card-kicker">Отличие 1</div><div class="card-title">Документы Google подключаются живыми</div><div class="card-body">В базу идёт не выгруженный файл, а сам документ с Диска. Поправили документ, ассистент видит новую версию сам. В ChatGPT надо перезаливать руками.</div></div>
+      <div class="card blue"><div class="card-kicker">Отличие 2</div><div class="card-title">Блокнот NotebookLM как база знаний</div><div class="card-body">Не десять файлов, а целый архив темы, который отвечает с указанием конкретного места в документе.</div></div>
+    </div>
+  </section>
+
+  <!-- 43 -->
+  <section class="slide n act">
+    <div class="act-num">Архив, который прочитал всё</div>
+    <div class="act-title"><span class="violet">NotebookLM</span></div>
+    <div class="act-desc">notebooklm.google.com или раздел «Блокноты» внутри Gemini.</div>
+  </section>
+
+  <!-- 44 -->
+  <section class="slide n">
+    <div class="statement">Выдумывать он не умеет<br><span class="violet">по устройству</span>.</div>
+    <div class="statement-sub">ChatGPT и Gemini это сотрудники. NotebookLM это архив, который прочитал всё и помнит, на какой странице что написано. Он отвечает только по вашим документам и всегда показывает, откуда взял.</div>
+  </section>
+
+  <!-- 45 -->
+  <section class="slide n">
+    <div class="eyebrow n">Чем отличается от базы ассистента</div>
+    <h2 class="slide-title">Десять файлов против архива темы</h2>
+    <table class="table">
+      <tr><th>Файлы в ассистенте</th><th class="blue">Блокнот NotebookLM</th></tr>
+      <tr><td>до 10 файлов</td><td><strong>десятки источников в одном блокноте</strong></td></tr>
+      <tr><td>только файлы</td><td><strong>файлы, сайты, видео с YouTube, аудиозаписи</strong></td></tr>
+      <tr><td>ссылается на файл</td><td><strong>показывает конкретное место в документе</strong></td></tr>
+      <tr><td>работает внутри одной функции</td><td><strong>работает как общий архив темы</strong></td></tr>
+    </table>
+    <div class="note-line">Правило то же: <strong>один блокнот, одна тема.</strong> И та же матрица можно, осторожно, нельзя.</div>
+  </section>
+
+  <!-- 46 -->
+  <section class="slide n">
+    <div class="eyebrow n">Что туда загружать</div>
+    <h2 class="slide-title">Двенадцать источников под ваш контур</h2>
+    <div class="numlist">
+      <div class="nl"><b>1</b><span>Регламенты головной компании по отчётности</span></div>
+      <div class="nl"><b>7</b><span>Аудиозаписи совещаний, транскрибирует сам</span></div>
+      <div class="nl"><b>2</b><span>Шаблоны отчётов, которые принимают без правок</span></div>
+      <div class="nl"><b>8</b><span>Тендерные технические задания</span></div>
+      <div class="nl"><b>3</b><span>Паспорт проекта и календарный план</span></div>
+      <div class="nl"><b>9</b><span>Внутренние положения и инструкции</span></div>
+      <div class="nl"><b>4</b><span>Отраслевые стандарты и ГОСТы</span></div>
+      <div class="nl"><b>10</b><span>Отраслевые обзоры и аналитика рынка</span></div>
+      <div class="nl"><b>5</b><span>Протоколы совещаний за квартал</span></div>
+      <div class="nl"><b>11</b><span>Записи конференций с YouTube по ссылке</span></div>
+      <div class="nl"><b>6</b><span>Типовые договоры подрядчиков, без реквизитов</span></div>
+      <div class="nl"><b>12</b><span>Готовый отчёт Deep Research по теме</span></div>
+    </div>
+  </section>
+
+  <!-- 47 -->
+  <section class="slide n">
+    <div class="eyebrow n">Что у него спрашивать</div>
+    <h2 class="slide-title">Десять вопросов, ради которых это заводят</h2>
+    <div class="numlist">
+      <div class="nl"><b>1</b><span>Собери FAQ для команды по этому регламенту.</span></div>
+      <div class="nl"><b>6</b><span>Собери все сроки и обязательства в одну таблицу.</span></div>
+      <div class="nl"><b>2</b><span>Какие требования головной компании мы регулярно нарушаем.</span></div>
+      <div class="nl"><b>7</b><span>Какие риски упомянуты, но нигде не закрыты.</span></div>
+      <div class="nl"><b>3</b><span>Какие решения приняты по объекту, кто владелец, какие сроки.</span></div>
+      <div class="nl"><b>8</b><span>Собери глоссарий терминов и сокращений.</span></div>
+      <div class="nl"><b>4</b><span>Сравни два договора и покажи, где условия для нас хуже.</span></div>
+      <div class="nl"><b>9</b><span>Что в этих документах противоречит друг другу.</span></div>
+      <div class="nl"><b>5</b><span>Что изменилось между прошлой версией регламента и нынешней.</span></div>
+      <div class="nl"><b>10</b><span>Сделай сводку на три минуты для доклада.</span></div>
+    </div>
+  </section>
+
+  <!-- 48 -->
+  <section class="slide n">
+    <div class="eyebrow n">Audio Overview</div>
+    <h2 class="slide-title">Ваши документы превращаются в подкаст</h2>
+    <div class="grid-4">
+      <div class="card violet"><div class="card-title">Deep Dive</div><div class="card-body">Два ведущих подробно обсуждают ваш материал, как настоящий подкаст.</div></div>
+      <div class="card"><div class="card-title">The Brief</div><div class="card-body">Короткая сводка на пару минут, как утренний брифинг.</div></div>
+      <div class="card"><div class="card-title">Critique</div><div class="card-body">Критический разбор: что слабое, где пробелы.</div></div>
+      <div class="card"><div class="card-title">Debate</div><div class="card-body">Два мнения, аргументы за и против.</div></div>
+    </div>
+    <div class="note-line">Studio, дальше Audio Overview, дальше Generate. <strong>Загрузили регламент и протоколы, послушали разбор по дороге на работу.</strong></div>
+  </section>
+
+  <!-- 49 -->
+  <section class="slide">
+    <div class="eyebrow">Как он живёт дальше</div>
+    <h2 class="slide-title">Симптом и лечение</h2>
+    <table class="table small">
+      <tr><th>Симптом</th><th>Лечение</th></tr>
+      <tr><td>Ответ слишком длинный</td><td>Ограничить объём в разделе «Формат результата»</td></tr>
+      <tr><td>Не тот стиль</td><td>Загрузить в базу 3-5 примеров хороших работ</td></tr>
+      <tr><td>Не хватает контекста</td><td>Загрузить регламент и списки</td></tr>
+      <tr><td>Повторяет одни и те же формулировки</td><td>Запретить шаблонные фразы в разделе «Запреты»</td></tr>
+      <tr><td>Не знает специфику</td><td>Добавить глоссарий с вашими терминами</td></tr>
+      <tr><td>Хочется новую функцию</td><td>Новый ассистент. Этого не перегружать</td></tr>
+      <tr><td>Стал работать хуже</td><td>Инструкция раздулась, убрать лишнее</td></tr>
+    </table>
+    <div class="quote" style="margin-top:24px;">Ассистент, которым вы не пользуетесь каждый день, не нужен. Лучше три отлично настроенных, чем десять заброшенных.</div>
+  </section>
+
+  <!-- 50 -->
+  <section class="slide">
+    <div class="eyebrow">Что вы унесли</div>
+    <h2 class="slide-title">Через два часа это выглядит так</h2>
+    <div class="grid-2">
+      <div class="card mint"><div class="card-title">Карта вашей работы</div><div class="card-body">Таблица функций и понимание, что из этого можно отдать, а что никогда.</div></div>
+      <div class="card mint"><div class="card-title">Два работающих ассистента</div><div class="card-body">С инструкцией, базой знаний и пройденной приёмкой из четырёх тестов.</div></div>
+      <div class="card mint"><div class="card-title">Один промпт на всех следующих</div><div class="card-body">Комбайн. Наговорили функцию, получили ассистента за пять минут.</div></div>
+      <div class="card mint"><div class="card-title">Тот же навык в двух экосистемах</div><div class="card-body">Gem-бот в Gemini и блокнот NotebookLM как архив темы.</div></div>
+    </div>
+  </section>
+
+  <!-- 51 -->
+  <section class="slide">
+    <div class="eyebrow">Домашка</div>
+    <h2 class="slide-title">Четыре дня, по одному действию в день</h2>
+    <div class="steps tight">
+      <div class="step"><div class="step-num">1</div><div><div class="step-title">Третья функция из топ-3</div><div class="step-text">Собираем комбайном. Четыре теста обязательно.</div></div></div>
+      <div class="step"><div class="step-num">2</div><div><div class="step-title">Функция, которую можно отдать сотруднику</div><div class="step-text">Собираем и отдаём ему готового ассистента.</div></div></div>
+      <div class="step"><div class="step-num">3</div><div><div class="step-title">Один из них в Gemini как Gem-бот</div><div class="step-text">Сравнить ответы на одном и том же вопросе.</div></div></div>
+      <div class="step"><div class="step-num">4</div><div><div class="step-title">Блокнот в NotebookLM</div><div class="step-text">Пять источников, три вопроса, послушать Audio Overview.</div></div></div>
+    </div>
+    <div class="note-line">Отчёт каждый вечер: <strong>скриншот четырёх тестов и одна строка, что пришлось починить в инструкции.</strong></div>
+  </section>
+
+  <!-- 52 -->
+  <section class="slide title-slide">
+    <div class="brand-line"><b>neovida</b> · Нейропросвещение</div>
+    <h2 class="title-big">Функция, а не <span class="accent">должность</span></h2>
+    <p class="title-sub">Всё остальное в уроке выросло из одной этой мысли.</p>
+    <div class="title-meta">Урок 4 · <b>экосистема Google целиком</b></div>
+  </section>
+
+  <div class="nojs-hint">Листание не работает. Откройте файл в браузере: правая кнопка, «Открыть в программе», Chrome или Safari.</div>
+</div>
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+let current = 0;
+const counter = document.getElementById('slideCounter');
+const progress = document.getElementById('progressBar');
+
+function showSlide(index) {
+  if (index < 0 || index >= slides.length) return;
+  slides.forEach((slide, i) => {
+    slide.classList.remove('active', 'prev');
+    if (i < index) slide.classList.add('prev');
+  });
+  slides[index].classList.add('active');
+  current = index;
+  counter.textContent = `${index + 1} / ${slides.length}`;
+  progress.style.width = `${((index + 1) / slides.length) * 100}%`;
+}
+
+document.addEventListener('keydown', (event) => {
+  if (['ArrowRight', ' ', 'PageDown'].includes(event.key)) { event.preventDefault(); showSlide(current + 1); }
+  if (['ArrowLeft', 'PageUp'].includes(event.key)) { event.preventDefault(); showSlide(current - 1); }
+  if (event.key === 'Home') showSlide(0);
+  if (event.key === 'End') showSlide(slides.length - 1);
+});
+
+document.getElementById('fsBtn').addEventListener('click', () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+
+let touchStartX = 0;
+document.addEventListener('touchstart', (event) => { touchStartX = event.changedTouches[0].screenX; }, { passive: true });
+document.addEventListener('touchend', (event) => {
+  const dx = event.changedTouches[0].screenX - touchStartX;
+  if (Math.abs(dx) > 50) showSlide(current + (dx < 0 ? 1 : -1));
+}, { passive: true });
+
+document.querySelector('.deck').classList.add('ready');
+showSlide(0);
+</script>
+</body>
+</html>
