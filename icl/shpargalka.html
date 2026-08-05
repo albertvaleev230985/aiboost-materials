@@ -206,15 +206,19 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:v
 document.querySelectorAll('.prompt').forEach(el=>{
   el.addEventListener('click',()=>{
     const t=el.querySelector('pre').innerText;
-    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{
+    const cp=el.querySelector('.cp');
+    const done=()=>{
       el.classList.add('copied');
-      const cp=el.querySelector('.cp');const old=cp.textContent;
+      const old=cp.dataset.old||cp.textContent;
+      cp.dataset.old=old;
       cp.textContent='Скопировано ✓';
       setTimeout(()=>{el.classList.remove('copied');cp.textContent=old;},1600);
-    }).catch(()=>{
-      const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
+    };
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(done).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();
       document.execCommand('copy');document.body.removeChild(ta);
-      el.classList.add('copied');setTimeout(()=>el.classList.remove('copied'),1600);
+      done();
     });
   });
 });
