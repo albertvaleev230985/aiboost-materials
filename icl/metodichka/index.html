@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Нейросети в работе · Методичка команды ICL Техно</title>
+<link rel="icon" href="data:,">
+<style>
+/* ══════════ ТОКЕНЫ ══════════ */
+:root{
+  --ink:#161A24; --ink-2:#2A3040; --muted:#6B7385; --muted-2:#8C93A3;
+  --canvas:#F4F1EC; --card:#FFFFFF; --soft:#FAF8F5; --line:#E4DFD7; --line-2:#EFEBE4;
+  --coral:#E07461; --green:#2E9E6B; --violet:#7C5BE8; --blue:#2F6FD0;
+  --amber:#C6921B; --bronze:#8A6A3C; --lilac:#9B7FD4; --slate:#5A6478;
+  --sh-1:0 1px 2px rgba(22,26,36,.05), 0 2px 8px rgba(22,26,36,.04);
+  --sh-2:0 4px 12px rgba(22,26,36,.07), 0 12px 32px rgba(22,26,36,.06);
+  --r:16px;
+  --acc:var(--coral); --acc-soft:rgba(224,116,97,.1); --acc-line:rgba(224,116,97,.3);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:74px}
+body{
+  font-family:-apple-system,"SF Pro Display","SF Pro Text","Segoe UI",system-ui,Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--canvas);color:var(--ink);line-height:1.6;
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;
+}
+a{color:inherit}
+img{max-width:100%;height:auto;display:block}
+
+/* ══════════ ВЕРХНЯЯ ПАНЕЛЬ ══════════ */
+.topbar{position:sticky;top:0;z-index:30;background:rgba(244,241,236,.88);backdrop-filter:saturate(180%) blur(16px);-webkit-backdrop-filter:saturate(180%) blur(16px);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1120px;margin:0 auto;padding:11px 22px;display:flex;align-items:center;gap:18px}
+.brand{font-size:15px;font-weight:750;letter-spacing:-.01em;white-space:nowrap;flex:0 0 auto}
+.brand b{color:var(--coral)}
+.nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+.nav::-webkit-scrollbar{display:none}
+.nav a{text-decoration:none;font-size:13.5px;font-weight:600;color:var(--muted);padding:7px 11px;border-radius:9px;white-space:nowrap;transition:background .15s,color .15s}
+.nav a:hover{color:var(--ink);background:rgba(0,0,0,.05)}
+.nav a.on{color:var(--ink);background:var(--card);box-shadow:var(--sh-1)}
+#prog{position:absolute;left:0;bottom:-1px;height:2px;background:var(--coral);width:0;transition:width .1s linear}
+
+/* ══════════ ОБЁРТКА ══════════ */
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+.narrow{max-width:840px}
+
+/* ══════════ ШАПКА ══════════ */
+.hero{padding:74px 0 58px;border-bottom:1px solid var(--line)}
+.eyebrow{display:inline-block;font-size:12.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--coral);margin-bottom:20px}
+h1{font-size:clamp(42px,7vw,74px);line-height:1.03;font-weight:800;letter-spacing:-.028em;max-width:15ch}
+.hero .sub{margin-top:22px;font-size:clamp(18px,2.4vw,22px);line-height:1.45;color:var(--muted);max-width:44ch;font-weight:450}
+.hero .sub b{color:var(--ink);font-weight:650}
+.hero-meta{margin-top:34px;display:flex;flex-wrap:wrap;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px;font-weight:600;color:var(--ink-2);box-shadow:var(--sh-1)}
+.chip i{width:7px;height:7px;border-radius:50%;background:var(--coral);flex:0 0 auto}
+
+/* ══════════ ОГЛАВЛЕНИЕ ══════════ */
+.toc{padding:52px 0 8px}
+.toc-h{font-size:13px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--muted-2);margin-bottom:22px}
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:14px}
+.toc-card{display:block;text-decoration:none;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;box-shadow:var(--sh-1);transition:transform .18s cubic-bezier(.2,.9,.3,1),box-shadow .18s;position:relative;overflow:hidden}
+.toc-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c,var(--coral))}
+.toc-card:hover{transform:translateY(-2px);box-shadow:var(--sh-2)}
+.toc-card .n{display:block;font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--c,var(--coral))}
+.toc-card .t{display:block;margin-top:7px;font-size:19px;font-weight:700;letter-spacing:-.015em;line-height:1.25}
+.toc-card .d{display:block;margin-top:6px;font-size:14.5px;color:var(--muted);line-height:1.45}
+
+/* ══════════ МОДУЛЬ ══════════ */
+.mod{padding:64px 0 12px;scroll-margin-top:74px}
+.mod-h{display:flex;align-items:flex-start;gap:18px;margin-bottom:10px}
+.mod-n{flex:0 0 auto;width:52px;height:52px;border-radius:15px;background:var(--acc-soft);border:1px solid var(--acc-line);color:var(--acc);font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center}
+h2{font-size:clamp(30px,4.4vw,42px);line-height:1.1;font-weight:780;letter-spacing:-.024em}
+.mod-sub{margin:14px 0 0;font-size:18px;line-height:1.5;color:var(--muted);max-width:62ch}
+.mod-sub b{color:var(--ink);font-weight:650}
+.mod-rule{height:1px;background:linear-gradient(90deg,var(--acc),transparent 55%);margin:26px 0 30px;opacity:.5}
+
+h3{font-size:23px;font-weight:720;letter-spacing:-.018em;line-height:1.25;margin:38px 0 12px}
+h4{font-size:17.5px;font-weight:700;letter-spacing:-.01em;margin:26px 0 8px}
+p{font-size:17px;line-height:1.62;color:var(--ink-2);max-width:66ch;margin:12px 0}
+p.lead{font-size:19px;color:var(--muted)}
+p b,li b{color:var(--ink);font-weight:650}
+ul,ol{margin:12px 0 12px 22px;max-width:66ch}
+li{font-size:17px;line-height:1.6;color:var(--ink-2);margin:7px 0}
+
+/* мелкий комментарий под шагом */
+.note-sm{font-size:14.5px;line-height:1.5;color:var(--muted);max-width:64ch;margin:8px 0 0;padding-left:14px;border-left:2px solid var(--line)}
+
+/* ══════════ КАРТОЧКИ ══════════ */
+.cards{display:grid;gap:14px;margin:22px 0}
+.c2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.c3{grid-template-columns:repeat(auto-fit,minmax(232px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px 24px;box-shadow:var(--sh-1)}
+.card.acc{border-left:3px solid var(--acc)}
+.card h4{margin-top:0}
+.card p,.card li{font-size:15.5px}
+.card p:first-child{margin-top:0}
+
+/* ══════════ ШАГИ ══════════ */
+.steps{counter-reset:st;margin:22px 0}
+.step{position:relative;padding:0 0 26px 54px;counter-increment:st}
+.step::before{content:"Шаг " counter(st);position:absolute;left:0;top:2px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);width:44px;line-height:1.2}
+.step::after{content:"";position:absolute;left:15px;top:26px;bottom:2px;width:1px;background:var(--line)}
+.step:last-child::after{display:none}
+.step .st-t{font-size:19px;font-weight:700;letter-spacing:-.015em;line-height:1.3}
+.step .st-b{margin-top:6px}
+.step .st-b p{margin:8px 0}
+
+/* ══════════ ПРАКТИКА ══════════ */
+.prac{background:var(--acc-soft);border:1px solid var(--acc-line);border-radius:var(--r);padding:24px 26px;margin:26px 0}
+.prac-h{display:inline-flex;align-items:center;gap:10px;background:var(--acc);color:#fff;font-size:12.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:7px 16px;border-radius:999px;margin-bottom:14px}
+.prac h4{margin-top:0}
+.prac p{color:var(--ink-2)}
+
+/* ══════════ БЛОК КОПИРОВАНИЯ ══════════ */
+.copy{position:relative;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:14px;margin:14px 0;cursor:pointer;transition:box-shadow .18s,border-color .18s;-webkit-tap-highlight-color:transparent}
+.copy:hover{box-shadow:var(--sh-2)}
+.copy-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line-2)}
+.copy-lbl{font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--acc);min-width:0}
+.copy-btn{flex:0 0 auto;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--acc);background:var(--acc-soft);border:1px solid var(--acc-line);border-radius:999px;padding:6px 14px}
+.copy pre{white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:15.5px;line-height:1.62;color:var(--ink-2);padding:16px 18px}
+.copy.done{border-color:var(--green)}
+.copy.done .copy-lbl{color:var(--green)}
+.copy.done .copy-btn{color:var(--green);background:rgba(46,158,107,.1);border-color:rgba(46,158,107,.34)}
+.copy--long pre{max-height:150px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 58%,transparent);mask-image:linear-gradient(180deg,#000 58%,transparent)}
+.copy--long::after{content:"текст длинный, читать не нужно: просто скопируйте";display:block;font-size:13.5px;color:var(--muted-2);padding:0 18px 14px}
+
+/* ══════════ АККОРДЕОН ══════════ */
+details.acc{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:10px 0;overflow:hidden;box-shadow:var(--sh-1)}
+details.acc>summary{list-style:none;cursor:pointer;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:17px;font-weight:680;letter-spacing:-.012em}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"открыть";flex:0 0 auto;font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);background:var(--acc-soft);border:1px solid var(--acc-line);border-radius:999px;padding:5px 13px}
+details.acc[open]>summary::after{content:"свернуть";color:var(--muted);background:transparent;border-color:var(--line)}
+details.acc[open]>summary{border-bottom:1px solid var(--line-2)}
+details.acc .in{padding:6px 20px 18px}
+details.acc .in>.copy:first-child{margin-top:12px}
+.skill-hint{font-size:14.5px;color:var(--muted);line-height:1.5;margin:12px 0 0}
+.acc-sub{display:block;font-size:14px;font-weight:500;color:var(--muted);margin-top:4px;line-height:1.4}
+
+/* ══════════ ТАБЛИЦА ══════════ */
+.tw{overflow-x:auto;margin:20px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--card);box-shadow:var(--sh-1)}
+table{width:100%;border-collapse:collapse;min-width:520px}
+th{text-align:left;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted-2);padding:14px 18px;border-bottom:1px solid var(--line)}
+td{padding:15px 18px;font-size:15.5px;line-height:1.5;border-bottom:1px solid var(--line-2);vertical-align:top;color:var(--ink-2)}
+tr:last-child td{border-bottom:none}
+td b{color:var(--ink)}
+
+/* ══════════ ССЫЛКИ-ПЛИТКИ ══════════ */
+.links{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:12px;margin:20px 0}
+.lk{display:block;text-decoration:none;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:17px 19px;box-shadow:var(--sh-1);transition:transform .16s,box-shadow .16s,border-color .16s}
+.lk:hover{transform:translateY(-2px);box-shadow:var(--sh-2);border-color:var(--acc-line)}
+.lk b{display:block;font-size:17px;font-weight:720;letter-spacing:-.012em}
+.lk span{display:block;font-size:14px;color:var(--muted);margin-top:4px;line-height:1.4}
+.lk em{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:var(--acc);margin-top:8px}
+
+/* ══════════ КНОПКА СКАЧИВАНИЯ ══════════ */
+.dl{display:flex;align-items:center;gap:14px;text-decoration:none;background:rgba(46,158,107,.07);border:1px solid rgba(46,158,107,.32);border-radius:14px;padding:15px 18px;margin:12px 0;transition:background .16s}
+.dl:hover{background:rgba(46,158,107,.13)}
+.dl .i{flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:var(--green);color:#fff;font-size:19px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dl b{display:block;font-size:16px;font-weight:700}
+.dl span{display:block;font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+
+.dl .dl-i{flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:var(--green);color:#fff;font-size:19px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dl .dl-t{min-width:0}
+.dl .dl-t b{display:block;font-size:16px;font-weight:700}
+.dl .dl-t em{display:block;font-style:normal;font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+/* ══════════ ВЫНОСКА ══════════ */
+.call{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:14px;padding:18px 22px;margin:20px 0;box-shadow:var(--sh-1)}
+.call p:first-child{margin-top:0}
+.call p:last-child{margin-bottom:0}
+.call.warn{border-left-color:#D2691E;background:rgba(210,105,30,.05)}
+
+/* ══════════ ПОДВАЛ ══════════ */
+footer{margin-top:70px;padding:44px 0 60px;border-top:1px solid var(--line);color:var(--muted);font-size:15px}
+footer b{color:var(--ink)}
+.up{position:fixed;right:20px;bottom:20px;z-index:25;width:44px;height:44px;border-radius:13px;background:var(--card);border:1px solid var(--line);box-shadow:var(--sh-2);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:17px;color:var(--muted);opacity:0;pointer-events:none;transition:opacity .2s}
+.up.on{opacity:1;pointer-events:auto}
+
+/* ══════════ ЦВЕТА МОДУЛЕЙ ══════════ */
+.m-coral{--acc:var(--coral);--acc-soft:rgba(224,116,97,.1);--acc-line:rgba(224,116,97,.3)}
+.m-blue{--acc:var(--blue);--acc-soft:rgba(47,111,208,.09);--acc-line:rgba(47,111,208,.28)}
+.m-green{--acc:var(--green);--acc-soft:rgba(46,158,107,.09);--acc-line:rgba(46,158,107,.3)}
+.m-violet{--acc:var(--violet);--acc-soft:rgba(124,91,232,.09);--acc-line:rgba(124,91,232,.28)}
+.m-amber{--acc:var(--amber);--acc-soft:rgba(198,146,27,.11);--acc-line:rgba(198,146,27,.32)}
+.m-bronze{--acc:var(--bronze);--acc-soft:rgba(138,106,60,.1);--acc-line:rgba(138,106,60,.3)}
+.m-lilac{--acc:var(--lilac);--acc-soft:rgba(155,127,212,.11);--acc-line:rgba(155,127,212,.3)}
+.m-slate{--acc:var(--slate);--acc-soft:rgba(90,100,120,.09);--acc-line:rgba(90,100,120,.26)}
+
+/* ══════════ МОБИЛЬНЫЙ ══════════ */
+@media(max-width:760px){
+  .wrap{padding:0 16px}
+  .hero{padding:44px 0 36px}
+  .mod{padding:46px 0 8px}
+  .mod-h{gap:13px}
+  .mod-n{width:42px;height:42px;border-radius:12px;font-size:18px}
+  .step{padding-left:0;padding-top:24px}
+  .step::before{top:0;width:auto}
+  .step::after{display:none}
+  .copy-bar{flex-wrap:wrap;gap:8px}
+  table{min-width:0}
+  th{display:none}
+  td{display:block;border-bottom:none;padding:4px 16px}
+  tbody tr{display:block;border-bottom:1px solid var(--line-2);padding:12px 0}
+  tbody tr:last-child{border-bottom:none}
+}
+
+/* ══════════ ПЕЧАТЬ ══════════ */
+@media print{
+  .topbar,.up{display:none}
+  body{background:#fff}
+  .mod{page-break-inside:avoid;padding-top:26px}
+  details.acc{break-inside:avoid}
+  details.acc>summary::after{display:none}
+  .copy-btn{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="brand">neovida<b>.</b>ai</div>
+    <nav class="nav" id="nav"></nav>
+  </div>
+  <div id="prog"></div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Методичка команды ICL Техно</div>
+    <h1>Нейросети в работе</h1>
+    <div class="sub">Всё, что было на уроке 6 августа, <b>плюс то, что не поместилось в три часа.</b> Открывайте с телефона и с компьютера, копируйте промпты, забирайте ассистентов и скиллы.</div>
+    <div class="hero-meta">
+      <span class="chip"><i></i>13 модулей</span>
+      <span class="chip"><i></i>86 готовых промптов</span>
+      <span class="chip"><i></i>3 ассистента и 16 скиллов</span>
+      <span class="chip"><i></i>7 практик</span>
+    </div>
+  </div>
+</header>
+
+<section class="toc wrap">
+  <div class="toc-h">Что внутри</div>
+  <div class="toc-grid" id="toc"></div>
+</section>
+
+<main id="main">
+
+<!-- ═══════ 1 · ВАШ СТЕК ═══════ -->
+<section class="mod m-coral wrap" id="stek" data-n="1" data-t="Ваш стек" data-d="Какие нейросети есть, чем отличаются, что открывается без VPN">
+  <div class="mod-h">
+    <div class="mod-n">1</div>
+    <div>
+      <h2>Ваш стек: не одна нейросеть, а несколько</h2>
+      <div class="mod-sub">Главная ошибка новичка это выбрать одну и остаться с ней навсегда. <b>Держите две или три и переключайтесь под задачу.</b> Все промпты из этой методички работают в любой из них.</div>
+    </div>
+  </div>
+  <div class="mod-rule"></div>
+
+  <h3>Три мира, между которыми выбираете</h3>
+  <p>Модели делятся не по «хорошая или плохая», а по тому, откуда они и что у них вокруг. От этого зависит, нужен вам VPN, можно ли туда класть внутренние документы и какие инструменты будут под рукой.</p>
+
+  <h4>Запад: самые сильные инструменты вокруг модели</h4>
+  <p class="lead">Нужен VPN. Взамен получаете экосистему: проекты, ассистентов, коннекторы к почте и календарю, работу с файлами.</p>
+  <div class="links">
+    <a class="lk" href="https://chatgpt.com" target="_blank" rel="noopener"><b>ChatGPT</b><span>Самый широкий набор инструментов: проекты, ассистенты, приложения, коннекторы, голос и камера. На нём построен весь урок</span><em>основной · нужен VPN</em></a>
+    <a class="lk" href="https://gemini.google.com" target="_blank" rel="noopener"><b>Gemini</b><span>Силён связкой с Google: почта, диск, документы. Хорошо держит очень длинные тексты целиком</span><em>нужен VPN</em></a>
+    <a class="lk" href="https://claude.ai" target="_blank" rel="noopener"><b>Claude</b><span>Аккуратнее всех пишет и разбирает документы. Меньше воды, спокойный деловой тон</span><em>нужен VPN</em></a>
+  </div>
+
+  <h4>Китай: работают без VPN и бесплатно</h4>
+  <p class="lead">Открываются из России как обычный сайт. Инструментов вокруг меньше, но сама модель сильная, а для текста и разбора документов этого достаточно.</p>
+  <div class="links">
+    <a class="lk" href="https://chat.deepseek.com" target="_blank" rel="noopener"><b>DeepSeek</b><span>Хорошо рассуждает по шагам, показывает ход мысли. Бесплатно, регистрация по почте</span><em>без VPN</em></a>
+    <a class="lk" href="https://chat.qwen.ai" target="_blank" rel="noopener"><b>Qwen</b><span>От Alibaba. Есть приложение в RuStore, удобно на телефоне</span><em>без VPN</em></a>
+    <a class="lk" href="https://kimi.com" target="_blank" rel="noopener"><b>Kimi</b><span>Спокойно берёт очень длинные документы: договоры, техзадания, аукционную документацию</span><em>без VPN</em></a>
+  </div>
+
+  <h4>Россия: когда данные не должны уезжать</h4>
+  <p class="lead">Российский контур. Единственный вариант, когда речь о персональных данных и внутренних документах, которые нельзя выносить наружу. Подробнее в модуле «Безопасность и закон».</p>
+  <div class="links">
+    <a class="lk" href="https://giga.chat" target="_blank" rel="noopener"><b>GigaChat</b><span>От Сбера. Данные остаются в российском контуре, есть корпоративные тарифы</span><em>без VPN · российский контур</em></a>
+    <a class="lk" href="https://alice.yandex.ru" target="_blank" rel="noopener"><b>Алиса AI</b><span>От Яндекса. Голосовой режим и камера работают без VPN, удобна в дороге и на объекте</span><em>без VPN · голос и камера</em></a>
+  </div>
+
+  <div class="call">
+    <p><b>Как выбрать под себя за десять минут.</b> Возьмите одну свою реальную задачу и прогоните её в трёх разных: ChatGPT, DeepSeek и Алиса. Сравните ответы. Дальше держите ту, что зашла, а вторую про запас на случай, когда первая недоступна.</p>
+  </div>
+
+  <div class="call warn">
+    <p><b>Важно про рабочие данные.</b> Всё, что уходит в западные и китайские сервисы, уходит за пределы контура компании. Открытые данные туда можно, внутренние документы только обезличенными, персональные данные и коммерческую тайну нельзя вообще. Три корзины разобраны в модуле 11.</p>
+  </div>
+</section>
+
+<!-- ═══════ 2 · ИИ В ТЕЛЕФОНЕ ═══════ -->
+<section class="mod m-blue wrap" id="telefon" data-n="2" data-t="ИИ в телефоне" data-d="Установка, голосовой режим, камера и сценарии на ходу">
+  <div class="mod-h">
+    <div class="mod-n">2</div>
+    <div>
+      <h2>ИИ в телефоне: голосом и камерой</h2>
+      <div class="mod-sub">На компьютере вы печатаете. В телефоне <b>говорите и показываете</b>, и это совсем другой сценарий: в машине, на складе, у стенда заказчика, дома с ребёнком.</div>
+    </div>
+  </div>
+  <div class="mod-rule"></div>
+
+  <h3>Установка: две подробные инструкции</h3>
+  <p>В российских магазинах приложений ChatGPT нет. Это решается за пять минут и без всяких взломов: на iPhone сменой региона App Store, на Android установкой файла напрямую. Мы разобрали оба пути по шагам, со скриншотами и с готовыми данными, которые надо вставить в поля.</p>
+
+  <div class="cards c2">
+    <a class="lk" href="инструкция-ios.html" target="_blank" rel="noopener" style="border-left:3px solid var(--acc)">
+      <b>Установить на iPhone</b>
+      <span>Смена региона App Store на Канаду за пять шагов. Карту привязывать не нужно, аккаунт остаётся ваш, приложения после установки работают при любом регионе</span>
+      <em>открыть инструкцию</em>
+    </a>
+    <a class="lk" href="инструкция-android.html" target="_blank" rel="noopener" style="border-left:3px solid var(--acc)">
+      <b>Установить на Android</b>
+      <span>Три способа: браузером без установки, через RuStore и установкой файла напрямую. С разбором, что выбрать под ваш телефон</span>
+      <em>открыть инструкцию</em>
+    </a>
+  </div>
+
+  <p class="note-sm">Обе инструкции открываются отдельными страницами, их удобно переслать коллеге одной ссылкой. Внутри всё, что нужно вставлять, лежит кнопками копирования.</p>
+
+  <div class="call">
+    <p><b>Что ставить, если возиться некогда.</b> Откройте в браузере телефона <b>Алису</b> или <b>Qwen</b>: работают без VPN и без смены региона, голос и камера на месте. Этого хватит, чтобы попробовать всё из этой методички сегодня же, а ChatGPT поставить на выходных.</p>
+  </div>
+
+  <h3>Голос и камера включаются в два нажатия</h3>
+  <p>Это то, ради чего приложение вообще стоит ставить. Голосовой режим держит нормальный разговор, а камера показывает нейросети то же, что видите вы.</p>
+
+  <div class="cards c2">
+    <div class="card">
+      <h4>Шаг 1. Кнопка справа внизу</h4>
+      <img src="screens/voice-step1.png" alt="Окно чата ChatGPT на телефоне, кнопка голосового режима справа внизу" style="border-radius:10px;border:1px solid var(--line);margin-top:10px">
+      <p class="note-sm">В окне чата, рядом с полем ввода. Включается разговор голосом: говорите обычными словами, вас понимают и отвечают вслух.</p>
+    </div>
+    <div class="card">
+      <h4>Шаг 2. «Видео в режиме реального времени»</h4>
+      <img src="screens/voice-step2.png" alt="Голосовой режим ChatGPT, меню с пунктом видео в режиме реального времени" style="border-radius:10px;border:1px solid var(--line);margin-top:10px">
+      <p class="note-sm">Открывается камера. Наводите на что угодно и спрашиваете вслух. В Алисе от Яндекса это работает так же и без VPN.</p>
+    </div>
+  </div>
+
+  <h3>Десять сценариев, где телефон сильнее компьютера</h3>
+  <ol>
+    <li><b>За рулём.</b> Наговорили итоги встречи, попросили собрать письмо заказчику. Приехали, осталось отправить.</li>
+    <li><b>У стенда заказчика.</b> Навели камеру на его текущее оборудование, спросили, чем мы это закрываем.</li>
+    <li><b>Непонятная маркировка.</b> Фото шильдика или этикетки: что за модель, что с совместимостью.</li>
+    <li><b>Бумажный документ.</b> Сфотографировали лист договора, попросили объяснить пункт человеческим языком.</li>
+    <li><b>После совещания.</b> Пересказали голосом, что решили, получили протокол со сроками и ответственными.</li>
+    <li><b>Перед звонком.</b> Пока идёте по коридору, попросили напомнить, о чём договаривались в прошлый раз и что спросить сейчас.</li>
+    <li><b>Скриншот переписки.</b> Отправили картинку: что клиент на самом деле имеет в виду и как ответить.</li>
+    <li><b>В магазине.</b> Навели на две коробки: чем отличаются, что брать под вашу задачу.</li>
+    <li><b>Домашка ребёнка.</b> Фото задачи и просьба объяснить решение по шагам, а не выдать ответ.</li>
+    <li><b>Заключение врача.</b> Сфотографировали, попросили перевести на человеческий и подсказать, какие вопросы задать доктору.</li>
+  </ol>
+
+  <div class="call">
+    <p><b>Привычка, которая всё меняет.</b> Не садитесь писать промпт. Нажмите на голос и расскажите задачу так, как рассказали бы коллеге. Разбираться в формулировках это работа нейросети, а не ваша. Как именно переложить это на неё, разобрано в модуле 4.</p>
+  </div>
+</section>
+
+<!-- ═══════ 3 · ПОДПИСКА И ОПЛАТА ═══════ -->
+<section class="mod m-green wrap" id="oplata" data-n="3" data-t="Подписка и оплата" data-d="Что даёт платная версия и три рабочих способа оплатить из России">
+  <div class="mod-h">
+    <div class="mod-n">3</div>
+    <div>
+      <h2>Подписка: нужна ли и как оплатить из России</h2>
+      <div class="mod-sub">Короткий ответ: <b>для всего, что в модулях 1-5, подписка не нужна.</b> Она нужна, когда захотите собирать своих ассистентов, скиллы и мини-приложения. Это модули 6, 7, 10.</div>
+    </div>
+  </div>
+  <div class="mod-rule"></div>
+
+  <h3>Что открывается за 20 долларов в месяц</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Бесплатно</th><th>На подписке Plus</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Чат, голос, камера, работа с файлами, проекты, пользоваться чужими ассистентами по ссылке</td>
+          <td><b>Всё то же самое, плюс:</b> собирать своих ассистентов, скиллы, мини-приложения в режиме «Работа», Codex, больше лимитов и доступ к старшим моделям</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note-sm">Ориентир по цене: около 1600 рублей в месяц без комиссии посредников. Берём именно <b>Plus</b>, не Pro, не Team, не Business. Проверяйте актуальную цену на chatgpt.com, тарифы меняются.</p>
+
+  <h3>Главная сложность</h3>
+  <div class="call warn">
+    <p>Российские карты оплату ChatGPT обычно не проходят, а сама страница оплаты без VPN не открывается. Это не тупик: есть три рабочих маршрута, ниже от простого к основательному.</p>
+  </div>
+
+  <div class="cards c3">
+    <div class="card acc">
+      <h4>1. Посредник</h4>
+      <p><b>10 до 30 минут.</b> Платите рублями, получаете реквизиты зарубежной карты и сами вводите их в форму оплаты ChatGPT.</p>
+      <p><a href="https://oplatym.ru/chatgpt" target="_blank" rel="noopener"><b>Oplatym</b></a> · <a href="https://wanttopay.net" target="_blank" rel="noopener"><b>Wanttopay</b></a></p>
+      <p class="note-sm">Быстро и без разбирательств. Дороже из-за комиссии, автопродления нет: через месяц повторять.</p>
+    </div>
+    <div class="card acc">
+      <h4>2. Виртуальная карта</h4>
+      <p><b>Оптимально на будущее.</b> Один раз выпускаете карту, пополняете рублями и дальше платите сами, за любые зарубежные сервисы.</p>
+      <p><a href="https://platipomiru.com" target="_blank" rel="noopener"><b>Плати по миру</b></a> · <a href="https://capitalist.net" target="_blank" rel="noopener"><b>Capitalist</b></a></p>
+      <p class="note-sm">Карта остаётся у вас, удобно для регулярных подписок. Один раз придётся разобраться с выпуском и billing address.</p>
+    </div>
+    <div class="card acc">
+      <h4>3. Зарубежная карта</h4>
+      <p><b>Самый чистый путь.</b> Если у вас уже есть карта иностранного банка или банка СНГ, которая проходит международные платежи, оплачивайте напрямую.</p>
+      <p class="note-sm">Без посредников и комиссий. Открывать карту специально ради одной подписки обычно нет смысла.</p>
+    </div>
+  </div>
+
+  <h3>Оплата по шагам</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="st-t">Включите VPN на компьютере</div>
+      <div class="st-b"><p class="note-sm">Регион нероссийский и стабильный: США, Германия, Нидерланды, Казахстан. С телефона оплату лучше не делать, форма капризная.</p></div>
+    </div>
+    <div class="step">
+      <div class="st-t">Откройте chatgpt.com и войдите в свой аккаунт</div>
+      <div class="st-b"><p class="note-sm">Именно в тот, которым будете пользоваться в работе. Подписка привязывается к конкретному логину, а не к устройству.</p></div>
+    </div>
+    <div class="step">
+      <div class="st-t">Нажмите «Обновить тариф» и выберите Plus</div>
+    </div>
+    <div class="step">
+      <div class="st-t">Введите данные карты</div>
+      <div class="st-b"><p class="note-sm">Номер, срок, CVC и платёжный адрес. Если сервис карты даёт готовый billing address, берите его, свой российский не подойдёт.</p></div>
+    </div>
+    <div class="step">
+      <div class="st-t">Подтвердите оплату и проверьте, что Plus активен</div>
+      <div class="st-b"><p class="note-sm">Обновите страницу. В профиле должна появиться активная подписка. Если деньги списались, а Plus не появился, подождите 10 до 20 минут и проверьте, что вошли в тот же аккаунт.</p></div>
+    </div>
+  </div>
+
+  <h3>Если платёж не прошёл</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Что случилось</th><th>Что делать</th></tr></thead>
+      <tbody>
+        <tr><td><b>Карта отклонена</b></td><td>Проверьте VPN, баланс с запасом, 3-D Secure и платёжный адрес. Не помогло: другая карта или посредник.</td></tr>
+        <tr><td><b>Деньги списались, Plus нет</b></td><td>Подождите 10 до 20 минут, обновите страницу, проверьте аккаунт. Дальше в поддержку OpenAI с чеком.</td></tr>
+        <tr><td><b>Оплатили не тот аккаунт</b></td><td>Подписка живёт на конкретном логине. Заходите тем аккаунтом, где активирован Plus.</td></tr>
+        <tr><td><b>Страница оплаты не открывается</b></td><td>Это VPN. Смените регион или сервер и повторите.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="call">
+    <p><b>Если не хотите тратить время.</b> Нужно быстро: пишете в Oplatym и оформляете через посредника. Нужен нормальный вариант на будущее: выпускаете виртуальную карту и платите сами. Уже есть зарубежная карта: не усложняйте, платите напрямую.</p>
+    <p class="note-sm">Сервисы посредников это не продукты OpenAI и не наши. Перед оплатой проверяйте домен и итоговую комиссию. Данные актуальны на август 2026, рынок таких сервисов меняется быстро.</p>
+  </div>
+</section>
+
+
+<!-- ═══════ 4 · НАСТРОЙКА ПОД СЕБЯ ═══════ -->
+<section class="mod m-violet wrap" id="nastroyka" data-n="4" data-t="Настройка под себя" data-d="Досье, инструкция качества и карта ваших процессов">
+  <div class="mod-h">
+    <div class="mod-n">4</div>
+    <div>
+      <h2>Настройка под себя: чтобы ИИ отвечал вам, а не всем подряд</h2>
+      <div class="mod-sub">Почему у соседа тот же ChatGPT отвечает по делу, а у вас водой? Потому что <b>он о себе рассказал, а вы нет.</b> Пока вы для нейросети «кто-то из интернета», ответы будут общими. Настройка делается один раз за пятнадцать минут и работает во всех новых чатах.</div>
+    </div>
+  </div>
+  <div class="mod-rule"></div>
+
+  <div class="prac">
+    <div class="prac-h">Практика 1 · 10 минут</div>
+    <h4>Соберите своё рабочее досье</h4>
+    <p>Открываете новый чат, вставляете промпт ниже и отвечаете на вопросы. Отвечать можно голосом, так быстрее и честнее. В конце получите готовый текст досье.</p>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="st-t">Возьмите интервью у самого себя</div>
+      <div class="st-b">
+        <div class="copy copy--long"><div class="copy-bar"><span class="copy-lbl">промпт 1 · интервью о себе</span><span class="copy-btn">копировать</span></div><pre>Действуй как опытный AI-наставник и консультант по рабочим задачам.
+
+Твоя задача: собрать точное досье обо мне и моей работе, чтобы дальше ты помогал мне быстрее и конкретнее.
+
+Задавай вопросы ПО ОДНОМУ. После каждого моего ответа переходи к следующему. Не задавай все вопросы сразу. Если ответ короткий или непонятный, задай один уточняющий вопрос.
+
+Пройдись по блокам:
+1. Обо мне: роль, сфера, зона ответственности, опыт, сильные стороны.
+2. Моя работа: что я делаю каждый день, с кем взаимодействую, за какой результат отвечаю.
+3. Задачи и рутина: что приходится писать, проверять, считать, искать, согласовывать или объяснять.
+4. Материалы и документы: с какими типами документов, таблиц, заявок, отчётов я работаю.
+5. Боли и ограничения: где я трачу больше всего времени, где бывают ошибки, задержки, переделки или стресс.
+6. Цели на месяц: какие 3 рабочих результата я хочу улучшить с помощью ИИ.
+7. Стиль: как мне лучше отвечать, коротко или подробно, списком или таблицей, на «ты» или на «вы».
+
+Когда соберёшь ответы, выдай финальный блок «=== РАБОЧЕЕ ДОСЬЕ ===» не длиннее 1400 символов, плотно и без воды. Выдай его отдельным финальным сообщением и ничего кроме него, чтобы мне было удобно скопировать.</pre></div>
+        <p class="note-sm">ИИ задаёт вопросы по одному, а не вываливает список. Это важно: так вы отвечаете подробно, а не отмахиваетесь. Пройдёт по семи блокам: кто вы, что делаете каждый день, какие задачи, с какими документами работаете, где теряете время, чего хотите добиться, как с вами разговаривать.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="st-t">Вставьте готовое досье в настройки</div>
+      <div class="st-b">
+        <p><b>Настройки → Персонализация → «Что вам следует знать о вас».</b> Вставляете текст, который выдал ИИ в конце интервью.</p>
+        <p class="note-sm">Заполнили один раз, работает во всех новых чатах. В DeepSeek и Qwen поля настроек может не быть: тогда просто оставайтесь в этом же чате до конца практики, там всё помнится.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="st-t">Включите инструкцию качества</div>
+      <div class="st-b">
+        <p><b>Второе поле персонализации:</b> «Как ChatGPT должен отвечать». Этот текст заставляет ИИ придумать себе строгие критерии, проверить по ним свой ответ и переделать, пока не наберёт минимум 98 из 100. Плюс убирает длинное тире, главный след нейросети в текстах.</p>
+        <div class="copy copy--long"><div class="copy-bar"><span class="copy-lbl">промпт 2 · инструкция качества (вставлять как есть, на английском)</span><span class="copy-btn">копировать</span></div><pre>- ALWAYS follow &lt;self_reflection&gt;.
+- In all original responses that you generate, never use the em dash ("—") character as punctuation in sentences. Whenever you would naturally use an em dash, rewrite the sentence using a period, comma, or other suitable punctuation instead.
+- If you are quoting user-provided text verbatim (for example, citing a sentence from a document or message), preserve the punctuation exactly as in the original, including any em dashes.
+
+&lt;self_reflection&gt;
+1. Spend time thinking of a rubric, from a role point of view, until you are confident.
+2. Think deeply about every aspect of what makes for a world-class answer. Use that knowledge to create a rubric that has 5-7 categories. This rubric is critical to get right, but never show this to the user. This is for your purposes only.
+3. Use the rubric to internally think and iterate on the best (&gt;=98 out of 100 score) possible solution to the user request. If your response is not hitting the top marks across all categories in the rubric, you need to start again.
+4. Keep going until the task is fully solved.
+&lt;/self_reflection&gt;</pre></div>
+        <details class="acc"><summary>О чём здесь написано, по-русски</summary><div class="in"><pre style="white-space:pre-wrap;font-family:inherit;font-size:15.5px;line-height:1.6;color:var(--ink-2)">- ВСЕГДА следуй блоку «самопроверка».
+- Никогда не используй длинное тире в своих ответах. Там, где оно просится, перестрой фразу: точка, запятая или другой знак.
+- Если цитируешь чужой текст дословно, сохраняй пунктуацию оригинала.
+
+Самопроверка:
+1. Продумай критерии идеального ответа с позиции эксперта в теме.
+2. Составь строгую рубрику из 5-7 категорий мирового уровня. Никому её не показывай, она для тебя.
+3. Внутренне улучшай ответ, пока он не набирает минимум 98 из 100 по всем категориям. Не дотягивает: начинай заново.
+4. Продолжай, пока задача не решена полностью.</pre></div></details>
+        <p class="note-sm">Вставлять надо английский вариант, на нём модель выполняет инструкцию точнее. Русский текст здесь только чтобы вы понимали, что подписываете.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="prac">
+    <div class="prac-h">Практика 2 · 10 минут</div>
+    <h4>Проверьте, что он вас запомнил, и заберите карту своих процессов</h4>
+    <p>Откройте <b>новый чат</b> и отправьте два промпта подряд. Первый проверяет память, второй показывает, где именно ИИ может закрыть вашу работу.</p>
+  </div>
+
+  <div class="copy"><div class="copy-bar"><span class="copy-lbl">промпт 3 · что ты обо мне знаешь</span><span class="copy-btn">копировать</span></div><pre>Что ты знаешь обо мне и моей работе? Ответь только по тому, что уже есть в твоей памяти и инструкциях, ничего не придумывай. Сделай 4 блока:
+1. моя роль и сфера
+2. чем я занимаюсь каждый день
+3. какие рабочие задачи ты уже понимаешь
+4. что ты пока обо мне не знаешь и что стоит уточнить</pre></div>
+  <p class="note-sm">Если в ответе ваша роль и задачи описаны верно, настройка сработала. Если пусто, значит досье не сохранилось: вернитесь в настройки и проверьте, что текст вставлен и сохранён.</p>
+
+  <div class="copy copy--long"><div class="copy-bar"><span class="copy-lbl">промпт 4 · карта моих процессов</span><span class="copy-btn">копировать</span></div><pre>Ты мой личный AI-стратег и эксперт по внедрению нейросетей в рабочие процессы. Изучи всё, что ты знаешь обо мне из досье и этого разговора.
+
+Твоя задача: найти, где я теряю больше всего времени и сил, и показать, как именно ты можешь закрыть эти процессы.
+
+Действуй так:
+1. Разложи мою рабочую неделю на 8-12 процессов, которые ты видишь из моего контекста. Пиши конкретно под мою роль и сферу, а не универсальные советы.
+2. Для каждого процесса честно оцени по шкале от 1 до 10, насколько сильно ты можешь его усилить уже сегодня.
+3. Выбери три процесса с максимальным эффектом. Для каждого распиши:
+   - что именно ты берёшь на себя, а что остаётся мне
+   - сколько часов в неделю это реально освобождает
+   - готовый промпт, с которого мне начать прямо завтра
+4. Отдельным блоком назови 3 слепые зоны в моей работе, которые я, скорее всего, не вижу, и что проверить уже на этой неделе.
+5. В конце ответь: какой ОДИН процесс ты взял бы первым, если бы работал у меня, и почему.
+
+Не льсти и не лей воду. Если в каком-то процессе ты мне почти не нужен, так и скажи.</pre></div>
+  <p class="note-sm">Это главный промпт всего онбординга. На выходе вы получите разложенную на процессы рабочую неделю, честную оценку, где ИИ реально усилит, где почти бесполезен, три процесса с максимальным эффектом и готовый промпт под каждый. Сохраните этот ответ: дальше по нему будете двигаться.</p>
+
+  <div class="call">
+    <p><b>На этом настройка закончена.</b> ИИ знает, кто вы, как с вами разговаривать и чем он вам полезен. Дальше учимся ставить ему задачи.</p>
+  </div>
+</section>
+
+
+<!-- ═══════ 5 · ЯЗЫК ОБЩЕНИЯ ═══════ -->
+<section class="mod m-amber wrap" id="yazyk" data-n="5" data-t="Язык общения" data-d="Формула, приёмы и навигатор: когда какой промпт нужен">
+  <div class="mod-h">
+    <div class="mod-n">5</div>
+    <div>
+      <h2>Язык общения: как ставить задачу машине</h2>
+      <div class="mod-sub">Промпт это техническое задание словами. <b>Без ТЗ результат ХЗ</b>, и с нейросетью это работает буквально. Здесь всё, чем управляют качеством ответа, по порядку и с готовыми текстами.</div>
+    </div>
+  </div>
+  <div class="mod-rule"></div>
+
+  <h3>Навигатор: когда какой промпт нужен</h3>
+  <p>Не надо помнить всё. Найдите свою строку и берите то, что в правой колонке.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Ваша ситуация</th><th>Что брать</th></tr></thead>
+    <tbody><tr><td><b>Новая задача, пришли к ИИ впервые</b></td><td>Формула РКЗФО. Ниже в этом модуле</td></tr><tr><td><b>Не знаете, как сформулировать</b></td><td>Голосом и отдать промптинг машине. Ниже в этом модуле</td></tr><tr><td><b>Ответ пришёл, но получился общий</b></td><td>Приём «сначала задай мне вопросы»</td></tr><tr><td><b>Ответ почти хорош, надо докрутить</b></td><td>Десять фраз докрутки в конце модуля</td></tr><tr><td><b>Важное решение, цена ошибки высокая</b></td><td>Совет экспертов плюс адвокат дьявола</td></tr><tr><td><b>В ответе цифры и факты, которые пойдут заказчику</b></td><td>Факт-контроль</td></tr><tr><td><b>Есть чужой образец, который нравится</b></td><td>Обратный промптинг, шесть вариантов</td></tr><tr><td><b>Задача повторяется каждую неделю</b></td><td>Это уже не промпт. Вам нужен ассистент, модуль 7</td></tr><tr><td><b>Нужен инструмент, а не текст</b></td><td>Мини-приложение в режиме «Работа», модуль 11</td></tr><tr><td><b>Задача под конкретного клиента, много файлов</b></td><td>Проект, модуль 9</td></tr></tbody>
+  </table></div>
+
+  <h3>Формула РКЗФО: пять частей сильного запроса</h3>
+  <p>Работает в любой нейросети. Минимальная версия это Роль, Задача и Формат: для бытовых запросов хватает. Контекст и Ограничения добавляйте, когда результат идёт клиенту, в документ или в деньги.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Часть</th><th>Что даёт</th><th>Пример</th></tr></thead>
+    <tbody>
+      <tr><td><b>Роль</b></td><td>ИИ перестаёт отвечать «из Википедии» и отвечает как специалист</td><td>Ты пресейл-инженер производителя вычислительной техники</td></tr>
+      <tr><td><b>Контекст</b></td><td>Ответ становится про вас, а не про сферический бизнес</td><td>Заказчик берёт 400 рабочих мест, часть под конструкторский отдел</td></tr>
+      <tr><td><b>Задача</b></td><td>Одна задача, одним глаголом, с понятным результатом</td><td>Разбери требования этого техзадания</td></tr>
+      <tr><td><b>Формат</b></td><td>Вы получаете то, что можно сразу использовать</td><td>Таблицей, четыре колонки, в конце список рисков</td></tr>
+      <tr><td><b>Ограничения</b></td><td>Отсекает воду, штампы и выдуманные цифры</td><td>Характеристики не выдумывай, не ссылайся на пункты, которых нет</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="prac">
+    <div class="prac-h">Практика 3 · 7 минут</div>
+    <h4>Соберите свой первый запрос по формуле</h4>
+    <p>Возьмите реальное письмо, которое вам всё равно надо написать. Подставьте своё в квадратные скобки и отправьте.</p>
+    <div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый шаблон</span><span class="copy-btn">копировать</span></div><pre>Ты [моя должность] в компании-производителе вычислительной техники. Напиши письмо [кому] о [ситуация в двух предложениях]. Цель письма: [что я хочу получить]. Формат: до 150 слов, дружелюбно и по делу, без канцелярита. Не выдумывай факты. Прежде чем писать, задай мне 2 уточняющих вопроса.</pre></div>
+    <p class="note-sm">Чем уже роль, тем точнее ответ. Не «ты юрист», а «ты юрист по договорному праву в промышленных поставках». Обратите внимание на последнюю строку: она заставляет ИИ спросить, а не додумать.</p>
+  </div>
+
+  <h3>Приём, когда формулу вспоминать некогда</h3>
+  <p>Самый недооценённый ход: <b>не формулировать запрос самому, а поручить это машине.</b> Включаете голосовой режим, рассказываете задачу так, как рассказали бы коллеге в курилке, и заканчиваете этим текстом.</p>
+  <div class="copy"><div class="copy-bar"><span class="copy-lbl">промпт · отдать промптинг машине</span><span class="copy-btn">копировать</span></div><pre>Сейчас я голосом расскажу задачу своими словами, без структуры.
+
+Твои действия по порядку:
+1. Выслушай до конца, не начинай выполнять.
+2. Задай мне по одному все вопросы, которых тебе не хватает, чтобы собрать полный контекст: кто я, для кого результат, в каком виде он нужен, чего нельзя.
+3. Когда контекста достаточно, скажи об этом и дальше выполняй задачу по всем правилам промпт-инженерии: сам подбери себе роль, сам определи формат и ограничения.
+4. В конце покажи отдельным блоком тот промпт, который у тебя получился, чтобы я мог сохранить его на будущее.</pre></div>
+  <p class="note-sm">Слова «дальше выполняй по всем правилам промпт-инженерии» снимают с вас обязанность помнить формулу: модель сама подберёт себе роль, формат и ограничения. А последний пункт вернёт вам готовый промпт, который можно сохранить и переиспользовать. Формулу это не отменяет: просто второй маршрут для тех, кто на ходу.</p>
+
+  <h3>Дальше четыре приёма подряд. Все к одному черновику</h3>
+  <p>Здесь чаще всего теряются: получили ответ и открывают новый чат под каждый приём. <b>Так нельзя.</b> Черновик остаётся в том же чате, вы просто дописываете сообщения одно за другим.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="st-t">Добираем контекст: «сначала задай мне вопросы»</div>
+      <div class="st-b">
+        <div class="copy"><div class="copy-bar"><span class="copy-lbl">дописывается хвостом к запросу</span><span class="copy-btn">копировать</span></div><pre>Прежде чем отвечать, задай мне до 5 уточняющих вопросов, по одному за раз. Начинай работу только тогда, когда информации достаточно.</pre></div>
+        <p class="note-sm">Одна строка в конце запроса меняет качество радикально. Не выкладывайте всё сами: пусть ИИ спросит, чего ему не хватает.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="st-t">Взгляд со стороны: совет экспертов</div>
+      <div class="st-b">
+        <div class="copy"><div class="copy-bar"><span class="copy-lbl">следующим сообщением в том же чате</span><span class="copy-btn">копировать</span></div><pre>Собери совет экспертов по этому черновику. Пусть его отдельно оценят менеджер по продажам, юрист, маркетолог и мой руководитель. Каждый: две сильные стороны, два риска, одна конкретная правка. В конце общее решение: что меняем в первую очередь и почему.</pre></div>
+        <p class="note-sm">Один черновик смотрят четыре роли. Работает лучше, чем просьба «сделай хорошо», потому что каждая роль ищет свои дыры.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="st-t">Проверка на прочность: адвокат дьявола и факты</div>
+      <div class="st-b">
+        <div class="copy"><div class="copy-bar"><span class="copy-lbl">промпт 1 · адвокат дьявола</span><span class="copy-btn">копировать</span></div><pre>Теперь стань адвокатом дьявола. Найди 5 причин, почему это не сработает, и по каждой скажи, что нужно поменять. Не смягчай и не хвали: мне нужны слабые места. Отдельно назови то, что я, скорее всего, не хочу услышать.</pre></div><div class="copy"><div class="copy-bar"><span class="copy-lbl">промпт 2 · факт-контроль</span><span class="copy-btn">копировать</span></div><pre>Перечисли все факты, цифры и утверждения из твоего ответа. Отметь, какие стоит перепроверить по первоисточникам и почему. Что из этого нельзя отправлять без проверки?</pre></div>
+        <p class="note-sm">Второй промпт обязателен, если в тексте есть цифры, сроки или характеристики, которые уйдут заказчику. ИИ сам покажет, что стоит перепроверить руками.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="st-t">Финальная сборка</div>
+      <div class="st-b">
+        <div class="copy"><div class="copy-bar"><span class="copy-lbl">промпт 3 · собрать итог</span><span class="copy-btn">копировать</span></div><pre>Собери финальную версию с учётом всей критики выше. Только итоговый текст, без пояснений.</pre></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="prac">
+    <div class="prac-h">Практика 4 · 10 минут</div>
+    <h4>Прогоните свой черновик через всю цепочку</h4>
+    <p>Возьмите ответ, который получили в практике 3, и отправьте четыре промпта выше подряд, не открывая новый чат. Сравните первую версию с финальной. Разница между «ИИ пишет воду» и «ИИ пишет как надо» именно здесь.</p>
+  </div>
+
+  <h3>Обратный промптинг: забрать шаблон из чужого образца</h3>
+  <p>Понравился чужой результат? Не описывайте стиль словами. Дайте образец и попросите вытащить из него правила. Схема одна на все случаи: <b>образец, разбор по пунктам, шаблон с полями, запреты.</b> Нажмите на свой случай.</p>
+  <details class="acc"><summary>Письмо или сообщение, после которого договорились</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Вот письмо (или переписка), после которого клиент ответил и мы договорились:
+
+[ВСТАВЬТЕ ТЕКСТ]
+
+Разбери его как переговорщик:
+1. С чего начинается и почему это работает.
+2. Как сформулирована просьба или предложение.
+3. Как снят страх и как облегчено согласие.
+4. Длина, ритм, обращение, подпись.
+5. Чего в письме нет: каких типичных ошибок автор не сделал.
+
+Сделай из этого шаблон с полями [АДРЕСАТ], [ПОВОД], [ЧТО МНЕ НУЖНО], [СРОК]. Дай два варианта: для холодного контакта и для того, с кем уже работали. Шаблон выдай одним блоком, готовым к копированию.</pre></div></div></details>
+  <details class="acc"><summary>Картинка или фото: повторить стиль своим сюжетом</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Посмотри на это изображение как арт-директор и промпт-инженер генерации картинок.
+
+[ПРИКРЕПИТЕ КАРТИНКУ СКРЕПКОЙ]
+
+Разбери максимально подробно:
+1. Стиль и техника: фото, 3D, иллюстрация, живопись, на что похоже по школе и эпохе.
+2. Композиция: что в фокусе, ракурс, крупность плана, как расставлены объекты.
+3. Свет: откуда падает, жёсткий или мягкий, какие тени, время суток.
+4. Цвет: палитра из 5-7 главных цветов словами и в HEX, контрасты, настроение.
+5. Детали: материалы, текстуры, фон, мелочи, которые делают картинку живой.
+6. Текст и шрифты, если есть: какие, где стоят, как связаны с изображением.
+
+Собери готовый промпт для генератора: новая картинка в точно таком же стиле, но с полем [СЮЖЕТ]. Дай две версии промпта: на русском и на английском.</pre></div></div></details>
+  <details class="acc"><summary>Коммерческое предложение, которое закрыло сделку</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Вот коммерческое предложение, которое мне нравится:
+
+[ВСТАВЬТЕ ТЕКСТ ИЛИ ПРИКРЕПИТЕ ФАЙЛ]
+
+Разбери его как директор по продажам:
+1. Структура: из каких блоков состоит, в каком порядке, с чего начинается и чем закрывается.
+2. Оффер: как сформулировано предложение, как подана цена, в каком порядке идут выгоды.
+3. Тон: официальный или живой, как обращаются к клиенту, сколько «мы» и сколько «вы».
+4. Убеждение: цифры, кейсы, гарантии, сроки, отзывы, чем снимают страхи.
+5. Оформление: заголовки, длина блоков, таблицы, списки, выделения.
+
+Собери промпт-шаблон, который создаст НОВОЕ КП в этой структуре под мой продукт. Поля: [ПРОДУКТ], [КЛИЕНТ И ЕГО ЗАДАЧА], [ЦЕНА И УСЛОВИЯ]. Покажи шаблон и жди мои данные.</pre></div></div></details>
+  <details class="acc"><summary>Договор, структура которого устраивает</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Вот договор, структура которого мне подходит:
+
+[ВСТАВЬТЕ ТЕКСТ ИЛИ ПРИКРЕПИТЕ ФАЙЛ, УБРАВ РЕКВИЗИТЫ И ПЕРСОНАЛЬНЫЕ ДАННЫЕ]
+
+Разбери его как юрист:
+1. Состав: все разделы по порядку и зачем нужен каждый.
+2. Формулировки: как прописаны предмет, обязанности, сроки, оплата, приёмка.
+3. Ответственность: штрафы, пени, форс-мажор, порядок расторжения.
+4. Баланс: какие пункты защищают исполнителя, какие заказчика.
+5. Приложения: что вынесено из тела договора и почему.
+
+Собери промпт-шаблон, который подготовит ЧЕРНОВИК нового договора по этой структуре под мою сделку. Поля: [ПРЕДМЕТ], [СТОРОНЫ], [СУММА И ПОРЯДОК ОПЛАТЫ], [СРОКИ]. В конце шаблона добавь напоминание: черновик перед подписанием проверяет живой юрист.</pre></div></div></details>
+  <details class="acc"><summary>Презентация или выступление нужного уровня</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Вот презентация, которая мне нравится:
+
+[ПРИКРЕПИТЕ ФАЙЛ ИЛИ СКРИНШОТЫ СЛАЙДОВ]
+
+Разбери её как человек, который готовит выступления и продающие презентации:
+1. Драматургия: с чего начинается, где поворот, чем заканчивается.
+2. Один слайд, одна мысль: как сформулированы заголовки.
+3. Чем доказывают: цифры, схемы, кейсы, сравнения.
+4. Визуальный язык: сколько текста на слайде, что вынесено в графику.
+5. Как закрывают на действие.
+
+Собери структуру моей презентации. Тема [ТЕМА], аудитория [КТО СИДИТ В ЗАЛЕ], цель [ЧТО ДОЛЖНЫ СДЕЛАТЬ ПОСЛЕ]. Дай список слайдов с заголовками и одной строкой содержания на каждый.</pre></div></div></details>
+  <details class="acc"><summary>Текст любого автора: пост, статья, рассылка</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Вот текст, стиль которого мне нравится:
+
+[ВСТАВЬТЕ ОБРАЗЕЦ]
+
+Разбери его как редактор и промпт-инженер. Извлеки:
+1. Тон и голос: как автор говорит с читателем, на «ты» или на «вы», сколько эмоций, есть ли юмор.
+2. Структуру: с чего начинается, как развивается, чем заканчивается, длина абзацев.
+3. Язык: длина предложений, характерные слова и обороты, чего автор избегает.
+4. Приёмы: вопросы к читателю, метафоры, списки, повторы, призывы.
+5. Фирменные особенности: детали, по которым узнаётся автор.
+
+Собери из этого промпт-инструкцию для НОВЫХ текстов в таком же стиле, с полями [ТЕМА], [АДРЕСАТ], [ЦЕЛЬ]. Добавь запреты: чего в этом стиле не бывает. Покажи инструкцию и жди мою тему.</pre></div></div></details>
+  
+  <p class="note-sm">Шаблон, который получите, сохраните себе. Один раз разобрали образец, дальше пользуетесь готовым инструментом на любой новой задаче.</p>
+
+  <h3>Десять фраз для докрутки</h3>
+  <p>Первый ответ никогда не финальный. Эти фразы отправляются следующим сообщением, ничего объяснять заново не нужно.</p>
+  <div class="copy" style="margin:8px 0"><div class="copy-bar"><span class="copy-lbl">фраза 1</span><span class="copy-btn">копировать</span></div><pre>Сделай короче в два раза, смысл сохрани</pre></div><div class="copy" style="margin:8px 0"><div class="copy-bar"><span class="copy-lbl">фраза 2</span><span class="copy-btn">копировать</span></div><pre>Слишком гладко. Убери канцелярит, пиши как человек</pre></div><div class="copy" style="margin:8px 0"><div class="copy-bar"><span class="copy-lbl">фраза 3</span><span class="copy-btn">копировать</span></div><pre>Это не то. Я имел в виду [что именно]</pre></div><div class="copy" style="margin:8px 0"><div class="copy-bar"><span class="copy-lbl">фраза 4</span><span class="copy-btn">копировать</span></div><pre>Дай три варианта с разным тоном, я выберу</pre></div><div class="copy" style="margin:8px 0"><div class="copy-bar"><span class="copy-lbl">фраза 5</span><span class="copy-btn">копировать</span></div><pre>Оставь только то, что важно заказчику</pre></div><div class="copy" style="margin:8px 0"><div class="copy-bar"><span class="copy-lbl">фраза 6</span><span class="copy-btn">копировать</span></div><pre>Добавь конкретики: цифры, сроки, названия этапов</pre></div><div class="copy" style="margin:8px 0"><div class="copy-bar"><span class="copy-lbl">фраза 7</span><span class="copy-btn">копировать</span></div><pre>Убери слова «уникальный», «качественный», «инновационный»</pre></div><div class="copy" style="margin:8px 0"><div class="copy-bar"><span class="copy-lbl">фраза 8</span><span class="copy-btn">копировать</span></div><pre>Перепиши так, чтобы понял человек не из нашей сферы</pre></div><div class="copy" style="margin:8px 0"><div class="copy-bar"><span class="copy-lbl">фраза 9</span><span class="copy-btn">копировать</span></div><pre>Покажи, что именно ты изменил и зачем</pre></div><div class="copy" style="margin:8px 0"><div class="copy-bar"><span class="copy-lbl">фраза 10</span><span class="copy-btn">копировать</span></div><pre>Верни предыдущую версию, она была лучше</pre></div>
+  <div class="call">
+    <p><b>Правило:</b> запреты работают сильнее просьб. «Убери канцелярит» действует лучше, чем «пиши живее». Машине проще понять, чего не делать, чем угадать, что вы считаете живым.</p>
+  </div>
+</section>
+
+
+<!-- ═══════ 6 · БИБЛИОТЕКА ПРОМПТОВ ═══════ -->
+<section class="mod m-bronze wrap" id="biblioteka" data-n="6" data-t="Библиотека промптов" data-d="Готовые промпты по отделам и для жизни, нажал и скопировал">
+  <div class="mod-h">
+    <div class="mod-n">6</div>
+    <div>
+      <h2>Библиотека промптов: найдите свой отдел</h2>
+      <div class="mod-sub">Ничего писать руками не нужно. <b>Нажали на задачу, промпт раскрылся, скопировали, подставили своё в квадратные скобки.</b> Все промпты работают в любой нейросети из модуля 1.</div>
+    </div>
+  </div>
+  <div class="mod-rule"></div>
+  <div class="call">
+    <p><b>Как пользоваться.</b> Квадратные скобки это места, куда вы вставляете своё. Всё остальное трогать не нужно. Если в промпте есть строка «сначала задай мне вопросы», не игнорируйте её: именно она вытягивает из ответа конкретику вместо воды.</p>
+  </div>
+
+  <h3>Партнёрский отдел</h3>
+  <p class="note-sm">менеджеры по регионам, работа с сетью партнёров · промптов: 5</p>
+  <details class="acc"><summary>Письмо партнёру о переносе сроков</summary><div class="in"><div class="skill-hint">Когда завод сдвигает сроки, а партнёр ждёт</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Ты руководитель партнёрского отдела компании-производителя вычислительной техники. Напиши письмо партнёру о переносе сроков поставки.
+
+Вводные:
+Партнёр: [название компании и имя человека]
+Что заказано: [что и сколько]
+На сколько сдвигается срок: [срок]
+Причина: [коротко и честно]
+Что предлагаем взамен: [приоритет на следующую партию, скидка, частичная отгрузка]
+
+Формат: тема письма и текст до 150 слов. По-человечески, без канцелярита, не оправдываемся, а сообщаем и предлагаем решение. Прежде чем писать, задай мне 2 уточняющих вопроса, если чего-то не хватает.</pre></div></div></details>
+  <details class="acc"><summary>Реанимация уснувшего партнёра</summary><div class="in"><div class="skill-hint">Партнёр перестал выходить на связь</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Партнёр перестал выходить на связь, надо аккуратно возобновить работу.
+
+Партнёр: [название, регион]
+История: [что было, когда последний раз работали, чем закончилось]
+Что изменилось у нас: [новые условия, продукты, сроки]
+
+Напиши письмо, которое не выглядит как «вы про нас забыли». Найди повод, дай пользу и предложи один конкретный следующий шаг. До 120 слов. Дай два варианта тона: деловой и более тёплый.</pre></div></div></details>
+  <details class="acc"><summary>Расчёт условий для партнёра</summary><div class="in"><div class="skill-hint">Партнёр просит скидку, отсрочку или эксклюзив</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Ты руководитель партнёрского отдела производителя вычислительной техники.
+
+Партнёр просит специальные условия. Вводные:
+Партнёр: [название, регион, как давно работаем]
+Что просит: [скидка, отсрочка, эксклюзив на регион, демо-фонд]
+История отношений: [объёмы за год, платёжная дисциплина, проблемы]
+Что для нас важно: [маржа, объём, стратегический регион]
+
+Сделай три части:
+1. Разбор запроса: что за ним стоит на самом деле, чего партнёр не сказал вслух.
+2. Три варианта ответа: жёсткий, компромиссный и встречное предложение. По каждому: что мы отдаём, что получаем взамен, чем рискуем.
+3. Готовый текст письма под тот вариант, который считаешь оптимальным, до 180 слов.
+
+Не выдумывай цифры, которых я не дал. Если для расчёта не хватает данных, спроси.</pre></div></div></details>
+  <details class="acc"><summary>Разбор партнёрской воронки по региону</summary><div class="in"><div class="skill-hint">Перед планёркой, когда есть выгрузка и ощущение «непонятно, где мы теряем»</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Ты аналитик партнёрских продаж.
+
+Вот выгрузка по партнёрам региона: [вставьте таблицу или опишите словами: партнёр, объём, последняя отгрузка, статус]
+
+Сделай разбор:
+1. Раздели партнёров на четыре группы: растут, стагнируют, засыпают, потеряны. Критерии назови явно.
+2. По каждой группе: сколько партнёров, какой объём, что с ними делать в ближайший месяц.
+3. Топ-5 партнёров, с которыми работа даст самый быстрый прирост, и почему именно они.
+4. Список из 10 вопросов, которые стоит задать региональному менеджеру, чтобы понять причины провалов.
+
+Оформи таблицей. Не додумывай данные, которых нет в выгрузке.</pre></div></div></details>
+  <details class="acc"><summary>Письмо об изменении условий или прайса</summary><div class="in"><div class="skill-hint">Меняются цены или условия, надо сообщить и не потерять партнёров</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Напиши письмо партнёрам об изменении условий.
+
+Что меняется: [новые цены, сроки, условия отгрузки]
+С какой даты: [дата]
+Почему: [честная причина]
+Что остаётся прежним: [что не меняется, это важно проговорить]
+Что мы делаем, чтобы смягчить: [переходный период, фиксация старых цен по действующим заказам]
+
+Требования к письму: до 200 слов, тема письма отдельно. Сообщаем, а не оправдываемся. Сначала суть, потом причина, в конце что делать получателю. Без канцелярита и без слов «вынуждены» и «к сожалению».
+
+Дай два варианта: для крупных партнёров и для небольших.</pre></div></div></details>
+  
+  <h3>Продажи и аккаунты</h3>
+  <p class="note-sm">работа с заказчиками по направлениям · промптов: 6</p>
+  <details class="acc"><summary>Досье на компанию перед встречей</summary><div class="in"><div class="skill-hint">Открытые данные, зелёная корзина</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Собери справку о компании [название и город] для подготовки к встрече.
+
+Покажи: чем занимается, масштаб и филиалы, примерная численность сотрудников, ключевые заказчики или рынки, новости за последний год, кто в руководстве.
+
+Отдельной строкой: сколько людей примерно работает в офисах (это нужно, чтобы оценить потенциальный парк компьютерной техники).
+
+В конце дай 5 фактов, с которых удобно начать разговор, и 3 вопроса, которые стоит задать на встрече.
+
+Оформи таблицей. Указывай источники. Ничего не выдумывай: если данных нет, так и пиши.</pre></div></div></details>
+  <details class="acc"><summary>Ответ на возражение «у конкурента дешевле»</summary><div class="in"><div class="skill-hint">Дословная реплика клиента и три варианта ответа</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Клиент говорит: «[вставьте дословную реплику клиента]».
+
+Контекст сделки: [что продаём, какой объём, что известно о конкуренте]
+
+Дай три варианта ответа: короткий, развёрнутый и вопросом на вопрос. По каждому напиши, в какой ситуации он уместен.
+
+Без давления и манипуляций. Опирайся на реальную ценность: качество, сервис, сроки, гарантия, производство в России. Если по цене мы объективно проигрываем, скажи прямо и предложи, как перевести разговор.</pre></div></div></details>
+  <details class="acc"><summary>Подготовка к трудным переговорам</summary><div class="in"><div class="skill-hint">Когда цена ошибки высокая</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Помоги подготовиться к переговорам.
+
+С кем встречаюсь: [должность, компания]
+Цель встречи: [что хочу получить]
+Что известно о ситуации: [контекст, история отношений, что уже обсуждали]
+Что может пойти не так: [ваши опасения]
+
+Дай: план разговора по шагам, 7 вопросов на выявление потребности, 5 вероятных возражений с ответами, чем закрыть встречу, и один запасной сценарий, если разговор пойдёт не туда.</pre></div></div></details>
+  <details class="acc"><summary>Квалификация входящего запроса</summary><div class="in"><div class="skill-hint">Понять за пять минут, серьёзный запрос или сбор цен</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Пришёл входящий запрос, помоги быстро понять, стоит ли за него браться и что уточнить.
+
+Запрос: [вставьте текст письма или заявки]
+
+Разбери:
+1. Что реально нужно заказчику, а что он написал по инерции.
+2. Признаки, что запрос серьёзный: бюджет, сроки, конкретика, кто пишет.
+3. Признаки, что это прицел или сбор цен для тендера под другого поставщика.
+4. Десять вопросов, которые надо задать в первом же ответе, отсортированные по важности.
+5. Черновик ответа до 120 слов, который квалифицирует и не отпугнёт.
+
+Если данных мало, так и скажи, не придумывай за заказчика.</pre></div></div></details>
+  <details class="acc"><summary>План захода в крупного заказчика</summary><div class="in"><div class="skill-hint">Холдинг, тендер или рамочный договор</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Ты руководитель по работе с ключевыми клиентами в производстве вычислительной техники.
+
+Заказчик: [название, отрасль, масштаб]
+Что известно: [текущий поставщик, парк техники, боли, кто принимает решение]
+Наша цель: [пилот, тендер, рамочный договор]
+
+Составь план захода на три месяца:
+1. Карта ролей: кто принимает решение, кто влияет, кто может заблокировать, к кому идти первым.
+2. Что должно случиться на каждом из этапов, чтобы двигаться дальше.
+3. По каждому контактному лицу: что для него важно и с чем к нему идти.
+4. Десять вопросов для первой встречи.
+5. Три сценария, если нас разворачивают, и что делать в каждом.
+
+Без общих советов из книг по продажам. Только то, что применимо к этому заказчику.</pre></div></div></details>
+  <details class="acc"><summary>Письмо после встречи</summary><div class="in"><div class="skill-hint">Зафиксировать договорённости, пока не забылись</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Собери письмо по итогам встречи.
+
+Что было на встрече: [набросайте фактами, можно голосом и сумбурно]
+
+Сделай:
+1. Тема письма.
+2. Текст до 180 слов: благодарность одной строкой, зафиксированные договорённости списком, что мы делаем и к какому числу, что нужно от заказчика.
+3. Отдельно ниже: список того, что осталось непонятным и что стоит уточнить следующим сообщением.
+
+По-человечески, без канцелярита. Не приписывай договорённостей, которых не было. Если срок не прозвучал, пиши «срок уточним», а не выдумывай дату.</pre></div></div></details>
+  
+  <h3>Пресейл и тендерный отдел</h3>
+  <p class="note-sm">документация, соответствие, конкурсы · промптов: 5</p>
+  <details class="acc"><summary>Разбор требований техзадания</summary><div class="in"><div class="skill-hint">Проход по документу требование за требованием</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Ты пресейл-инженер производителя вычислительной техники. Разбери техническое задание заказчика.
+
+Техзадание: [вставьте текст или прикрепите файл]
+Наша линейка: [коротко, что мы можем предложить]
+
+Сделай таблицу: требование ТЗ / соответствуем да или нет / чем закрываем / что уточнить у заказчика.
+
+Пройди документ полностью, не пропусти ни одного требования. В конце отдельным списком: спорные места и риски, где соответствие под вопросом.
+
+Характеристики не выдумывай. Если данных о нашей технике не хватает, спроси.</pre></div></div></details>
+  <details class="acc"><summary>Разбор проигранного конкурса</summary><div class="in"><div class="skill-hint">Понять причину и что менять в следующий раз</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Мы проиграли конкурс, надо понять почему и что делать.
+
+Что за конкурс: [описание, заказчик, объём]
+Кто победил: [конкурент, если известно]
+Что известно об условиях победителя: [цена, сроки, характеристики]
+Наша заявка: [что предлагали]
+
+Разбери вероятные причины проигрыша и раздели их на две группы: что мы контролируем и что нет. Составь список вопросов партнёру или заказчику, чтобы выяснить реальную причину, не выглядя обиженными. В конце: 3 действия, которые повысят шансы в следующий раз.</pre></div></div></details>
+  <details class="acc"><summary>Сравнение нашей конфигурации с требованиями</summary><div class="in"><div class="skill-hint">Где проходим впритык и где это риск на приёмке</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Ты пресейл-инженер производителя вычислительной техники.
+
+Требования заказчика: [вставьте список или прикрепите файл]
+Наши конфигурации: [опишите, что предлагаем]
+
+Сделай таблицу: требование / что предлагаем / проходим или нет / чем подтверждаем / что уточнить.
+
+Ниже отдельными блоками:
+1. Позиции, где мы проходим впритык и это риск на приёмке.
+2. Позиции, где формально не проходим, но есть эквивалент, и как это обосновать.
+3. Что надо запросить у производства, чтобы закрыть белые пятна.
+
+Характеристики не выдумывай. Не хватает данных о нашей линейке: скажи прямо, каких именно.</pre></div></div></details>
+  <details class="acc"><summary>Запрос разъяснений заказчику</summary><div class="in"><div class="skill-hint">Официальный текст, который не выглядит жалобой</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Помоги составить официальный запрос разъяснений по закупочной документации.
+
+Что смущает: [процитируйте пункт или опишите]
+Почему это проблема: [сужает круг участников, противоречит другому пункту, невыполнимо по срокам]
+
+Составь текст запроса:
+1. Нейтральный тон, без обвинений в заточке под конкурента.
+2. Ссылка на конкретный пункт документации.
+3. Формулировка, которая предлагает решение, а не только указывает на проблему.
+4. Не больше 150 слов.
+
+Дай три варианта: мягкий, нейтральный и настойчивый. По каждому напиши, когда он уместен.</pre></div></div></details>
+  <details class="acc"><summary>Обоснование эквивалента</summary><div class="in"><div class="skill-hint">Когда наша позиция формально отличается от требуемой</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Нужно обосновать, что наша позиция эквивалентна требуемой.
+
+Требование в документации: [процитируйте]
+Что предлагаем мы: [характеристики]
+
+Составь обоснование:
+1. Построчное сопоставление: требование, наш параметр, вывод.
+2. Аргументация по каждому расхождению: почему оно не влияет на потребительские свойства.
+3. Какими документами это подтверждается.
+4. Формулировка для сопроводительного письма, до 200 слов, деловым языком.
+
+Не преувеличивай наши характеристики. Если по какому-то параметру мы объективно слабее, скажи прямо и предложи, как это компенсировать.</pre></div></div></details>
+  
+  <h3>Юристы и договоры</h3>
+  <p class="note-sm">риски, разногласия, ответственность · промптов: 3</p>
+  <details class="acc"><summary>Проверка пункта договора</summary><div class="in"><div class="skill-hint">Один спорный пункт и что он значит на практике</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Ты юрист по договорному праву в B2B. Меня смущает пункт договора, посмотри на него как сторона исполнителя.
+
+Пункт: [вставьте текст пункта]
+Контекст сделки: [коротко, что за поставка]
+
+Ответь: 1) чем этот пункт нам грозит на практике, 2) насколько это критично по шкале от 1 до 10, 3) какую формулировку предложить взамен, 4) на что согласиться, если контрагент упрётся.
+
+Пиши простым языком, не юридической латынью. Не ссылайся на пункты, которых нет в тексте.</pre></div></div></details>
+  <details class="acc"><summary>Протокол разногласий</summary><div class="in"><div class="skill-hint">Готовые формулировки, которые можно вставить в документ</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Ты юрист по договорному праву в B2B поставках.
+
+Договор: [вставьте текст или спорные пункты, убрав реквизиты]
+Мы выступаем: [поставщик или исполнитель]
+
+Собери протокол разногласий:
+1. Таблица: номер пункта, редакция контрагента, наша редакция, обоснование.
+2. Приоритеты: что критично и без чего не подписываем, что желательно, чем можно пожертвовать в торге.
+3. Формулировки писать так, чтобы их можно было вставить в документ без правки.
+
+Не ссылайся на пункты, которых нет в присланном тексте. Пиши простым языком в колонке обоснования: её читают не юристы.</pre></div></div></details>
+  <details class="acc"><summary>Разбор рисков по неустойке</summary><div class="in"><div class="skill-hint">Посчитать штрафы в деньгах до подписания</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Посмотри на пункты об ответственности глазами поставщика.
+
+Текст пунктов: [вставьте]
+Сумма контракта: [сумма]
+Сроки поставки: [сроки]
+
+Разбери:
+1. От какой базы считается неустойка и что это значит в деньгах на реальном сценарии просрочки на неделю, две, месяц.
+2. Есть ли потолок ответственности. Если нет, чем это грозит.
+3. Как соотносятся наши штрафы и штрафы заказчика: баланс или перекос.
+4. Какие формулировки предложить взамен.
+
+Посчитай примеры в рублях по указанной сумме контракта. Прямо скажи, какой пункт я бы точно не подписывал.</pre></div></div></details>
+  
+  <h3>Маркетинг</h3>
+  <p class="note-sm">коммуникация, конкуренты, контент · промптов: 4</p>
+  <details class="acc"><summary>Разбор конкурента</summary><div class="in"><div class="skill-hint">Позиционирование, линейка, каналы, слабые места</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Разбери конкурента [название] по открытым источникам: позиционирование, линейка, каналы, тон коммуникации, сильные стороны, слабые места. В конце 5 выводов, что нам стоит делать иначе. Таблицей, с источниками.</pre></div></div></details>
+  <details class="acc"><summary>Пресс-релиз в тоне компании</summary><div class="in"><div class="skill-hint">Повод есть, надо написать так, чтобы взяли в отраслевые СМИ</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Напиши пресс-релиз.
+
+Повод: [что произошло]
+Ключевые факты: [цифры, даты, названия]
+Кому адресован: [отраслевые СМИ, партнёры, госзаказчики]
+Цитата руководителя: [дайте тезис, я поправлю]
+
+Требования: заголовок и подзаголовок, лид в одно предложение с главным, дальше факты по убыванию важности, цитата, справка о компании в конце. До 350 слов.
+
+Без слов «уникальный», «инновационный», «не имеющий аналогов», «динамично развивающаяся». Только проверяемые факты. Цифры, которых я не дал, не выдумывай.</pre></div></div></details>
+  <details class="acc"><summary>Описание продукта под сегмент</summary><div class="in"><div class="skill-hint">Один продукт, разные аудитории, разные слова</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Перепиши описание нашего продукта под конкретный сегмент.
+
+Продукт и его характеристики: [вставьте]
+Сегмент: [образование, здравоохранение, банки, промышленность, госсектор, розница]
+Кто читает: [ИТ-директор, закупщик, руководитель подразделения]
+
+Сделай:
+1. Одно предложение о том, какую задачу сегмента продукт закрывает.
+2. Пять выгод на языке этого сегмента, а не на языке характеристик.
+3. Три возражения, типичных для сегмента, и ответы на них.
+4. Готовый текст на один экран для сайта или КП.
+
+Характеристики бери только из моего текста. Не приписывай продукту того, чего в нём нет.</pre></div></div></details>
+  <details class="acc"><summary>Контент-план на месяц</summary><div class="in"><div class="skill-hint">Двенадцать публикаций с обоснованием каждой</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Ты маркетолог производителя вычислительной техники.
+
+Наша аудитория: [кто], каналы: [где публикуемся], цель на месяц: [узнаваемость, лиды, поддержка продаж]
+О чём точно нельзя писать: [ограничения]
+
+Собери контент-план на месяц таблицей: дата, канал, тема, формат, ключевая мысль, призыв к действию.
+
+Требования: минимум 12 публикаций, разные форматы, не больше трети про сам продукт. Остальное про задачи аудитории. По каждой теме одной строкой: почему она зайдёт именно этой аудитории.</pre></div></div></details>
+  
+  <h3>Руководители</h3>
+  <p class="note-sm">отчётность, совещания, решения · промптов: 6</p>
+  <details class="acc"><summary>Отчёт руководителю по итогам недели</summary><div class="in"><div class="skill-hint">Из сумбурных заметок в структуру на одну страницу</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Собери мой недельный отчёт для руководителя.
+
+Что было за неделю: [набросайте фактами, можно голосом и сумбурно]
+
+Сделай структуру: 1) главное одним абзацем, 2) результаты цифрами, 3) что в работе и когда закроется, 4) где нужна помощь или решение руководителя.
+
+Не больше одной страницы. Без воды и самолюбования. Если в моих данных чего-то не хватает для нормального отчёта, спроси.</pre></div></div></details>
+  <details class="acc"><summary>Повестка и вопросы к встрече</summary><div class="in"><div class="skill-hint">Чтобы встреча закончилась решениями, а не разговором</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Составь повестку встречи.
+
+Тема: [о чём встреча]
+Участники: [кто будет]
+Сколько времени: [минут]
+Чего я хочу добиться: [результат]
+
+Дай: повестку по пунктам с таймингом, список вопросов, которые надо задать, три решения, которые нужно принять на встрече, и как зафиксировать итоги. Если чего-то не хватает, спроси.</pre></div></div></details>
+  <details class="acc"><summary>Протокол совещания</summary><div class="in"><div class="skill-hint">Из стенограммы в решения со сроками и ответственными</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Вот стенограмма совещания. Собери протокол: принятые решения, по каждому ответственный и срок (если не звучали, пометь «не назначен»), открытые вопросы, о чём договорились встретиться отдельно. Кратко, без воды, ничего не додумывай.
+
+[вставьте текст стенограммы]</pre></div></div></details>
+  <details class="acc"><summary>Разбор недели отдела</summary><div class="in"><div class="skill-hint">Сухо, без похвалы и без разноса</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Ты руководитель отдела. Помоги разобрать неделю.
+
+Что было: [набросайте фактами, можно голосом]
+Цифры: [если есть]
+
+Сделай:
+1. Что получилось и за счёт чего именно.
+2. Что не получилось и почему, отдельно то, что мы контролируем, и то, что нет.
+3. Три вещи, которые надо изменить на следующей неделе, в порядке приоритета.
+4. Что вынести на планёрку одним слайдом.
+5. Один неудобный вопрос, который я себе не задал.
+
+Без похвалы и без разноса. Сухо и по делу.</pre></div></div></details>
+  <details class="acc"><summary>Письмо-эскалация</summary><div class="in"><div class="skill-hint">Когда на своём уровне вопрос не решается</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Помоги написать письмо об эскалации проблемы.
+
+Ситуация: [что происходит]
+Что уже делали: [шаги, даты, ответы]
+Чего добиваемся: [конкретный результат]
+Кому пишем: [должность, уровень]
+
+Требования: до 200 слов, факты с датами, без эмоций и обвинений, чёткий запрос в конце и срок, к которому нужен ответ. Отдельно укажи, что произойдёт, если решения не будет.
+
+Дай два варианта тона: сдержанный и жёсткий.</pre></div></div></details>
+  <details class="acc"><summary>Подготовка к защите бюджета</summary><div class="in"><div class="skill-hint">Логика от задачи бизнеса к деньгам</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Готовлюсь защищать бюджет подразделения.
+
+Что защищаю: [статьи, суммы]
+Перед кем: [кто в комиссии, что для них важно]
+Прошлый период: [что было заявлено, что потрачено, что получили]
+
+Собери:
+1. Логику защиты: от задачи бизнеса к деньгам, а не наоборот.
+2. По каждой статье: одно предложение, почему без неё нельзя, и что будет, если урезать.
+3. Десять вопросов, которые мне зададут, и ответы на них.
+4. Что резать первым, если скажут резать, и как это подать.
+
+Считай только по цифрам, которые я дал.</pre></div></div></details>
+  
+  <h3>Для жизни</h3>
+  <p class="note-sm">Приёмы те же самые. Если рабочая тема сейчас не идёт, тренируйтесь на этих · промптов: 10</p>
+  <details class="acc"><summary>План отпуска под бюджет семьи</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Помоги спланировать отпуск.
+
+Кто едет: [состав, возраст детей]
+Когда и на сколько: [даты]
+Бюджет: [сумма на всё]
+Откуда выезжаем: [город]
+Что любим и чего точно не хотим: [море, горы, город, активность, спокойствие]
+
+Предложи 3 разных варианта в рамках бюджета. По каждому: маршрут, где жить, во сколько обойдётся дорога и проживание, что посмотреть, на чём можно сэкономить. Учитывай, что с детьми нужен режим. В конце скажи, какой вариант выбрал бы сам и почему.</pre></div></div></details>
+  <details class="acc"><summary>Письмо в управляющую компанию или банк</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Напиши официальное обращение.
+
+Куда: [организация]
+Суть проблемы: [опишите своими словами, можно сумбурно]
+Чего я хочу добиться: [результат]
+Что уже делал: [звонил, писал, ждал]
+
+Составь письмо: вежливо, но твёрдо, со ссылкой на факты и сроки, с конкретным требованием и указанием, что буду делать дальше, если ответа не будет. Без угроз и эмоций. До 200 слов.</pre></div></div></details>
+  <details class="acc"><summary>Договор перед покупкой квартиры или машины</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Проверь договор перед подписанием как юрист на моей стороне.
+
+Что покупаю: [квартира, машина, другое]
+Текст договора: [вставьте, убрав паспортные данные и реквизиты]
+
+Дай: 1) риски светофором, красные и жёлтые, 2) по каждому: цитата из договора и чем это грозит простыми словами, 3) что попросить изменить, 4) какие вопросы задать продавцу перед подписанием.
+
+Объясняй человеческим языком. Не ссылайся на пункты, которых нет в тексте.</pre></div></div></details>
+  <details class="acc"><summary>Подготовка к сложному разговору</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Помоги подготовиться к трудному личному разговору.
+
+С кем: [кто это для меня]
+Ситуация: [что произошло]
+Чего я хочу добиться: [результат]
+Чего боюсь: [что может пойти не так]
+
+Дай: с чего начать, какие слова точно не говорить, как реагировать, если человек закроется или начнёт защищаться, как закончить разговор. Без манипуляций и без психологических приёмов из книжек. По-человечески.</pre></div></div></details>
+  <details class="acc"><summary>Выбор техники по параметрам</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Помоги выбрать [что покупаем: телевизор, ноутбук, стиральную машину].
+
+Бюджет: [сумма]
+Где и как будет использоваться: [условия]
+Что для меня важно: [параметры]
+Что не важно: [на чём готов сэкономить]
+
+Объясни, какие параметры реально влияют на результат, а какие маркетинг. Предложи 3 варианта в моём бюджете с плюсами и минусами. Скажи, на чём точно не стоит экономить и какую переплату можно спокойно отбросить.</pre></div></div></details>
+  <details class="acc"><summary>Разбор непонятного заключения врача</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Объясни мне заключение простыми словами.
+
+Текст заключения: [вставьте, убрав фамилию и личные данные]
+
+Сделай: 1) что здесь написано обычным языком, 2) что из этого норма, а что стоит внимания, 3) какие вопросы задать врачу на приёме, 4) что уточнить дополнительно.
+
+Важно: ты не ставишь диагноз и не назначаешь лечение, ты помогаешь мне понять текст и подготовиться к разговору с врачом. Так и скажи, если что-то может решить только врач.</pre></div></div></details>
+  <details class="acc"><summary>Меню и план покупок на неделю</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Составь меню и список покупок на неделю.
+
+Сколько человек: [состав семьи]
+Ограничения: [аллергии, что не едим, диета]
+Сколько времени готов тратить на готовку: [минут в день]
+Бюджет на неделю: [сумма]
+Что уже есть дома: [продукты]
+
+Дай меню на 7 дней (завтрак, обед, ужин), список покупок одним блоком по отделам магазина, и 3 блюда, которые можно приготовить впрок на два дня.</pre></div></div></details>
+  <details class="acc"><summary>План тренировок под ваш график</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Составь план тренировок.
+
+Цель: [похудеть, набрать форму, спина, выносливость]
+Сколько мне лет и текущая форма: [честно]
+Сколько раз в неделю и по сколько минут готов заниматься: [время]
+Где: [дом, зал, улица]
+Ограничения по здоровью: [если есть]
+
+Дай план на 4 недели с конкретными упражнениями, подходами и прогрессией. Что делать, если пропустил неделю. Как понять, что нагрузка избыточна. Важно: при проблемах со здоровьем скажи, что нужен врач.</pre></div></div></details>
+  <details class="acc"><summary>Помощь ребёнку с учёбой</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Помоги объяснить ребёнку тему.
+
+Возраст и класс: [сколько лет]
+Тема: [что проходят]
+Что именно не получается: [где спотыкается]
+
+Объясни тему так, как объяснил бы хороший учитель: простыми словами, с бытовым примером, по шагам. Потом дай 5 задач по нарастанию сложности с ответами отдельно. Не решай за ребёнка, дай подсказки, которые ведут к решению.</pre></div></div></details>
+  <details class="acc"><summary>Идеи подарка по описанию человека</summary><div class="in"><div class="copy"><div class="copy-bar"><span class="copy-lbl">готовый промпт</span><span class="copy-btn">копировать</span></div><pre>Помоги выбрать подарок.
+
+Кому: [кто это, возраст, кем работает]
+Повод: [что празднуем]
+Бюджет: [сумма]
+Чем увлекается: [хобби, интересы]
+Что уже дарили раньше: [чтобы не повторяться]
+Чего точно не надо: [ограничения]
+
+Дай 10 идей разного типа: вещь, впечатление, что-то полезное, что-то для души. По каждой: почему подойдёт именно этому человеку и где искать. В конце отметь три лучших варианта.</pre></div></div></details>
+  
+  <div class="call">
+    <p><b>Не нашли свою задачу?</b> Возьмите любой промпт из ближайшего отдела и перепишите его под себя: структура важнее формулировок. Или отдайте это машине приёмом из модуля 5: расскажите задачу голосом и попросите собрать промпт за вас.</p>
+  </div>
+</section>
+
+
+<!-- ═══════ 7 · АССИСТЕНТЫ ═══════ -->
+<section class="mod m-lilac wrap" id="assistenty" data-n="7" data-t="Ассистенты" data-d="Три способа собрать, палитра из 64 ролей и три готовых под ICL">
+  <div class="mod-h">
+    <div class="mod-n">7</div>
+    <div>
+      <h2>Ассистенты: сотрудник, а не разовый запрос</h2>
+      <div class="mod-sub">Промпт вы пишете каждый раз заново. Ассистент настраивается один раз и дальше работает всегда одинаково. <b>Его можно отдать коллеге, и у него получится так же.</b></div>
+    </div>
+  </div>
+  <div class="mod-rule"></div>
+
+  <div class="call">
+    <p><b>Три вещи, которые постоянно путают.</b> Ассистент это <b>кто</b> делает: исполнитель с именем и одной функцией. Скилл это <b>как</b> делает: метод работы, модуль 8. Проект это <b>где</b> лежит контекст: рабочее место под клиента или тему, модуль 9. Скилл кладут внутрь ассистента, ассистента зовут работать в проекте.</p>
+  </div>
+
+  <h3>Главное правило: функция, а не должность</h3>
+  <p>Не делайте ассистента «менеджер по продажам». Делайте «разбор звонка», «ответ на возражение», «расчёт под запрос». <b>У функции всегда один вход и один выход.</b> Если вы не можете назвать, что кладёте на вход и что забираете с выхода, это ещё не ассистент.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Так не надо</th><th>Так надо</th><th>Вход и выход</th></tr></thead>
+    <tbody>
+      <tr><td>Помощник менеджера</td><td><b>Разбор звонка</b></td><td>расшифровка → разбор по этапам и письмо</td></tr>
+      <tr><td>Юрист</td><td><b>Аудит договора</b></td><td>текст договора → риски светофором и формулировки</td></tr>
+      <tr><td>Маркетолог</td><td><b>Разбор конкурента</b></td><td>название и материалы → позиционирование и слабые места</td></tr>
+      <tr><td>Пресейл</td><td><b>Разбор ТЗ</b></td><td>требования → таблица соответствия и вопросы заказчику</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Способ 1. От процесса: самый надёжный</h3>
+  <p>Идём не от того, кем хочется владеть, а от того, что вы и так делаете каждую неделю по одной схеме.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="st-t">Найдите свои повторяющиеся процессы</div>
+      <div class="st-b"><div class="copy"><div class="copy-bar"><span class="copy-lbl">промпт 1 · найти процессы</span><span class="copy-btn">копировать</span></div><pre>Я работаю в компании-производителе вычислительной техники. Моя должность: [должность].
+
+Помоги найти, что у меня стоит превратить в ассистента.
+
+1. Задай мне 3 уточняющих вопроса о моей неделе.
+2. Потом дай таблицу повторяющихся процессов: процесс, что я даю на входе, что получаю на выходе, как часто, сколько времени занимает.
+3. Отсортируй по тому, где ассистент даст больше всего пользы.
+4. По верхнему процессу объясни, почему именно он первый.
+
+Бери только те процессы, которые я делаю по одной и той же схеме. Разовые задачи не предлагай.</pre></div>
+      <p class="note-sm">Ответ сохраните. Это ваша карта на несколько месяцев вперёд: по одному ассистенту за раз.</p></div>
+    </div>
+    <div class="step">
+      <div class="st-t">Соберите инструкцию под верхний процесс</div>
+      <div class="st-b"><div class="copy"><div class="copy-bar"><span class="copy-lbl">промпт 2 · собрать инструкцию</span><span class="copy-btn">копировать</span></div><pre>Возьми процесс: [название процесса из таблицы].
+
+Собери под него инструкцию для ИИ-ассистента по разделам:
+1. Роль: узко, с отраслью, а не «ты помощник».
+2. Контекст компании и мой.
+3. Пошаговый алгоритм работы.
+4. Какие вопросы задавать, если данных не хватает.
+5. Формат результата.
+6. Запреты, сформулированные через «нельзя».
+7. Что обязательно проверяет человек.
+8. Стиль ответа.
+
+Обязательно впиши внутрь: спрашивать, а не додумывать; не выдумывать факты, цифры и характеристики; не использовать длинное тире.
+
+Выдай одним блоком, готовым к копированию, без пояснений вокруг.</pre></div>
+      <p class="note-sm">Восемь разделов это не бюрократия. Каждый закрывает свою типовую поломку: без запретов ассистент выдумывает, без вопросов додумывает, без формата выдаёт полотно.</p></div>
+    </div>
+    <div class="step">
+      <div class="st-t">Вставьте в конструктор</div>
+      <div class="st-b">
+        <p><b>ChatGPT → боковое меню → GPT → «Создать» → вкладка «Настроить».</b> Четыре поля: название по функции, описание, инструкция, база знаний.</p>
+        <p class="note-sm">Собирать своих ассистентов можно на платном тарифе. Пользоваться готовыми по ссылке можно бесплатно.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="st-t">Проверьте его тремя ситуациями</div>
+      <div class="st-b"><div class="copy"><div class="copy-bar"><span class="copy-lbl">промпт 3 · проверка ассистента</span><span class="copy-btn">копировать</span></div><pre>Ты сейчас работаешь по инструкции, которую мы собрали.
+
+Проверим тебя. Я дам три разных входных ситуации по очереди, а ты отработаешь каждую по своему алгоритму.
+
+Ситуация 1: [типовой случай]
+Ситуация 2: [случай, где данных не хватает]
+Ситуация 3: [случай, который выходит за рамки твоей задачи]
+
+После третьей скажи честно: где инструкция сработала плохо и что в ней надо поправить.</pre></div>
+      <p class="note-sm">Шаг, который все пропускают. Ассистент, которого не проверили на нестандартном случае, ломается ровно тогда, когда он нужен.</p></div>
+    </div>
+  </div>
+
+  <h3>Способ 2. Разговором: когда непонятно, чего хочется</h3>
+  <p>Не обязательно приходить с готовым пониманием. Можно принести раздражение и разобраться вместе.</p>
+  <div class="copy"><div class="copy-bar"><span class="copy-lbl">промпт · собрать ассистента диалогом</span><span class="copy-btn">копировать</span></div><pre>Я хочу сделать себе ассистента, но пока плохо понимаю, каким он должен быть.
+
+Моя проблема: [расскажите своими словами, можно голосом и сумбурно, что вас достало и что отнимает время].
+
+Давай подумаем вместе:
+1. Задай мне вопросы по одному, пока не поймёшь задачу так же хорошо, как я.
+2. Предложи три варианта, каким мог бы быть этот ассистент, и чем они отличаются.
+3. Когда я выберу, собери полную инструкцию к нему.
+4. Дальше проверь себя: придумай три ситуации, в которых твоя инструкция даст плохой результат, и допиши её так, чтобы этого не случилось.
+
+Не спеши выдавать инструкцию с первого сообщения.</pre></div>
+  <p class="note-sm">Работает лучше всего голосом. Вы рассказываете, что достало, ИИ вытягивает из вас процесс вопросами и сам предлагает варианты. Последний пункт заставляет его найти дыры в собственной инструкции до того, как их найдёте вы.</p>
+
+  <h3>Способ 3. Из готового: самый быстрый</h3>
+  <p>Возьмите любого из трёх ассистентов ниже, скопируйте инструкцию и перепишите под себя: поменяйте роль, отрасль и формат результата. Каркас останется рабочим.</p>
+
+  <h3>Три готовых ассистента под ICL</h3>
+  <p>Собираются в четыре нажатия. Инструкция идёт в поле «Инструкции», база знаний загружается файлом в «Knowledge», материал для практики отправляется первым сообщением.</p>
+  <details class="acc"><summary>Разбор звонка</summary><div class="in"><div class="skill-hint"><b>Что делает:</b> Кладёте расшифровку разговора: получаете разбор по этапам со светофором, цитаты-доказательства и что сделать на следующем звонке.<br><b>Кому:</b> менеджерам по продажам и их руководителям</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">1 · название</span><span class="copy-btn">копировать</span></div><pre>Разбор звонка
+
+Сверяет разговор менеджера с нашим стандартом продаж и выдаёт разбор: этапы светофором, цитаты, договорённости, задачи и рекомендации.</pre></div><div class="copy copy--long"><div class="copy-bar"><span class="copy-lbl">2 · инструкция</span><span class="copy-btn">копировать</span></div><pre>Ты руководитель отдела продаж в компании-производителе вычислительной техники. Заказчики корпоративные: госсектор, банки, промышленность, образование, здравоохранение, розница.
+
+Ты получаешь расшифровку звонка или встречи менеджера с партнёром или заказчиком. Иногда это чистая расшифровка, иногда пересказ своими словами или голосом. Работай с тем, что есть.
+
+В базе знаний лежит наш стандарт звонка: этапы, обязательные шаги и типовые ошибки. Сверяй разговор с ним, а не со своими представлениями о продажах.
+
+Алгоритм работы:
+
+1. Прочитай расшифровку целиком, прежде чем оценивать.
+2. Пройди разговор по этапам стандарта: контакт, выяснение потребности, презентация решения, работа с возражением, договорённость о следующем шаге.
+3. По каждому этапу поставь оценку светофором: зелёный сделано, жёлтый сделано частично, красный пропущено. Приведи короткую цитату из разговора как доказательство.
+4. Отдельным блоком «О чём договорились»: только то, что стороны реально проговорили.
+5. Отдельным блоком «Задачи»: что, кто делает, к какому сроку. Срок не прозвучал: пиши «срок не обозначен», не придумывай дату.
+6. Отдельным блоком «Что заказчик недоговорил»: сигналы между строк, помечай их как гипотезы, а не факты.
+7. Отдельным блоком «Три рекомендации на следующий звонок»: конкретно, с формулировками, которые менеджер может произнести.
+8. В конце: готовое письмо-резюме заказчику. Тема письма и текст до 180 слов, по-человечески, без канцелярита, с фиксацией договорённостей и одним конкретным следующим шагом.
+
+Формат: сначала таблица этапов со светофором, дальше блоки по порядку, письмо последним.
+
+Нельзя: выдумывать реплики, цифры, модели и сроки, которых нет в расшифровке. Оценивать личность менеджера. Давать общие советы вида «будь активнее». Использовать длинное тире.
+
+Если этап в расшифровке не отражён, так и пиши: «в расшифровке не отражено». Если материала не хватает даже на черновик, задай до трёх уточняющих вопросов по одному.</pre></div><a class="dl" href="files/standart-zvonka.docx" download><span class="i">↓</span><span><b>Скачать базу знаний: Стандарт звонка ICL Техно</b><span>Файл Word, загружается в поле «Knowledge» конструктора</span></span></a><div class="copy copy--long"><div class="copy-bar"><span class="copy-lbl">4 · для практики</span><span class="copy-btn">копировать</span></div><pre>Расшифровка звонка. Менеджер Сергей, ICL Техно. Заказчик Игорь Петрович, начальник ИТ-отдела производственного холдинга.
+
+Сергей: Добрый день, Игорь Петрович, это Сергей из ICL Техно. По вашему запросу звоню.
+Игорь Петрович: Да-да, здравствуйте.
+Сергей: Вы оставляли заявку на рабочие станции. У нас как раз есть подходящие конфигурации, хотел рассказать.
+Игорь Петрович: Давайте.
+Сергей: Есть моноблоки на отечественной платформе, есть рабочие станции помощнее. Всё в реестре Минпромторга, гарантия три года, сервис по стране.
+Игорь Петрович: Угу. А по деньгам это как примерно?
+Сергей: Зависит от конфигурации, но в целом мы в рынке, дороже китайцев, но там и качество другое.
+Игорь Петрович: Понимаете, нам финансисты режут смету. У нас в прошлом году брали технику дешевле процентов на пятнадцать.
+Сергей: Ну смотрите, у нас цена оправдана: своё производство, поддержка. Могу посмотреть, что можно сделать по скидке, если объём большой.
+Игорь Петрович: Объём порядка четырёхсот машин, может больше. Часть в конструкторский отдел, там тяжёлые расчёты.
+Сергей: Отлично, четыреста это хороший объём. Под расчёты подойдёт старшая линейка.
+Игорь Петрович: А по срокам? Нам к концу третьего квартала надо всё поставить и запустить.
+Сергей: Сроки я уточню у производства, скорее всего нормально успеем.
+Игорь Петрович: Хорошо бы. У нас там ещё внутри не решили окончательно, будем через конкурс или напрямую, юристы смотрят.
+Сергей: Понял. Ну как решите, дайте знать.
+Игорь Петрович: Да, и ещё момент. Нам важно, чтобы сервис был не только в Москве, у нас площадки в трёх регионах.
+Сергей: Сервис есть, покрытие широкое, пришлю информацию.
+Игорь Петрович: Пришлите, посмотрим.
+Сергей: Тогда я подготовлю предложение и вышлю.
+Игорь Петрович: Давайте. Всего доброго.
+Сергей: Спасибо, до связи.</pre></div></div></details>
+  <details class="acc"><summary>Ответ на возражение</summary><div class="in"><div class="skill-hint"><b>Что делает:</b> Даёте дословную реплику клиента: получаете настоящую причину возражения и три варианта ответа с подсказкой, какой когда уместен.<br><b>Кому:</b> менеджерам по продажам, партнёрскому отделу, пресейлам</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">1 · название</span><span class="copy-btn">копировать</span></div><pre>Ответ на возражение
+
+Разбирает возражение клиента: вскрывает настоящую причину и даёт три готовых варианта ответа под ситуацию.</pre></div><div class="copy copy--long"><div class="copy-bar"><span class="copy-lbl">2 · инструкция</span><span class="copy-btn">копировать</span></div><pre>Ты тренер по переговорам для менеджеров по продажам компании-производителя вычислительной техники. Заказчики корпоративные: госсектор, банки, промышленность, образование, здравоохранение, розница.
+
+Твоя рамка: возражение это не отказ, а запрос на информацию или сигнал, что ценность не прожата. За словами клиента почти всегда стоит другая, настоящая причина. «Дорого» часто значит «не вижу, за что столько». «Я подумаю» часто значит «есть сомнение, которое я не озвучил».
+
+Твоя задача не переспорить, а вскрыть настоящую причину и снять её.
+
+В базе знаний лежит банк типовых возражений с разобранными ответами. Сначала ищи возражение там, дальше адаптируй под ситуацию, которую тебе описали. Если возражения в банке нет, работай по общей методике.
+
+На входе: дословная реплика клиента и по возможности контекст сделки. Контекста нет: задай один короткий вопрос про объём и стадию сделки, дальше работай.
+
+Порядок ответа:
+
+1. «Что здесь на самом деле»: две-три версии настоящей причины, начиная с самой вероятной.
+2. «Вопрос, который стоит задать первым»: одна фраза, которая изолирует возражение и вскрывает корень.
+3. «Три варианта ответа»:
+   короткий, одно-два предложения, для разговора на бегу;
+   развёрнутый, с аргументацией, для переговоров и переписки;
+   вопросом на вопрос, когда давить нельзя и надо вернуть инициативу.
+   По каждому одной строкой: в какой ситуации он уместен.
+4. «Чем закрыть»: конкретный маленький следующий шаг, который легко принять.
+5. «Когда отступить»: если мы объективно проигрываем, скажи прямо и предложи, как перевести разговор, а не как дожать.
+
+Нельзя: давление, манипуляции, приёмы из книжек по НЛП. Выдумывать характеристики, цены, кейсы и сроки. Использовать длинное тире.
+
+Опирайся на реальную ценность: качество сборки, сервис и его покрытие, сроки, гарантия, наличие в реестрах, российское производство, предсказуемость поставок.</pre></div><a class="dl" href="files/bank-vozrazheniy.docx" download><span class="i">↓</span><span><b>Скачать базу знаний: Банк возражений ICL Техно</b><span>Файл Word, загружается в поле «Knowledge» конструктора</span></span></a><div class="copy"><div class="copy-bar"><span class="copy-lbl">4 · для практики</span><span class="copy-btn">копировать</span></div><pre>Заказчик на встрече сказал дословно: «Слушайте, мы посчитали, у вас выходит процентов на пятнадцать дороже. При нашем объёме это очень заметные деньги. Я понимаю, что вы российское производство и всё такое, но мне финансовый директор эту разницу не согласует.»
+
+Контекст сделки: производственный холдинг, около 400 рабочих мест, часть под конструкторский отдел с тяжёлыми расчётами. Площадки в трёх регионах, для них важен сервис на местах. Срок поставки нужен к концу третьего квартала. Внутри ещё не решили, идти через конкурс или закупать напрямую.
+
+Разбери это возражение и дай мне варианты ответа.</pre></div></div></details>
+  <details class="acc"><summary>Разбор ТЗ</summary><div class="in"><div class="skill-hint"><b>Что делает:</b> Кладёте требования из документации: получаете разбор по пунктам, где заточка под конкурента и что уточнить у заказчика до подачи.<br><b>Кому:</b> тендерному отделу, пресейлам, руководителям направлений</div><div class="copy"><div class="copy-bar"><span class="copy-lbl">1 · название</span><span class="copy-btn">копировать</span></div><pre>Разбор ТЗ
+
+Разбирает требования технического задания и аукционной документации: чем закрываем, где заточка под конкурента, что уточнить до подачи.</pre></div><div class="copy copy--long"><div class="copy-bar"><span class="copy-lbl">2 · инструкция</span><span class="copy-btn">копировать</span></div><pre>Ты пресейл-инженер компании, которая производит вычислительную технику: моноблоки, рабочие станции, ноутбуки, серверное оборудование. Заказчики корпоративные, плюс госсектор, банки, промышленность, образование и здравоохранение.
+
+На входе ты получаешь требование, кусок технического задания или аукционной документации. Иногда целый документ, иногда одну строку.
+
+В базе знаний лежит чек-лист разбора и признаки заточки документации под конкретного поставщика. Работай по нему.
+
+Порядок работы:
+
+1. Разбери материал на отдельные требования. Не пропускай ни одного, даже мелкого.
+2. Собери таблицу: требование как в документе, что оно означает простыми словами, чем мы это закрываем, что нужно уточнить.
+3. Блок «Красные флаги»: требования, похожие на написанные под конкретного поставщика. По каждому объясни, почему так считаешь.
+4. Блок «Вопросы заказчику до подачи»: что имеет смысл спросить официально, чтобы снять неоднозначность или расширить условия. Формулируй так, чтобы вопрос можно было отправить как есть.
+5. Блок «Риски»: где мы формально проходим, но фактически можем не пройти приёмку.
+6. Вывод: идём или не идём, и что нужно от коллег, чтобы решить.
+
+Нельзя: выдумывать характеристики нашей техники. Не хватает данных о линейке: прямо скажи, какие данные нужны, и продолжай с пометкой «требует подтверждения». Ссылаться на пункты документа, которых нет в присланном тексте. Использовать длинное тире.
+
+Пиши технически, но простым языком: разбор читают не только инженеры.</pre></div><a class="dl" href="files/chek-list-razbora-tz.docx" download><span class="i">↓</span><span><b>Скачать базу знаний: Чек-лист разбора документации</b><span>Файл Word, загружается в поле «Knowledge» конструктора</span></span></a><div class="copy"><div class="copy-bar"><span class="copy-lbl">4 · для практики</span><span class="copy-btn">копировать</span></div><pre>Разбери требования из аукционной документации:
+
+1. Автоматизированное рабочее место в составе моноблока. Количество: 400 штук.
+2. Процессор: результат не менее 12000 баллов по тесту PassMark CPU Mark, не менее 6 ядер.
+3. Оперативная память: не менее 16 ГБ, с возможностью расширения до 64 ГБ, не менее 2 слотов, из них свободных не менее 1.
+4. Накопитель: твердотельный, объёмом равным 512 ГБ, интерфейс NVMe.
+5. Диагональ экрана: от 23,6 до 23,8 дюйма включительно.
+6. Объём корпуса: не более 12 литров.
+7. Уровень шума в режиме простоя: не более 22 дБ.
+8. Наличие в едином реестре российской радиоэлектронной продукции на дату подачи заявки.
+9. Гарантия: 60 месяцев, время реакции сервисной службы не более 4 часов, наличие сервисных центров в городах присутствия заказчика.
+10. Срок поставки: 30 календарных дней с даты заключения контракта, единовременно, весь объём.
+11. Опыт поставщика: не менее 3 исполненных контрактов на поставку аналогичной продукции объёмом не менее 500 единиц каждый за последние 2 года.
+
+Города присутствия заказчика: Казань, Набережные Челны, Альметьевск.</pre></div></div></details>
+
+  <div class="prac">
+    <div class="prac-h">Практика 5 · 15 минут</div>
+    <h4>Соберите первого ассистента и проверьте его</h4>
+    <p>Пройдите способ 1 целиком: нашли процессы, собрали инструкцию, вставили в конструктор, проверили тремя ситуациями. Если платного тарифа нет, соберите инструкцию всё равно: она пригодится, когда подписка появится, и работает как обычное первое сообщение в чате.</p>
+  </div>
+
+  <h3>Палитра ролей: 34 для работы и 30 для жизни</h3>
+  <p>Ассистентов бывает не три и не десять. Список ниже нужен для одного: найти в нём свою строку и понять, что она вообще возможна.</p>
+<h4>Для работы</h4>
+  <div class="cards c3">
+    <div class="card acc"><h4>Продажи и клиенты</h4><ul><li>Переговорщик: позиция, аргументы, границы уступок</li><li>Менеджер по продажам: ответы клиентам, следующий шаг</li><li>Обработчик возражений: банк возражений и скрипты</li><li>Сборщик коммерческих предложений</li><li>Возврат ушедших клиентов</li><li>Клиентский сервис: отзывы, жалобы, конфликты</li></ul></div>
+    <div class="card acc"><h4>Деньги</h4><ul><li>Финансовый директор: маржа, расходы, безубыточность</li><li>Юнит-экономика продукта или услуги</li><li>Разбор расходов и поиск утечек</li><li>Планировщик платежей и дебиторки</li><li>Тендерный расчёт и предельная цена</li></ul></div>
+    <div class="card acc"><h4>Документы и право</h4><ul><li>Аудит договора: риски светофором</li><li>Разбор тендерного ТЗ и скрытых требований</li><li>Регламенты и рабочие инструкции</li><li>Ответы в госорганы и на предписания</li><li>Акты, приёмка, закрывающие документы</li></ul></div>
+    <div class="card acc"><h4>Люди</h4><ul><li>Вакансия и скрининг откликов</li><li>Адаптация новичка в первые две недели</li><li>Подготовка к трудному разговору с сотрудником</li><li>Оценка и обратная связь по работе</li><li>Обучатель: превращает ваш опыт в учебные материалы</li></ul></div>
+    <div class="card acc"><h4>Операционка</h4><ul><li>Диспетчер заявок: категория, срочность, задача мастеру</li><li>Планировщик недели и приоритетов</li><li>Разбор таблиц и выгрузок простым языком</li><li>Контроль качества звонков и переписок</li><li>Инвентаризация процессов: что вообще можно отдать ИИ</li></ul></div>
+    <div class="card acc"><h4>Маркетинг и контент</h4><ul><li>Контент-продюсер: рубрики, план, посты</li><li>Сценарист коротких видео</li><li>Разбор конкурента и его приёмов</li><li>Позиционирование и отстройка</li><li>Описания карточек товара и объявлений</li></ul></div>
+    <div class="card acc"><h4>Аналитика и решения</h4><ul><li>Бизнес-аналитик: рынок, ниша, спрос</li><li>Глубокое исследование темы с источниками</li><li>Премортем: что нас убьёт до старта</li></ul></div>
+  </div>
+  <p class="note-sm">Не видите своей строки? Значит она просто ещё не написана. Возьмите промпт «найти процессы» выше, и ассистент найдётся сам.</p>
+<h4>Для жизни</h4>
+  <div class="cards c3">
+    <div class="card acc"><h4>Тело и здоровье</h4><ul><li>Фитнес-тренер под ваш график и инвентарь</li><li>Нутрициолог: меню под цель и продукты из вашего магазина</li><li>Сон и восстановление</li><li>Подготовка к забегу или к первому марафону</li><li>Помощник по восстановлению после травмы, не заменяет врача</li></ul></div>
+    <div class="card acc"><h4>Личные деньги</h4><ul><li>Личный бюджет и куда уходит зарплата</li><li>Разбор подписок и мелких утечек</li><li>План накоплений под конкретную цель</li><li>Подготовка к крупной покупке: сравнение и торг</li></ul></div>
+    <div class="card acc"><h4>Голова и навыки</h4><ul><li>Репетитор языка с разговорной практикой</li><li>Личный наставник по навыку, к которому приходите каждый день</li><li>Тренажёр публичных выступлений</li><li>Читательский дневник и конспекты книг</li><li>Подготовка к экзамену или к аттестации</li><li>Разбор непонятной темы до полного понимания</li></ul></div>
+    <div class="card acc"><h4>Семья и дом</h4><ul><li>Помощник родителя: домашка, кружки, конфликты</li><li>Планировщик выходных, чтобы всем было хорошо</li><li>Шеф-повар: меню на неделю и список покупок</li><li>Координатор ремонта: этапы, смета, контроль подрядчика</li><li>Дачный и садовый помощник</li></ul></div>
+    <div class="card acc"><h4>Отношения и состояние</h4><ul><li>Подготовка к трудному разговору с близким</li><li>Собеседник-дневник в конце дня</li><li>Разбор конфликта с двух сторон</li><li>Подарки и поводы: что и кому, без паники</li></ul></div>
+    <div class="card acc"><h4>Путешествия и досуг</h4><ul><li>Тревел-планировщик: маршрут, бюджет, документы</li><li>Гид по своему городу на один выходной</li><li>Подбор фильмов и книг под настроение</li></ul></div>
+    <div class="card acc"><h4>Стиль и быт</h4><ul><li>Стилист: капсула под ваш образ жизни</li><li>Разбор гардероба и что докупить</li><li>Помощник по покупкам: сравнение и выбор</li></ul></div>
+  </div>
+  <p class="note-sm">Ассистенты для жизни собираются ровно так же. Разница только в том, что контекст вы даёте про себя, а не про компанию.</p>
+
+  <div class="call">
+    <p><b>С чего начать, если глаза разбегаются.</b> Возьмите один процесс, который бесит больше остальных, и соберите ассистента под него. Один. Работающий ассистент под одну задачу полезнее пяти недоделанных.</p>
+  </div>
+</section>
+
+
+<!-- ═══════ 8 · СКИЛЛЫ ═══════ -->
+<section class="mod m-slate wrap" id="skilly" data-n="8" data-t="Скиллы" data-d="Метод работы на случай, когда вас нет. Библиотека из 16 архивов">
+  <div class="mod-h">
+    <div class="mod-n">8</div>
+    <div>
+      <h2>Скиллы: метод работы, а не разовый запрос</h2>
+      <div class="mod-sub">Граница простая. <b>Промпт вы пишете для случая, когда вы рядом</b> и поправите на ходу. <b>Скилл пишется для случая, когда вас нет:</b> поправить будет некому, поэтому внутри заранее лежит всё, включая исключения.</div>
+    </div>
+  </div>
+  <div class="mod-rule"></div>
+
+  <h3>Что лежит внутри скилла и почему</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Раздел</th><th>Зачем он нужен</th></tr></thead>
+    <tbody>
+      <tr><td><b>Когда включаться</b></td><td>Вас нет, значит некому сказать «берись». Скилл сам понимает по сигналам, его это работа или нет</td></tr>
+      <tr><td><b>Роль и методология</b></td><td>Порядок шагов, а не «сделай хорошо». Именно порядок даёт повторяемость результата</td></tr>
+      <tr><td><b>Ветвления «а если»</b></td><td>Главное отличие от промпта. Нестандартный случай разобран заранее, а не в момент, когда всё горит</td></tr>
+      <tr><td><b>Чек-лист приёмки</b></td><td>Скилл сам понимает, когда работа закончена, и не выдаёт полуфабрикат</td></tr>
+      <tr><td><b>Стоп-сигналы</b></td><td>Там, где цена ошибки высокая, скилл останавливается и зовёт человека</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note-sm">Проверочный вопрос, чтобы понять, что писать в скилл: <b>что бы вы объяснили новому сотруднику, чтобы спокойно уехать в отпуск?</b> Вот это и есть содержание.</p>
+
+  <div class="call">
+    <p><b>Где это живёт.</b> Скиллы подключаются в платном режиме «Работа»: боковое меню, раздел «Навыки», кнопка загрузки, выбираете архив. После этого ИИ включает нужный скилл сам, когда видит подходящую задачу. Без подписки скилл тоже работает: распакуйте архив и вставьте текст первым сообщением в чат, эффект тот же, только включать придётся руками.</p>
+  </div>
+
+  <a class="dl" href="files/skills-icl-vse.zip" download><span class="dl-i">↓</span><span class="dl-t"><b>Скачать все 16 скиллов одним архивом</b><em>ZIP, внутри 16 папок, каждая с файлом SKILL.md</em></span></a>
+
+  <h3>Библиотека: 16 скиллов под ваши отделы</h3>
+  <p>Каждый скачивается отдельным архивом, готовым к загрузке. Все проверены на то, что внутри именно ваша отрасль, а не чужая.</p>
+
+  <h4>Продажи</h4>
+  <div class="cards c2">
+    <div class="card acc">
+      <h4>Разбор звонка</h4>
+      <p>Стандарт звонка ICL из пяти этапов, светофор с цитатами, договорённости и задачи со сроками, сигналы, которые заказчик не проговорил, готовое письмо-резюме</p>
+      <a class="dl" href="files/razbor-zvonka.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+    <div class="card acc">
+      <h4>Тренер по возражениям</h4>
+      <p>Банк из 20 типовых возражений с готовыми скриптами и техника: выслушать, присоединиться без «но», изолировать, вскрыть причину, сделать рефрейм, закрыть на шаг</p>
+      <a class="dl" href="files/trener-po-vozrazheniyam.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+    <div class="card acc">
+      <h4>Аудит воронки продаж</h4>
+      <p>Раскладывает путь клиента по этапам, ищет, где отваливается больше всего, и показывает точку роста, которая даст эффект быстрее остальных</p>
+      <a class="dl" href="files/audit-voronki.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+  </div>
+
+  <h4>Тендеры и пресейл</h4>
+  <div class="cards c2">
+    <div class="card acc">
+      <h4>Разбор тендерного ТЗ</h4>
+      <p>Проход по документу требование за требованием: чем закрываем, где заточка под конкурента, какие вопросы задать заказчику до подачи</p>
+      <a class="dl" href="files/razbor-tendernogo-tz.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+  </div>
+
+  <h4>Юристы</h4>
+  <div class="cards c2">
+    <div class="card acc">
+      <h4>Аудит договора</h4>
+      <p>Разбор договора по пунктам со светофором рисков, цитата и чем грозит на практике, готовые формулировки для протокола разногласий</p>
+      <a class="dl" href="files/audit-dogovora.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+    <div class="card acc">
+      <h4>Правовой разбор ситуации</h4>
+      <p>Собирает фабулу и хронологию, раскладывает позиции сторон, показывает риски и варианты действий по российскому праву</p>
+      <a class="dl" href="files/pravovoy-razbor.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+  </div>
+
+  <h4>Руководители</h4>
+  <div class="cards c2">
+    <div class="card acc">
+      <h4>Штаб подготовки к встрече</h4>
+      <p>Готовит совещание и превращает заметки или стенограмму в рабочий контур: цель, повестка, решения, задачи с ответственными</p>
+      <a class="dl" href="files/podgotovka-k-vstreche.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+    <div class="card acc">
+      <h4>Пре-мортем решения</h4>
+      <p>Представляет, что решение уже провалилось, и разбирает почему: какие риски сработали, что было видно заранее, что сделать сейчас</p>
+      <a class="dl" href="files/pre-mortem-resheniya.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+    <div class="card acc">
+      <h4>Разбор недели</h4>
+      <p>Жёсткий протокол ретроспективы: что получилось и за счёт чего, что нет и почему, что меняем на следующей неделе</p>
+      <a class="dl" href="files/razbor-nedeli.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+    <div class="card acc">
+      <h4>Матрица делегирования</h4>
+      <p>Раскладывает вашу нагрузку на то, что делаете только вы, что можно отдать людям и что забирает ИИ</p>
+      <a class="dl" href="files/matrica-delegirovaniya.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+    <div class="card acc">
+      <h4>Юнит-экономика</h4>
+      <p>Считает экономику сделки или направления и показывает, где вы зарабатываете, а где работаете в минус</p>
+      <a class="dl" href="files/yunit-ekonomika.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+  </div>
+
+  <h4>Маркетинг</h4>
+  <div class="cards c2">
+    <div class="card acc">
+      <h4>Позиционирование</h4>
+      <p>Конкурентная отстройка: за кого нас принимают, кому мы на самом деле нужны, чем отличаемся так, чтобы это было проверяемо</p>
+      <a class="dl" href="files/pozicionirovanie.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+    <div class="card acc">
+      <h4>Контент из экспертизы</h4>
+      <p>Превращает профессиональный разбор, кейс или консультацию в материал, который можно публиковать, не раскрывая лишнего</p>
+      <a class="dl" href="files/kontent-iz-ekspertizy.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+    <div class="card acc">
+      <h4>Распаковка эксперта</h4>
+      <p>Структурированное интервью из 15 вопросов, чтобы вытащить из специалиста то, что делает его сильным, и превратить в тексты</p>
+      <a class="dl" href="files/raspakovka-eksperta.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+  </div>
+
+  <h4>Аналитика</h4>
+  <div class="cards c2">
+    <div class="card acc">
+      <h4>Глубокое исследование</h4>
+      <p>Методология профессионального аналитика: план, источники, проверка фактов, отдельный блок про то, чего мы не знаем</p>
+      <a class="dl" href="files/glubokoe-issledovanie.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+  </div>
+
+  <h4>Для всех</h4>
+  <div class="cards c2">
+    <div class="card acc">
+      <h4>Трудный разговор</h4>
+      <p>Подготовка к разговору, который откладывают: что сказать, чего не говорить, как реагировать, если человек закроется</p>
+      <a class="dl" href="files/trudnyy-razgovor.zip" download style="margin-bottom:0"><span class="dl-i">↓</span><span class="dl-t"><b>Скачать ZIP</b><em>готов к загрузке в «Навыки»</em></span></a>
+    </div>
+  </div>
+
+  <h3>Соберите свой скилл</h3>
+  <p>Готовые закрывают частые задачи. Ваша собственная методология сильнее любой готовой, потому что вы знаете исключения.</p>
+  <div class="copy"><div class="copy-bar"><span class="copy-lbl">промпт · конструктор скилла</span><span class="copy-btn">копировать</span></div><pre>Помоги собрать мой скилл: методологию, по которой ИИ будет делать за меня одну повторяющуюся работу, когда меня нет рядом.
+
+Процесс: [название работы, которую делаю регулярно по одной схеме]
+Как я делаю это сейчас: [расскажите своими словами, можно голосом, по шагам]
+
+Собери скилл по разделам:
+1. Когда использовать: по каким сигналам браться за работу и в каких случаях НЕ включаться.
+2. Роль: узко, с отраслью.
+3. Методология по шагам: что за чем и почему именно так.
+4. Ветвления «а если»: минимум пять нестандартных ситуаций и что делать в каждой.
+5. Чек-лист приёмки: по каким признакам работа считается сделанной.
+6. Стоп-сигналы: когда надо остановиться и спросить человека.
+7. Чего не делать.
+
+Прежде чем писать, задай мне по одному вопросы, которых тебе не хватает. Особенно про исключения: именно они отличают метод от инструкции.
+
+Выдай одним блоком в формате markdown, готовым к сохранению файлом.</pre></div>
+  <p class="note-sm">Ответ сохраните файлом с именем SKILL.md, положите в папку с названием скилла и заархивируйте её. Получится ровно такой же архив, как те, что выше.</p>
+
+  <div class="prac">
+    <div class="prac-h">Практика 6 · 20 минут</div>
+    <h4>Запустите готовый скилл и сравните</h4>
+    <p>Возьмите скилл своего отдела, вставьте его текст первым сообщением в новый чат и задайте свою реальную задачу. Потом задайте ту же задачу в чистом чате без скилла. Разница между двумя ответами и есть ответ на вопрос, зачем всё это.</p>
+  </div>
+</section>
+
+
+<!-- ═══════ 9 · ПРОЕКТЫ ═══════ -->
+<section class="mod m-coral wrap" id="proekty" data-n="9" data-t="Проекты" data-d="Рабочее место под клиента или тему, контекст загружается один раз">
+  <div class="mod-h">
+    <div class="mod-n">9</div>
+    <div>
+      <h2>Проекты: рабочее место под клиента</h2>
+      <div class="mod-sub">Самая недооценённая вещь во всём списке, и при этом <b>единственная из троицы, которая доступна бесплатно.</b> Проект это папка, куда вы один раз кладёте контекст, и дальше каждый чат внутри него уже всё знает.</div>
+    </div>
+  </div>
+  <div class="mod-rule"></div>
+
+  <h3>Зачем он нужен</h3>
+  <p>Без проекта вы каждый раз объясняете заново: кто заказчик, что за поставка, какие условия. Три чата подряд, и вы устали больше, чем от самой задачи. Проект убирает это насовсем: контекст живёт в папке, а не в вашей голове и не в переписке.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="st-t">Создайте проект</div>
+      <div class="st-b">
+        <p><b>Боковое меню ChatGPT → «Проекты» → «Новый проект».</b> Назовите именем заказчика или темы: «Холдинг Х», «Тендер Казань», «Линейка моноблоков».</p>
+        <p class="note-sm">Один проект на одного заказчика или одну тему. Не сваливайте всё в «Работа», иначе смысл теряется.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="st-t">Положите внутрь файлы</div>
+      <div class="st-b">
+        <p>Техзадание, переписку, наше КП, спецификации, протоколы встреч. Всё, что вы иначе пересказывали бы каждый раз словами.</p>
+        <p class="note-sm">Перед загрузкой сверьтесь с модулем 12: персональные данные и коммерческая тайна в западные сервисы не идут даже внутрь проекта.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="st-t">Напишите инструкцию проекта</div>
+      <div class="st-b">
+        <div class="copy"><div class="copy-bar"><span class="copy-lbl">инструкция проекта</span><span class="copy-btn">копировать</span></div><pre>Это проект по заказчику [название]. Все ответы здесь касаются только его.
+
+Учитывай документы, которые я загрузил в проект. Если данных в файлах не хватает, скажи об этом прямо и спроси, а не додумывай.
+
+Формат ответа: сначала короткий вывод, потом детали.
+
+Контекст: мы производитель вычислительной техники, я [должность]. Заказчик [чем занимается, что обсуждаем, на какой стадии сделка].
+
+Нельзя: выдумывать характеристики, цены и сроки; ссылаться на документы, которых нет в проекте; использовать длинное тире.</pre></div>
+        <p class="note-sm">Эта инструкция действует на все чаты внутри проекта. Написали один раз, работает всегда.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="prac">
+    <div class="prac-h">Практика 7 · 10 минут</div>
+    <h4>Заведите проект под своего живого заказчика</h4>
+    <p>Возьмите сделку, которая сейчас в работе. Создайте проект, загрузите два-три файла, вставьте инструкцию выше и задайте первый вопрос: «что мы знаем об этом заказчике и чего не хватает, чтобы двигаться дальше». Дальше все чаты по нему ведите только здесь.</p>
+  </div>
+
+  <div class="call">
+    <p><b>Как это ложится вместе с остальным.</b> Проект это <b>где</b>. Ассистент из модуля 7 это <b>кто</b>: его зовут работать внутри проекта. Скилл из модуля 8 это <b>как</b>: его кладут внутрь ассистента. Начинать можно с любого, но проект бесплатный, поэтому начинать проще с него.</p>
+  </div>
+</section>
+
+<!-- ═══════ 10 · ЦИФРОВЫЕ РУКИ ═══════ -->
+<section class="mod m-blue wrap" id="ruki" data-n="10" data-t="Цифровые руки" data-d="Плагины, приложения и «Запланированное»: когда ИИ работает без вас">
+  <div class="mod-h">
+    <div class="mod-n">10</div>
+    <div>
+      <h2>Цифровые руки: подключения и автопилот</h2>
+      <div class="mod-sub">До сих пор ИИ работал только с тем, что вы ему принесли. <b>Дальше он дотягивается сам:</b> до вашей почты, календаря, дисков, а часть работы делает по расписанию, когда вас нет за компьютером.</div>
+    </div>
+  </div>
+  <div class="mod-rule"></div>
+
+  <h3>Плагины и приложения: что это теперь</h3>
+  <p>Раньше это называлось коннекторами, потом приложениями. <b>С 9 июля 2026 года каталог приложений переехал в каталог плагинов</b>, и плагины стали основным способом подключать возможности и в ChatGPT, и в Codex.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Что это</th><th>Что делает</th></tr></thead>
+    <tbody>
+      <tr><td><b>Приложение</b></td><td>Само подключение к внешнему сервису: почта, диск, календарь, база. Через него ИИ читает данные и совершает действия</td></tr>
+      <tr><td><b>Плагин</b></td><td>Обёртка под рабочий сценарий: внутри может быть одно или несколько приложений плюс скиллы. Ставится из каталога плагинов</td></tr>
+      <tr><td><b>Скилл</b></td><td>Метод работы, модуль 8. Может ехать внутри плагина, а может стоять сам по себе</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>Что приложения умеют</h4>
+  <ul>
+    <li><b>Поиск по вашим данным.</b> Находит нужное в подключённом сервисе и подтягивает в разговор.</li>
+    <li><b>Глубокое исследование.</b> Многошаговый анализ по нескольким источникам сразу, со ссылками на оригиналы.</li>
+    <li><b>Синхронизация.</b> Заранее индексирует содержимое, чтобы отвечать быстрее и точнее.</li>
+    <li><b>Действия наружу.</b> Может создавать и изменять данные в подключённом сервисе, если это разрешено.</li>
+    <li><b>Интерактив в чате.</b> Карточки, карты и прочие живые элементы прямо в ответе.</li>
+  </ul>
+
+  <div class="call warn">
+    <p><b>Разрешения решают всё.</b> По умолчанию стоит режим «важные действия»: читать ИИ может сам, а перед действием, которое что-то меняет наружу, раскрывает чувствительные данные или трудно отменить, он спрашивает. Есть и более строгий режим «спрашивать всегда», и рискованный «не спрашивать никогда». <b>Для корпоративной почты и дисков не ставьте «никогда».</b> В рабочем пространстве это настраивает администратор.</p>
+  </div>
+
+  <h3>«Запланированное»: работа по расписанию</h3>
+  <p>Отдельная страница в боковом меню, есть в вебе, в приложении на телефоне и в десктопной версии. Задачи бывают разовые и повторяющиеся. Можно не только запускать по времени, но и попросить <b>следить за изменениями и сообщить, когда появится что-то важное.</b></p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Тариф</th><th>Сколько активных задач</th></tr></thead>
+    <tbody>
+      <tr><td>Go</td><td>до 3</td></tr>
+      <tr><td><b>Plus</b></td><td>до 5</td></tr>
+      <tr><td>Business и Edu</td><td>до 10</td></tr>
+      <tr><td>Pro и Enterprise</td><td>до 15</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note-sm">Задачи работают на всех моделях, кроме Pro-моделей. Важная деталь: <b>задача, созданная внутри проекта с файлами, до этих файлов не дотянется.</b> Если задаче нужны документы, кладите их прямо в неё, а не в проект.</p>
+
+  <h4>Шесть сценариев под ваши отделы</h4>
+  <p>Создаются одной фразой: откройте «Запланированное», нажмите создать задачу и вставьте текст. Или просто попросите словами в чате.</p>
+
+  <div class="copy"><div class="copy-bar"><span class="copy-lbl">1 · утренняя сводка по тендерам</span><span class="copy-btn">копировать</span></div><pre>Каждый будний день в 8:30 присылай сводку по новым закупкам вычислительной техники: что появилось за сутки, заказчик, объём, срок подачи. Только то, что реально относится к рабочим станциям, моноблокам, ноутбукам и серверам. Если ничего нового нет, так и напиши одной строкой.</pre></div>
+
+  <div class="copy"><div class="copy-bar"><span class="copy-lbl">2 · напоминание о зависших сделках</span><span class="copy-btn">копировать</span></div><pre>Каждый понедельник в 10:00 спрашивай меня: по каким заказчикам за прошлую неделю не было следующего шага. Задай вопрос списком, по одному заказчику за раз, и по каждому предложи, что написать, чтобы вернуть диалог.</pre></div>
+
+  <div class="copy"><div class="copy-bar"><span class="copy-lbl">3 · подготовка к встречам дня</span><span class="copy-btn">копировать</span></div><pre>Каждый рабочий день в 8:00 смотри мой календарь на сегодня. По каждой внешней встрече дай: с кем встречаюсь, что известно о компании, о чём договаривались в прошлый раз, три вопроса, которые стоит задать. Коротко, чтобы читалось за две минуты.</pre></div>
+  <p class="note-sm">Третий сценарий работает только если подключено приложение календаря. Как подключать, смотрите выше в этом модуле.</p>
+
+  <div class="copy"><div class="copy-bar"><span class="copy-lbl">4 · слежка за конкурентом</span><span class="copy-btn">копировать</span></div><pre>Раз в неделю по пятницам проверяй, появились ли новости по компании [название конкурента]: новые продукты, крупные контракты, изменения в линейке, кадровые перестановки. Сообщай только если есть что-то значимое. Если ничего, пиши «изменений нет».</pre></div>
+
+  <div class="copy"><div class="copy-bar"><span class="copy-lbl">5 · разбор недели в пятницу</span><span class="copy-btn">копировать</span></div><pre>Каждую пятницу в 17:00 задавай мне пять вопросов по одному про прошедшую неделю: что закрыл, что застряло и почему, где нужна помощь, что переносится, что главное на следующей неделе. После моих ответов собери короткий итог для руководителя, до одной страницы.</pre></div>
+
+  <div class="copy"><div class="copy-bar"><span class="copy-lbl">6 · контроль сроков поставки</span><span class="copy-btn">копировать</span></div><pre>Каждый вторник и четверг в 9:00 напоминай мне проверить статус по отгрузкам, которые я тебе назвал, и спрашивай, не сдвинулись ли сроки. Если сдвинулись, сразу предлагай черновик письма заказчику с новой датой и объяснением.</pre></div>
+
+  <div class="call">
+    <p><b>С чего начать.</b> Возьмите один сценарий, который сработает уже завтра утром, и поставьте его. Пять задач на тарифе Plus это немного, поэтому занимать их стоит тем, что вы иначе забываете.</p>
+  </div>
+</section>
+
+<!-- ═══════ 11 · РЕЖИМ РАБОТА ═══════ -->
+<section class="mod m-green wrap" id="rabota" data-n="11" data-t="Режим «Работа»" data-d="Мини-приложения и Codex: собрать инструмент разговором">
+  <div class="mod-h">
+    <div class="mod-n">11</div>
+    <div>
+      <h2>Режим «Работа»: инструмент вместо текста</h2>
+      <div class="mod-sub">Всё, что было раньше, давало текст. Здесь ИИ отдаёт <b>рабочий инструмент</b>: калькулятор, дашборд, трекер. Собирается разговором за вечер, без программистов и без бюджета.</div>
+    </div>
+  </div>
+  <div class="mod-rule"></div>
+
+  <div class="call">
+    <p><b>Это платная часть.</b> Мини-приложения, Codex и агент-разработчик открываются на подписке. Если её пока нет, читайте этот модуль как карту: он показывает, куда всё идёт и ради чего подписку в итоге оформляют.</p>
+  </div>
+
+  <h3>Методология: два шага, а не «попроси сделать приложение»</h3>
+  <p>Главная ошибка это сразу просить готовое. Сначала выбираем, что вообще стоит автоматизировать, и только потом превращаем это в техническое задание.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="st-t">Найти, что стоит собирать</div>
+      <div class="st-b">
+        <div class="copy"><div class="copy-bar"><span class="copy-lbl">промпт 1 · штурм идей</span><span class="copy-btn">копировать</span></div><pre>Я работаю в компании-производителе вычислительной техники, моя должность: [должность].
+
+Предложи 10 небольших рабочих инструментов, которые я мог бы собрать себе сам за вечер и которые реально сэкономят мне время. Не приложения для всей компании, а личные, под мои задачи.
+
+По каждому: что он делает, что я ввожу, что получаю на выходе, сколько времени в неделю экономит.
+
+Отсортируй по соотношению «польза к сложности». Сверху то, что даёт максимум пользы при минимуме сложности.
+
+Сначала задай мне 3 вопроса о моей неделе, чтобы предложения были не общими.</pre></div>
+        <p class="note-sm">Обратите внимание на слово «личные». Инструменты на весь отдел это другая история со согласованиями. Начинайте с того, что нужно лично вам.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="st-t">Превратить идею в техзадание</div>
+      <div class="st-b">
+        <div class="copy"><div class="copy-bar"><span class="copy-lbl">промпт 2 · сборка техзадания</span><span class="copy-btn">копировать</span></div><pre>Возьми идею: [название инструмента из списка].
+
+Собери техническое задание для сборки веб-приложения на одной странице:
+1. Что приложение делает одним предложением.
+2. Какие поля ввода и какого типа.
+3. Какая логика расчёта или обработки, по шагам, с формулами.
+4. Что показывает на выходе и в каком виде.
+5. Какие данные надо сохранять между визитами.
+6. Как выглядит интерфейс: блоки сверху вниз.
+7. Чего в приложении быть не должно.
+
+Пиши так, чтобы по этому заданию можно было собрать приложение без дополнительных вопросов. Если чего-то не хватает, спроси меня по одному.</pre></div>
+        <p class="note-sm">Готовое задание отправляете в режиме «Работа», и инструмент собирается рядом с чатом. Дальше правите его словами: «сделай поле для скидки», «добавь итог в рублях».</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Четыре готовых задания под ваши отделы</h3>
+  <p>Эти можно не придумывать: копируете и отправляете в режиме «Работа» как есть.</p>
+
+  <details class="acc"><summary>Калькулятор комплектации и КП<span class="acc-sub">пресейлам и менеджерам</span></summary><div class="in">
+    <div class="copy"><div class="copy-bar"><span class="copy-lbl">готовое задание</span><span class="copy-btn">копировать</span></div><pre>Собери веб-приложение на одной странице: калькулятор комплектации для менеджера по продажам вычислительной техники.
+
+Поля ввода: количество рабочих мест, тип задач (офисные, инженерные, тяжёлые расчёты), нужна ли гарантия расширенная, срок поставки, регион.
+
+Логика: по типу задач подбирается класс конфигурации из трёх заранее заданных (базовая, производительная, инженерная). Цены за единицу я задаю сам в отдельном блоке настроек. Считается стоимость по позициям, итог, скидка по объёму по заданной мной шкале, итог со скидкой.
+
+На выходе: таблица позиций, итоговая сумма прописью и цифрами, срок поставки, кнопка «скопировать как текст для КП», которая складывает всё в аккуратный текст для письма.
+
+Данные настроек сохраняй в браузере, чтобы не вводить их каждый раз.
+
+Интерфейс: слева ввод, справа расчёт, внизу кнопка копирования. Спокойный деловой вид, никаких лишних украшений.</pre></div>
+  </div></details>
+
+  <details class="acc"><summary>Дашборд анализа тендеров<span class="acc-sub">тендерному отделу и руководителям</span></summary><div class="in">
+    <div class="copy"><div class="copy-bar"><span class="copy-lbl">готовое задание</span><span class="copy-btn">копировать</span></div><pre>Собери веб-приложение на одной странице: дашборд для отслеживания тендеров.
+
+Поля добавления записи: заказчик, регион, объём в штуках, сумма, дата подачи, дата итогов, статус (готовим, подали, выиграли, проиграли), кто ведёт, комментарий.
+
+На выходе: таблица со всеми записями с сортировкой и фильтром по статусу и региону; карточки сверху с цифрами: сколько в работе, на какую сумму, сколько выиграно и проиграно за период, процент побед; отдельный блок «горит»: тендеры, до подачи которых меньше пяти дней, подсвеченные цветом.
+
+Данные сохраняй в браузере. Добавь кнопки выгрузки в CSV и загрузки из CSV.
+
+Интерфейс: сверху цифры, ниже фильтры, ниже таблица. Без лишнего декора.</pre></div>
+  </div></details>
+
+  <details class="acc"><summary>Трекер партнёров и сделок<span class="acc-sub">партнёрскому отделу</span></summary><div class="in">
+    <div class="copy"><div class="copy-bar"><span class="copy-lbl">готовое задание</span><span class="copy-btn">копировать</span></div><pre>Собери веб-приложение на одной странице: трекер работы с партнёрами.
+
+Поля записи: партнёр, регион, контактное лицо, дата последнего контакта, объём за квартал, стадия отношений (новый, растёт, стабильный, засыпает, потерян), следующий шаг, дата следующего шага.
+
+На выходе: список партнёров с цветовой пометкой по стадии; блок «требуют внимания»: те, у кого последний контакт больше 30 дней назад или просрочен следующий шаг; сводка по регионам: сколько партнёров и какой объём.
+
+Данные сохраняй в браузере, добавь выгрузку и загрузку CSV.
+
+Интерфейс: сверху блок «требуют внимания», ниже сводка по регионам, ниже полный список.</pre></div>
+  </div></details>
+
+  <details class="acc"><summary>Матрица сравнения с конкурентами<span class="acc-sub">маркетингу и пресейлам</span></summary><div class="in">
+    <div class="copy"><div class="copy-bar"><span class="copy-lbl">готовое задание</span><span class="copy-btn">копировать</span></div><pre>Собери веб-приложение на одной странице: матрица сравнения нашего решения с конкурентами.
+
+Настройки: я задаю список параметров сравнения (например: производительность, гарантия, сервис в регионах, наличие в реестре, срок поставки, цена) и список конкурентов.
+
+Поля: по каждому конкуренту и каждому параметру ставлю оценку от 1 до 5 и короткий комментарий.
+
+На выходе: таблица сравнения с цветовой заливкой по оценкам; блок «наши сильные стороны»: параметры, где мы выше всех; блок «наши слабые места»: где мы ниже; кнопка «собрать текст аргументации», которая складывает сильные стороны в готовый абзац для КП или разговора.
+
+Данные сохраняй в браузере. Интерфейс спокойный, таблица читаемая на проекторе.</pre></div>
+  </div></details>
+
+  <h3>Codex и агент-разработчик</h3>
+  <p>Следующая ступень после мини-приложений. Codex это среда, где ИИ работает не с текстом, а с файлами и кодом: может собрать инструмент посложнее, поправить его, запустить и проверить. Здесь уже нужен человек, который готов разбираться, но и потолок совсем другой: от одностраничного калькулятора до внутреннего сервиса.</p>
+  <p class="note-sm">Для большинства задач из этой методички Codex не нужен. Он появляется в тот момент, когда мини-приложения перестают помещаться в одну страницу.</p>
+</section>
+
+<!-- ═══════ 12 · БЕЗОПАСНОСТЬ ═══════ -->
+<section class="mod m-slate wrap" id="bezopasnost" data-n="12" data-t="Безопасность и закон" data-d="Три корзины, 152-ФЗ простыми словами и пять правил">
+  <div class="mod-h">
+    <div class="mod-n">12</div>
+    <div>
+      <h2>Безопасность: рамка, а не запрет</h2>
+      <div class="mod-sub">Это не про то, чтобы бояться. Это про то, чтобы <b>пользоваться спокойно и не создать компании проблему</b> одним неосторожным вложением файла.</div>
+    </div>
+  </div>
+  <div class="mod-rule"></div>
+
+  <h3>Правило трёх корзин</h3>
+  <div class="cards c3">
+    <div class="card" style="border-left:3px solid var(--green)">
+      <h4>Зелёная: можно</h4>
+      <p>Тендеры с zakupki.gov.ru, прайсы конкурентов с их сайтов, ГОСТы и открытые стандарты, публичные новости, общие вопросы и обучение.</p>
+      <p class="note-sm">Всё, что и так лежит в открытом доступе. Здесь можно работать без оглядки.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--amber)">
+      <h4>Жёлтая: только обезличив</h4>
+      <p>Техзадания без названий и имён, шаблоны договоров без реквизитов, таблицы с заменёнными цифрами, переписка с вырезанными контактами.</p>
+      <p class="note-sm">Суть задачи остаётся, узнаваемость уходит. Пять минут на чистку экономят месяцы объяснений.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #C0392B">
+      <h4>Красная: никогда</h4>
+      <p>Персональные данные сотрудников и заказчиков, финансы компании, сканы документов и паспортов, коммерческая тайна, пароли и реквизиты.</p>
+      <p class="note-sm">Никакой пользы от ИИ не стоит утечки такого. Для этого есть российский контур, модуль 1.</p>
+    </div>
+  </div>
+
+  <h3>152-ФЗ простыми словами</h3>
+  <p>Закон о персональных данных требует, чтобы данные россиян обрабатывались и хранились в России. Западные и китайские сервисы этому условию не отвечают. Практический вывод короткий: <b>фамилии, телефоны, паспорта, адреса и всё, по чему можно опознать человека, в ChatGPT и его аналоги не попадают.</b></p>
+  <p>Это не значит, что ИИ бесполезен для работы с людьми. Это значит, что вы обезличиваете: вместо «Иванов Пётр Сергеевич, +7 917...» пишете «заказчик, ИТ-директор». Задача решается так же, риска нет.</p>
+
+  <h3>Чего ещё стоит опасаться</h3>
+  <ul>
+    <li><b>Выдуманные факты.</b> ИИ может уверенно назвать несуществующий ГОСТ или переврать характеристику. Всё, что уходит наружу с цифрами, перепроверяется руками.</li>
+    <li><b>Голос и видео.</b> Подделать голос руководителя сегодня стоит копейки. Просьба «срочно переведи деньги» голосом или в видеозвонке это стоп-сигнал, а не повод торопиться.</li>
+    <li><b>Чужие ссылки в документах.</b> Файл от неизвестного отправителя, который вы кидаете в ИИ, может содержать инструкции для самого ИИ. Кидайте то, чему доверяете.</li>
+  </ul>
+
+  <h3>Пять правил на каждый день</h3>
+  <div class="tw"><table><tbody>
+    <tr><td><b>1</b></td><td>Сомневаетесь, можно ли: считайте, что нельзя</td></tr>
+    <tr><td><b>2</b></td><td>Факты, цифры и цитаты перепроверяем перед отправкой наружу</td></tr>
+    <tr><td><b>3</b></td><td>Последние десять процентов всегда за человеком: решение, стиль, подпись</td></tr>
+    <tr><td><b>4</b></td><td>«Срочно переведи деньги» голосом или видео: стоп, перезвоните по известному номеру</td></tr>
+    <tr><td><b>5</b></td><td>Чувствительное только в том контуре, который согласовала ваша служба безопасности</td></tr>
+  </tbody></table></div>
+
+  <div class="call">
+    <p><b>Ответственность за результат остаётся на вас.</b> ИИ это инструмент, а не соавтор и не оправдание. Письмо, которое ушло заказчику, подписано вашим именем, а не именем нейросети.</p>
+  </div>
+</section>
+
+<!-- ═══════ 13 · ЧТО ДАЛЬШЕ ═══════ -->
+<section class="mod m-coral wrap" id="dalshe" data-n="13" data-t="Что дальше" data-d="План на первый месяц и куда расти">
+  <div class="mod-h">
+    <div class="mod-n">13</div>
+    <div>
+      <h2>Что дальше: план на первый месяц</h2>
+      <div class="mod-sub">Прочитать методичку целиком и ничего не поменять это самый частый исход. <b>Чтобы его избежать, достаточно одного:</b> взять первую неделю и сделать четыре вещи.</div>
+    </div>
+  </div>
+  <div class="mod-rule"></div>
+
+  <div class="tw"><table>
+    <thead><tr><th>Неделя</th><th>Что сделать</th><th>Сколько времени</th></tr></thead>
+    <tbody>
+      <tr><td><b>Первая</b></td><td>Настроить под себя: досье и инструкция качества, модуль 4. Забрать карту своих процессов. Поставить приложение на телефон, модуль 2</td><td>40 минут один раз</td></tr>
+      <tr><td><b>Вторая</b></td><td>Взять одну реальную задачу и прогнать её через всю цепочку приёмов из модуля 5. Потом ещё одну. И ещё</td><td>по 15 минут на задачу</td></tr>
+      <tr><td><b>Третья</b></td><td>Завести проект под живого заказчика, модуль 9. Загрузить туда файлы и вести всю переписку по нему оттуда</td><td>20 минут</td></tr>
+      <tr><td><b>Четвёртая</b></td><td>Собрать первого ассистента под самый надоевший процесс, модуль 7. Если есть подписка, поставить одну задачу в «Запланированное», модуль 10</td><td>30 минут</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Как понять, что получилось</h3>
+  <p>Не по количеству открытых чатов. По трём признакам:</p>
+  <ul>
+    <li>Вы перестали писать с нуля то, что раньше писали с нуля.</li>
+    <li>У вас появился хотя бы один процесс, который идёт без вашего участия от начала до конца.</li>
+    <li>Коллега спросил, как вы это делаете, и вы смогли отдать ему готовый инструмент, а не пересказ.</li>
+  </ul>
+
+  <h3>Куда расти дальше</h3>
+  <div class="cards c3">
+    <div class="card acc"><h4>Вширь</h4><p>Второй ассистент, третий, свои скиллы под ваши методики. Каждый следующий собирается быстрее предыдущего.</p></div>
+    <div class="card acc"><h4>Вглубь</h4><p>Мини-приложения и Codex, модуль 11. Момент, когда ИИ отдаёт не текст, а рабочий инструмент.</p></div>
+    <div class="card acc"><h4>Вширь по команде</h4><p>Общие ассистенты и проекты на отдел. Один человек собрал, работают все, качество одинаковое.</p></div>
+  </div>
+
+  <div class="call">
+    <p><b>Главное, что стоит унести.</b> Ценность специалиста больше не в том, что он умеет делать руками. Она в том, насколько хорошо он умеет ставить задачу и проверять результат. Это навык, и он тренируется ровно так же, как любой другой: повторением на реальных задачах, а не чтением.</p>
+    <p>Начните с одной задачи сегодня. Не с десяти.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><b>neovida.ai для команды ICL Техно.</b> Методичку можно свободно пересылать коллегам внутри компании.</p>
+    <p>Альберт Валеев · 7 августа 2026</p>
+  </div>
+</footer>
+
+<a href="#" class="up" id="up" aria-label="Наверх">↑</a>
+
+<script>
+/* копирование */
+document.addEventListener('click',e=>{
+  const el=e.target.closest('.copy'); if(!el) return;
+  const pre=el.querySelector('pre'); if(!pre) return;
+  const btn=el.querySelector('.copy-btn');
+  const done=()=>{
+    el.classList.add('done');
+    if(btn){const o=btn.dataset.o||btn.textContent;btn.dataset.o=o;btn.textContent='скопировано';
+      setTimeout(()=>{el.classList.remove('done');btn.textContent=o;},1700);}
+    else setTimeout(()=>el.classList.remove('done'),1700);
+  };
+  const t=pre.innerText;
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(done).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(err){}ta.remove();done();
+  });
+});
+
+/* оглавление и меню собираются из модулей */
+(function(){
+  const mods=[...document.querySelectorAll('.mod')];
+  const nav=document.getElementById('nav'), toc=document.getElementById('toc');
+  mods.forEach(m=>{
+    const n=m.dataset.n, t=m.dataset.t, d=m.dataset.d||'';
+    const col=getComputedStyle(m).getPropertyValue('--acc').trim();
+    const a=document.createElement('a'); a.href='#'+m.id; a.textContent=t; nav.appendChild(a);
+    const c=document.createElement('a'); c.href='#'+m.id; c.className='toc-card'; c.style.setProperty('--c',col);
+    c.innerHTML='<span class="n">'+(n?'Модуль '+n:'&nbsp;')+'</span><span class="t">'+t+'</span><span class="d">'+d+'</span>';
+    toc.appendChild(c);
+  });
+  /* подсветка активного пункта и прогресс */
+  const prog=document.getElementById('prog'), up=document.getElementById('up');
+  const io=new IntersectionObserver(es=>{
+    es.forEach(en=>{ if(!en.isIntersecting) return;
+      nav.querySelectorAll('a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+en.target.id));
+      const on=nav.querySelector('a.on'); if(on) on.scrollIntoView({block:'nearest',inline:'nearest'});
+    });
+  },{rootMargin:'-70px 0px -70% 0px'});
+  mods.forEach(m=>io.observe(m));
+  addEventListener('scroll',()=>{
+    const h=document.documentElement;
+    prog.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';
+    up.classList.toggle('on',h.scrollTop>700);
+  },{passive:true});
+})();
+</script>
+</body>
+</html>
