@@ -881,15 +881,26 @@
 <div class="foot">neovida.ai · ИИ. Новая реальность · Онлайн-поток 2 · <a href="супер-шпаргалка.html">вернуться в супер-шпаргалку</a></div>
 <script>
 document.querySelectorAll('.p').forEach(function(box){
-  function copy(){
-    var t = box.querySelector('pre').innerText;
-    navigator.clipboard.writeText(t).then(function(){
-      var b = box.querySelector('.cp');
-      box.classList.add('done'); b.textContent = 'Скопировано';
-      setTimeout(function(){ box.classList.remove('done'); b.textContent = 'Скопировать'; }, 1800);
-    });
-  }
-  box.addEventListener('click', copy);
+  box.addEventListener('click', function(){
+    var text = box.querySelector('pre').innerText;
+    var btn = box.querySelector('.cp');
+    var done = function(){
+      box.classList.add('done'); btn.textContent = 'Скопировано';
+      setTimeout(function(){ box.classList.remove('done'); btn.textContent = 'Скопировать'; }, 1800);
+    };
+    var legacy = function(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){}
+      document.body.removeChild(ta);
+      if (ok) done();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, legacy);
+    } else { legacy(); }
+  });
 });
 </script>
 </body>

@@ -561,11 +561,24 @@
 <script>
 document.querySelectorAll('.copybox').forEach(function(box){
   box.addEventListener('click', function(){
-    navigator.clipboard.writeText(box.querySelector('pre').innerText).then(function(){
-      var b = box.querySelector('.cp');
-      box.classList.add('done'); b.textContent = 'Скопировано';
-      setTimeout(function(){ box.classList.remove('done'); b.textContent = 'Скопировать'; }, 1800);
-    });
+    var text = box.querySelector('pre').innerText;
+    var btn = box.querySelector('.cp');
+    var done = function(){
+      box.classList.add('done'); btn.textContent = 'Скопировано';
+      setTimeout(function(){ box.classList.remove('done'); btn.textContent = 'Скопировать'; }, 1800);
+    };
+    var legacy = function(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){}
+      document.body.removeChild(ta);
+      if (ok) done();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, legacy);
+    } else { legacy(); }
   });
 });
 </script>
