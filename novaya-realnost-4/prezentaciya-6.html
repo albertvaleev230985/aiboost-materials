@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность · Поток 4 · Занятие 6 · Визуал</title>
+<style>
+/* ══════════ ТОКЕНЫ ══════════ */
+:root{
+  --bg0:#0B1220; --bg1:#131B2E;
+  --surface:rgba(21,30,50,.92);
+  --line:rgba(255,255,255,.09);
+  --text:#F4F1EC; --muted:#9AA3B2;
+  --coral:#E07461; --coral-soft:rgba(224,116,97,.16);
+  --emerald:#10b981; --emerald-soft:rgba(16,185,129,.16);
+  --glow:rgba(224,116,97,.42);
+  --steel:#7FA6D0;
+  --lilac:#B69BE6; --gold:#F2C14E;
+  --sh:0 24px 60px rgba(0,0,0,.45), 0 4px 14px rgba(0,0,0,.35);
+  --r:24px;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#05080F;overflow:hidden}
+body{font-family:-apple-system,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ══════════ СЦЕНА 1920x1080 ══════════ */
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{width:1920px;height:1080px;flex:0 0 auto;position:relative;background:linear-gradient(160deg,var(--bg0),var(--bg1));overflow:hidden;transform-origin:center center}
+
+/* ══════════ СЛАЙД ══════════ */
+.slide{position:absolute;inset:0;display:none;padding:96px;flex-direction:column}
+.slide.active{display:flex}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:.2}
+.bg--strong{opacity:.55}
+.bg--mid{opacity:.32}
+.veil{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(11,18,32,.25) 0%,rgba(11,18,32,.55) 55%,rgba(11,18,32,.92) 100%)}
+.veil--left{background:linear-gradient(90deg,rgba(11,18,32,.94) 0%,rgba(11,18,32,.72) 46%,rgba(11,18,32,.18) 100%)}
+.veil--flat{background:rgba(11,18,32,.76)}
+.wrap{position:relative;z-index:2;display:flex;flex-direction:column;flex:1;min-height:0}
+
+/* ══════════ АКЦЕНТЫ ПО АКТАМ ══════════ */
+.slide.as{--coral:#B69BE6;--coral-soft:rgba(182,155,230,.16);--glow:rgba(182,155,230,.40)}
+.slide.kb{--coral:#10b981;--coral-soft:rgba(16,185,129,.16);--glow:rgba(16,185,129,.40)}
+.slide.sk{--coral:#F2C14E;--coral-soft:rgba(242,193,78,.15);--glow:rgba(242,193,78,.36)}
+.slide.gg{--coral:#7FA6D0;--coral-soft:rgba(127,166,208,.17);--glow:rgba(127,166,208,.40)}
+.slide.sk .badge,.slide.sk .step-p .n{color:#241a06}
+.c-pr{color:#E07461}.c-as{color:#B69BE6}.c-sk{color:#F2C14E}.c-gg{color:#7FA6D0}.c-kb{color:#10b981}
+
+/* ══════════ ТИПОГРАФИКА ══════════ */
+.kicker{font-size:27px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--coral);margin-bottom:28px}
+h1{font-size:118px;line-height:1.04;font-weight:800;letter-spacing:-.015em;max-width:1600px}
+h2{font-size:66px;line-height:1.08;font-weight:750;letter-spacing:-.01em;max-width:1580px}
+.lead{font-size:38px;line-height:1.35;color:var(--muted);max-width:1500px;font-weight:450}
+.lead b,.lead strong{color:var(--text);font-weight:650}
+.src{font-size:25px;color:var(--muted);opacity:.85;margin-top:auto;padding-top:26px}
+.accent{color:var(--coral)}
+
+/* ══════════ АНИМАЦИИ ══════════ */
+@keyframes rise{from{opacity:0;transform:translateY(46px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes bgZoom{from{transform:scale(1.07)}to{transform:scale(1)}}
+@keyframes growW{from{width:0}}
+@keyframes growH{from{height:0}}
+@keyframes popIn{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}
+.slide.active .a{animation:rise .75s var(--ease) both}
+.slide.active .af{animation:fadeIn 1s ease both}
+.slide.active .ap{animation:popIn .6s var(--ease) both}
+.slide.active .bg{animation:bgZoom 9s ease-out both}
+@keyframes emerge{0%{opacity:.08;filter:brightness(.3) blur(9px);transform:scale(1.09)}100%{opacity:.6;filter:brightness(1) blur(0);transform:scale(1)}}
+.slide.active .bg--emerge{animation:emerge 5.5s cubic-bezier(.22,.61,.36,1) both}
+.d1{animation-delay:.09s!important}.d2{animation-delay:.18s!important}.d3{animation-delay:.27s!important}.d4{animation-delay:.36s!important}.d5{animation-delay:.45s!important}.d6{animation-delay:.54s!important}.d7{animation-delay:.63s!important}.d8{animation-delay:.72s!important}.d9{animation-delay:.81s!important}.d10{animation-delay:.9s!important}
+
+/* ══════════ ИКОНКИ ══════════ */
+.ph-i{display:inline-flex;line-height:0}
+.ph-i svg{width:var(--sz,48px);height:var(--sz,48px)}
+.logo-i{display:inline-flex;line-height:0;color:var(--text)}
+.logo-i svg{height:var(--sz,44px);width:auto;fill:currentColor}
+.mono{display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:50%;background:var(--coral-soft);border:1px solid var(--coral);color:var(--coral);font-weight:800;font-size:30px;flex:0 0 auto}
+.ico-chip{display:inline-flex;align-items:center;justify-content:center;width:96px;height:96px;border-radius:26px;background:var(--coral-soft);color:var(--coral);flex:0 0 auto}
+
+/* ══════════ КАРТОЧКИ ══════════ */
+.cards{display:grid;gap:36px;margin-top:56px}
+.cards.c2{grid-template-columns:1fr 1fr}
+.cards.c3{grid-template-columns:1fr 1fr 1fr}
+.cards.c4{grid-template-columns:repeat(4,1fr);gap:26px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:44px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:22px;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--coral),transparent 70%);opacity:.78}
+.card .num{font-size:70px;font-weight:800;color:var(--coral);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.card h3{font-size:34px;font-weight:700;line-height:1.2}
+.card p{font-size:27px;line-height:1.4;color:var(--muted)}
+.card p b{color:var(--text)}
+.card .head{display:flex;align-items:center;gap:24px;min-height:80px}
+.card--sm{padding:32px 34px;gap:16px}
+.card--sm h3{font-size:31px}
+.card--sm p{font-size:26px}
+.card--sm .head{min-height:72px;gap:20px}
+.card--xs{padding:26px 28px;gap:12px}
+.card--xs h3{font-size:29px}
+.card--xs p{font-size:25px}
+.card--xs .head{min-height:0;gap:16px}
+
+/* ══════════ БИГ-СТАТ ══════════ */
+.stat-center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:8px}
+.stat-num{font-size:200px;font-weight:800;letter-spacing:-.03em;color:var(--coral);line-height:1}
+.stat-cap{font-size:44px;font-weight:650;margin-top:10px}
+.stat-sub{font-size:32px;color:var(--muted);margin-top:14px;max-width:1440px;line-height:1.4}
+
+/* ══════════ СПЛИТ ══════════ */
+.split{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;flex:1;align-items:center;margin-top:20px}
+.split.rev{grid-template-columns:.95fr 1.05fr}
+.split .txt{display:flex;flex-direction:column;gap:24px}
+.split .txt h2{font-size:58px}
+.split .txt .kicker{margin-bottom:0}
+.split .pic{border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);border:1px solid var(--line);height:560px}
+.split .pic img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ══════════ СПИСОК-ПРАВИЛА ══════════ */
+.rules{display:flex;flex-direction:column;gap:26px;margin-top:52px;max-width:1600px}
+.rule{display:flex;align-items:center;gap:32px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px 38px}
+.rule .ico-chip{width:78px;height:78px;border-radius:20px}
+.rule .t{font-size:31px;line-height:1.35}
+.rule .t b{color:var(--coral)}
+.rules--tight{gap:16px!important}
+.rules--tight .rule{padding:20px 34px}
+.rules--tight .ico-chip{width:64px;height:64px;border-radius:18px}
+.rules--tight .t{font-size:29px}
+.rules--7{gap:11px!important}
+.rules--7 .rule{padding:14px 30px}
+.rules--7 .ico-chip{width:56px;height:56px;border-radius:15px}
+.rules--7 .t{font-size:27px;line-height:1.3}
+.rules--10{gap:7px!important}
+.rules--10 .rule{padding:9px 24px;border-radius:14px;gap:24px}
+.rules--10 .mono{width:46px;height:46px;font-size:24px}
+.rules--10 .t{font-size:26px;line-height:1.24}
+
+/* ══════════ ПРАКТИКА ══════════ */
+.badge{display:inline-flex;align-items:center;gap:14px;background:var(--coral);color:#fff;font-size:26px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;padding:14px 30px;border-radius:999px;margin-bottom:30px;box-shadow:0 10px 34px var(--glow);align-self:flex-start}
+.steps-p{display:flex;flex-direction:column;gap:22px;margin-top:40px;max-width:1600px}
+.step-p{display:flex;gap:30px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:26px 36px}
+.step-p .n{width:64px;height:64px;border-radius:50%;background:var(--coral);color:#fff;font-size:30px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.step-p .t{font-size:30px;line-height:1.38;padding-top:12px}
+.step-p .t b{color:var(--coral)}
+.steps-p--tight{gap:14px!important}
+.steps-p--tight .step-p{padding:18px 32px}
+.steps-p--tight .step-p .n{width:56px;height:56px;font-size:27px}
+.steps-p--tight .step-p .t{font-size:28px;padding-top:8px}
+
+/* ══════════ ПРОМПТ-БЛОК ══════════ */
+.prompt{font-family:"SF Mono",Menlo,Consolas,monospace;background:rgba(16,24,42,.92);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:16px;padding:26px 32px;font-size:27px;line-height:1.46;white-space:pre-wrap;color:var(--text);font-weight:450}
+.prompt .ph{color:var(--coral);font-weight:650}
+.prompt b{font-weight:750;color:#fff}
+.prompt--sm{font-size:26px;padding:24px 28px;line-height:1.4}
+.prompt--dense{font-size:26px;padding:22px 26px;line-height:1.3}
+.prompt--lg{font-size:31px;padding:32px 38px}
+.p-lbl{font-size:25px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--steel);margin-bottom:12px}
+.pgrid{display:grid;gap:30px;margin-top:32px}
+.pgrid.p2{grid-template-columns:1fr 1fr}
+.pcol{display:flex;flex-direction:column}
+.pgrid--mid{flex:1;align-content:center}
+
+/* ══════════ ТАБЛИЦА ══════════ */
+.tbl{display:grid;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface);margin-top:34px;box-shadow:var(--sh)}
+.tbl > div{padding:24px 30px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-size:27px;line-height:1.34;display:flex;align-items:center;color:var(--muted)}
+.tbl .th{font-size:25px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:rgba(255,255,255,.06);color:var(--text)}
+.tbl .q{font-weight:700;color:var(--text)}
+.tbl .hi{color:var(--text)}
+.tbl.t2{grid-template-columns:1fr 1fr}
+.tbl.t2 > div:nth-child(2n){border-right:none}
+.tbl.t2 > div:nth-last-child(-n+2){border-bottom:none}
+.tbl.t3{grid-template-columns:1fr 1fr 1fr}
+.tbl.t3 > div:nth-child(3n){border-right:none}
+.tbl.t3 > div:nth-last-child(-n+3){border-bottom:none}
+.tbl--tall > div{padding:34px 30px}
+.tbl .ok{color:#6EE7B7;font-weight:800}
+.tbl .warn{color:#F2C14E;font-weight:800}
+.tbl .no{color:#F08C7A;font-weight:800}
+
+/* ══════════ ДВА СТОЛБА ══════════ */
+.big2{display:grid;grid-template-columns:1fr 3px 1fr;gap:64px;align-items:center;margin-top:34px;flex:1}
+.big2-i{text-align:center}
+.big2-l{font-size:132px;font-weight:800;letter-spacing:-.025em;line-height:1}
+.big2-t{font-size:46px;line-height:1.24;margin-top:24px;color:var(--muted);font-weight:450}
+.big2-t b{color:var(--text);font-weight:750}
+.big2-div{width:3px;height:400px;border-radius:2px;background:linear-gradient(180deg,transparent,rgba(244,241,236,.36) 22%,rgba(244,241,236,.36) 78%,transparent)}
+
+/* ══════════ КОНТУР ИЗ 4 ЭЛЕМЕНТОВ ══════════ */
+.loop{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:44px;flex:1;align-content:center;max-height:620px}
+.loop-i{background:#141d31;border:1px solid var(--line);border-radius:22px;padding:34px 28px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:16px}
+.loop-i .lc{color:var(--coral);display:inline-flex}
+.loop-i .ln{font-size:24px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--coral)}
+.loop-i h4{font-size:36px;font-weight:750;line-height:1.14}
+.loop-i p{font-size:26px;color:var(--muted);line-height:1.34}
+
+/* ══════════ ШАГИ 5 ══════════ */
+.fx{display:grid;grid-template-columns:repeat(5,1fr);gap:24px;margin-top:46px}
+.fx-i{background:#141d31;border:1px solid var(--line);border-radius:22px;padding:32px 22px;text-align:center;box-shadow:var(--sh)}
+.fx-l{font-size:92px;font-weight:800;color:var(--coral);line-height:1;letter-spacing:-.02em}
+.fx-w{font-size:32px;font-weight:750;margin-top:14px}
+.fx-s{font-size:25px;color:var(--muted);margin-top:10px;line-height:1.3}
+
+/* ══════════ ЧИПЫ ══════════ */
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:44px}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:30px 28px;display:flex;flex-direction:column;gap:16px;position:relative;overflow:hidden}
+.chip::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--coral),transparent 75%);opacity:.8}
+.chip .n{font-size:25px;font-weight:800;color:var(--coral);letter-spacing:.1em}
+.chip .hd{display:flex;align-items:center;gap:16px;color:var(--coral)}
+.chip h4{font-size:31px;font-weight:750;line-height:1.18}
+.chip p{font-size:25px;color:var(--muted);line-height:1.32}
+
+/* ══════════ ЭКРАН ИНТЕРФЕЙСА GEMINI ══════════ */
+.ui{background:#101a2c;border:1px solid var(--line);border-radius:22px;padding:22px 26px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:12px}
+.ui-row{display:flex;align-items:center;gap:22px;background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:14px;padding:14px 24px}
+.ui-row .k{width:48px;height:48px;border-radius:12px;background:var(--coral-soft);color:var(--coral);font-size:25px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.ui-row .fl{font-size:29px;font-weight:700;flex:0 0 auto}
+.ui-row .fd{font-size:26px;color:var(--muted);margin-left:auto;text-align:right;line-height:1.26;padding-left:26px}
+.ui-row.hot{border-color:var(--coral);background:var(--coral-soft)}
+.cbx{display:flex;align-items:center;gap:24px;background:rgba(240,140,122,.1);border:2px solid #F08C7A;border-radius:18px;padding:26px 32px}
+.cbx .bx{width:52px;height:52px;border-radius:10px;border:3px solid #F08C7A;flex:0 0 auto}
+.cbx .tx{font-size:32px;font-weight:700;line-height:1.3}
+.strike{position:relative}
+.strike::after{content:"";position:absolute;left:-4px;right:-4px;top:53%;height:3px;background:#F08C7A}
+
+/* ══════════ КАРТА-МЕТАФОРА ══════════ */
+.mapbox{flex:1;display:flex;align-items:center;justify-content:center;margin-top:12px}
+.mapsvg{width:1560px;height:auto;max-height:660px}
+.map--empty .mf{display:none}
+.mapsvg .mq{display:none}
+.map--empty .mq{display:block}
+
+/* ══════════ ПАЛИТРА РОЛЕЙ ══════════ */
+.pal{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin-top:30px;flex:1;align-content:center}
+.pal-g{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--sh)}
+.pal-g .gh{display:flex;align-items:center;gap:12px;color:var(--coral);margin-bottom:14px}
+.pal-g .gh h4{font-size:26px;font-weight:800;line-height:1.14}
+.pal-g ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.pal-g li{font-size:25px;line-height:1.24;color:var(--muted);padding-left:19px;position:relative}
+.pal-g li::before{content:"";position:absolute;left:0;top:13px;width:9px;height:2px;border-radius:2px;background:var(--coral);opacity:.8}
+.pal-note{background:var(--coral-soft);border:1px solid var(--coral);border-radius:20px;padding:22px 24px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.pal-note .t{font-size:27px;line-height:1.26;font-weight:750}
+.pal-note .s{font-size:25px;line-height:1.28;color:var(--muted)}
+
+/* ══════════ ХРОМ ══════════ */
+#chrome{position:absolute;left:0;right:0;bottom:0;z-index:50;padding:0 44px 20px;display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}
+#act-label{font-size:24px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:650}
+#slide-no{font-size:24px;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:650}
+#bar{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.07);z-index:51}
+#bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#E07461,#F0A08E);transition:width .45s var(--ease),background .45s ease}
+.slide.active.as ~ #bar i{background:linear-gradient(90deg,#B69BE6,#D4C2F2)}
+.slide.active.kb ~ #bar i{background:linear-gradient(90deg,#10b981,#6EE7B7)}
+.slide.active.sk ~ #bar i{background:linear-gradient(90deg,#F2C14E,#FFD980)}
+.slide.active.gg ~ #bar i{background:linear-gradient(90deg,#7FA6D0,#A9C6E6)}
+.brand-corner{position:absolute;top:44px;left:64px;z-index:40;font-size:25px;font-weight:700;color:var(--muted)}
+.brand-corner b{color:#E07461}
+#fs-btn{position:fixed;top:20px;right:20px;z-index:120;width:46px;height:46px;padding:0;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(11,18,32,.5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#9AA3B2;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.4;transition:opacity .2s,color .2s,border-color .2s,background .2s}
+#fs-btn:hover{opacity:1;color:#F4F1EC;border-color:#E07461;background:rgba(224,116,97,.16)}
+#fs-btn svg{width:23px;height:23px}
+#fs-btn .i-close{display:none}
+#fs-btn.is-fs .i-open{display:none}
+#fs-btn.is-fs .i-close{display:block}
+
+/* ══════════ ЗАНЯТИЕ 6: ДОБАВКИ ══════════ */
+.lnk{color:var(--coral);text-decoration:none;border-bottom:2px solid var(--coral-soft);transition:border-color .2s}
+.lnk:hover{border-color:var(--coral)}
+.price{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;padding:6px 20px;font-size:23px;color:var(--muted);font-weight:650;align-self:flex-start}
+.price b{color:var(--text)}
+.logo-img{height:46px;width:auto;display:inline-block}
+.tool h3{font-size:38px}
+.tool .site{font-size:24px;color:var(--muted);font-weight:600}
+.tool ul{list-style:none;display:flex;flex-direction:column;gap:10px;margin:0}
+.tool li{font-size:25px;line-height:1.32;color:var(--muted);padding-left:22px;position:relative}
+.tool li::before{content:"";position:absolute;left:0;top:13px;width:10px;height:2px;border-radius:2px;background:var(--coral);opacity:.85}
+.tool li b{color:var(--text)}
+
+/* ══════════ ПРАКТИКА: СВЕТЛЫЙ СЛАЙД ══════════ */
+.slide.practice{background:linear-gradient(160deg,#F7F4EF,#EDE7DD)}
+.slide.practice .kicker{color:var(--coral)}
+.slide.practice h2{color:#141B2B}
+.slide.practice .lead{color:#4A5468}
+.slide.practice .lead b{color:#141B2B}
+.slide.practice .step-p{background:#fff;border-color:rgba(20,27,43,.08);box-shadow:0 12px 32px rgba(20,27,43,.09)}
+.slide.practice .step-p .t{color:#333D52}
+.slide.practice .step-p .t b{color:var(--coral)}
+.slide.practice .src{color:#6B7488;opacity:1}
+.slide.practice .lnk{color:var(--coral);border-bottom-color:rgba(20,27,43,.15)}
+.slide.practice .badge{box-shadow:0 10px 30px rgba(20,27,43,.18)}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+<!-- ═════════════ АКТ 0 · МОСТИК И КАРТА (7 мин) ═════════════ -->
+
+<!-- 1 · Титул -->
+<section class="slide" data-act="Старт">
+  <img class="bg bg--strong" src="screens6/bg-title.jpg" alt=""><div class="veil"></div>
+  <div class="wrap" style="justify-content:flex-end">
+    <div class="kicker a">Очный курс · Поток 4 · Уфа · 11 августа 2026</div>
+    <h1 class="a d1" style="font-size:150px">Визуал</h1>
+    <div class="lead a d2" style="margin-top:32px;font-size:41px">Занятие 6 из 8. Презентации, картинки, видео, лендинг.<br><b>Всё, что раньше заказывали, сегодня сделаем сами.</b></div>
+    <div class="a d3" style="margin-top:52px;font-size:28px;color:var(--muted);font-weight:650">Альберт Валеев · <span class="accent">neovida.ai</span></div>
+  </div>
+</section>
+
+<!-- 2 · Мостик -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <div class="kicker a">Где мы остановились</div>
+    <h2 class="a d1">У вас уже есть ИИ, который думает.<br>Сегодня он начнёт <span class="accent">показывать</span></h2>
+    <div class="cards c3 a d2" style="flex:1;align-content:center">
+      <div class="card ap d3"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="robot" style="--sz:48px"></i></span><h3>Ассистент в ChatGPT</h3></div><p>Знает ваш метод, пишет вашим голосом, работает по вашей базе знаний.</p></div>
+      <div class="card ap d4"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="plugs-connected" style="--sz:48px"></i></span><h3>Google-среда</h3></div><p>Gem-боты, блокноты, почта и календарь. Вторая экосистема подключена.</p></div>
+      <div class="card ap d5"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="lightning" style="--sz:48px"></i></span><h3>Codex-сборщик</h3></div><p>Штурм идей и первая рабочая вещь, собранная за вечер.</p></div>
+    </div>
+    <div class="lead a d6" style="font-size:32px">Но всё это <b>тексты и таблицы</b>. А клиент сначала видит, потом читает.</div>
+  </div>
+</section>
+
+<!-- 3 · Мысль урока -->
+<section class="slide" data-act="Старт">
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Одна мысль на всё занятие</div>
+    <h2 class="a d1" style="font-size:72px;line-height:1.12">Презентация, фотосессия, ролик и лендинг<br><span class="accent">перестали быть услугой</span></h2>
+    <div class="lead a d2" style="margin-top:40px;font-size:36px">Дизайнер, фотограф, монтажёр и верстальщик не исчезли.<br><b>Они переехали в два окна, которые у вас уже открыты.</b></div>
+  </div>
+</section>
+
+<!-- 4 · Карта урока -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <div class="kicker a">Что сегодня заберёте</div>
+    <h2 class="a d1">Пять блоков. После каждого: готовая вещь</h2>
+    <div class="chips a d2" style="grid-template-columns:repeat(5,1fr);margin-top:52px">
+      <div class="chip ap d3"><div class="hd"><i class="ph-i" data-ph="presentation-chart" style="--sz:44px"></i></div><h4>Презентации</h4><p>Kimi, NotebookLM, Gamma + новинка: .pptx из ChatGPT.</p></div>
+      <div class="chip ap d4" style="--coral:#B69BE6;--coral-soft:rgba(182,155,230,.16)"><div class="hd"><i class="ph-i" data-ph="camera" style="--sz:44px"></i></div><h4>Картинки</h4><p>Фотосессия и баннеры в двух инструментах, что уже в кармане.</p></div>
+      <div class="chip ap d5" style="--coral:#F2C14E;--coral-soft:rgba(242,193,78,.15)"><div class="hd"><i class="ph-i" data-ph="film-strip" style="--sz:44px"></i></div><h4>Видео</h4><p>Фото оживает в ролик. Прямо в Gemini, бесплатно.</p></div>
+      <div class="chip ap d6" style="--coral:#10b981;--coral-soft:rgba(16,185,129,.16)"><div class="hd"><i class="ph-i" data-ph="storefront" style="--sz:44px"></i></div><h4>Лендинг</h4><p>Витрина оффера с кнопкой заявки. По шагам, до живой ссылки.</p></div>
+      <div class="chip ap d7" style="--coral:#7FA6D0;--coral-soft:rgba(127,166,208,.17)"><div class="hd"><i class="ph-i" data-ph="crown" style="--sz:44px"></i></div><h4>Профи-лига</h4><p>Куда расти: Krea, Higgsfield, Kling, аватары. Только обзор.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · Честно про деньги -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <div class="kicker a">Чтобы вопрос не висел весь вечер</div>
+    <h2 class="a d1">Всё сегодняшнее работает на том, <span class="accent">что у вас уже есть</span></h2>
+    <div class="rules rules--tight a d2" style="margin-top:48px">
+      <div class="rule ap d3"><span class="ico-chip"><i class="ph-i" data-ph="check-circle" style="--sz:40px"></i></span><div class="t"><b>Платный ChatGPT</b>: есть у каждого в группе. Сегодня он окупится ещё раз</div></div>
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="check-circle" style="--sz:40px"></i></span><div class="t"><b>Бесплатный Google</b>: картинки, видео и блокноты работают без подписки. Нужен только VPN</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="check-circle" style="--sz:40px"></i></span><div class="t"><b>Kimi, GLM, Bolt</b>: бесплатные лимиты, хватает на всё занятие и домашку</div></div>
+      <div class="rule ap d6"><span class="ico-chip"><i class="ph-i" data-ph="eye" style="--sz:40px"></i></span><div class="t">Платные профи-сервисы <b>покажем издалека</b>. Сегодня не покупаем ничего</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════ АКТ 1 · ПРЕЗЕНТАЦИИ (30 мин) ═════════════ -->
+
+<!-- 6 · Разделитель -->
+<section class="slide" data-act="Презентации">
+  <img class="bg bg--strong bg--emerge" src="screens6/bg-prez.jpg" alt=""><div class="veil veil--left"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Блок 1 из 5</div>
+    <h1 class="a d1" style="font-size:104px">Презентации</h1>
+    <div class="lead a d2" style="margin-top:28px">Одна тема, четыре кнопки. Готовый файл со слайдами за три минуты.</div>
+  </div>
+</section>
+
+<!-- 7 · Аналогия: четыре способа -->
+<section class="slide" data-act="Презентации">
+  <div class="wrap">
+    <div class="kicker a">Как в стройке</div>
+    <h2 class="a d1">Четыре способа <span class="accent">построить дом</span></h2>
+    <div class="rules rules--tight a d2" style="margin-top:44px">
+      <div class="rule ap d3"><span class="ico-chip"><i class="ph-i" data-ph="lightning" style="--sz:40px"></i></span><div class="t"><b>Kimi или GLM Turbo</b>: типовой проект. Быстро, надёжно, редактируемый .pptx</div></div>
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="book-open-text" style="--sz:40px"></i></span><div class="t"><b>NotebookLM</b>: из ваших чертежей. Точно по вашим документам</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="palette" style="--sz:40px"></i></span><div class="t"><b>ChatGPT → Gamma</b>: красивый дизайн на готовых темах. Контент пишет ChatGPT, дизайн делает Gamma</div></div>
+      <div class="rule ap d6"><span class="ico-chip"><span class="logo-i" data-logo="openai" style="--sz:36px"></span></span><div class="t"><b>ChatGPT сам</b>: новинка. Готовый .pptx прямо из вашего чата, где он уже знает ваш бизнес</div></div>
+    </div>
+    <div class="src a">Нет «лучшего» инструмента. Есть правильный инструмент для задачи.</div>
+  </div>
+</section>
+
+<!-- 8 · Подход 1: Kimi / GLM Turbo -->
+<section class="slide" data-act="Презентации">
+  <div class="wrap">
+    <div class="badge a">Подход 1</div>
+    <h2 class="a d1"><img class="logo-img" src="screens6/logo-kimi.png" alt="Kimi" style="height:50px;vertical-align:-6px">&nbsp; Kimi <span style="color:var(--muted);font-weight:600">или</span> GLM Turbo</h2>
+    <div class="lead a d2" style="margin-top:14px;font-size:31px">Пишешь тему → получаешь готовый <b>.pptx за 60 секунд</b>. Если один в очереди: берёшь другой.</div>
+    <div class="cards c2 a d3" style="margin-top:28px">
+      <div class="card card--sm ap d4">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="presentation-chart" style="--sz:40px"></i></span><h3><a class="lnk" href="https://www.kimi.com" target="_blank">Kimi Slides</a></h3></div>
+        <p>37 шаблонов, русский язык. Бесплатно, без водяных знаков. <b>.pptx: текст и элементы редактируемые.</b></p>
+        <p>Минус: в часы пик ставит в очередь.</p>
+      </div>
+      <div class="card card--sm ap d5">
+        <div class="head"><span class="ico-chip"><img class="logo-img" src="screens6/logo-zai.png" alt="Z.ai" style="height:36px"></span><h3><a class="lnk" href="https://chat.z.ai" target="_blank">GLM Turbo (z.ai)</a></h3></div>
+        <p>Стабильный, без очередей. Бесплатно, без VPN. <b>Делает .pptx и красивый HTML.</b></p>
+        <p>Берите, если Kimi не отвечает.</p>
+      </div>
+    </div>
+    <div class="src a">Также: Qwen рендерит слайды как картинки (красиво, но не редактируемо).</div>
+  </div>
+</section>
+
+<!-- 9 · Демо Kimi/GLM -->
+<section class="slide" data-act="Презентации">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="play-circle" style="--sz:30px"></i> Демо</div>
+    <h2 class="a d1">Kimi или GLM Turbo <span class="accent">в деле</span></h2>
+    <div class="pgrid pgrid--mid a d2">
+      <div class="pcol">
+        <div class="p-lbl">Промпт · один и тот же в оба</div>
+        <div class="prompt">Презентация на тему: «Как специалисту быстро упаковать рабочую идею с помощью ИИ».
+Аудитория: клиент, руководитель, команда или партнёр.
+Содержание: проблема, кому это нужно, 5 аргументов, примеры из моей сферы, риски, следующий шаг.
+10 слайдов. Стиль: профессиональный, минималистичный, без рекламного шума.</div>
+      </div>
+    </div>
+    <div class="src a">Запускаем там, где сегодня быстрее: kimi.com или chat.z.ai → план → генерация → .pptx</div>
+  </div>
+</section>
+
+<!-- 10 · Подход 2: NotebookLM -->
+<section class="slide" data-act="Презентации">
+  <div class="wrap">
+    <div class="badge a">Подход 2</div>
+    <h2 class="a d1"><span class="logo-i" data-logo="notebooklm" style="--sz:50px;vertical-align:-6px"></span>&nbsp; NotebookLM: <span class="accent">Slide Deck</span></h2>
+    <div class="lead a d2" style="margin-top:14px;font-size:31px">Загрузили документы → получили презентацию <b>на основе ваших данных</b>.</div>
+    <div class="cards c2 a d3" style="margin-top:28px">
+      <div class="card card--sm ap d4">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="shield-check" style="--sz:40px"></i></span><h3>Суперсила</h3></div>
+        <p>Точность: контент из ваших документов. <b>Нет галлюцинаций: только ваши данные.</b> Каждый слайд можно доработать промптом.</p>
+      </div>
+      <div class="card card--sm ap d5">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="list-checks" style="--sz:40px"></i></span><h3>Как использовать</h3></div>
+        <p>1. <a class="lnk" href="https://notebooklm.google.com" target="_blank">notebooklm.google.com</a><br>2. Загрузить PDF, Google Doc или сайт<br>3. Студия → <b>Презентация</b> (Slide Deck)<br>4. Настроить стиль через промпт<br>5. Экспорт в PDF или .pptx</p>
+      </div>
+    </div>
+    <div class="src a">Вы уже работали с блокнотами на занятии 4. Теперь используем их для визуала.</div>
+  </div>
+</section>
+
+<!-- 11 · Демо NotebookLM -->
+<section class="slide" data-act="Презентации">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="play-circle" style="--sz:30px"></i> Демо</div>
+    <h2 class="a d1">NotebookLM Slide Deck: <span class="accent">на живом документе</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:34px">
+      <div class="step-p ap d3"><div class="n">1</div><div class="t">Загружаем ваш документ: <b>КП, резюме, описание услуги, проект, рабочий отчёт</b></div></div>
+      <div class="step-p ap d4"><div class="n">2</div><div class="t">Студия → Slide Deck → <b>Detailed Deck</b></div></div>
+      <div class="step-p ap d5"><div class="n">3</div><div class="t">Промпт стиля: <b>«Минимализм, тёмный фон, 3–5 пунктов на слайд»</b></div></div>
+      <div class="step-p ap d6"><div class="n">4</div><div class="t">Редактируем слайд: карандаш → <b>«Добавь конкретные цифры из прайса»</b></div></div>
+    </div>
+    <div class="src a">Загрузили документ: получили презентацию по нему. Без выдумок, только из ваших данных.</div>
+  </div>
+</section>
+
+<!-- 12 · NotebookLM пошагово + стили -->
+<section class="slide" data-act="Презентации">
+  <div class="wrap">
+    <div class="kicker a">Разберём по кликам</div>
+    <h2 class="a d1">NotebookLM: <span class="accent">пошагово</span></h2>
+    <div class="cards c2 a d2" style="margin-top:26px">
+      <div class="card card--sm ap d3">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="steps" style="--sz:40px"></i></span><h3>Создание презентации</h3></div>
+        <p style="line-height:1.55">1. <a class="lnk" href="https://notebooklm.google.com" target="_blank">notebooklm.google.com</a><br>2. Создать блокнот → загрузить документ<br>3. Панель <b>Студия</b><br>4. Кнопка <b>Презентация</b><br>5. Настройки: формат, длина, язык<br>6. Поле <b>Custom Prompt</b>: готовый стиль с <a class="lnk" href="https://materials.neovida.ai/notebooklm-styles.html" target="_blank">neovida.ai/notebooklm-styles</a><br>7. Generate</p>
+      </div>
+      <div class="card card--sm ap d4">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="palette" style="--sz:40px"></i></span><h3>Пример промпта стиля</h3></div>
+        <p style="line-height:1.55;font-style:italic">Стиль: минимализм, белый фон. Цвета: акцент #E07461, текст #1A1A2E. Шрифт: жирный sans-serif для заголовков. Каждый слайд: одна мысль, максимум 5 пунктов. Визуализируй цифры как инфографику.</p>
+        <p><b>Редактирование:</b> карандаш у слайда → инструкция<br><b>Экспорт:</b> ⋮ → Download PDF / PowerPoint</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 · Подход 3: Gamma -->
+<section class="slide" data-act="Презентации">
+  <div class="wrap">
+    <div class="badge a">Подход 3</div>
+    <h2 class="a d1">Gamma: <span class="accent">профильный AI-конструктор</span></h2>
+    <div class="lead a d2" style="margin-top:14px;font-size:31px">Полный визуальный редактор: слайды правятся <b>кликом мыши</b>.</div>
+    <div class="cards c2 a d3" style="margin-top:28px">
+      <div class="card card--sm ap d4">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="medal" style="--sz:40px"></i></span><h3>Плюсы</h3></div>
+        <p><b>Лучший дизайн: 5/5.</b> 17+ готовых тем: bold, minimal, dark, playful. Редактирование кликом. Без VPN, бесплатно: 400 кредитов, до 10 слайдов.</p>
+      </div>
+      <div class="card card--sm ap d5">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="list-checks" style="--sz:40px"></i></span><h3>Как использовать</h3></div>
+        <p>1. Контент готовим в <b>ChatGPT</b> (промпт в шпаргалке)<br>2. <a class="lnk" href="https://gamma.app" target="_blank">gamma.app</a> → Create → <b>Paste in text</b><br>3. Вставить текст из ChatGPT<br>4. Выбрать тему из галереи → Generate</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 · Gamma workflow -->
+<section class="slide" data-act="Презентации">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="play-circle" style="--sz:30px"></i> Демо</div>
+    <h2 class="a d1">Gamma: workflow <span class="accent">ChatGPT → Gamma</span></h2>
+    <div class="lead a d2" style="margin-top:14px;font-size:30px">На бесплатке Gamma: 10 слайдов и только готовые темы. Поэтому <b>контент готовим в ChatGPT, а Gamma делает дизайн</b>.</div>
+    <div class="cards c2 a d3" style="margin-top:26px">
+      <div class="card card--sm ap d4">
+        <div class="head"><div class="mono">1</div><h3>ChatGPT</h3></div>
+        <p>Промпт «структура под Gamma, 10 слайдов» (готовый: в шпаргалке) → ChatGPT разбивает контент по слайдам → <b>копируем весь ответ</b>.</p>
+      </div>
+      <div class="card card--sm ap d5">
+        <div class="head"><div class="mono">2</div><h3>Gamma</h3></div>
+        <p><a class="lnk" href="https://gamma.app" target="_blank">gamma.app</a> → Create → Presentation → <b>Paste in text</b> → вставляем текст → выбираем тему из галереи → <b>Generate</b>.</p>
+      </div>
+    </div>
+    <div class="src a">Готовый промпт под Gamma: в шпаргалке. Меняете тему и контекст под себя.</div>
+  </div>
+</section>
+
+<!-- 15 · Подход 4: ChatGPT (новинка) -->
+<section class="slide" data-act="Презентации">
+  <div class="wrap">
+    <div class="badge a">Подход 4 · новинка</div>
+    <h2 class="a d1"><span class="logo-i" data-logo="openai" style="--sz:52px;vertical-align:-8px"></span>&nbsp; ChatGPT отдаёт готовый <span class="accent">.pptx</span></h2>
+    <div class="lead a d2" style="margin-top:14px;font-size:30px">У всей группы платная подписка. Он уже <b>знает ваш бизнес</b> и говорит вашим голосом: этого нет ни у одного конструктора.</div>
+    <div class="pgrid a d3" style="margin-top:22px">
+      <div class="pcol">
+        <div class="p-lbl">Промпт · прямо в ваш рабочий чат</div>
+        <div class="prompt prompt--sm">Собери презентацию на тему: [ваша тема]. Для кого: [аудитория]. 10 слайдов, деловой чистый стиль, крупные цифры, без стоковых фото. Отдай готовым файлом .pptx на скачивание.</div>
+      </div>
+    </div>
+    <div class="rules rules--tight a d4" style="margin-top:24px">
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="file-ppt" style="--sz:38px"></i></span><div class="t">Файл открывается в PowerPoint и Keynote, <b>каждый слайд правится руками</b></div></div>
+      <div class="rule ap d6"><span class="ico-chip"><i class="ph-i" data-ph="brain" style="--sz:38px"></i></span><div class="t">Попросите «сначала изучи тему в интернете»: соберёт <b>со свежими цифрами</b></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 · Сравнение -->
+<section class="slide" data-act="Презентации">
+  <div class="wrap">
+    <div class="kicker a">Когда какой</div>
+    <h2 class="a d1">Четыре подхода: <span class="accent">сравнение</span></h2>
+    <div class="tbl a d2" style="grid-template-columns:1fr 1.1fr 1.1fr 1fr 1.1fr;margin-top:30px">
+      <div class="th">Критерий</div><div class="th">Kimi / GLM</div><div class="th">NotebookLM</div><div class="th">Gamma</div><div class="th">ChatGPT</div>
+      <div class="q">Источник</div><div>Промпт / тема</div><div class="hi">Ваши документы</div><div>Промпт / тема</div><div class="hi">Ваш чат: он вас знает</div>
+      <div class="q">Формат</div><div class="hi">.pptx</div><div>Слайды + ревизия</div><div>Онлайн-редактор</div><div class="hi">.pptx</div>
+      <div class="q">Дизайн</div><div>4/5</div><div>3.5/5</div><div class="ok">5/5</div><div>3.5/5</div>
+      <div class="q">Цена</div><div class="ok">Бесплатно</div><div class="ok">Бесплатно</div><div>400 кредитов</div><div>В подписке</div>
+      <div class="q">Лучше для</div><div>Быстрый PowerPoint</div><div>Из ваших материалов</div><div>Красивый визуал</div><div>Про ваш бизнес</div>
+    </div>
+  </div>
+</section>
+
+<!-- 17 · Простой путь: Slidesgo -->
+<section class="slide" data-act="Презентации">
+  <div class="wrap">
+    <div class="kicker a">Простой путь</div>
+    <h2 class="a d1">Slidesgo AI: <span class="accent">сам генерит, 24 стиля</span></h2>
+    <div class="cards c2 a d2" style="margin-top:30px">
+      <div class="card card--sm ap d3">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="check-circle" style="--sz:40px"></i></span><h3>Плюсы</h3></div>
+        <p>24 готовых стиля: минимализм, яркий, геометрия. Загрузка файла (PDF, DOCX): извлечёт тезисы. Скачать .pptx. <b>3 презентации в месяц бесплатно.</b></p>
+      </div>
+      <div class="card card--sm ap d4">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="x-circle" style="--sz:40px"></i></span><h3>Минусы</h3></div>
+        <p>Нельзя задать свой кастомный стиль: только 24 встроенных. <b>Хотите уникальный стиль: идём на следующий слайд.</b></p>
+      </div>
+    </div>
+    <div class="src a"><a class="lnk" href="https://slidesgo.com/ai/presentation-maker" target="_blank">slidesgo.com/ai/presentation-maker</a> · быстро, но без гибкости по стилю</div>
+  </div>
+</section>
+
+<!-- 18 · Обратный промптинг -->
+<section class="slide" data-act="Презентации">
+  <div class="wrap">
+    <div class="kicker a">Продвинутый путь · обратный промптинг</div>
+    <h2 class="a d1">Презентация <span class="accent">в любом стиле</span></h2>
+    <div class="fx a d2" style="grid-template-columns:repeat(4,1fr);margin-top:34px">
+      <div class="fx-i ap d3"><div class="fx-l">1</div><div class="fx-w">Найти стиль</div><div class="fx-s"><a class="lnk" href="https://www.slidescarnival.com" target="_blank">SlidesCarnival</a>, <a class="lnk" href="https://slidesmania.com" target="_blank">SlidesMania</a>, <a class="lnk" href="https://pitch.com/templates" target="_blank">Pitch</a></div></div>
+      <div class="fx-i ap d4"><div class="fx-l">2</div><div class="fx-w">Скриншоты</div><div class="fx-s">3–5 красивых слайдов → в ChatGPT</div></div>
+      <div class="fx-i ap d5"><div class="fx-l">3</div><div class="fx-w">Промпт стиля</div><div class="fx-s">ChatGPT описывает стиль до 500 символов</div></div>
+      <div class="fx-i ap d6"><div class="fx-l">4</div><div class="fx-w">Вставить</div><div class="fx-s">в NotebookLM Custom Prompt или Gamma</div></div>
+    </div>
+    <div class="pgrid a d7" style="margin-top:28px">
+      <div class="pcol">
+        <div class="p-lbl">Промпт для ChatGPT · вместе со скриншотами</div>
+        <div class="prompt prompt--sm">Проанализируй стиль этих слайдов. Опиши кратко (до 500 символов): цвета (HEX), шрифты, layout, настроение. Напиши готовый промпт для AI-генератора презентаций: он должен уместиться в 500 символов.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 19 · Практика 1 -->
+<section class="slide practice" data-act="Презентации">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="hand-tap" style="--sz:30px"></i> Ваша очередь · 10 минут</div>
+    <h2 class="a d1">Создайте <span class="accent">презентацию</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:36px">
+      <div class="step-p ap d3"><div class="n">1</div><div class="t">Выберите подход: <b>Kimi / GLM Turbo</b> (быстрый .pptx), <b>NotebookLM</b> (из документов), <b>Gamma</b> (красивый) или <b>ChatGPT</b> (.pptx из чата)</div></div>
+      <div class="step-p ap d4"><div class="n">2</div><div class="t">Введите свою тему: <b>реальную, рабочую</b>. Варианты под вашу роль: в шпаргалке</div></div>
+      <div class="step-p ap d5"><div class="n">3</div><div class="t">Получите результат → <b>покажите в чат потока</b></div></div>
+    </div>
+    <div class="src a" style="opacity:1">Готовые стили для NotebookLM: <a class="lnk" href="https://materials.neovida.ai/notebooklm-styles.html" target="_blank">materials.neovida.ai/notebooklm-styles</a> · выбрали → скопировали → вставили в Custom Prompt</div>
+  </div>
+</section>
+
+<!-- ═════════════ АКТ 2 · КАРТИНКИ (25 мин) ═════════════ -->
+
+<!-- 15 · Разделитель -->
+<section class="slide as" data-act="Картинки">
+  <img class="bg bg--strong bg--emerge" src="screens6/bg-img.jpg" alt=""><div class="veil veil--left"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Блок 2 из 5</div>
+    <h1 class="a d1" style="font-size:104px">Картинки</h1>
+    <div class="lead a d2" style="margin-top:28px">Фотосессия без фотографа: карточки товара, посты, обложки, баннеры.</div>
+  </div>
+</section>
+
+<!-- 16 · Два инструмента -->
+<section class="slide as" data-act="Картинки">
+  <div class="wrap">
+    <div class="kicker a">Ничего нового ставить не надо</div>
+    <h2 class="a d1">Два топ-инструмента <span class="accent">уже у вас в кармане</span></h2>
+    <div class="cards c2 a d2" style="flex:1;align-content:center">
+      <div class="card ap d3">
+        <div class="head"><span class="logo-i" data-logo="openai" style="--sz:56px"></span><h3>ChatGPT Images 2.0</h3></div>
+        <p><b>Создаёт с нуля.</b> Вышла в апреле: сейчас №1 обоих мировых рейтингов картинок.</p>
+        <p>Просто пишете в тот же чат: «нарисуй...». Работает в вашей платной подписке.</p>
+      </div>
+      <div class="card ap d4">
+        <div class="head"><span class="logo-i" data-logo="googlegemini" style="--sz:52px"></span><h3>Nano Banana в Gemini</h3></div>
+        <p><b>Переделывает ваше.</b> Загружаете своё фото и говорите, что поменять.</p>
+        <p>Работает на бесплатном аккаунте. Та же кнопка «+», что вы знаете с занятия 4.</p>
+      </div>
+    </div>
+    <div class="lead a d5" style="font-size:31px">Запомнить просто: <b>создать: ChatGPT. Переделать: Gemini.</b></div>
+  </div>
+</section>
+
+<!-- 17 · Что нового в Images 2.0 -->
+<section class="slide as" data-act="Картинки">
+  <div class="wrap">
+    <div class="kicker a">Апрель 2026 · ChatGPT Images 2.0</div>
+    <h2 class="a d1">Почему все старые советы <span class="accent">устарели</span></h2>
+    <div class="rules rules--tight a d2" style="margin-top:44px">
+      <div class="rule ap d3"><span class="ico-chip"><i class="ph-i" data-ph="brain" style="--sz:40px"></i></span><div class="t"><b>Думает перед рисованием</b>: изучает тему, планирует композицию, проверяет себя. Первая модель, которая так умеет</div></div>
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="text-t" style="--sz:40px"></i></span><div class="t"><b>Текст на картинке: 99% точности, включая кириллицу.</b> Баннеры и вывески по-русски больше не боль</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="frame-corners" style="--sz:40px"></i></span><div class="t"><b>4K и любые пропорции</b>: от широкого баннера до вертикального сторис</div></div>
+      <div class="rule ap d6"><span class="ico-chip"><i class="ph-i" data-ph="images" style="--sz:40px"></i></span><div class="t"><b>До 8 согласованных картинок за раз</b>: один герой, один стиль во всей серии</div></div>
+    </div>
+    <div class="src a">Год назад для текста на картинках советовали отдельный сервис Ideogram. Уже не надо: всё в одном окне.</div>
+  </div>
+</section>
+
+<!-- 18 · Nano Banana: редактура -->
+<section class="slide as" data-act="Картинки">
+  <div class="wrap">
+    <div class="kicker a">Nano Banana · сила в редактуре</div>
+    <h2 class="a d1">Ваше фото <span class="accent">в новой жизни</span></h2>
+    <div class="chips a d2" style="margin-top:48px">
+      <div class="chip ap d3"><div class="hd"><i class="ph-i" data-ph="magic-wand" style="--sz:40px"></i></div><h4>Поменять фон</h4><p>Товар из гаража переезжает в светлую студию на мраморный стол.</p></div>
+      <div class="chip ap d4"><div class="hd"><i class="ph-i" data-ph="palette" style="--sz:40px"></i></div><h4>Примерить стиль</h4><p>Зал в другом цвете стен, вывеска в другом шрифте: до ремонта.</p></div>
+      <div class="chip ap d5"><div class="hd"><i class="ph-i" data-ph="user-focus" style="--sz:40px"></i></div><h4>Деловой портрет</h4><p>Селфи превращается в фото для сайта: костюм, свет, фон офиса.</p></div>
+      <div class="chip ap d6"><div class="hd"><i class="ph-i" data-ph="sparkle" style="--sz:40px"></i></div><h4>Оживить архив</h4><p>Старое фото фасада, команды или продукта: чистое и резкое.</p></div>
+    </div>
+    <div class="lead a d7" style="margin-top:36px;font-size:31px">Формула проста: загрузили фото → сказали, что поменять → <b>уточнили пару раз</b>. Готово.</div>
+  </div>
+</section>
+
+<!-- 19 · Формула промпта -->
+<section class="slide as" data-act="Картинки">
+  <div class="wrap">
+    <div class="kicker a">Как просить, чтобы получалось</div>
+    <h2 class="a d1">Формула промпта: <span class="accent">пять деталей</span></h2>
+    <div class="fx a d2" style="margin-top:40px">
+      <div class="fx-i ap d3"><div class="fx-l" style="font-size:64px"><i class="ph-i" data-ph="package" style="--sz:64px"></i></div><div class="fx-w">Объект</div><div class="fx-s">что на фото</div></div>
+      <div class="fx-i ap d4"><div class="fx-l" style="font-size:64px"><i class="ph-i" data-ph="buildings" style="--sz:64px"></i></div><div class="fx-w">Сцена</div><div class="fx-s">где и когда</div></div>
+      <div class="fx-i ap d5"><div class="fx-l" style="font-size:64px"><i class="ph-i" data-ph="aperture" style="--sz:64px"></i></div><div class="fx-w">Стиль</div><div class="fx-s">фото, арт, 3D</div></div>
+      <div class="fx-i ap d6"><div class="fx-l" style="font-size:64px"><i class="ph-i" data-ph="lightning" style="--sz:64px"></i></div><div class="fx-w">Свет</div><div class="fx-s">мягкий, закатный</div></div>
+      <div class="fx-i ap d7"><div class="fx-l" style="font-size:64px"><i class="ph-i" data-ph="crop" style="--sz:64px"></i></div><div class="fx-w">Формат</div><div class="fx-s">16:9, 1:1, сторис</div></div>
+    </div>
+    <div class="pgrid a d8" style="margin-top:34px">
+      <div class="pcol">
+        <div class="p-lbl">Пример целиком</div>
+        <div class="prompt prompt--sm">Фотореалистичное фото для сайта кейтеринга: фуршетный стол с горячими закусками в лофт-пространстве, официант в чёрном фартуке на заднем плане. Стиль: профессиональная фуд-съёмка. Свет: мягкий дневной из больших окон. Формат 16:9.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 20 · 10 правил промптинга -->
+<section class="slide as" data-act="Картинки">
+  <div class="wrap">
+    <div class="kicker a">Проверено тремя потоками</div>
+    <h2 class="a d1">10 правил <span class="accent">промптинга для визуала</span></h2>
+    <div class="rules rules--10 a d2" style="margin-top:28px">
+      <div class="rule ap d3"><div class="mono">1</div><div class="t"><b>Пиши на английском</b>: кириллицу в кавычках. Новые модели понимают и русский</div></div>
+      <div class="rule ap d3"><div class="mono">2</div><div class="t"><b>Формула:</b> субъект + стиль + свет + ракурс</div></div>
+      <div class="rule ap d4"><div class="mono">3</div><div class="t"><b>Описывай, что хочешь</b>, а не чего не хочешь</div></div>
+      <div class="rule ap d4"><div class="mono">4</div><div class="t"><b>Указывай стиль:</b> editorial, product, lifestyle, 3D</div></div>
+      <div class="rule ap d5"><div class="mono">5</div><div class="t"><b>Управляй светом:</b> golden hour, soft light, dramatic</div></div>
+      <div class="rule ap d5"><div class="mono">6</div><div class="t"><b>Указывай ракурс:</b> close-up, wide shot, low-angle</div></div>
+      <div class="rule ap d6"><div class="mono">7</div><div class="t"><b>Будь конкретным:</b> «freckles, auburn hair» вместо «beautiful»</div></div>
+      <div class="rule ap d6"><div class="mono">8</div><div class="t"><b>Главное: в начало</b> промпта</div></div>
+      <div class="rule ap d7"><div class="mono">9</div><div class="t"><b>Заземляй абстракции:</b> не «инновация», а конкретная сцена</div></div>
+      <div class="rule ap d7"><div class="mono">10</div><div class="t"><b>Итерируй:</b> первый результат не финал, уточняй</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 21 · Бизнес-промпты 1 -->
+<section class="slide as" data-act="Картинки">
+  <div class="wrap">
+    <div class="kicker a">Готовые промпты · подставьте своё</div>
+    <h2 class="a d1">Карточка товара и <span class="accent">деловой портрет</span></h2>
+    <div class="pgrid p2 a d2" style="margin-top:30px">
+      <div class="pcol ap d3">
+        <div class="p-lbl"><i class="ph-i" data-ph="package" style="--sz:24px;vertical-align:-4px"></i> Фото товара · ChatGPT</div>
+        <div class="prompt prompt--sm">Профессиональное фото товара для интернет-магазина: <span class="ph">[ваш товар]</span> на светлом фоне с мягкой тенью, вид чуть сверху, детали в резкости. Студийный свет. Квадрат 1:1. Сделай 4 варианта с разных ракурсов.</div>
+      </div>
+      <div class="pcol ap d4">
+        <div class="p-lbl"><i class="ph-i" data-ph="user-focus" style="--sz:24px;vertical-align:-4px"></i> Портрет · Gemini + ваше селфи</div>
+        <div class="prompt prompt--sm">Сделай из этого фото деловой портрет для сайта компании: тёмный пиджак, нейтральный офисный фон с лёгким размытием, мягкий студийный свет, уверенное спокойное лицо. Сохрани сходство, не меняй черты лица.</div>
+      </div>
+    </div>
+    <div class="src a">Правки словами: «фон темнее», «улыбку мягче», «плечи развернуть». Два-три круга: и готово.</div>
+  </div>
+</section>
+
+<!-- 23 · bananaprompts -->
+<section class="slide as" data-act="Картинки">
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Лайфхак для ленивых</div>
+    <h2 class="a d1">Не хотите писать промпт: <span class="accent">возьмите готовый</span></h2>
+    <div class="stat-center" style="flex:0;margin-top:56px;align-items:flex-start">
+      <div class="stat-num" style="font-size:96px"><a class="lnk" href="https://www.bananaprompts.xyz/explore" target="_blank" style="border-bottom-width:4px">bananaprompts.xyz</a></div>
+      <div class="stat-sub" style="font-size:34px;margin-top:28px">Библиотека промптов <b>с превью результата</b>: листаете картинки, нашли похожую на задачу, скопировали промпт, подставили своё.</div>
+    </div>
+    <div class="rules rules--tight a d3" style="margin-top:48px;max-width:1500px">
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="eye" style="--sz:38px"></i></span><div class="t">Видно <b>до генерации</b>, что получится: экономит лимиты и время</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="graduation-cap" style="--sz:38px"></i></span><div class="t">Читайте чужие промпты как учебник: <b>так быстрее всего растёт насмотренность</b></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 24 · Демо Nano Banana -->
+<section class="slide as" data-act="Картинки">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="play-circle" style="--sz:30px"></i> Демо</div>
+    <h2 class="a d1">Редактура на живом фото: <span class="accent">товар переезжает в студию</span></h2>
+    <div class="steps-p a d2" style="margin-top:40px">
+      <div class="step-p ap d3"><div class="n">1</div><div class="t">Gemini → «+» → загружаем <b>обычное фото с телефона</b></div></div>
+      <div class="step-p ap d4"><div class="n">2</div><div class="t">«Убери фон, поставь на <b>мраморный стол у окна</b>, мягкий утренний свет, лёгкая тень»</div></div>
+      <div class="step-p ap d5"><div class="n">3</div><div class="t">Уточняем: «ближе», «добавь веточку эвкалипта слева», «фон чуть темнее»</div></div>
+    </div>
+    <div class="src a">Смотрим на экран: от фото из гаража до карточки маркетплейса за две минуты.</div>
+  </div>
+</section>
+
+<!-- 25 · Практика 2 -->
+<section class="slide as practice" data-act="Картинки">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="hand-tap" style="--sz:30px"></i> Ваша очередь · 7 минут</div>
+    <h2 class="a d1">Одна картинка <span class="accent">под ваш бизнес</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:36px">
+      <div class="step-p ap d3"><div class="n">1</div><div class="t">Путь А: <b>ChatGPT, с нуля</b> по формуле. Путь Б: <b>Gemini, редактура</b> своего фото</div></div>
+      <div class="step-p ap d4"><div class="n">2</div><div class="t">Один круг уточнений: <b>«теплее», «ближе», «фон чище»</b></div></div>
+      <div class="step-p ap d5"><div class="n">3</div><div class="t">Результат: <b>в чат потока</b>. Дальше эта картинка оживёт в видео</div></div>
+    </div>
+    <div class="src a" style="opacity:1">Промпты под карточку товара, портрет, пост и баннер: в шпаргалке, копируйте и подставляйте своё.</div>
+  </div>
+</section>
+
+<!-- ═════════════ АКТ 3 · ВИДЕО (15 мин) ═════════════ -->
+
+<!-- 26 · Разделитель -->
+<section class="slide sk" data-act="Видео">
+  <img class="bg bg--strong bg--emerge" src="screens6/bg-video.jpg" alt=""><div class="veil veil--left"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Блок 3 из 5</div>
+    <h1 class="a d1" style="font-size:104px">Видео</h1>
+    <div class="lead a d2" style="margin-top:28px">Голливуд не обещаем. Живой ролик для сторис за две минуты: да.</div>
+  </div>
+</section>
+
+<!-- 27 · Проверено сегодня -->
+<section class="slide sk" data-act="Видео">
+  <div class="wrap">
+    <div class="kicker a">Проверено сегодня днём, на бесплатном аккаунте</div>
+    <h2 class="a d1">В Gemini появился раздел <span class="accent">«Видео»</span></h2>
+    <div class="ui a d2" style="margin-top:40px;max-width:1500px">
+      <div class="ui-row ap d3"><div class="k"><i class="ph-i" data-ph="film-slate" style="--sz:26px"></i></div><div class="fl">Сайдбар → Видео</div><div class="fd">отдельный раздел «Создание видео», работает без подписки</div></div>
+      <div class="ui-row hot ap d4"><div class="k"><i class="ph-i" data-ph="squares-four" style="--sz:26px"></i></div><div class="fl">Готовые шаблоны</div><div class="fd"><b>«Демонстрация товара» · «Презентация логотипа» · «Инструкция»</b> и другие</div></div>
+      <div class="ui-row ap d5"><div class="k"><i class="ph-i" data-ph="pencil-line" style="--sz:26px"></i></div><div class="fl">Или свой промпт</div><div class="fd">поле «Опишите видео» + загрузка фото</div></div>
+      <div class="ui-row ap d6"><div class="k"><i class="ph-i" data-ph="crop" style="--sz:26px"></i></div><div class="fl">Форматы</div><div class="fd">горизонтальное 16:9 или вертикальное под сторис</div></div>
+    </div>
+    <div class="src a">Внутри работает Veo: та самая модель, чьи ролики вы принимали за настоящую съёмку.</div>
+  </div>
+</section>
+
+<!-- 28 · Фото в видео -->
+<section class="slide sk" data-act="Видео">
+  <div class="wrap">
+    <div class="kicker a">Главный приём</div>
+    <h2 class="a d1">Фото + одна фраза = <span class="accent">8 секунд видео</span></h2>
+    <div class="steps-p a d2" style="margin-top:36px">
+      <div class="step-p ap d3"><div class="n">1</div><div class="t">Загружаете фото: <b>товар, зал, фасад, блюдо</b>. Хоть картинку из прошлого блока</div></div>
+      <div class="step-p ap d4"><div class="n">2</div><div class="t">Описываете <b>движение</b>: что происходит в кадре и куда едет камера</div></div>
+      <div class="step-p ap d5"><div class="n">3</div><div class="t">Получаете ролик <b>со звуком</b>: шум зала, шаги, музыка фона</div></div>
+    </div>
+    <div class="pgrid a d6" style="margin-top:30px">
+      <div class="pcol">
+        <div class="p-lbl">Пример промпта к фото блюда</div>
+        <div class="prompt prompt--sm">Камера медленно наезжает на блюдо, поднимается лёгкий пар, блики света на посуде, на заднем плане мягко расфокусирован зал ресторана. Тёплая уютная атмосфера, звук негромкого зала.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 29 · Демо видео -->
+<section class="slide sk" data-act="Видео">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="play-circle" style="--sz:30px"></i> Демо</div>
+    <h2 class="a d1">Шаблон «Демонстрация товара»: <span class="accent">в один клик</span></h2>
+    <div class="rules a d2" style="margin-top:40px">
+      <div class="rule ap d3"><span class="ico-chip"><i class="ph-i" data-ph="camera" style="--sz:40px"></i></span><div class="t">Берём <b>фото с телефона</b>: без студии и подготовки</div></div>
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="cursor-click" style="--sz:40px"></i></span><div class="t">Жмём шаблон: Gemini <b>сам пишет сценарий движения</b> камеры</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="film-strip" style="--sz:40px"></i></span><div class="t">Через минуту: ролик, который <b>не стыдно поставить в сторис</b> и на сайт</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 30 · Лимиты честно -->
+<section class="slide sk" data-act="Видео">
+  <div class="wrap">
+    <div class="kicker a">Честно про лимиты</div>
+    <h2 class="a d1">Это витрина, <span class="accent">не завод</span></h2>
+    <div class="big2 a d2">
+      <div class="big2-i ap d3"><div class="big2-l" style="font-size:110px">2–3</div><div class="big2-t">ролика в день на бесплатном аккаунте. <b>Для сторис и проб: достаточно</b></div></div>
+      <div class="big2-div"></div>
+      <div class="big2-i ap d4"><div class="big2-l" style="font-size:110px">∞</div><div class="big2-t">поток роликов: это платные профи-сервисы. <b>Покажем в конце занятия</b></div></div>
+    </div>
+    <div class="lead a d5" style="font-size:31px">Правило простое: <b>тратьте дневной лимит на задачу, а не на баловство.</b> Наигрались: возвращайтесь завтра.</div>
+  </div>
+</section>
+
+<!-- 31 · Практика 3 -->
+<section class="slide sk practice" data-act="Видео">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="hand-tap" style="--sz:30px"></i> Ваша очередь · 7 минут</div>
+    <h2 class="a d1">Оживите <span class="accent">свою картинку</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:36px">
+      <div class="step-p ap d3"><div class="n">1</div><div class="t">Gemini → Видео → загрузите <b>картинку из прошлого блока</b> или фото с телефона</div></div>
+      <div class="step-p ap d4"><div class="n">2</div><div class="t">Опишите <b>движение и настроение</b>: камера, свет, звук. Или шаблон «Демонстрация товара»</div></div>
+      <div class="step-p ap d5"><div class="n">3</div><div class="t">Пока генерится (минута-две): <b>подумайте, где этот ролик будет жить</b>: сторис, сайт, презентация</div></div>
+      <div class="step-p ap d6"><div class="n">4</div><div class="t">Готовый ролик: <b>в чат потока</b></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════ АКТ 4 · ЛЕНДИНГИ (25 мин) ═════════════ -->
+
+<!-- 32 · Разделитель -->
+<section class="slide kb" data-act="Лендинг">
+  <img class="bg bg--strong bg--emerge" src="screens6/bg-landing.jpg" alt=""><div class="veil veil--left"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Блок 4 из 5</div>
+    <h1 class="a d1" style="font-size:104px">Лендинг</h1>
+    <div class="lead a d2" style="margin-top:28px">Витрина вашего оффера с кнопкой заявки. По шагам, до живой ссылки.</div>
+  </div>
+</section>
+
+<!-- 33 · Что такое лендинг -->
+<section class="slide kb" data-act="Лендинг">
+  <div class="wrap">
+    <div class="kicker a">Сверим понятия</div>
+    <h2 class="a d1">Лендинг: <span class="accent">одна страница, один оффер, одна кнопка</span></h2>
+    <div class="rules rules--tight a d2" style="margin-top:44px">
+      <div class="rule ap d3"><span class="ico-chip"><i class="ph-i" data-ph="target" style="--sz:40px"></i></span><div class="t">Показывает <b>одно предложение</b>: услугу, продукт, мероприятие, вакансию</div></div>
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="cursor-click" style="--sz:40px"></i></span><div class="t">Ведёт к <b>одному действию</b>: оставить заявку, записаться, позвонить</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="check-circle" style="--sz:40px"></i></span><div class="t">Это <b>не сайт на десять разделов</b>. И слава богу: поэтому он собирается за вечер</div></div>
+    </div>
+    <div class="lead a d6" style="margin-top:36px;font-size:31px">Куда ставить: реклама, подпись в мессенджере, QR на визитке, шапка профиля. <b>Даже простой лендинг работает лучше, чем его отсутствие.</b></div>
+  </div>
+</section>
+
+<!-- 34 · Путь целиком -->
+<section class="slide kb" data-act="Лендинг">
+  <div class="wrap">
+    <div class="kicker a">Весь путь на одном слайде</div>
+    <h2 class="a d1">Пять шагов до <span class="accent">живой ссылки</span></h2>
+    <div class="fx a d2" style="margin-top:52px">
+      <div class="fx-i ap d3"><div class="fx-l">1</div><div class="fx-w">Референс</div><div class="fx-s">lapa.ninja: нашли красивый лендинг своей ниши</div></div>
+      <div class="fx-i ap d4"><div class="fx-l">2</div><div class="fx-w">Скриншот</div><div class="fx-s">GoFullPage: длинный снимок всей страницы</div></div>
+      <div class="fx-i ap d5"><div class="fx-l">3</div><div class="fx-w">Bolt</div><div class="fx-s">скриншот + промпт: собирает в этом стиле</div></div>
+      <div class="fx-i ap d6"><div class="fx-l">4</div><div class="fx-w">Правки</div><div class="fx-s">словами в чате: цвет, блоки, форма</div></div>
+      <div class="fx-i ap d7"><div class="fx-l">5</div><div class="fx-w">Deploy</div><div class="fx-s">кнопка: и ссылка живёт в интернете</div></div>
+    </div>
+    <div class="src a">Дизайнера в цепочке нет, а дизайн есть: его роль играет референс.</div>
+  </div>
+</section>
+
+<!-- 35 · Шаги 1-2 -->
+<section class="slide kb" data-act="Лендинг">
+  <div class="wrap">
+    <div class="kicker a">Шаги 1 и 2 · референс и скриншот</div>
+    <h2 class="a d1">Крадём как художники: <span class="accent">стиль, не контент</span></h2>
+    <div class="cards c2 a d2" style="margin-top:36px">
+      <div class="card ap d3">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="eye" style="--sz:44px"></i></span><h3><a class="lnk" href="https://lapa.ninja" target="_blank">lapa.ninja</a></h3></div>
+        <p><b>7300+ лучших лендингов мира</b> с фильтром по нишам: рестораны, юристы, стройка, услуги.</p>
+        <p>Листаете 5 минут, выбираете один, который «вот бы мне такой».</p>
+      </div>
+      <div class="card ap d4">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="scan" style="--sz:44px"></i></span><h3><a class="lnk" href="https://chromewebstore.google.com/detail/gofullpage-full-page-scre/fdpohaocaechififmbbbbbknoalclacl" target="_blank">GoFullPage</a></h3></div>
+        <p>Бесплатное расширение Chrome. <b>Один клик: длинный PNG всей страницы</b> сверху донизу.</p>
+        <p>Ставится за минуту: магазин расширений → GoFullPage → Установить.</p>
+      </div>
+    </div>
+    <div class="src a">Мы не копируем чужой бизнес. Мы берём композицию и уровень дизайна, контент будет ваш.</div>
+  </div>
+</section>
+
+<!-- 36 · Шаг 3: Bolt -->
+<section class="slide kb" data-act="Лендинг">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="play-circle" style="--sz:30px"></i> Демо</div>
+    <h2 class="a d1"><i class="ph-i" data-ph="lightning" style="--sz:54px;vertical-align:-8px"></i>&nbsp; <a class="lnk" href="https://bolt.new" target="_blank">bolt.new</a>: скриншот + промпт = <span class="accent">лендинг за 2 минуты</span></h2>
+    <div class="lead a d2" style="margin-top:14px;font-size:30px">Вход через Google. Прикрепляем скриншот референса скрепкой, вставляем промпт:</div>
+    <div class="pgrid a d3" style="margin-top:22px">
+      <div class="pcol">
+        <div class="prompt prompt--dense">Сделай адаптивный лендинг в стиле прикреплённого скриншота для <span class="ph">[ваш бизнес]</span>.
+Оффер: <span class="ph">[что предлагаете]</span>. Кому: <span class="ph">[ваши клиенты]</span>.
+Секции: 1) Hero: оффер, выгода, кнопка «Оставить заявку». 2) 4 преимущества без общих слов. 3) Как работаем: 3 шага. 4) Доверие: кейсы и цифры, нет фактов: ставь плейсхолдеры. 5) FAQ: 5 вопросов. 6) Форма: имя и телефон.
+Сохрани стиль и композицию референса, контент замени на мой. Мобильная версия обязательна. Не выдумывай цифры и отзывы.</div>
+      </div>
+    </div>
+    <div class="src a">Бесплатного лимита (миллион токенов в месяц) хватает на 2–3 лендинга с правками.</div>
+  </div>
+</section>
+
+<!-- 37 · Шаг 4: правки -->
+<section class="slide kb" data-act="Лендинг">
+  <div class="wrap">
+    <div class="kicker a">Шаг 4 · правки словами, без кода</div>
+    <h2 class="a d1">Говорите с лендингом, <span class="accent">как с подрядчиком</span></h2>
+    <div class="rules rules--10 a d2" style="margin-top:30px">
+      <div class="rule ap d3"><div class="mono">1</div><div class="t">Поменяй основной цвет на тёмно-синий, кнопки оставь яркими</div></div>
+      <div class="rule ap d3"><div class="mono">2</div><div class="t">Заголовок короче и смелее, без слова «качественный»</div></div>
+      <div class="rule ap d4"><div class="mono">3</div><div class="t">Добавь блок FAQ из пяти вопросов про сроки и оплату</div></div>
+      <div class="rule ap d4"><div class="mono">4</div><div class="t">Замени стоковые фото на спокойные однотонные фоны</div></div>
+      <div class="rule ap d5"><div class="mono">5</div><div class="t">В форме оставь только имя и телефон</div></div>
+      <div class="rule ap d5"><div class="mono">6</div><div class="t">Добавь плавающую кнопку WhatsApp справа снизу</div></div>
+      <div class="rule ap d6"><div class="mono">7</div><div class="t">Цены скрой, поставь «от 15 000 ₽» и кнопку «Узнать точную»</div></div>
+      <div class="rule ap d6"><div class="mono">8</div><div class="t">Добавь блок «Нам доверяют» с логотипами-плейсхолдерами</div></div>
+      <div class="rule ap d7"><div class="mono">9</div><div class="t">Сделай шапку прилипающей при прокрутке</div></div>
+      <div class="rule ap d7"><div class="mono">10</div><div class="t">Проверь мобильную версию: кнопка заявки на первом экране</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 38 · Шаг 5: Deploy + запасной -->
+<section class="slide kb" data-act="Лендинг">
+  <div class="wrap">
+    <div class="kicker a">Шаг 5 · публикация</div>
+    <h2 class="a d1">Кнопка Deploy: и у вас <span class="accent">живая ссылка</span></h2>
+    <div class="cards c2 a d2" style="margin-top:36px">
+      <div class="card ap d3">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="rocket-launch" style="--sz:44px"></i></span><h3>Основной путь</h3></div>
+        <p>В Bolt жмёте <b>Deploy</b>: получаете ссылку вида ваш-проект.netlify.app. Открывается у любого, можно слать клиентам уже сегодня.</p>
+      </div>
+      <div class="card ap d4">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="shield-check" style="--sz:44px"></i></span><h3>Без VPN · запасной</h3></div>
+        <p><b>Kimi или GLM</b>: «Собери одностраничный лендинг: hero с кнопкой, 4 преимущества, доверие, FAQ, форма. Отдай готовым HTML». Файл открывается в браузере.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 39 · Рамка -->
+<section class="slide kb" data-act="Лендинг">
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Важная рамка</div>
+    <h2 class="a d1" style="font-size:70px">Лендинг за вечер: это <span class="accent">витрина</span>.<br>Продукт: это уже стройка</h2>
+    <div class="lead a d2" style="margin-top:40px;font-size:34px">Витрина оффера, страница услуги, посадочная под рекламу: <b>ровно то, что мы сделали</b>.<br>Личный кабинет, оплата, интеграции с CRM: другой масштаб и другие инструменты.</div>
+    <div class="lead a d3" style="margin-top:24px;font-size:34px"><b>Знайте границу:</b> внутри неё вы теперь справляетесь сами.</div>
+  </div>
+</section>
+
+<!-- 40 · Практика 4 -->
+<section class="slide kb practice" data-act="Лендинг">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="hand-tap" style="--sz:30px"></i> Ваша очередь · 10 минут</div>
+    <h2 class="a d1">Лендинг того же оффера, <span class="accent">что и презентация</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:36px">
+      <div class="step-p ap d3"><div class="n">1</div><div class="t">lapa.ninja: <b>2 минуты на референс</b>, не залипаем</div></div>
+      <div class="step-p ap d4"><div class="n">2</div><div class="t">GoFullPage → скриншот → <b>bolt.new</b> → промпт со слайда</div></div>
+      <div class="step-p ap d5"><div class="n">3</div><div class="t">Пока собирается: <b>две правки словами</b> из списка</div></div>
+      <div class="step-p ap d6"><div class="n">4</div><div class="t">Deploy → <b>ссылку в чат потока</b>. Без VPN: Kimi/GLM вариант</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════ АКТ 5 · ПРОФИ-ЛИГА (10 мин) ═════════════ -->
+
+<!-- 41 · Разделитель -->
+<section class="slide gg" data-act="Профи-лига">
+  <img class="bg bg--strong bg--emerge" src="screens6/bg-pro.jpg" alt=""><div class="veil veil--left"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Блок 5 из 5 · только обзор</div>
+    <h1 class="a d1" style="font-size:104px">Профи-лига</h1>
+    <div class="lead a d2" style="margin-top:28px">Куда расти, когда бесплатного станет мало. Сегодня смотрим, не покупаем.</div>
+  </div>
+</section>
+
+<!-- 42 · Карта групп -->
+<section class="slide gg" data-act="Профи-лига">
+  <div class="wrap">
+    <div class="kicker a">Чтобы не потеряться в зоопарке сервисов</div>
+    <h2 class="a d1">Три группы: <span class="accent">по типу задач</span></h2>
+    <div class="cards c3 a d2" style="flex:1;align-content:center">
+      <div class="card ap d3"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="stack" style="--sz:46px"></i></span><h3>Комбайны</h3></div><p>Все топ-модели мира в одном окне и одной подписке.</p><p><b>Krea · Higgsfield</b></p></div>
+      <div class="card ap d4"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="medal" style="--sz:46px"></i></span><h3>Топ-модели</h3></div><p>Идёте напрямую к лучшей модели под конкретную задачу.</p><p><b>Kling · Seedream · Sora 2</b></p></div>
+      <div class="card ap d5"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="user-circle" style="--sz:46px"></i></span><h3>Аватары</h3></div><p>Цифровой ведущий читает ваш текст на камеру. Совсем другой жанр.</p><p><b>HeyGen · Synthesia</b></p></div>
+    </div>
+    <div class="lead a d6" style="font-size:30px">По каждому: что умеет, для чего брать, сколько стоит. <b>Ссылки кликабельные: шпаргалка будет у вас.</b></div>
+  </div>
+</section>
+
+<!-- 43 · Комбайны -->
+<section class="slide gg" data-act="Профи-лига">
+  <div class="wrap">
+    <div class="kicker a">Группа 1 · комбайны</div>
+    <h2 class="a d1">Один аккаунт: <span class="accent">все модели внутри</span></h2>
+    <div class="cards c2 a d2" style="margin-top:30px;gap:28px">
+      <div class="card card--sm tool ap d3">
+        <div class="head" style="min-height:0"><h3><a class="lnk" href="https://www.krea.ai" target="_blank">Krea</a></h3><span class="site">krea.ai · творческая студия</span></div>
+        <ul>
+          <li><b>Картинки и видео всеми топ-моделями</b>: Flux, Seedream, Kling, Veo: переключаются в одном окне</li>
+          <li><b>Realtime-рисование</b>: водите мышкой набросок, картинка перерисовывается на лету</li>
+          <li><b>Апскейл до 22K</b>: мутное фото становится плакатным</li>
+          <li>Обучение на своих фото: <b>вы в любых сценах</b> в одном стиле</li>
+        </ul>
+        <div class="price">Есть дневной фри-лимит · платно <b>от ~$10/мес</b></div>
+      </div>
+      <div class="card card--sm tool ap d4">
+        <div class="head" style="min-height:0"><h3><a class="lnk" href="https://higgsfield.ai" target="_blank">Higgsfield</a></h3><span class="site">higgsfield.ai · виртуальная видеостудия</span></div>
+        <ul>
+          <li><b>15+ видеомоделей одной подпиской</b>: Sora 2, Veo, Kling, Seedance</li>
+          <li><b>70+ киношных пресетов камеры</b>: облёт 360, crash zoom, bullet time: жмёте кнопку, получаете голливудский кадр</li>
+          <li>Постоянный герой во всех роликах, синхрон губ, замена лица</li>
+          <li>Marketing Studio: <b>конвейер рекламных роликов</b> под продукт</li>
+        </ul>
+        <div class="price">Фри почти нет · платно <b>от $15/мес</b></div>
+      </div>
+    </div>
+    <div class="src a">Комбайн берут, когда надоело жонглировать пятью подписками и лимитами.</div>
+  </div>
+</section>
+
+<!-- 44 · Топ-модели -->
+<section class="slide gg" data-act="Профи-лига">
+  <div class="wrap">
+    <div class="kicker a">Группа 2 · топ-модели напрямую</div>
+    <h2 class="a d1">У каждой: <span class="accent">своя суперсила</span></h2>
+    <div class="cards c3 a d2" style="margin-top:28px;gap:24px">
+      <div class="card card--xs tool ap d3">
+        <div class="head"><h3 style="font-size:32px"><a class="lnk" href="https://app.klingai.com" target="_blank">Kling</a></h3><span class="site">klingai.com</span></div>
+        <ul>
+          <li><b>Видео лучшего качества за свои деньги</b></li>
+          <li>Свежая версия генерит <b>сразу со звуком</b></li>
+          <li>Оживление фото, продление ролика, контроль движения</li>
+          <li>Для сторис, продуктовых роликов, атмосферы</li>
+        </ul>
+        <div class="price">Фри-кредиты ежедневно · <b>от $7/мес</b></div>
+      </div>
+      <div class="card card--xs tool ap d4">
+        <div class="head"><h3 style="font-size:32px"><a class="lnk" href="https://dreamina.capcut.com" target="_blank">Dreamina · Seedream</a></h3><span class="site">от ByteDance (TikTok, CapCut)</span></div>
+        <ul>
+          <li><b>Seedream 4.5: топ-3 картиночных моделей мира</b></li>
+          <li>Редактура по референсам: «сделай так же, <b>но с моим товаром</b>»</li>
+          <li>Шаблоны под соцсети и маркетплейсы</li>
+          <li>Для продуктовой съёмки и единого стиля бренда</li>
+        </ul>
+        <div class="price">Есть фри-кредиты · дальше подписка</div>
+      </div>
+      <div class="card card--xs tool ap d5">
+        <div class="head"><h3 style="font-size:32px"><a class="lnk" href="https://sora.com" target="_blank">Sora 2</a></h3><span class="site">sora.com · OpenAI</span></div>
+        <ul>
+          <li>Ролики <b>со звуком и диалогами</b>, каскады сцен</li>
+          <li>Cameo: <b>вставляете себя</b> в любое видео</li>
+          <li>Соцсеть из сгенерированных роликов</li>
+          <li><b>Честно:</b> приложение из РФ выпилено. Только VPN и платный аккаунт</li>
+        </ul>
+        <div class="price">Смотреть: да · опираться: <b>нет</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 45 · Аватары -->
+<section class="slide gg" data-act="Профи-лига">
+  <div class="wrap">
+    <div class="kicker a">Группа 3 · говорящие аватары</div>
+    <h2 class="a d1">Цифровой ведущий: <span class="accent">видео без съёмки вообще</span></h2>
+    <div class="cards c2 a d2" style="margin-top:28px;gap:28px">
+      <div class="card card--sm tool ap d3">
+        <div class="head" style="min-height:0"><h3><a class="lnk" href="https://www.heygen.com" target="_blank">HeyGen</a></h3><span class="site">heygen.com · лидер жанра</span></div>
+        <ul>
+          <li><b>700+ готовых аватаров</b> или ваш двойник по фото и 2-минутному видео</li>
+          <li>Пишете текст: аватар произносит <b>клоном вашего голоса</b></li>
+          <li><b>Перевод видео на 175 языков</b> с пересинхроном губ: вы «говорите» по-китайски</li>
+          <li>Video Agent: целый ролик из одного промпта</li>
+          <li>Для: обучение сотрудников, контент без съёмок, международные версии</li>
+        </ul>
+        <div class="price">Есть фри-проба · рабочий тариф <b>от $29/мес</b></div>
+      </div>
+      <div class="card card--sm tool ap d4">
+        <div class="head" style="min-height:0"><h3><a class="lnk" href="https://www.synthesia.io" target="_blank">Synthesia</a></h3><span class="site">synthesia.io · корпоративный уклон</span></div>
+        <ul>
+          <li><b>350+ аватаров с микромимикой</b>: дыхание, брови, никакой восковости</li>
+          <li>Клон голоса <b>за 10 секунд записи</b></li>
+          <li><b>Видео из ссылки</b>: кидаете сайт или документ, сам пишет сценарий и собирает</li>
+          <li>Интерактив: <b>кнопки прямо в видео</b>, зритель выбирает ветку</li>
+          <li>Для: онбординг, инструктажи, база обучалок вместо живых тренеров</li>
+        </ul>
+        <div class="price">Фри 10 мин/мес · платно <b>от $29/мес</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 46 · Правило денег -->
+<section class="slide gg" data-act="Профи-лига">
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Правило денег в визуале</div>
+    <h2 class="a d1" style="font-size:70px">Сначала выжмите бесплатное.<br>Платите, когда <span class="accent">упёрлись дважды</span></h2>
+    <div class="rules rules--tight a d2" style="margin-top:44px">
+      <div class="rule ap d3"><span class="ico-chip"><i class="ph-i" data-ph="check-circle" style="--sz:38px"></i></span><div class="t">То, что мы делали сегодня, закрывает <b>80% визуальных задач малого бизнеса</b></div></div>
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="currency-circle-dollar" style="--sz:38px"></i></span><div class="t">Платят за <b>объём и скорость</b>, не за магию: модели внутри те же</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="target" style="--sz:38px"></i></span><div class="t">Если берёте: <b>один сервис под главную задачу</b>, а не пять сразу</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════ ФИНАЛ (8 мин) ═════════════ -->
+
+<!-- 47 · Итоги -->
+<section class="slide" data-act="Финал">
+  <div class="wrap">
+    <div class="kicker a">Сегодня вы забрали</div>
+    <h2 class="a d1">Четыре суперсилы <span class="accent">за один вечер</span></h2>
+    <div class="chips a d2" style="margin-top:52px">
+      <div class="chip ap d3"><div class="hd"><i class="ph-i" data-ph="presentation-chart" style="--sz:42px"></i></div><h4>Презентация</h4><p>Готовый .pptx из промпта: ChatGPT, Kimi, GLM, NotebookLM.</p></div>
+      <div class="chip ap d4"><div class="hd"><i class="ph-i" data-ph="camera" style="--sz:42px"></i></div><h4>Фотосессия</h4><p>Создать в ChatGPT, переделать своё в Gemini. Текст по-русски: работает.</p></div>
+      <div class="chip ap d5"><div class="hd"><i class="ph-i" data-ph="film-strip" style="--sz:42px"></i></div><h4>Ролик</h4><p>Фото + фраза = 8 секунд видео со звуком. Прямо в Gemini.</p></div>
+      <div class="chip ap d6"><div class="hd"><i class="ph-i" data-ph="storefront" style="--sz:42px"></i></div><h4>Лендинг</h4><p>Референс → скриншот → Bolt → правки → живая ссылка.</p></div>
+    </div>
+    <div class="lead a d7" style="margin-top:40px;font-size:31px">И карта профи-лиги на вырост: <b>знаете, куда идти, когда упрётесь.</b></div>
+  </div>
+</section>
+
+<!-- 48 · Домашка -->
+<section class="slide" data-act="Финал">
+  <div class="wrap">
+    <div class="kicker a">Домашка · придёт утром в чат</div>
+    <h2 class="a d1">Два задания: <span class="accent">оба про ваш бизнес</span></h2>
+    <div class="cards c2 a d2" style="margin-top:40px">
+      <div class="card ap d3">
+        <div class="head"><div class="mono">1</div><h3>Презентация + фотосессия</h3></div>
+        <p>Презентация под реальную задачу одним из четырёх способов. Плюс <b>три картинки</b>: товар, портрет, баннер с текстом.</p>
+      </div>
+      <div class="card ap d4">
+        <div class="head"><div class="mono">2</div><h3>Лендинг с живой ссылкой</h3></div>
+        <p>Тот же оффер: в витрину. Референс, Bolt, две правки, Deploy. <b>Ссылку: в чат</b>.</p>
+      </div>
+    </div>
+    <div class="src a">Все промпты сегодняшнего занятия будут в шпаргалке: копируйте, подставляйте своё.</div>
+  </div>
+</section>
+
+<!-- 49 · Финал -->
+<section class="slide" data-act="Финал">
+  <img class="bg bg--strong bg--emerge" src="screens6/bg-final.jpg" alt=""><div class="veil"></div>
+  <div class="wrap" style="justify-content:flex-end">
+    <div class="kicker a">Занятие 6 из 8</div>
+    <h1 class="a d1" style="font-size:92px">Клиент сначала видит,<br>потом читает. <span class="accent">Теперь вас видно</span></h1>
+    <div class="lead a d2" style="margin-top:32px">Домашка утром в чат. Вопросы по инструментам: туда же, разберём каждого.</div>
+    <div class="a d3" style="margin-top:44px;font-size:28px;color:var(--muted);font-weight:650">Альберт Валеев · <span class="accent">neovida.ai</span></div>
+  </div>
+</section>
+
+<div class="brand-corner">neovida<b>.</b>ai</div>
+<div id="bar"><i></i></div>
+</div></div>
+<button id="fs-btn" title="На весь экран (F)" aria-label="На весь экран">
+<svg class="i-open" viewBox="0 0 256 256" fill="currentColor"><path d="M216 48v48a8 8 0 0 1-16 0V56h-40a8 8 0 0 1 0-16h48a8 8 0 0 1 8 8ZM96 200H56v-40a8 8 0 0 0-16 0v48a8 8 0 0 0 8 8h48a8 8 0 0 0 0-16Zm112-48a8 8 0 0 0-8 8v40h-40a8 8 0 0 0 0 16h48a8 8 0 0 0 8-8v-48a8 8 0 0 0-8-8ZM96 40H48a8 8 0 0 0-8 8v48a8 8 0 0 0 16 0V56h40a8 8 0 0 0 0-16Z"/></svg>
+<svg class="i-close" viewBox="0 0 256 256" fill="currentColor"><path d="M144 96V48a8 8 0 0 1 16 0v40h40a8 8 0 0 1 0 16h-48a8 8 0 0 1-8-8Zm-40 56H56a8 8 0 0 0 0 16h40v40a8 8 0 0 0 16 0v-48a8 8 0 0 0-8-8Zm104 0h-48a8 8 0 0 0-8 8v48a8 8 0 0 0 16 0v-40h40a8 8 0 0 0 0-16ZM96 40a8 8 0 0 0-8 8v40H48a8 8 0 0 0 0 16h48a8 8 0 0 0 8-8V48a8 8 0 0 0-8-8Z"/></svg>
+</button>
+<script src="assets6.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.ph-i').forEach(el=>{
+    const n=el.dataset.ph; if(window.PH&&PH[n]) el.innerHTML=PH[n].replace('<svg ','<svg fill="currentColor" ');
+  });
+  document.querySelectorAll('.logo-i').forEach(el=>{
+    const n=el.dataset.logo; if(window.LOGO&&LOGO[n]) el.innerHTML=LOGO[n];
+  });
+  document.querySelectorAll('.bg').forEach(el=>{el.addEventListener('error',()=>el.remove())});
+  initDeck();
+});
+
+let cur=0,slides=[],barEl,actEl,noEl;
+function initDeck(){
+  slides=[...document.querySelectorAll('.slide')];
+  barEl=document.querySelector('#bar i');
+  const chrome=document.createElement('div');chrome.id='chrome';
+  chrome.innerHTML='<div id="act-label"></div><div id="slide-no"></div>';
+  document.getElementById('stage').appendChild(chrome);
+  actEl=document.getElementById('act-label');noEl=document.getElementById('slide-no');
+  const h=parseInt(location.hash.slice(1),10);
+  cur=(h>=1&&h<=slides.length)?h-1:0;
+  scale();window.addEventListener('resize',scale);
+  show(cur);
+  window.addEventListener('keydown',e=>{
+    if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='Home'){show(0)}
+    else if(e.key==='End'){show(slides.length-1)}
+    else if(e.key.toLowerCase()==='f'){toggleFS()}
+  });
+  document.getElementById('viewport').addEventListener('click',e=>{
+    if(e.target.closest('a'))return;
+    (e.clientX>window.innerWidth*0.33)?next():prev();
+  });
+  const fsBtn=document.getElementById('fs-btn');
+  fsBtn.addEventListener('click',e=>{e.stopPropagation();toggleFS();});
+  document.addEventListener('fullscreenchange',()=>{fsBtn.classList.toggle('is-fs',!!document.fullscreenElement);});
+}
+function scale(){
+  const s=Math.min(window.innerWidth/1920,window.innerHeight/1080);
+  document.getElementById('stage').style.transform=`scale(${s})`;
+}
+function next(){if(cur<slides.length-1)show(cur+1)}
+function prev(){if(cur>0)show(cur-1)}
+function show(i){
+  slides.forEach(s=>s.classList.remove('active'));
+  cur=i;const sl=slides[i];sl.classList.add('active');
+  history.replaceState(null,'','#'+(i+1));
+  barEl.style.width=((i+1)/slides.length*100)+'%';
+  actEl.textContent=sl.dataset.act||'';
+  noEl.textContent=(i+1)+' / '+slides.length;
+}
+function toggleFS(){
+  if(!document.fullscreenElement)document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+</script>
+</body>
+</html>
