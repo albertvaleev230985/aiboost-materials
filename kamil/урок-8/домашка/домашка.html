@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<!-- Камиль Амирханов · персональная программа · занятие 8 · домашка · 2026-08-14 -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Домашка. Занятие 8: Франкенштейн, рилсы и свой набор скиллов | Камиль Амирханов</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0d0d13; --bg2:#12121a; --card:#1a1a24; --card2:#15151e;
+  --line:rgba(255,255,255,.12); --line2:rgba(255,255,255,.07);
+  --white:#fff; --w80:rgba(255,255,255,.82); --w60:rgba(255,255,255,.58); --w40:rgba(255,255,255,.40);
+  --coral:#E07461; --gold:#E6A15C; --blue:#6EA8FE; --green:#5EC47A; --violet:#A78BFA; --red:#e0616b;
+}
+html{scroll-behavior:smooth;}
+body{
+  background:
+    radial-gradient(900px 520px at 82% -6%, rgba(224,116,97,.16), transparent 62%),
+    radial-gradient(700px 460px at -12% 6%, rgba(230,161,92,.10), transparent 60%),
+    var(--bg);
+  color:var(--white);
+  font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased; line-height:1.5; min-height:100vh;
+}
+.wrap{max-width:860px;margin:0 auto;padding:26px 18px 90px;}
+
+/* ---------- Шапка ---------- */
+.brandbar{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;
+  letter-spacing:.14em;color:var(--w40);text-transform:uppercase;}
+.brandbar .dot{width:7px;height:7px;border-radius:50%;background:var(--coral);}
+h1{font-size:clamp(27px,6.6vw,42px);font-weight:800;line-height:1.1;margin:16px 0 10px;letter-spacing:-.015em;}
+h1 .g{color:var(--coral);}
+.lead{font-size:clamp(15.5px,4vw,18px);color:var(--w80);max-width:680px;}
+.lead b{color:var(--white);}
+
+.usebox{margin-top:20px;padding:16px 18px;border-radius:14px;background:rgba(255,255,255,.05);
+  border:1px solid var(--line);font-size:15px;color:var(--w80);}
+.usebox b{color:var(--white);}
+.usebox .tap{color:var(--coral);font-weight:600;}
+
+.nextlesson{margin-top:12px;padding:13px 16px;border-radius:12px;
+  background:rgba(224,116,97,.10);border:1px solid rgba(224,116,97,.32);font-size:15px;color:var(--w80);}
+.nextlesson b{color:var(--coral);}
+
+/* ---------- Общее правило ---------- */
+.rules{margin-top:26px;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:20px 20px 18px;border-top:3px solid var(--white);}
+.rules h3{font-size:19px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px;}
+.rules p{font-size:15px;color:var(--w80);margin-bottom:12px;}
+.rules ol{list-style:none;counter-reset:r;display:grid;gap:10px;}
+.rules ol li{counter-increment:r;position:relative;padding-left:34px;font-size:15px;color:var(--w80);}
+.rules ol li::before{content:counter(r);position:absolute;left:0;top:0;width:24px;height:24px;
+  border-radius:7px;background:rgba(255,255,255,.09);border:1px solid var(--line);
+  display:grid;place-items:center;font-size:12.5px;font-weight:800;color:var(--white);}
+.rules ol li b{color:var(--white);}
+
+/* ---------- Таблица ---------- */
+.tw{overflow-x:auto;margin:14px 0 0;-webkit-overflow-scrolling:touch;}
+table{border-collapse:collapse;width:100%;min-width:440px;font-size:14.5px;}
+th,td{text-align:left;padding:10px 13px;border-bottom:1px solid var(--line2);color:var(--w80);vertical-align:top;}
+th{color:var(--w40);font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+td b{color:var(--white);}
+td .sign{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:16px;color:var(--coral);font-weight:700;}
+
+/* ---------- Навигация ---------- */
+.nav{display:flex;flex-wrap:wrap;gap:10px;margin:26px 0 6px;}
+.nav a{flex:1 1 155px;text-decoration:none;color:var(--white);padding:14px 15px;border-radius:14px;
+  background:var(--card);border:1px solid var(--line);display:flex;align-items:center;gap:12px;
+  transition:transform .15s,border-color .15s;}
+.nav a:hover{transform:translateY(-2px);}
+.nav .num{width:34px;height:34px;flex:0 0 34px;border-radius:10px;display:grid;place-items:center;
+  font-weight:800;font-size:16px;color:#0d0d13;}
+.nav .n1 .num{background:var(--coral);} .nav .n2 .num{background:var(--gold);}
+.nav .n3 .num{background:var(--blue);} .nav .n4 .num{background:var(--green);}
+.nav .n5 .num{background:var(--violet);}
+.nav .nt{font-weight:700;font-size:14.5px;} .nav .ns{font-size:12.5px;color:var(--w60);}
+
+/* ---------- Блок ---------- */
+.day{margin-top:46px;scroll-margin-top:16px;}
+.day-head{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+.day-badge{width:46px;height:46px;flex:0 0 46px;border-radius:13px;display:grid;place-items:center;
+  font-weight:800;font-size:22px;color:#0d0d13;}
+.d1 .day-badge{background:var(--coral);} .d2 .day-badge{background:var(--gold);}
+.d3 .day-badge{background:var(--blue);}  .d4 .day-badge{background:var(--green);}
+.d5 .day-badge{background:var(--violet);}
+.day-head h2{font-size:clamp(21px,5vw,29px);font-weight:800;line-height:1.14;letter-spacing:-.01em;}
+.day-head .tool{font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
+.d1 .tool{color:var(--coral);} .d2 .tool{color:var(--gold);}
+.d3 .tool{color:var(--blue);}  .d4 .tool{color:var(--green);} .d5 .tool{color:var(--violet);}
+.day > .sub{font-size:16px;color:var(--w80);margin:10px 0 20px;}
+
+.why{padding:16px 18px;border-radius:14px;margin:4px 0 22px;font-size:15.5px;color:var(--w80);
+  background:linear-gradient(180deg,rgba(224,116,97,.10),rgba(224,116,97,.03));border-left:3px solid var(--coral);}
+.d2 .why{background:linear-gradient(180deg,rgba(230,161,92,.11),rgba(230,161,92,.03));border-left-color:var(--gold);}
+.d3 .why{background:linear-gradient(180deg,rgba(110,168,254,.11),rgba(110,168,254,.03));border-left-color:var(--blue);}
+.d4 .why{background:linear-gradient(180deg,rgba(94,196,122,.11),rgba(94,196,122,.03));border-left-color:var(--green);}
+.d5 .why{background:linear-gradient(180deg,rgba(167,139,250,.11),rgba(167,139,250,.03));border-left-color:var(--violet);}
+.why b{color:var(--white);}
+.why .k{display:block;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--w60);
+  margin-bottom:6px;font-weight:700;}
+
+.blocklbl{font-size:15px;color:var(--w80);font-weight:600;margin:28px 0 10px;}
+.blocklbl .no{color:var(--coral);font-weight:800;}
+.d2 .blocklbl .no{color:var(--gold);} .d3 .blocklbl .no{color:var(--blue);}
+.d4 .blocklbl .no{color:var(--green);} .d5 .blocklbl .no{color:var(--violet);}
+.blockhint{font-size:14.5px;color:var(--w60);margin:-4px 0 10px;}
+.blockhint b{color:var(--w80);}
+
+/* ---------- Шаги ---------- */
+.steps{list-style:none;counter-reset:s;margin:8px 0 4px;}
+.steps > li{position:relative;padding:2px 0 18px 42px;counter-increment:s;
+  border-left:2px solid var(--line2);margin-left:15px;}
+.steps > li:last-child{border-left:2px solid transparent;padding-bottom:2px;}
+.steps > li::before{content:counter(s);position:absolute;left:-15px;top:-2px;width:30px;height:30px;
+  border-radius:50%;background:var(--card2);border:2px solid var(--coral);color:var(--white);
+  display:grid;place-items:center;font-size:14px;font-weight:700;}
+.d2 .steps > li::before{border-color:var(--gold);}
+.d3 .steps > li::before{border-color:var(--blue);}
+.d4 .steps > li::before{border-color:var(--green);}
+.d5 .steps > li::before{border-color:var(--violet);}
+.steps .st{display:block;font-weight:650;color:var(--white);font-size:16px;}
+.steps .sd{display:block;font-size:14.5px;color:var(--w60);margin-top:4px;}
+.steps .sd code,.mono{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px;
+  background:rgba(255,255,255,.07);padding:2px 7px;border-radius:6px;color:var(--white);
+  white-space:nowrap;}
+
+/* ---------- Промпт: тап = копирование ---------- */
+.prompt{position:relative;cursor:pointer;user-select:none;background:#08080e;border:1px solid var(--line);
+  border-radius:12px;padding:34px 15px 15px;font-family:ui-monospace,'SF Mono',Menlo,monospace;
+  font-size:13.5px;line-height:1.62;color:#e6e6f0;white-space:pre-wrap;margin:10px 0 0;
+  overflow-wrap:anywhere;transition:border-color .15s,background .15s;}
+.prompt:hover{border-color:var(--coral);background:#0b0b13;}
+.prompt::after{content:'нажми, чтобы скопировать';position:absolute;top:9px;right:13px;
+  font-family:-apple-system,system-ui,sans-serif;font-size:11px;color:var(--w40);}
+.prompt.copied{border-color:var(--green);}
+.prompt.copied::after{content:'скопировано ✓';color:var(--green);}
+.prompt .where{position:absolute;top:9px;left:15px;font-family:-apple-system,system-ui,sans-serif;
+  font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--coral);}
+.d2 .prompt .where{color:var(--gold);} .d3 .prompt .where{color:var(--blue);}
+.d4 .prompt .where{color:var(--green);} .d5 .prompt .where{color:var(--violet);}
+.prompt .fill{color:var(--gold);font-weight:600;}
+.prompt .at{color:var(--coral);font-weight:700;}
+.d3 .prompt .at{color:var(--blue);} .d4 .prompt .at{color:var(--green);} .d5 .prompt .at{color:var(--violet);}
+
+/* ---------- Плашки ---------- */
+.note{margin:16px 0 0;padding:13px 16px;border-radius:12px;font-size:14.5px;color:var(--w80);
+  background:rgba(230,161,92,.09);border:1px solid rgba(230,161,92,.34);}
+.note b{color:var(--gold);}
+.stop{margin:14px 0 0;padding:13px 16px;border-radius:12px;font-size:14.5px;color:var(--w80);
+  background:rgba(224,97,107,.09);border:1px solid rgba(224,97,107,.32);}
+.stop b{color:var(--red);}
+.tip{margin:14px 0 0;padding:13px 16px;border-radius:12px;font-size:14.5px;color:var(--w80);
+  background:rgba(94,196,122,.08);border:1px solid rgba(94,196,122,.30);}
+.tip b{color:var(--green);}
+
+/* ---------- Кнопки скачивания ---------- */
+.dl{display:inline-flex;align-items:center;gap:7px;text-decoration:none;
+  background:rgba(230,161,92,.14);border:1px solid rgba(230,161,92,.42);color:var(--gold);
+  font-size:13.5px;font-weight:700;padding:9px 15px;border-radius:10px;transition:.15s;margin:12px 10px 0 0;}
+.dl:hover{background:rgba(230,161,92,.24);}
+.dl.cor{background:rgba(224,116,97,.14);border-color:rgba(224,116,97,.42);color:var(--coral);}
+.dl.cor:hover{background:rgba(224,116,97,.24);}
+.dl.bl{background:rgba(110,168,254,.13);border-color:rgba(110,168,254,.42);color:var(--blue);}
+.dl.bl:hover{background:rgba(110,168,254,.23);}
+
+/* ---------- Карточка записи ---------- */
+.rec{margin:14px 0 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;}
+.rec .rl{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--w40);font-weight:700;}
+.rec a{color:var(--coral);word-break:break-all;font-size:14px;}
+.rec .pass{margin-top:8px;font-size:14.5px;color:var(--w80);}
+.rec .pass code{font-family:ui-monospace,'SF Mono',Menlo,monospace;background:rgba(255,255,255,.08);
+  padding:3px 9px;border-radius:6px;color:var(--white);font-size:13.5px;}
+
+/* ---------- Карточки сервисов ---------- */
+.svc{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 0;}
+.svcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 16px;
+  display:flex;flex-direction:column;gap:7px;border-top:2px solid rgba(110,168,254,.45);}
+.svcard .sh{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
+.svcard .sn{font-size:17px;font-weight:800;letter-spacing:-.01em;}
+.svcard .sm{font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--w40);}
+.svcard .sm .k{color:var(--gold);}
+.svcard .sm .f{color:var(--green);}
+.svcard .sl{font-size:13px;color:var(--blue);text-decoration:none;overflow-wrap:anywhere;}
+.svcard .sl:hover{text-decoration:underline;}
+.svcard .sp{font-size:14.5px;color:var(--w80);line-height:1.55;}
+.sumcard{margin:16px 0 0;background:linear-gradient(180deg,rgba(110,168,254,.13),rgba(110,168,254,.03));
+  border:1px solid rgba(110,168,254,.32);border-radius:16px;padding:18px 20px;}
+.sumcard h4{font-size:18px;font-weight:800;letter-spacing:-.01em;margin-bottom:8px;}
+.sumcard p{font-size:15px;color:var(--w80);margin-bottom:9px;}
+.sumcard p:last-child{margin-bottom:0;}
+.sumcard b{color:var(--white);}
+
+/* ---------- Карточки скиллов ---------- */
+.skills{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 0;}
+.sk{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px 14px;
+  display:flex;flex-direction:column;gap:7px;}
+.sk .snm{font-weight:700;font-size:15px;line-height:1.25;}
+.sk .sat{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:var(--green);
+  background:rgba(94,196,122,.12);padding:2px 8px;border-radius:6px;align-self:flex-start;}
+.sk .sds{font-size:13.5px;color:var(--w60);line-height:1.45;flex:1;}
+
+/* ---------- Развилка ---------- */
+.fork{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 0;}
+.fork .fc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 16px;}
+.fork .fc.a{border-top:3px solid var(--green);}
+.fork .fc.b{border-top:3px solid var(--gold);}
+.fork .fh{font-weight:800;font-size:16px;margin-bottom:6px;}
+.fork .fd{font-size:14px;color:var(--w60);line-height:1.5;}
+
+/* ---------- Чеклист ---------- */
+.check{margin:22px 0 4px;display:grid;gap:9px;}
+.check .ci{display:flex;gap:11px;align-items:flex-start;font-size:15px;color:var(--w80);}
+.check .box{flex:0 0 20px;width:20px;height:20px;border-radius:6px;border:2px solid var(--coral);margin-top:1px;}
+.d2 .check .box{border-color:var(--gold);} .d3 .check .box{border-color:var(--blue);}
+.d4 .check .box{border-color:var(--green);} .d5 .check .box{border-color:var(--violet);}
+
+/* ---------- Подвал ---------- */
+.foot{margin-top:54px;padding:24px 22px;border-radius:16px;text-align:center;
+  background:linear-gradient(180deg,rgba(224,116,97,.16),rgba(224,116,97,.03));border:1px solid var(--line);}
+.foot .big{font-size:clamp(19px,4.6vw,23px);font-weight:800;margin-bottom:10px;}
+.foot p{font-size:15px;color:var(--w80);max-width:600px;margin:0 auto 8px;}
+.foot .sign{margin-top:16px;font-size:12.5px;color:var(--w40);}
+
+@media(max-width:700px){
+  .prompt{padding-top:52px;}
+  .prompt .where{top:11px;line-height:1.3;}
+  .prompt::after{top:30px;left:15px;right:auto;}
+}
+@media(max-width:600px){
+  .skills,.fork,.svc{grid-template-columns:1fr;}
+  .nav a{flex:1 1 100%;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ ШАПКА ============ -->
+  <div class="brandbar"><span class="dot"></span>neovida · персональная программа · занятие 8</div>
+  <h1>Домашка: <span class="g">Франкенштейн, рилсы и свой набор скиллов</span></h1>
+  <p class="lead">На встрече мы начали собирать «Франкенштейна»: один скилл, внутри которого двенадцать сервисов и почти двести инструментов. Сейчас доводим его до конца, а заодно закрываем всё, что висело: ставим скилл по рилсам, чиним генерацию картинок и добираем скиллы под твою обычную рутину. <b>Никакого терминала, все команды выполняет Codex.</b> Ты копируешь просьбу, вставляешь и читаешь ответ.</p>
+
+  <div class="usebox">
+    Как работать: копируй промпт, меняй текст <span class="tap">в квадратных скобках</span> на свой. <b>Все промпты копируются одним касанием</b> <span class="tap">(нажми на чёрный блок)</span>. Пять блоков, каждый примерно на 30-40 минут. Дни подписаны как ориентир, но <b>важнее порядок, а не даты</b>: пропустил день, просто иди дальше по списку.
+  </div>
+
+  <div class="nextlesson">
+    <b>Занятие 9, четверг 20 августа, 12:00.</b> Приходишь с рабочим Франкенштейном, установленным скиллом по рилсам и живой генерацией картинок. Отдельно на встрече обсудим обучение по «Цельности» и «Точке сборки».
+  </div>
+
+  <!-- ============ ОБЩЕЕ ПРАВИЛО ============ -->
+  <div class="rules">
+    <h3>Правило, которое работает в каждом блоке</h3>
+    <p>Скиллы ставятся всегда одинаково. Один раз запомнил этот путь и дальше ставишь что угодно, откуда угодно.</p>
+    <ol>
+      <li><b>Нашёл скилл.</b> Сам или руками Codex. Просто ссылка или архив, ставить пока рано.</li>
+      <li><b>Досмотрел до установки.</b> Просишь Codex прочитать скилл и отчитаться, что тот делает и не творит ли лишнего. Чужой скилл это незнакомец, которому ты выдаёшь пропуск в свой компьютер.</li>
+      <li><b>Поставил.</b> Codex сам создаёт папку и раскладывает файлы. Ты в это не лезешь.</li>
+      <li><b>Перезапустил Codex.</b> Обязательно, а не по желанию: скиллы подхватываются только при старте. Закрыть полностью, на красный кружок, и открыть заново. Половина «у меня не встало» это пропущенный перезапуск.</li>
+      <li><b>Спросил, как им пользоваться.</b> Зачем он тебе, на каких фразах включится сам и как позвать вручную. Иначе скилл стоит и пылится.</li>
+    </ol>
+
+    <div class="tw"><table>
+      <tr><th>Знак</th><th>Что делает</th></tr>
+      <tr><td><span class="sign">$</span> доллар</td><td><b>Это скилл.</b> Всегда <span class="mono">$имя</span>: <span class="mono">$deep-research</span>, <span class="mono">$reels-montage</span>. Одинаково и в приложении, и в терминале</td></tr>
+      <tr><td><span class="sign">@</span> собачка</td><td><b>В Codex это не про скиллы.</b> Через неё подключаются приложения и инструменты. Собачка для скиллов работает в браузерном ChatGPT, там где стоят твои пятнадцать навыков. Не путай две среды</td></tr>
+      <tr><td><span class="sign">/</span> слэш</td><td><span class="mono">/skills</span> показывает список того, что у тебя стоит. А вот <span class="mono">/имя-скилла</span> не работает, слэшем скилл не позвать</td></tr>
+    </table></div>
+  </div>
+
+  <!-- ============ НАВИГАЦИЯ ============ -->
+  <nav class="nav">
+    <a href="#day1" class="n1"><span class="num">1</span><span><span class="nt">Сб, 15 августа</span><br><span class="ns">Франкенштейн</span></span></a>
+    <a href="#day2" class="n2"><span class="num">2</span><span><span class="nt">Вс, 16 августа</span><br><span class="ns">скилл по рилсам</span></span></a>
+    <a href="#day3" class="n3"><span class="num">3</span><span><span class="nt">Пн, 17 августа</span><br><span class="ns">картинки</span></span></a>
+    <a href="#day4" class="n4"><span class="num">4</span><span><span class="nt">Вт, 18 августа</span><br><span class="ns">скиллы под рутину</span></span></a>
+    <a href="#day5" class="n5"><span class="num">5</span><span><span class="nt">Ср, 19 августа</span><br><span class="ns">ищем скиллы сам</span></span></a>
+  </nav>
+
+  <!-- ============================ БЛОК 1 ============================ -->
+  <section class="day d1" id="day1">
+    <div class="day-head">
+      <div class="day-badge">1</div>
+      <div>
+        <div class="tool">Суббота, 15 августа · Codex</div>
+        <h2>Собираем Франкенштейна</h2>
+      </div>
+    </div>
+    <p class="sub">Один скилл, внутри двенадцать сервисов и 189 инструментов. Дальше ты просто просишь исследовать, а он сам решает, чем брать.</p>
+
+    <div class="why">
+      <span class="k">Почему он «Франкенштейн»</span>
+      Обычный поиск в ИИ это одна дверь: он идёт в интернет и приносит, что нашлось сверху. Франкенштейн это <b>двенадцать разных дверей, сшитых в один скилл</b>. Один сервис ищет быстро, второй читает страницу целиком, третий лезет в соцсети, четвёртый заходит туда, где стоит защита от роботов, пятый ищет по смыслу, когда ты не знаешь, как это называется. Ты об этом не думаешь: пишешь задачу словами, он сам выбирает инструмент. Без него ты получаешь первую ссылку, с ним картину.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 1.</span> Найди в записи момент, с которого смотреть</div>
+    <p class="blockhint">Урок идёт два с лишним часа, и смотреть всё не надо. Задача другая и как раз в твоём духе: <b>заставить ИИ найти нужную минуту за тебя.</b> Специально не пишу, где именно этот блок, найди сам, это займёт пару минут.</p>
+
+    <div class="rec">
+      <div class="rl">Запись урока «AI Цех», 8 августа</div>
+      <a href="https://us06web.zoom.us/rec/share/2PjTFxmFbcutC91rqLN0x0PnlbpZrKSVEhM5gnvx7D78HeOscvNIMU9_eEeyX71f.v4lwrtzNuVDAs8zQ" target="_blank" rel="noopener">us06web.zoom.us/rec/share/2PjTFxmFbcutC91rqLN0x0PnlbpZrKSVEhM5gnvx7D78HeOscvNIMU9_eEeyX71f.v4lwrtzNuVDAs8zQ</a>
+      <div class="pass">Код доступа: <code>kw4&amp;vJ6U</code></div>
+    </div>
+
+    <p class="blockhint" style="margin-top:14px;">Ссылку на запись ИИ открыть не сможет, она под паролем. Поэтому делаем так: <b>жмёшь кнопку, скачивается файл с текстовой расшифровкой урока, и вот его ты прикрепляешь скрепкой в ChatGPT вместе с промптом ниже.</b> В расшифровке проставлены тайм-коды, по ним он и найдёт минуту.</p>
+    <a class="dl cor" href="../files/zapis-uroka-transkript.txt" download>Скачать zapis-uroka-transkript.txt</a>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">в ChatGPT, скачанный файл скрепкой</span>Прикрепил расшифровку урока на два с лишним часа. Тайм-коды стоят в квадратных скобках в формате [минуты:секунды] от начала записи.
+Найди в ней блок про скилл «Франкенштейн», он же «Дипресёрч»: там, где собирают один инструмент из двенадцати сервисов для глубокого исследования.
+Ответь коротко и по делу:
+1. с какой минуты мне начинать смотреть, чтобы попасть на начало блока;
+2. на какой минуте блок заканчивается;
+3. пять строк о том, что в этом блоке происходит, чтобы я понимал, что увижу;
+4. три момента внутри блока, которые точно стоит послушать, с тайм-кодами.
+Весь урок не пересказывай, мне нужен только этот блок.</div>
+
+    <div class="tip">
+      <b>Это и есть приём, ради которого блок здесь.</b> Так же можно разбирать любую запись: свой вебинар, чужой эфир, разговор с клиентом, запись созвона команды. Не «посмотрю на выходных», а «найди мне минуту и три главных места». Дальше ты смотришь пятнадцать минут вместо двух часов.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 2.</span> Посмотри блок</div>
+    <p class="blockhint">Открываешь запись, вводишь код доступа, перематываешь на найденную минуту. Смотреть весь урок не нужно, только этот кусок. Цель одна: увидеть своими глазами, что собирается и зачем, чтобы дальше не тыкать вслепую.</p>
+
+    <div class="blocklbl"><span class="no">Шаг 3.</span> Ставим сам скилл</div>
+    <p class="blockhint">Дальше всё делает Codex. Ты вставляешь просьбу и читаешь, что он отвечает. Займёт минут десять, часть времени он будет молча ставить сервисы.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Разверни мне «Дипресёрч» целиком. Файл скилла скачай сам вот отсюда:
+https://ai-tseh-lesson-3.vercel.app/deep-research-SKILL.md
+
+Я работаю в приложении и терминал не открываю: папки не создаю, файлы не раскладываю, команды не ввожу. Сделай всё сам, по шагам:
+
+1. Создай папку ~/.codex/skills/deep-research/ и положи туда файл скилла. Назови его ровно SKILL.md, с другим именем ты его не увидишь.
+
+2. Подключи шесть сервисов, которым не нужна регистрация: parallel-search, you-search-free, anysearch, rivalsearch, open-websearch, playwright. Подключаются они командой codex mcp add. У open-websearch обязателен флаг MODE=stdio, без него сервер молча зависает.
+
+3. Остальные шесть, это Tavily, Firecrawl, Exa, Apify, Jina и Bright Data, пока не подключай. Просто напиши списком: какой ключ нужен и на какой странице его завести. Ключи я заведу сам.
+
+4. Перезапустись, чтобы всё поднялось. Если сам перезапуститься не можешь, так и скажи, я закрою и открою Codex.
+
+В конце покажи простым списком: что реально подключилось и отвечает, что не поднялось и почему, и какие задачи я теперь могу тебе ставить.</div>
+
+    <div class="note">
+      <b>Codex перезапускается руками, это нормально.</b> Он честно скажет, что сам себя перезапустить не может. Закрываешь приложение полностью, на красный кружок, открываешь заново и пишешь в новом чате «продолжаем, проверь что поднялось». Не закроешь, будешь смотреть на пустой список и думать, что всё сломалось.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 4.</span> Проверяем, что он реально живой</div>
+    <p class="blockhint">Скилл может стоять, а сервисы не отвечать. Эта просьба заставляет Codex сходить и проверить по-настоящему, а не отчитаться по памяти.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex, после перезапуска</span>Покажи, какие внешние сервисы у меня сейчас подключены.
+Сходи и проверь по-настоящему, не по памяти.
+Ответь простым списком:
+1. что подключено;
+2. что из этого реально отвечает, а что молчит;
+3. у молчащих: в чём причина, простыми словами;
+4. что мне из-за этого сейчас недоступно.
+Ничего не удаляй и не переподключай без моего слова.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 5.</span> Заводим ключи</div>
+    <p class="blockhint">Шесть сервисов у тебя уже работают, им регистрация не нужна. Ещё шесть просят бесплатный ключ, и <b>список с адресами Codex тебе сам выдал в конце третьего шага</b>. Ссылки берёшь у него, я их здесь не дублирую. Дальше всё механически.</p>
+
+    <ul class="steps">
+      <li><span class="st">Заведи один файл под ключи</span><span class="sd">Обычная заметка или текстовый файл на рабочем столе, назови <span class="mono">КЛЮЧИ.txt</span>. Всё складываешь в него, по строчке на сервис.</span></li>
+      <li><span class="st">Иди по списку Codex и собирай</span><span class="sd">На каждом сайте регистрируешься, копируешь ключ, вставляешь в файл и подписываешь строкой, от какого он сервиса. Так же, как на видео.</span></li>
+      <li><span class="st">Сохрани файл и всё</span><span class="sd">Больше руками ничего. Один промпт ниже, и Codex подключит всё сам.</span></li>
+    </ul>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex, когда все ключи собраны</span>Мои ключи лежат в файле <span class="fill">[путь к файлу, например ~/Desktop/КЛЮЧИ.txt]</span>. Возле каждого подписано, от какого он сервиса.
+Возьми их оттуда и подключи все сервисы, которым они нужны. Сделай сам:
+1. подключи каждый сервис, ключ пропиши в его настройках;
+2. перезапустись, чтобы они поднялись. Если сам перезапуститься не можешь, так и скажи, я закрою и открою Codex;
+3. проверь каждый живым запросом: отвечает или молчит.
+Ключи никуда не выкладывай и никуда не отправляй, кроме настроек этих сервисов. Мне в ответ их не печатай.
+В конце покажи: какие сервисы ответили, какие нет и что с ними делать дальше.</div>
+
+    <div class="note">
+      <b>Времени в обрез, заведи первые три-четыре.</b> Набор работает частями, это не поломка. Карту не просят нигде, кроме Bright Data, и там только через три месяца. Из России часть сайтов открывается через VPN.
+    </div>
+
+    <div class="stop">
+      <b>Ключ это как пароль от квартиры.</b> Файл с ключами никуда не пересылай, не выкладывай в чат и не показывай на скриншоте. Если ключ где-то засветился, заходишь в кабинет сервиса и выпускаешь новый, старый отзываешь.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 6.</span> Что у тебя теперь под капотом</div>
+    <p class="blockhint">Ниже короткая выжимка по каждому из двенадцати сервисов: что он умеет и что ты теряешь без него. Хочешь глубже, проваливайся по ссылке и смотри сам. Прочитать стоит не по диагонали: <b>иначе будешь просить у Codex то, что он уже умеет</b>, и не просить того, что он умеет тоже.</p>
+
+    <div class="svc">
+
+      <div class="svcard">
+        <div class="sh"><span class="sn">Bright Data</span><span class="sm">74 инструмента · <span class="k">ключ</span></span></div>
+        <a class="sl" href="https://brightdata.com/ai/mcp-server" target="_blank" rel="noopener">brightdata.com/ai/mcp-server</a>
+        <p class="sp">Тяжёлая артиллерия набора. Достаёт то, что закрыто от обычного сборщика: сайты с защитой от роботов, капчей и блокировкой по стране. Отдаёт выдачу поисковика целиком, публичные данные соцсетей, карточки товаров с маркетплейсов, данные компаний, приложения из сторов. Когда остальные упираются в «доступ запрещён», работает он. Без него половина коммерчески интересных сайтов остаётся за забором.</p>
+      </div>
+
+      <div class="svcard">
+        <div class="sh"><span class="sn">Firecrawl</span><span class="sm">27 инструментов · <span class="k">ключ</span></span></div>
+        <a class="sl" href="https://www.firecrawl.dev" target="_blank" rel="noopener">firecrawl.dev</a>
+        <p class="sp">Основная читалка. Превращает любую страницу в чистый текст без рекламы, меню и мусора, и умеет обойти сайт целиком, составив карту всех его разделов. Разница простая: поисковик даёт ссылку, а Firecrawl даёт содержимое. Без него агент собирает картину по обрывкам из поисковой выдачи, а обрывки врут чаще, чем кажется.</p>
+      </div>
+
+      <div class="svcard">
+        <div class="sh"><span class="sn">Playwright</span><span class="sm">24 инструмента · <span class="f">без ключа</span></span></div>
+        <a class="sl" href="https://github.com/microsoft/playwright-mcp" target="_blank" rel="noopener">github.com/microsoft/playwright-mcp</a>
+        <p class="sp">Настоящий браузер, которым управляет агент. Заходит, кликает, листает, заполняет формы, снимает скриншоты. Нужен для страниц, которые собираются прямо в браузере и в исходном тексте выглядят пустыми, и для всего, куда пускают только после входа под своим логином. Без него всё, что живёт за кнопкой «Войти», недоступно.</p>
+      </div>
+
+      <div class="svcard">
+        <div class="sh"><span class="sn">Jina</span><span class="sm">21 инструмент · <span class="k">ключ</span></span></div>
+        <a class="sl" href="https://jina.ai" target="_blank" rel="noopener">jina.ai</a>
+        <p class="sp">Документы и наука. Читает страницы и PDF, ищет в научных базах, находит исследования, чистит и сортирует результаты по важности. Плюс снимает скриншот страницы, когда нужно показать «вот как это выглядело в тот день». Без него из картины выпадают все PDF-ки и всё, что опубликовано как исследование, а это часто самое доказательное.</p>
+      </div>
+
+      <div class="svcard">
+        <div class="sh"><span class="sn">Apify</span><span class="sm">10 инструментов · <span class="k">ключ</span></span></div>
+        <a class="sl" href="https://apify.com/store" target="_blank" rel="noopener">apify.com/store</a>
+        <p class="sp">Магазин готовых сборщиков под конкретные площадки: Instagram, Facebook, TikTok, YouTube, Google Maps, Авито, маркетплейсы, отзывы, вакансии. Это и есть «залезть в соцсети и собрать цифры»: каждый сборщик написан под свою площадку и знает её устройство изнутри. Именно им ты будешь разбирать Инстаграм на седьмом шаге. Без него соцсети и карты закрыты почти полностью.</p>
+      </div>
+
+      <div class="svcard">
+        <div class="sh"><span class="sn">rivalsearch</span><span class="sm">9 инструментов · <span class="f">без ключа</span></span></div>
+        <a class="sl" href="https://github.com/damionrashford/RivalSearchMCP" target="_blank" rel="noopener">github.com/damionrashford/RivalSearchMCP</a>
+        <p class="sp">Широкий невод. Проходит сразу по всем открытым источникам: веб, соцсети, наука, новости, GitHub, разбор документов. Это быстрый первый заход, когда ещё непонятно, где вообще искать и как называется то, что ты ищешь. Без него теряется дешёвая широкая разведка, с которой удобно начинать любое исследование.</p>
+      </div>
+
+      <div class="svcard">
+        <div class="sh"><span class="sn">parallel-search</span><span class="sm">6 инструментов · <span class="f">без ключа</span></span></div>
+        <a class="sl" href="https://parallel.ai" target="_blank" rel="noopener">parallel.ai</a>
+        <p class="sp">Независимый поисковый движок, работает без регистрации. Его роль в наборе это второе мнение: если Tavily и parallel-search принесли одно и то же, это уже похоже на факт, а не на чьё-то утверждение. Без него нечем перепроверять, и агенту остаётся верить одному источнику.</p>
+      </div>
+
+      <div class="svcard">
+        <div class="sh"><span class="sn">open-websearch</span><span class="sm">6 инструментов · <span class="f">без ключа</span></span></div>
+        <a class="sl" href="https://github.com/Aas-ee/open-webSearch" target="_blank" rel="noopener">github.com/Aas-ee/open-webSearch</a>
+        <p class="sp">Опрашивает сразу несколько обычных поисковиков (DuckDuckGo, Bing, Brave и другие) и работает прямо на твоём компьютере, а не на чужом сервере. Отсюда его смысл: ноль зависимости от чужих лимитов. Когда бесплатные квоты у остальных кончились, этот продолжает искать. Без него в конце месяца можно остаться без поиска вообще.</p>
+      </div>
+
+      <div class="svcard">
+        <div class="sh"><span class="sn">Tavily</span><span class="sm">5 инструментов · <span class="k">ключ</span></span></div>
+        <a class="sl" href="https://tavily.com" target="_blank" rel="noopener">tavily.com</a>
+        <p class="sp">Поиск, заточенный под ИИ. Возвращает не список синих ссылок, а собранный ответ с цитатами и указанием, откуда что взято. Это основной быстрый поиск, с него начинается почти любое исследование, а остальные подключаются, когда нужно копнуть. Без него каждый ответ придётся собирать руками из десятка открытых страниц.</p>
+      </div>
+
+      <div class="svcard">
+        <div class="sh"><span class="sn">anysearch</span><span class="sm">4 инструмента · <span class="f">без ключа</span></span></div>
+        <a class="sl" href="https://anysearch.com" target="_blank" rel="noopener">anysearch.com</a>
+        <p class="sp">Анонимный поиск, который умеет работать пачкой: сто запросов за один заход вместо ста подходов по одному. Ещё находит поддомены сайта, то есть скрытые разделы, на которые нет ссылок с главной. Полезен, когда нужно быстро прочесать большой список: конкурентов, площадок, компаний. Без него массовые проверки идут медленно.</p>
+      </div>
+
+      <div class="svcard">
+        <div class="sh"><span class="sn">Exa</span><span class="sm">2 инструмента · <span class="k">ключ</span></span></div>
+        <a class="sl" href="https://exa.ai" target="_blank" rel="noopener">exa.ai</a>
+        <p class="sp">Ищет по смыслу, а не по совпадению слов. Можно описать своими словами то, чего не знаешь, как называется, и он найдёт. Незаменим, когда нет профессионального термина: обычный поисковик в такой ситуации бесполезен, он ищет буквы. Без него находится только то, что ты уже умеешь правильно назвать, а это сильно сужает картину.</p>
+      </div>
+
+      <div class="svcard">
+        <div class="sh"><span class="sn">you-search-free</span><span class="sm">1 инструмент · <span class="f">без ключа</span></span></div>
+        <a class="sl" href="https://you.com" target="_blank" rel="noopener">you.com</a>
+        <p class="sp">Ещё один независимый поиск без регистрации. Работает третьим голосом при проверке фактов: когда два источника спорят между собой, он выступает арбитром и показывает, чья версия встречается чаще. Без него меньше независимых подтверждений, и в спорных местах приходится верить кому-то одному.</p>
+      </div>
+
+    </div>
+
+    <div class="sumcard">
+      <h4>Что из этого собирается</h4>
+      <p>Двенадцать сервисов это не двенадцать поисковиков. Это <b>двенадцать разных способов добраться до информации</b>, и каждый закрывает свой тип источника. Поисковик находит, читалка читает, сборщик лезет в соцсети, браузер заходит под логином, смысловой поиск выручает, когда ты не знаешь названия.</p>
+      <p>Сшитые в один скилл, они работают как <b>один супер-поисковик</b>. Ты не выбираешь между ними и вообще о них не думаешь: пишешь задачу обычными словами, а скилл сам решает, кого послать, в каком порядке и что делать, если ответы разошлись. Один принёс название, второй открыл сайт, третий вытащил отзывы, четвёртый перепроверил цифру. Каждый дополняет остальных.</p>
+      <p>Бесплатные стоят рядом с платными не для количества, а ради перепроверки: <b>один источник это мнение, два независимых, сказавших одно и то же, это уже факт.</b> Поэтому в наборе целых четыре поисковика без ключей. И работает он частями: поставил половину, всё равно работает, просто картина будет уже.</p>
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 7.</span> Пусть сам расскажет, как им пользоваться</div>
+    <p class="blockhint">Тот самый пятый пункт общего правила. Без него скилл стоит, а ты про него забываешь.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Расскажи, как мне пользоваться скиллом «Дипресёрч».
+Ответь на три вопроса отдельно:
+1. когда ты включаешь его сам? Приведи 5 примеров моих фраз, на которые ты среагируешь и полезешь в интернет, и 5 фраз, на которые не среагируешь;
+2. как позвать его вручную, если ты не включился сам? Покажи точную запись;
+3. как ты решаешь, каким из двенадцати сервисов брать конкретный вопрос, и что делаешь, когда два источника противоречат друг другу.
+И скажи прямо: что мне писать, чтобы ты искал глубоко и задействовал несколько сервисов сразу, а не отвечал первой ссылкой.
+Объясняй так, как объяснял бы человеку без технического опыта.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 8.</span> Живой прогон: разбор Инстаграма</div>
+    <p class="blockhint">Учебное не считается, берём настоящую задачу. Ту самую, про которую говорили: посмотреть, что происходит в аккаунтах. Это как раз тот случай, где обычный ИИ разводит руками, а Франкенштейн заходит через Apify.</p>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">вариант 1 · свой аккаунт</span>Разбери мой аккаунт в Instagram: <span class="fill">[ссылка на твой профиль]</span>.
+Посмотри посты и рилсы за последние три месяца и скажи:
+1. какие пять публикаций собрали заметно больше остальных, и что у них общего: тема, формат, первая фраза, длина;
+2. какие темы у меня повторяются, а какие я почти не трогаю;
+3. на что аудитория реагирует комментариями, а не просто лайками;
+4. три вещи, которые я делаю по привычке, но они не работают.
+Цифры давай реальные, из аккаунта. Чего не смог собрать, так и пиши «не собрал», не додумывай.
+В конце: пять тем на ближайший месяц, которые с высокой вероятностью зайдут именно моей аудитории, и почему ты так решил.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">вариант 2 · разбор чужого</span>Разбери аккаунт: <span class="fill">[ссылка на профиль эксперта из моей ниши]</span>.
+Меня интересует не восхищение, а механика. Ответь по пунктам:
+1. о чём он говорит чаще всего и какие три темы приносят ему максимум реакций;
+2. как устроены его первые кадры и первые фразы: что он делает, чтобы досмотрели;
+3. как он ведёт человека от бесплатного контента к платному продукту, по шагам;
+4. что из этого мне подходит, а что противоречит моему стилю.
+По каждому выводу давай пример конкретной публикации, а не общие слова.</div>
+
+    <div class="stop">
+      <b>Граница.</b> Личные и рабочие данные не отправляй в бесплатные анонимные сервисы: anysearch, open-websearch, rivalsearch. Они стоят на чужих серверах. Если в задаче есть чувствительное, твои цифры, данные клиента, внутренняя кухня, прямо скажи Codex брать Tavily, Firecrawl или Exa: это сервисы на твоих ключах и твоих аккаунтах.
+    </div>
+
+    <div class="check">
+      <div class="ci"><span class="box"></span> Сам нашёл минуту в записи и посмотрел блок про Франкенштейна</div>
+      <div class="ci"><span class="box"></span> Скилл стоит, Codex перезапущен, проверка показала живые сервисы</div>
+      <div class="ci"><span class="box"></span> Заведены ключи минимум для четырёх сервисов, Apify среди них</div>
+      <div class="ci"><span class="box"></span> Прогнал разбор Инстаграма и получил результат с реальными цифрами</div>
+    </div>
+  </section>
+
+  <!-- ============================ БЛОК 2 ============================ -->
+  <section class="day d2" id="day2">
+    <div class="day-head">
+      <div class="day-badge">2</div>
+      <div>
+        <div class="tool">Воскресенье, 16 августа · Codex</div>
+        <h2>Скилл по рилсам</h2>
+      </div>
+    </div>
+    <p class="sub">Тот, который я обещал. Отдаёшь ему сырое видео, получаешь готовый вертикальный ролик с субтитрами, плашками и музыкой.</p>
+
+    <div class="why">
+      <span class="k">Что он делает</span>
+      Ты кидаешь видео, где просто говоришь на камеру, и одну фразу словами. Дальше он сам: распознаёт речь, ставит караоке-субтитры с подсветкой слова, вытаскивает из речи тезисы и цифры и выносит их на экран плашками, режет паузы и «эээ», подкладывает музыку и приглушает её под голосом, переводит горизонт в вертикаль и следит, чтобы тебя не обрезало. <b>Монтаж идёт прямо на твоём компьютере</b>, видео никуда не загружается. И главное: он не рендерит, пока не покажет тебе план и не получит «ок».
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 1.</span> Скачай архив со скиллом</div>
+    <p class="blockhint">Нажимаешь кнопку, файл <span class="mono">reels-montage.zip</span> падает в «Загрузки». Распаковывать его не надо и открывать тоже: <b>это тот самый архив, который ты будешь прикреплять скрепкой в следующих двух шагах.</b></p>
+    <a class="dl" href="../files/reels-montage.zip" download>Скачать reels-montage.zip</a>
+
+    <div class="blocklbl"><span class="no">Шаг 2.</span> Досмотр: пусть Codex его прочитает</div>
+    <p class="blockhint">Открываешь Codex, копируешь промпт ниже, <b>прикрепляешь скрепкой тот архив, который только что скачал</b>, и отправляешь. Второй пункт общего правила, и здесь он не для галочки. Прогони, даже зная, что скилл от меня: важно, чтобы этот шаг стал привычкой, а не разовым упражнением.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex, архив reels-montage.zip скрепкой</span>Изучи вот этот скилл, архив прикрепил.
+Ничего не устанавливай и ничего не запускай, просто прочитай и отчитайся.
+Скажи простыми словами:
+1. что этот скилл делает;
+2. какие команды он запускает на моём компьютере;
+3. ходит ли он в интернет и куда именно;
+4. может ли он увидеть мои ключи, пароли или личные данные;
+5. есть ли в нём что-то опасное или странное;
+6. поставил бы ты его сам и почему.
+И отдельно ответь честно: не вредный ли он.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 3.</span> Ставим</div>
+    <p class="blockhint">Отчёт прочитал, вопросов нет, ставим. <b>Прикрепляешь скрепкой тот же самый архив</b>, что и в прошлом шаге, и отправляешь промпт ниже.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex, тот же архив скрепкой</span>Поставь мне скилл reels-montage, архив прикрепил.
+Я работаю в приложении и руками ничего не делаю, сделай всё сам:
+1. распакуй архив;
+2. положи папку скилла туда, откуда ты подхватываешь скиллы, это ~/.codex/skills/. Должно получиться ~/.codex/skills/reels-montage/SKILL.md, а рядом папка references;
+3. перезапустись, иначе скилл не подхватится. Если сам перезапуститься не можешь, так и скажи, я закрою и открою Codex;
+4. после перезапуска проверь, что он на месте, и покажи, как его звать.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 4.</span> Пусть поставит себе движок</div>
+    <p class="blockhint">Скилл это инструкция, а монтирует отдельный движок. Ставится он один раз и дальше работает всегда. Установка займёт минут десять, большую часть Codex будет качать молча.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Подготовь всё для монтажа роликов.
+Прочитай скилл reels-montage и выполни его нулевой шаг: поставь движок и проверь окружение.
+Я работаю в приложении и терминал не открываю, сделай всё сам. Чего не хватает на компьютере, поставь тоже сам, не заставляй меня разбираться.
+Когда закончишь, скажи одной фразой: готов принимать видео или чего именно не хватает.</div>
+
+    <div class="note">
+      <b>Если попросит доступ или пароль администратора.</b> Такое бывает при установке системных штук. Codex должен объяснить, что именно ставит и зачем, а вводишь пароль ты сам. Не объяснил, спроси прямо: «что ты ставишь и зачем оно нужно».
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 5.</span> Первый ролик</div>
+    <p class="blockhint">Возьми любое своё видео, где ты просто говоришь на камеру. Хоть кружок из телеграма, хоть кусок эфира. Первый ролик делаем не ради результата, а чтобы увидеть механику.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex, видео файлом</span><span class="at">$reels-montage</span> Вот видео, собери из него вертикальный рилс. Файл прикрепил.
+Ничего не выдумывай: тексты и цифры бери только из того, что я реально говорю.
+Покажи мне план до монтажа, я его посмотрю и скажу «ок».</div>
+
+    <div class="tip">
+      <b>Смотри, какой короткий промпт.</b> В этом и смысл. Что делать с видео, уже прописано внутри скилла: как разложить речь по сценам, где показать цифру, где дать цитату, какой должен быть ритм, как настроить музыку. Если ты снова перескажешь всё это в промпте, скилл не нужен, ты просто руками написал длинную инструкцию. Чего ему не хватит, он спросит сам.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 6.</span> Правки</div>
+    <p class="blockhint">План он покажет, и почти наверняка что-то захочется поменять. Правишь словами, обычными, как живому монтажёру.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">примеры правок, в Codex</span>Музыка забивает голос, сделай её тише.
+Текст мелкий, с телефона не читается, увеличь.
+Вторую и третью сцену убери, они лишние.
+Цитату на 40-й секунде выведи крупно на весь экран.
+Меня обрезает по краю кадра, поправь кадрирование.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 7.</span> Банк промптов: что он ещё умеет</div>
+    <p class="blockhint">Это не задание, а пища для головы. Двенадцать формулировок под разные ситуации, чтобы ты видел границы инструмента и не просил у него только «смонтируй». Бери любую, подставляй своё.</p>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">1 · когда некогда думать</span>Смонтируй.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">2 · горизонт в вертикаль</span>Сделай вертикальный рилс из этого горизонтального видео. Следи за лицом при перекадрировании, чтобы меня не обрезало. Добавь ритмичный зум, новый план каждые три секунды. Субтитры и плашки как обычно.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">3 · нарезка из длинного эфира</span>Из этой записи вытащи пять самых сильных смысловых кусков по 40-60 секунд. Покажи мне тайм-коды и первые фразы, я выберу, что монтировать.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">4 · только субтитры</span>Ничего не оформляй. Нужны только караоке-субтитры по словам, крупные, по центру нижней трети. Формат оставь как в исходнике.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">5 · плотная речь</span>Вырежи паузы, вдохи и слова-паразиты, чтобы речь звучала плотно. Длину сократи примерно на треть, смысл не трогай. Потом уже оформляй.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">6 · цитата крупным планом</span>Возьми фразу с <span class="fill">[тайм-код начала]</span> по <span class="fill">[тайм-код конца]</span> и сделай отдельный ролик: цитата крупно на фоне, подпись автора, без лишней графики.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">7 · уложиться в длину</span>Уложи в 45 секунд. Если речь длиннее, предложи, какие куски вырезать, и покажи список до монтажа.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">8 · продающий ролик</span>Смонтируй продающий рилс. В конце добавь карточку с призывом и текстом: <span class="fill">[что человек должен сделать]</span>. Последнюю треть чаще показывай лицо, чтобы был контакт со зрителем.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">9 · свои цвета</span>Сделай в моих цветах: акцент <span class="fill">[цвет]</span>, фон <span class="fill">[светлый или тёмный]</span>. Шрифты без засечек. Плашки не должны перекрывать лицо.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">10 · музыка и баланс</span>Подбери современный инструментал без вокала с безопасной лицензией. Сделай две пробы по десять секунд на моём голосе. Музыка под речью тише голоса примерно на 15 дБ, в паузах поднимается.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">11 · две версии под площадки</span>Сделай две версии: вертикаль 1080x1920 под рилсы и горизонт 1920x1080 под YouTube. Тексты и музыка одинаковые, отличается только кадрирование.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">12 · врезки и картинки по смыслу</span>Смонтируй ролик. Поставь две картинки врезками на весь экран под смысл речи, а на фразе «сделай скриншот» вставь мой кадр в окно редактора.</div>
+
+    <div class="tip">
+      <b>Полный банк лежит внутри самого скилла.</b> Там их двадцать, вместе с техническими режимами. Хочешь посмотреть всё, просто спроси у Codex: «покажи, что умеет скилл reels-montage, приведи примеры задач». Он прочитает свой справочник и выдаст списком.
+    </div>
+
+    <div class="check">
+      <div class="ci"><span class="box"></span> Досмотр прогнан, отчёт прочитан</div>
+      <div class="ci"><span class="box"></span> Скилл стоит, Codex перезапущен, движок поставился и отвечает «готов»</div>
+      <div class="ci"><span class="box"></span> Собран первый ролик, план утверждал ты, а не он сам за себя</div>
+      <div class="ci"><span class="box"></span> Внёс хотя бы одну правку словами и получил новую версию</div>
+    </div>
+  </section>
+
+  <!-- ============================ БЛОК 3 ============================ -->
+  <section class="day d3" id="day3">
+    <div class="day-head">
+      <div class="day-badge">3</div>
+      <div>
+        <div class="tool">Понедельник, 17 августа · Codex</div>
+        <h2>Чиним картинки</h2>
+      </div>
+    </div>
+    <p class="sub">Разбираемся, почему скилл на генерацию не запустился, и доводим до живой картинки.</p>
+
+    <div class="why">
+      <span class="k">Что тогда произошло на самом деле</span>
+      Скилл был поставлен нормально и работал ровно так, как задуман. <b>У тебя в тот момент был бесплатный тариф, а сам генератор картинок живёт в платном.</b> Поэтому скилл честно сказал, что нужной среды нет, и отказался работать. Это не поломка, а его главная функция: он специально написан так, чтобы вместо настоящей картинки не подсунуть тебе серую заглушку, разноцветный квадрат или картинку, нарисованную кодом. Лучше честное «не могу», чем красивый мусор, который ты вставишь в презентацию и заметишь это уже перед клиентом.
+    </div>
+
+    <div class="note">
+      <b>Заодно про сам Codex.</b> Codex теперь работает и на бесплатном тарифе, просто с ограничениями по количеству задач. А вот генерация картинок и часть тяжёлых функций остаются в платном. То есть без подписки ты не остаёшься без агента, но остаёшься без картинок.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 1.</span> Вызови скилл и проверь, живой ли он</div>
+    <p class="blockhint">Начинаем не с картинки, а <b>с самого скилла</b>. Пусть Codex найдёт его у себя, прочитает и прогонит тестовую команду. Дальше действуешь по его ответу, а не по догадкам.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Проверь мой скилл student-imagegen-enforcer, он отвечает за картинки.
+Сходи и посмотри по-настоящему, а не по памяти:
+1. стоит ли он у тебя вообще и по какому адресу лежит;
+2. прочитай его и скажи своими словами, что он от тебя требует и на каких моих словах включается сам;
+3. прогони тестовую команду из самого скилла и покажи, что получилось.
+Отвечай честно. Не стоит, так и скажи. Стоит, но отработать не можешь, назови точную причину простыми словами, без технических терминов.
+В конце одной фразой: готов рисовать или нет.</div>
+
+    <div class="note">
+      <b>Если скилла на месте не оказалось.</b> Мы ставили его на встрече, но если он куда-то делся, скачай архив и поставь заново тем же способом, что и скилл по рилсам: жмёшь кнопку, потом в Codex прикрепляешь скачанный архив скрепкой и просишь поставить.
+      <br><a class="dl bl" href="../files/student-imagegen-enforcer.zip" download>Скачать student-imagegen-enforcer.zip</a>
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 2.</span> Сказал «не готов»: две дороги</div>
+    <p class="blockhint">Скорее всего причина будет та же, что в прошлый раз, и упрётся в тариф. Выбираешь дорогу и идёшь дальше, тупика тут нет.</p>
+
+    <div class="fork">
+      <div class="fc a">
+        <div class="fh">Вернуть подписку</div>
+        <div class="fd">Рабочий вариант, если картинки нужны регулярно: презентации, посты, обложки, визуал под «Цельность» и клуб. Тогда всё в одном месте: Codex сам рисует и сам вставляет картинки туда, где они нужны.</div>
+      </div>
+      <div class="fc b">
+        <div class="fh">Рисовать рядом</div>
+        <div class="fd">Пока без подписки: картинку делаешь в обычном ChatGPT, скачиваешь файл и отдаёшь его Codex скрепкой. Он вставит её в презентацию или на страницу. Дольше на пару шагов, но работает.</div>
+      </div>
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 3.</span> Сказал «готов»: даём боевую задачу</div>
+    <p class="blockhint">Теперь проверяем не словами, а результатом. Возьми любой из четырёх, они все под твоё. Хочешь, прогони два и сравни.</p>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">задача 1 · обложка поста</span>Нарисуй обложку для поста. Тема: <span class="fill">[о чём пост]</span>.
+Формат квадрат, фотореализм, спокойный свет, без людей и без текста на картинке.
+Условия: настоящая сгенерированная картинка, файл .png или .jpg. SVG, градиенты, фигуры кодом и серые заглушки не подходят, это не картинка. Не можешь нарисовать, скажи прямо и не подделывай.
+В конце скажи, где лежит файл и как мне его открыть.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">задача 2 · визуал под программу</span>Нарисуй три варианта визуала для моей программы <span class="fill">[название программы]</span>. Она про <span class="fill">[о чём она в двух фразах]</span>.
+Вертикальный формат под сторис. Настроение спокойное и премиальное, без людей, без текста на картинке.
+Сделай три разных подхода, а не три похожие картинки, и коротко объясни, чем они отличаются по ощущению.
+Условия: настоящие сгенерированные файлы. Заглушки и картинки, нарисованные кодом, не подходят. Не можешь, скажи прямо.
+В конце скажи, где лежат файлы.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">задача 3 · картинка по описанию из речи</span>Я сейчас опишу картинку словами, сумбурно, как думаю. Ты сам вытащи из этого нормальное описание, покажи мне его одной фразой, и после моего «да» рисуй.
+Вот: <span class="fill">[наговори голосом, как представляешь картинку]</span>
+Условия: настоящий файл картинки, не заглушка и не рисунок кодом. Не можешь, скажи прямо.</div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">задача 4 · переделать существующую</span>Вот картинка, переделай её. Файл прикрепил.
+Что поменять: <span class="fill">[что не нравится и каким хочешь видеть результат]</span>.
+Всё остальное оставь как есть, композицию не ломай.
+Условия: на выходе настоящий файл картинки. Не можешь отредактировать, скажи прямо, а не рисуй заново что-то похожее.</div>
+
+    <div class="stop">
+      <b>Как понять, что тебя обманули.</b> Настоящая картинка это файл, который открывается в просмотрщике. Если в ответе прилетел кусок кода, или «схема», или прямоугольники с подписями, это не картинка. Так и пиши: «это не картинка, сделай через встроенную генерацию или скажи, что не можешь». Ровно за этим скилл и стоит.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 4.</span> Пересобери презентацию по Иремелю</div>
+    <p class="blockhint">Ту самую, которая в прошлый раз вышла кривой. Теперь у тебя есть скиллы, поэтому смотрим, что изменилось на том же материале. Сравнение честное: тема одна, инструмент другой.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex, материалы скрепкой</span>Собери презентацию по Иремелю. Материалы прикрепил.
+Сначала покажи мне структуру: сколько слайдов, что на каждом, и где нужны картинки. Ждёшь моего «ок» и только потом собираешь.
+Условия:
+1. текст на слайдах короткий, я его проговариваю голосом, а не читаю с экрана;
+2. картинки делай настоящей генерацией, заглушки не подходят;
+3. цифры и факты бери только из моих материалов, ничего не придумывай.
+В конце скажи, где лежит файл и как его открыть.</div>
+
+    <div class="check">
+      <div class="ci"><span class="box"></span> Codex нашёл скилл, прочитал его и прогнал тестовую команду</div>
+      <div class="ci"><span class="box"></span> Сказал прямо, готов рисовать или нет, и назвал причину</div>
+      <div class="ci"><span class="box"></span> Прогнал хотя бы одну боевую задачу и получил настоящий файл, а не заглушку</div>
+      <div class="ci"><span class="box"></span> Пересобрал презентацию по Иремелю и увидел разницу с прошлым разом</div>
+    </div>
+  </section>
+
+  <!-- ============================ БЛОК 4 ============================ -->
+  <section class="day d4" id="day4">
+    <div class="day-head">
+      <div class="day-badge">4</div>
+      <div>
+        <div class="tool">Вторник, 18 августа · Codex</div>
+        <h2>Скиллы под твою рутину</h2>
+      </div>
+    </div>
+    <p class="sub">Документы, сметы, договоры, ответы клиентам, контент. То, что ты делаешь руками каждую неделю.</p>
+
+    <div class="why">
+      <span class="k">Скиллы это не коллекция марок</span>
+      Смысл не в том, чтобы поставить сто штук и красиво выглядеть в списке. Смысл в том, чтобы <b>закрыть свою повторяющуюся работу</b>. Поэтому начинаем не с каталога, а с себя: сначала выписываем, что реально повторяется каждую неделю, и только потом ищем под это инструмент. Иначе получится склад скиллов, которыми ты не пользуешься.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 1.</span> Десять дел, которые повторяются</div>
+    <p class="blockhint">Не «развивать бизнес», а конкретное: собрать программу выезда, ответить резиденту клуба, свести смету, проверить договор с площадкой, написать пост, подготовиться к сессии. Если список не идёт, не выдумывай, отдай Codex, он вытащит вопросами.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Помоги мне составить список моих повторяющихся рабочих дел.
+Сначала прочитай мой личный кодекс из ~/.codex/AGENTS.md, чтобы понимать, чем я занимаюсь.
+
+Задавай вопросы ПО ОДНОМУ, всего 8 вопросов, про мою последнюю рабочую неделю: что я делал руками, что делал повторно, на чём терял время, что откладывал, что делал в выходные, что делал поздно вечером, что за меня делал кто-то другой, что я терпеть не могу делать.
+Жди мой ответ после каждого вопроса. Отвечать буду голосом и сумбурно, разбирайся сам.
+
+Потом собери список из 10 моих повторяющихся дел. По каждому одна строка в таком виде:
+что я делаю | как часто | сколько времени уходит за раз.
+Сортируй по потерянному времени, сверху самое дорогое.
+Ничего не придумывай за меня: не хватает данных, спроси ещё раз.
+В конце сохрани список в файл МОИ-10-РУТИН.md.</div>
+
+    <div class="tip">
+      <b>Список без цифр не работает.</b> В каждой строке должна быть цифра: часы в неделю или рубли в месяц. Иначе невозможно понять, что чинить первым, и ты будешь автоматизировать то, что просто раздражает, а не то, что дороже всего стоит.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 2.</span> Ставим набор под эти дела</div>
+    <p class="blockhint">Список внутри просьбы закрытый, лишнего Codex не притащит. Он сам выберет из него подходящее под твои задачи и поставит только это.</p>
+
+    <div class="skills">
+      <div class="sk"><div class="snm">Презентации и коммерческие</div><span class="sat">slides</span>
+        <div class="sds">Собирает презентацию из твоего текста: структура, слайды, готовый файл. Под мастер-классы, продажу «Цельности», корпоративные предложения.</div></div>
+      <div class="sk"><div class="snm">Документы в Word</div><span class="sat">doc</span>
+        <div class="sds">Договоры, акты, письма, регламенты. Нормальный файл с оформлением, а не текст в чате.</div></div>
+      <div class="sk"><div class="snm">Таблицы с живыми формулами</div><span class="sat">spreadsheet</span>
+        <div class="sds">Сметы, расчёты, прайсы. Формулы работают, поменял цифру, пересчиталось всё.</div></div>
+      <div class="sk"><div class="snm">PDF</div><span class="sat">pdf</span>
+        <div class="sds">Счета и договоры в PDF: собрать, оформить, отдать клиенту.</div></div>
+      <div class="sk"><div class="snm">Склеить и разрезать PDF</div><span class="sat">pdf-merge-split</span>
+        <div class="sds">Собрать несколько документов в один или выдернуть нужные страницы.</div></div>
+      <div class="sk"><div class="snm">Прочитать скан или фото</div><span class="sat">pdf-ocr</span>
+        <div class="sds">Счёт пришёл фотографией, договор сканом. Вытаскивает текст и цифры.</div></div>
+      <div class="sk"><div class="snm">Разбор конкурентов</div><span class="sat">competitive-intelligence</span>
+        <div class="sds">Кто рядом, что продают, по какой цене, чем отличаются. Работает в связке с Франкенштейном.</div></div>
+      <div class="sk"><div class="snm">Проверка договора</div><span class="sat">contract-review</span>
+        <div class="sds">Второй взгляд перед подписью: где риск, чего не хватает, что править.</div></div>
+      <div class="sk"><div class="snm">Ответ клиенту</div><span class="sat">draft-response</span>
+        <div class="sds">Когда ситуация неприятная и писать не хочется: возврат, недовольство, срыв сроков.</div></div>
+      <div class="sk"><div class="snm">Найм</div><span class="sat">job-post-builder</span>
+        <div class="sds">Вакансия, вопросы на собеседование, оффер. Под того самого технаря воронки.</div></div>
+      <div class="sk"><div class="snm">Контент</div><span class="sat">social</span>
+        <div class="sds">Посты, контент-план, сценарии для роликов. Дальше их монтирует скилл из второго блока.</div></div>
+      <div class="sk"><div class="snm">Картинки</div><span class="sat">встроено</span>
+        <div class="sds">Отдельно ставить не надо, генерация уже внутри Codex. Про неё был третий блок.</div></div>
+    </div>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Подбери и поставь мне только то, что нужно под мою задачу.
+Моя задача: <span class="fill">[опиши своими словами то, что делаешь руками каждую неделю и хочешь отдать агенту]</span>.
+
+Выбирай строго из этого набора, своего ничего не добавляй:
+https://github.com/letta-ai/skills
+- slides: презентации и коммерческие предложения
+- doc: договоры, акты, письма и регламенты в Word
+- spreadsheet: сметы и прайсы с живыми формулами
+- pdf: счета и договоры в PDF
+https://github.com/TerminalSkills/skills
+- pdf-merge-split: склеить несколько PDF или вырезать страницы
+- pdf-ocr: прочитать счёт, пришедший фотографией или сканом
+https://github.com/anthropics/knowledge-work-plugins
+- competitive-intelligence: разбор конкурентов и цен
+- contract-review: проверка договора перед подписью
+- draft-response: ответы клиентам в сложных ситуациях
+- job-post-builder: вакансия, собеседование и оффер
+https://github.com/coreyhaines31/marketingskills
+- social: посты, контент-план и сценарии видео
+
+Картинки в этот список не входят: генерация уже встроена в тебя, отдельно её ставить не надо.
+
+Команда установки всегда такая:
+npx skills add <адрес репозитория> --skill <имя> -a codex -y
+Несколько скиллов из одного репозитория ставь одной командой, просто повтори --skill нужное число раз.
+
+Я работаю в приложении и терминал не открываю, сделай всё сам:
+1. сначала назови 2-3 скилла, которые реально закрывают мою задачу, и коротко объясни, почему именно они;
+2. поставь только их;
+3. перезапустись, иначе они не подхватятся. Если сам перезапуститься не можешь, так и скажи, я закрою и открою Codex;
+4. проверь, что каждый действительно на месте.
+
+В конце покажи списком: какой скилл встал, как его звать ($имя) и одной строкой, какую мою задачу он закрывает.
+Что не встало, назови отдельно и объясни почему.
+И сразу прогони один из них на моей задаче, чтобы я увидел живой результат, а не отчёт.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 3.</span> Чтобы они включались сами</div>
+    <p class="blockhint">Скилл вызывается не красотой названия, а точностью описания: агент читает описание и решает, подходит ли момент. Помогает прописать их в правила, тогда он вспоминает про них без тебя.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Пропиши мои скиллы в правила, чтобы ты вызывал их сам.
+Сделай так:
+1. посмотри, какие скиллы у меня сейчас стоят;
+2. по каждому напиши одну строку в формате «когда нужно [конкретная ситуация из моей работы], используй скилл $имя». Ситуацию бери из моего файла МОИ-10-РУТИН.md, а не выдумывай;
+3. добавь эти строки в AGENTS.md отдельным разделом «МОИ СКИЛЛЫ». Ничего не стирай из того, что там уже есть.
+Сначала покажи мне текст, который собираешься записать, и жди моего «да».</div>
+
+    <div class="check">
+      <div class="ci"><span class="box"></span> Есть список из десяти дел, и в каждом стоит цифра</div>
+      <div class="ci"><span class="box"></span> Поставлено минимум три скилла под эти дела, видно в <span class="mono">/skills</span></div>
+      <div class="ci"><span class="box"></span> Хотя бы один прогнан на настоящей задаче, а не на учебной</div>
+      <div class="ci"><span class="box"></span> Скиллы прописаны в правилах разделом «МОИ СКИЛЛЫ»</div>
+    </div>
+  </section>
+
+  <!-- ============================ БЛОК 5 ============================ -->
+  <section class="day d5" id="day5">
+    <div class="day-head">
+      <div class="day-badge">5</div>
+      <div>
+        <div class="tool">Среда, 19 августа · Codex</div>
+        <h2>Дальше ищешь сам</h2>
+      </div>
+    </div>
+    <p class="sub">Последний блок и самый важный по смыслу. До этого скиллы давал я. Теперь ты умеешь находить их без меня.</p>
+
+    <div class="why">
+      <span class="k">Зачем это отдельным блоком</span>
+      Пока скиллы приносит наставник, ты зависишь от наставника. Каталогов сейчас тысячи, и появляются новые каждую неделю. Разница между «мне дали инструмент» и <b>«я знаю, как достать инструмент под любую свою задачу»</b> примерно та же, что между рыбой и удочкой. Ставим один служебный скилл, который ищет другие скиллы, и дальше ты просто говоришь, что тебе нужно.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 1.</span> Скилл, который ищет скиллы</div>
+    <p class="blockhint">Ставится один раз. Адрес я специально не даю: пусть Codex найдёт его сам, чтобы ты не поставил что-то не то по устаревшей ссылке.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Поставь мне скилл find-skills от vercel-labs, это скилл, который сам ищет другие скиллы под задачу.
+Я работаю в приложении и терминал не открываю, сделай всё сам, по шагам:
+1. зайди на skills.sh и найди там точный адрес этого скилла. Адрес я тебе специально не даю, найди и покажи мне, что нашёл;
+2. поставь его командой
+   npx skills add <владелец/репозиторий> --skill find-skills -a codex -y
+   Флаги не меняй: -a codex это Codex, -y чтобы ты не задавал мне вопросов;
+3. перезапустись, иначе скилл не подхватится. Если сам перезапуститься не можешь, так и скажи, я закрою и открою Codex.
+В конце покажи: какой адрес нашёл, встал ли скилл и как мне теперь его звать.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 2.</span> Пробуем на своей задаче</div>
+    <p class="blockhint">Возьми любой пункт из списка десяти дел, который ещё не закрыт. Здесь он пока ничего не ставит, только приносит варианты, а решаешь ты.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Мне нужен скилл под задачу: <span class="fill">[опиши задачу своими словами]</span>.
+Пока ничего не ставь.
+Посмотри, что есть в каталогах, и принеси мне 2-3 подходящих варианта. По каждому скажи:
+1. что он делает простыми словами;
+2. чем отличается от остальных;
+3. кто автор и когда обновлялся в последний раз.
+В конце посоветуй один и объясни, почему именно его.
+Ставить будем только после моего «да».</div>
+
+    <div class="blocklbl"><span class="no">Шаг 3.</span> Досмотр перед установкой</div>
+    <p class="blockhint">Тот же промпт, что во втором блоке, но теперь применяешь его к чужому скиллу, который нашёл сам. Вот здесь он уже не для тренировки.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Изучи вот этот скилл: <span class="fill">[ссылка или прикреплённый файл]</span>.
+Ничего не устанавливай и ничего не запускай, просто прочитай и отчитайся.
+Скажи простыми словами:
+1. что этот скилл делает;
+2. какие команды он запускает на моём компьютере;
+3. ходит ли он в интернет и куда именно;
+4. может ли он увидеть мои ключи, пароли или личные данные;
+5. есть ли в нём что-то опасное или странное;
+6. поставил бы ты его сам и почему.
+И отдельно ответь честно: не украден ли этот скилл и не вредный ли он.</div>
+
+    <p class="blockhint" style="margin-top:16px;">Читая отчёт, держи в голове вот эти признаки. Решение всё равно за тобой, а не за агентом.</p>
+    <div class="tw"><table>
+      <tr><th>На что смотрим</th><th>Что настораживает</th></tr>
+      <tr><td><b>Кто автор</b></td><td>Аккаунт без истории, создан вчера</td></tr>
+      <tr><td><b>Видно ли исходники</b></td><td>Только архив, кода не видно</td></tr>
+      <tr><td><b>Когда обновлялся</b></td><td>Последний раз два года назад</td></tr>
+      <tr><td><b>Что просит у агента</b></td><td>Просит больше прав, чем нужно под задачу</td></tr>
+      <tr><td><b>Какие файлы читает</b></td><td>Читает всё подряд, а не свою папку</td></tr>
+      <tr><td><b>Что умеет запускать</b></td><td>Удаляет, отправляет, платит</td></tr>
+      <tr><td><b>Куда ходит в интернет</b></td><td>На адреса, которых нет в описании</td></tr>
+      <tr><td><b>Видит ли ключи</b></td><td>Лезет в настройки без причины</td></tr>
+    </table></div>
+
+    <div class="stop">
+      <b>Правило, которое стоит запомнить дословно.</b> Ставит агент, а решает человек. Он может прочитать скилл и объяснить, что тот делает. Но нажать «ставим» должен ты, осознанно. Это ровно тот случай, где удобство не должно побеждать здравый смысл.
+    </div>
+
+    <div class="check">
+      <div class="ci"><span class="box"></span> <span class="mono">find-skills</span> стоит, Codex показал адрес, который нашёл сам</div>
+      <div class="ci"><span class="box"></span> Нашёл варианты под свою задачу и выбрал один</div>
+      <div class="ci"><span class="box"></span> Прогнал досмотр на скилле, который нашёл сам, и прочитал отчёт</div>
+      <div class="ci"><span class="box"></span> Поставил его и проверил на живой задаче</div>
+    </div>
+  </section>
+
+  <!-- ============ ФИНАЛ ============ -->
+  <div class="foot">
+    <div class="big">Что несёшь на занятие 9</div>
+    <p>Рабочего Франкенштейна с заведёнными ключами и одним настоящим исследованием. Поставленный скилл по рилсам и первый собранный ролик. Живую генерацию картинок и пересобранную презентацию по Иремелю. Свой набор скиллов под десять рутин.</p>
+    <p>И отдельно возьми то, что <b>не получилось или сработало не так</b>. Где встал, где ответ разочаровал, где решил, что проще руками. Разбирать удачное скучно, а вот застрявшие места как раз и двигают.</p>
+    <div class="sign">neovida.ai · персональная AI-система Камиля Амирханова · занятие 8 → занятие 9, четверг 20 августа, 12:00</div>
+  </div>
+
+</div>
+
+<script>
+function fb(t){try{var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';
+  document.body.appendChild(a);a.focus();a.select();document.execCommand('copy');document.body.removeChild(a);}catch(e){}}
+function cp(el){
+  var c=el.cloneNode(true);
+  var w=c.querySelector('.where'); if(w) w.remove();
+  var t=c.innerText.trim();
+  var done=function(){el.classList.add('copied');setTimeout(function(){el.classList.remove('copied');},1900);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done).catch(function(){fb(t);done();});
+  }else{fb(t);done();}
+}
+</script>
+</body>
+</html>
