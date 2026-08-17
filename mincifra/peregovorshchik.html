@@ -359,7 +359,7 @@ pre#promt{margin:0;padding:0 16px 14px;max-height:300px;overflow:auto;white-spac
   }
   function put(text, cb){
     if(navigator.clipboard && window.isSecureContext){
-      navigator.clipboard.writeText(text).then(cb, function(){ legacy(text, cb); });
+      navigator.clipboard.writeText(text).then(function(){ cb(true); }, function(){ legacy(text, cb); });
     } else { legacy(text, cb); }
   }
   function legacy(text, cb){
@@ -372,9 +372,10 @@ pre#promt{margin:0;padding:0 16px 14px;max-height:300px;overflow:auto;white-spac
     document.body.appendChild(ta);
     ta.select();
     ta.setSelectionRange(0, text.length);
-    try { document.execCommand('copy'); } catch(e) {}
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch(e) { ok = false; }
     document.body.removeChild(ta);
-    cb();
+    cb(ok);
   }
 
   // блоки .copy и строки .mini
@@ -384,7 +385,8 @@ pre#promt{margin:0;padding:0 16px 14px;max-height:300px;overflow:auto;white-spac
       var lbl = clone.querySelector('.lbl'); if(lbl) lbl.remove();
       var tag = clone.querySelector('.tag'); if(tag) tag.remove();
       var text = clone.textContent.trim();
-      put(text, function(){
+      put(text, function(ok){
+        if(!ok){ ping('Браузер не дал скопировать, выделите текст вручную'); return; }
         el.classList.add('done');
         ping();
         setTimeout(function(){ el.classList.remove('done'); }, 1600);
@@ -396,7 +398,8 @@ pre#promt{margin:0;padding:0 16px 14px;max-height:300px;overflow:auto;white-spac
   var btn = document.getElementById('copyPromt');
   btn.addEventListener('click', function(){
     var text = document.getElementById('promt').textContent.trim();
-    put(text, function(){
+    put(text, function(ok){
+      if(!ok){ ping('Браузер не дал скопировать, выделите текст вручную'); return; }
       btn.classList.add('done');
       btn.textContent = 'Скопировано, вставляйте в поле «Инструкции»';
       ping('Инструкция скопирована');
