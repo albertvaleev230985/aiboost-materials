@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neovida — Глобальный поиск</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+  --amber:#F09030;--amber-light:#FEF4E8;
+}
+.dark{
+  --bg:#1C1B19;--surface:#262523;--surface-alt:#2E2D2A;
+  --border:#3A3835;--text:#D5D0C9;--text2:#8A857E;--muted:#5E5A54;
+  --coral:#D4806F;--coral-light:#2D2220;
+  --green:#6DAF85;--green-light:#1E2B22;
+  --blue:#7DA3C9;--blue-light:#1E2630;
+  --purple:#9A84BA;--purple-light:#262030;
+  --amber:#D9A050;--amber-light:#2A2418;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.app{display:flex;height:100vh;background:var(--bg)}
+
+/* ── SIDEBAR ── */
+.side{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.side-logo{padding:16px 18px;border-bottom:1px solid var(--border)}
+.logo-text{font-size:22px;font-weight:800;letter-spacing:-.4px;color:var(--text);line-height:1;display:flex;align-items:baseline}
+.logo-slash{color:var(--coral);font-weight:300;margin:0 1px}.logo-product{font-weight:400;color:var(--coral)}
+.side-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-section{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;padding:8px 10px 6px;margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:var(--surface-alt);color:var(--text)}
+.nav-item.active{background:var(--coral-light);color:var(--coral);font-weight:600}
+.nav-item svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+.side-bottom{padding:12px 14px;border-top:1px solid var(--border)}
+.side-user{display:flex;align-items:center;gap:10px}
+.side-ava{width:34px;height:34px;border-radius:8px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text2)}
+.side-uname{font-size:14px;font-weight:600;color:var(--text)}
+.side-urole{font-size:12px;color:var(--text2)}
+
+/* ── CONTENT ── */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.top-bar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.top-title{font-size:20px;font-weight:700;color:var(--text)}
+.top-right{display:flex;gap:10px;align-items:center}
+.btn-c{width:34px;height:34px;border-radius:8px;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:border-color .15s}
+.btn-c:hover{border-color:var(--coral);color:var(--coral)}
+.body{flex:1;overflow-y:auto;padding:20px 24px}
+
+/* ── SEARCH BAR ── */
+.search-container{max-width:720px;margin:0 auto 20px}
+.search-bar{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.search-input{flex:1;padding:14px 18px 14px 44px;border:2px solid var(--border);border-radius:14px;font-size:16px;color:var(--text);background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%23B5AFA8' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cline x1='13' y1='13' x2='17' y2='17'/%3E%3C/svg%3E") no-repeat 14px center;font-family:inherit;transition:border-color .15s}
+.search-input:hover{border-color:var(--coral)}
+.search-input:focus{border-color:var(--coral);outline:none}
+.search-input::placeholder{color:var(--muted)}
+
+/* Filters */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.filter-chip{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:5px}
+.filter-chip:hover{border-color:var(--coral);color:var(--coral)}
+.filter-chip.active{background:var(--coral-light);border-color:var(--coral);color:var(--coral)}
+.filter-chip svg{width:12px;height:12px}
+.filter-select{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;font-family:inherit;transition:border-color .15s;appearance:none;padding-right:24px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='none' stroke='%238B8580' stroke-width='2'%3E%3Cpolyline points='2 3 5 7 8 3'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.filter-select:hover{border-color:var(--coral)}
+.filter-select:focus{border-color:var(--coral);outline:none}
+
+/* Results summary */
+.results-summary{font-size:13px;color:var(--text2);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.results-count b{color:var(--text)}
+.results-hint{font-size:12px;color:var(--purple);display:flex;align-items:center;gap:4px}
+
+/* ── RESULT CARDS ── */
+.results{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;transition:border-color .15s;cursor:pointer;animation:fadeIn .3s ease both}
+.result-card:nth-child(2){animation-delay:.05s}
+.result-card:nth-child(3){animation-delay:.1s}
+.result-card:nth-child(4){animation-delay:.15s}
+.result-card:hover{border-color:var(--coral)}
+
+/* Card header */
+.rc-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.rc-ava{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.rc-info{flex:1;min-width:0}
+.rc-top-row{display:flex;align-items:center;gap:8px}
+.rc-manager{font-size:14px;font-weight:700;color:var(--text)}
+.rc-arrow{color:var(--muted);font-size:12px}
+.rc-client{font-size:14px;font-weight:600;color:var(--text2)}
+.rc-meta{font-size:12px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:12px}
+.rc-meta-item{display:flex;align-items:center;gap:4px}
+.rc-meta-item svg{width:12px;height:12px}
+.rc-score{padding:4px 10px;border-radius:8px;font-size:13px;font-weight:800;flex-shrink:0}
+.score-high{background:var(--green-light);color:var(--green)}
+.score-mid{background:var(--amber-light);color:var(--amber)}
+.score-low{background:var(--coral-light);color:var(--coral)}
+
+/* Transcript fragment */
+.rc-transcript{margin-bottom:12px}
+.rc-transcript-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.rc-fragment{padding:12px 14px;background:var(--surface-alt);border-radius:10px;border-left:3px solid var(--amber);font-size:13px;color:var(--text);line-height:1.7}
+.rc-fragment .highlight{background:var(--amber-light);color:var(--amber);font-weight:700;padding:1px 4px;border-radius:3px}
+.rc-speaker{font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:2px}
+.rc-timecode{font-size:11px;color:var(--muted);font-weight:600}
+
+/* Manager response */
+.rc-response{margin-bottom:12px}
+.rc-response-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.rc-response-text{padding:12px 14px;background:var(--surface-alt);border-radius:10px;border-left:3px solid var(--blue);font-size:13px;color:var(--text);line-height:1.7}
+
+/* Card actions */
+.rc-actions{display:flex;gap:8px}
+.rc-action{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:all .15s}
+.rc-action:hover{border-color:var(--coral);color:var(--coral)}
+.rc-action svg{width:12px;height:12px}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:20px;max-width:720px;margin-left:auto;margin-right:auto}
+.page-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:all .15s}
+.page-btn:hover{border-color:var(--coral);color:var(--coral)}
+.page-btn.active{background:var(--coral);border-color:var(--coral);color:#fff}
+.page-info{font-size:12px;color:var(--muted);margin:0 8px}
+
+/* ── CONTROLS ── */
+.ctrls{position:fixed;bottom:20px;right:20px;z-index:100}
+@keyframes neoPulse{0%,100%{box-shadow:0 0 0 0 rgba(139,110,181,.3)}50%{box-shadow:0 0 0 8px rgba(139,110,181,0)}}
+.neo-fab{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#8B6EB5,#6B4E95);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(139,110,181,.35);color:#fff;font-size:20px;font-weight:800;transition:all .2s;animation:neoPulse 3s infinite}
+.neo-fab:hover{transform:scale(1.08)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+  <div class="side">
+    <div class="side-logo"><div class="logo-text">neovida<span class="logo-slash">/</span><span class="logo-product">sales</span></div></div>
+    <div class="side-nav">
+      <div class="nav-section">Управление</div>
+      <div class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Настройки
+      </div>
+    </div>
+    <div class="side-bottom">
+      <div class="side-user">
+        <div class="side-ava">ИС</div>
+        <div><div class="side-uname">Иван Смирнов</div><div class="side-urole">Руководитель ОП</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="top-bar">
+      <span class="top-title">Поиск по звонкам</span>
+      <div class="top-right">
+        <button class="btn-c" id="themeBtn"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <!-- Search -->
+      <div class="search-container">
+        <div class="search-bar">
+          <input class="search-input" type="text" value="клиент говорит дорого" placeholder="Поиск по всем звонкам: слова, фразы, имена клиентов...">
+        </div>
+        <div class="filters">
+          <select class="filter-select">
+            <option>Эта неделя</option>
+            <option selected>Этот месяц</option>
+            <option>Квартал</option>
+            <option>Всё время</option>
+          </select>
+          <select class="filter-select">
+            <option selected>Все менеджеры</option>
+            <option>Анна Козлова</option>
+            <option>Игорь Петров</option>
+            <option>Мария Волкова</option>
+            <option>Дмитрий Сидоров</option>
+            <option>Елена Новикова</option>
+          </select>
+          <select class="filter-select">
+            <option selected>Любая оценка</option>
+            <option>80+ (высокие)</option>
+            <option>60-79 (средние)</option>
+            <option>Ниже 60 (низкие)</option>
+          </select>
+          <select class="filter-select">
+            <option selected>Все источники</option>
+            <option>Online</option>
+            <option>АТС</option>
+            <option>Мобильное</option>
+          </select>
+        </div>
+
+        <div class="results-summary">
+          <div class="results-count">Найдено <b>15 звонков</b> по запросу «клиент говорит дорого»</div>
+          <div class="results-hint">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            Семантический поиск: ищем по смыслу
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="results">
+
+        <!-- Result 1: High score -->
+        <div class="result-card">
+          <div class="rc-head">
+            <div class="rc-ava" style="background:var(--green)">АК</div>
+            <div class="rc-info">
+              <div class="rc-top-row">
+                <span class="rc-manager">Анна Козлова</span>
+                <span class="rc-arrow">→</span>
+                <span class="rc-client">Алексей Петров, ТехноЭкспо</span>
+              </div>
+              <div class="rc-meta">
+                <span class="rc-meta-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 5 февраля, 14:23</span>
+                <span class="rc-meta-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 5:12</span>
+                <span class="rc-meta-item">Online</span>
+              </div>
+            </div>
+            <div class="rc-score score-high">78</div>
+          </div>
+
+          <div class="rc-transcript">
+            <div class="rc-transcript-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              Фрагмент · <span class="rc-timecode">03:42</span>
+            </div>
+            <div class="rc-fragment">
+              <span class="rc-speaker">Клиент:</span>
+              «...ну это как-то <span class="highlight">дорого</span>, мы рассчитывали тысяч на 150, а тут получается под 200 с лишним...»
+            </div>
+          </div>
+
+          <div class="rc-response">
+            <div class="rc-response-label">Ответ менеджера</div>
+            <div class="rc-response-text">
+              <span class="rc-speaker">Менеджер:</span>
+              «Давайте посчитаем: с доставкой и монтажом это выходит дешевле чем заказывать отдельно. Плюс мы включаем дизайн и цветопробу — это ещё минус 15 тысяч. Итого разница с вашим бюджетом примерно 20 тысяч, но вы получаете готовый результат под ключ.»
+            </div>
+          </div>
+
+          <div class="rc-actions">
+            <button class="rc-action"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Досье</button>
+            <button class="rc-action"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Прослушать с 03:42</button>
+          </div>
+        </div>
+
+        <!-- Result 2: Low score -->
+        <div class="result-card">
+          <div class="rc-head">
+            <div class="rc-ava" style="background:var(--coral)">ИП</div>
+            <div class="rc-info">
+              <div class="rc-top-row">
+                <span class="rc-manager">Игорь Петров</span>
+                <span class="rc-arrow">→</span>
+                <span class="rc-client">Сергей Волков, ПромСтрой</span>
+              </div>
+              <div class="rc-meta">
+                <span class="rc-meta-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 3 февраля, 11:05</span>
+                <span class="rc-meta-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 3:48</span>
+                <span class="rc-meta-item">Online</span>
+              </div>
+            </div>
+            <div class="rc-score score-low">54</div>
+          </div>
+
+          <div class="rc-transcript">
+            <div class="rc-transcript-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              Фрагмент · <span class="rc-timecode">02:15</span>
+            </div>
+            <div class="rc-fragment">
+              <span class="rc-speaker">Клиент:</span>
+              «...у <span class="highlight">конкурентов процентов на 15 дешевле</span>, мне нужно как-то обосновать руководству почему мы должны заказать у вас...»
+            </div>
+          </div>
+
+          <div class="rc-response">
+            <div class="rc-response-label">Ответ менеджера</div>
+            <div class="rc-response-text">
+              <span class="rc-speaker">Менеджер:</span>
+              «Ну, э-э, я могу скидку дать... Какой у вас бюджет? Может что-то подберём подешевле...»
+            </div>
+          </div>
+
+          <div class="rc-actions">
+            <button class="rc-action"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Досье</button>
+            <button class="rc-action"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Прослушать с 02:15</button>
+          </div>
+        </div>
+
+        <!-- Result 3: Semantic match -->
+        <div class="result-card">
+          <div class="rc-head">
+            <div class="rc-ava" style="background:var(--blue)">МВ</div>
+            <div class="rc-info">
+              <div class="rc-top-row">
+                <span class="rc-manager">Мария Волкова</span>
+                <span class="rc-arrow">→</span>
+                <span class="rc-client">Ольга Нестерова, СтройМонтаж</span>
+              </div>
+              <div class="rc-meta">
+                <span class="rc-meta-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 4 февраля, 16:40</span>
+                <span class="rc-meta-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 7:22</span>
+                <span class="rc-meta-item">АТС</span>
+              </div>
+            </div>
+            <div class="rc-score score-mid">71</div>
+          </div>
+
+          <div class="rc-transcript">
+            <div class="rc-transcript-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              Фрагмент · <span class="rc-timecode">04:58</span>
+            </div>
+            <div class="rc-fragment">
+              <span class="rc-speaker">Клиент:</span>
+              «...мы просто <span class="highlight">бюджет не потянем</span> такой, у нас на всё выделено 300 тысяч, а тут только на вывеску половина уйдёт...»
+            </div>
+          </div>
+
+          <div class="rc-response">
+            <div class="rc-response-label">Ответ менеджера</div>
+            <div class="rc-response-text">
+              <span class="rc-speaker">Менеджер:</span>
+              «Понимаю ограничение по бюджету. Давайте посмотрим: можно разбить на 2 этапа. Сейчас делаем основную вывеску — 180 тысяч, а навигационные таблички во второй очереди через месяц. Так бюджет ложится комфортнее.»
+            </div>
+          </div>
+
+          <div class="rc-actions">
+            <button class="rc-action"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Досье</button>
+            <button class="rc-action"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Прослушать с 04:58</button>
+          </div>
+        </div>
+
+        <!-- Result 4 -->
+        <div class="result-card">
+          <div class="rc-head">
+            <div class="rc-ava" style="background:var(--amber)">ДС</div>
+            <div class="rc-info">
+              <div class="rc-top-row">
+                <span class="rc-manager">Дмитрий Сидоров</span>
+                <span class="rc-arrow">→</span>
+                <span class="rc-client">Павел Крюков, АвтоДеталь</span>
+              </div>
+              <div class="rc-meta">
+                <span class="rc-meta-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 6 февраля, 09:30</span>
+                <span class="rc-meta-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 4:15</span>
+                <span class="rc-meta-item">Online</span>
+              </div>
+            </div>
+            <div class="rc-score score-high">82</div>
+          </div>
+
+          <div class="rc-transcript">
+            <div class="rc-transcript-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              Фрагмент · <span class="rc-timecode">01:50</span>
+            </div>
+            <div class="rc-fragment">
+              <span class="rc-speaker">Клиент:</span>
+              «...мне <span class="highlight">цена кусается</span> если честно, я думал раза в полтора дешевле будет...»
+            </div>
+          </div>
+
+          <div class="rc-response">
+            <div class="rc-response-label">Ответ менеджера</div>
+            <div class="rc-response-text">
+              <span class="rc-speaker">Менеджер:</span>
+              «Павел, вы правы — на первый взгляд сумма немаленькая. Но смотрите: материал держится на улице 5 лет без выцветания. Если посчитать стоимость в год — это 36 тысяч. Дешёвый аналог прослужит год-полтора и обойдётся в 50 тысяч за тот же срок. Могу показать сравнительный расчёт.»
+            </div>
+          </div>
+
+          <div class="rc-actions">
+            <button class="rc-action"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Досье</button>
+            <button class="rc-action"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Прослушать с 01:50</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <span class="page-info">из 2 страниц</span>
+        <button class="page-btn"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="ctrls">
+    <button class="neo-fab" onclick="alert('Neo: Хотите найти лучший ответ на это возражение? Отфильтруйте по оценке 80+ — увидите как отвечают лучшие менеджеры.')">N</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var dark = false;
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    dark = !dark;
+    document.getElementById('app').classList.toggle('dark', dark);
+    this.innerHTML = dark
+      ? '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+  });
+
+  // Filter chips
+  document.querySelectorAll('.filter-chip').forEach(function(c){
+    c.addEventListener('click', function(){ this.classList.toggle('active'); });
+  });
+})();
+</script>
+</body>
+</html>

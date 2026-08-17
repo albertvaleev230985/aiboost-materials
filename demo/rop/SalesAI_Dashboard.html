@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neovida — Дашборд аналитики</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+  --amber:#F09030;--amber-light:#FEF4E8;
+}
+.dark{
+  --bg:#1C1B19;--surface:#262523;--surface-alt:#2E2D2A;
+  --border:#3A3835;--text:#D5D0C9;--text2:#8A857E;--muted:#5E5A54;
+  --coral:#D4806F;--coral-light:#2D2220;--coral-dark:#B5635A;
+  --green:#6DAF85;--green-light:#1E2B22;
+  --blue:#7DA3C9;--blue-light:#1E2630;
+  --purple:#9A84BA;--purple-light:#262030;
+  --amber:#D9A050;--amber-light:#2A2418;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.app{display:flex;height:100vh;background:var(--bg)}
+
+/* ── SIDEBAR ── */
+.side{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.side-logo{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.logo-text{font-size:22px;font-weight:800;letter-spacing:-.4px;color:var(--text);line-height:1;display:flex;align-items:baseline}
+.logo-slash{color:var(--coral);font-weight:300;margin:0 1px}.logo-product{font-weight:400;color:var(--coral)}
+.side-role{font-size:11px;color:var(--muted);background:var(--surface-alt);padding:3px 9px;border-radius:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.side-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-section{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;padding:8px 10px 6px;margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:var(--surface-alt);color:var(--text)}
+.nav-item.active{background:var(--coral-light);color:var(--coral);font-weight:600}
+.nav-item svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+.side-bottom{padding:12px 14px;border-top:1px solid var(--border)}
+.side-user{display:flex;align-items:center;gap:10px}
+.side-avatar{width:34px;height:34px;border-radius:8px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text2)}
+.side-uname{font-size:14px;font-weight:600;color:var(--text)}
+.side-urole{font-size:12px;color:var(--text2)}
+
+/* ── CONTENT ── */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.top-bar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.top-title{font-size:20px;font-weight:700;color:var(--text)}
+.top-right{display:flex;gap:8px;align-items:center}
+.period-select{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:14px;color:var(--text);font-family:inherit;cursor:pointer;appearance:none;padding-right:30px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%238B8580' stroke-width='2'%3E%3Cpolyline points='2 4 6 8 10 4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:border-color .15s}
+.period-select:hover{border-color:var(--coral)}
+.period-select:focus{border-color:var(--coral);outline:none}
+
+.body{flex:1;overflow-y:auto;padding:20px 24px}
+
+/* ── SECTION HEADERS ── */
+.section-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:8px}
+.section-label{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.section-badge{font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px}
+.badge-own{background:var(--green-light);color:var(--green)}
+.badge-crm{background:var(--purple-light);color:var(--purple)}
+.section-line{flex:1;height:1px;background:var(--border)}
+
+/* ── KPI CARDS ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.kpi-row-3{grid-template-columns:repeat(3,1fr)}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;animation:fadeIn .4s ease both}
+.kpi:nth-child(2){animation-delay:.05s}.kpi:nth-child(3){animation-delay:.1s}.kpi:nth-child(4){animation-delay:.15s}
+.kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.kpi-label{font-size:13px;color:var(--text2);font-weight:500}
+.kpi-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.kpi-value{font-size:28px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px}
+.kpi-sub{font-size:16px;font-weight:500;color:var(--text2)}
+.kpi-change{font-size:12px;font-weight:600;display:flex;align-items:center;gap:3px}
+.kpi-up{color:var(--green)}
+.kpi-down{color:var(--coral)}
+.arr-up{display:inline-flex}<svg xmlns="http://www.w3.org/2000/svg" class="arr-up" width="10" height="10"></svg>
+
+/* ── CHARTS ── */
+.charts-row{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:20px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;animation:fadeIn .4s ease .1s both}
+.chart-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.chart-legend{font-size:12px;color:var(--text2);font-weight:400;display:flex;gap:14px}
+.chart-legend span{display:flex;align-items:center;gap:4px}
+
+/* ── BAR CHART ── */
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:150px;padding-top:10px}
+.bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar-wrap{width:100%;display:flex;align-items:flex-end;justify-content:center;height:120px;gap:3px}
+.bar{width:14px;border-radius:4px 4px 0 0;transition:height .8s ease;min-height:4px}
+.bar-calls{background:var(--blue)}
+.bar-good{background:var(--green)}
+.bar-label{font-size:11px;color:var(--muted);text-align:center}
+
+/* ── DISPOSITION LIST ── */
+.disp-list{display:flex;flex-direction:column;gap:10px}
+.disp-item{display:flex;align-items:center;gap:10px}
+.disp-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.disp-name{font-size:13px;color:var(--text);min-width:110px}
+.disp-bar-bg{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.disp-bar-fill{height:100%;border-radius:3px;transition:width .8s ease}
+.disp-val{font-size:13px;font-weight:600;color:var(--text);width:28px;text-align:right}
+.disp-pct{font-size:11px;color:var(--text2);width:34px;text-align:right}
+
+/* ── MANAGERS TABLE ── */
+.mgr-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;animation:fadeIn .4s ease .2s both;margin-bottom:20px}
+.mgr-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:14px}
+.mgr-table{width:100%;border-collapse:collapse}
+.mgr-table th{text-align:left;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;border-bottom:1px solid var(--border)}
+.mgr-table td{padding:10px;border-bottom:1px solid var(--border);font-size:14px;color:var(--text)}
+.mgr-table tr:last-child td{border:none}
+.mgr-table tr:hover td{background:var(--surface-alt)}
+.mgr-name{display:flex;align-items:center;gap:10px}
+.mgr-ava{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.mgr-rank{font-size:13px;font-weight:700;color:var(--muted);width:24px;text-align:center}
+.score-wrap{display:flex;align-items:center;gap:6px}
+.score-bar{width:60px;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.score-fill{height:100%;border-radius:3px}
+.mgr-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px}
+.badge-top{background:var(--green-light);color:var(--green)}
+.badge-mid{background:var(--amber-light);color:var(--amber)}
+.badge-low{background:var(--coral-light);color:var(--coral)}
+
+/* ── BOTTOM ROW ── */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;animation:fadeIn .4s ease .3s both}
+.card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.insight-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.insight-item:last-child{border:none}
+.insight-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.insight-text{font-size:14px;color:var(--text);line-height:1.5}
+.insight-label{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* ── COMPETITORS INTEL ── */
+.comp-intel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px;animation:fadeIn .4s ease .32s both}
+.comp-intel-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.comp-intel-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.comp-top{display:flex;flex-direction:column;gap:8px}
+.comp-top-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;transition:border-color .15s;cursor:pointer}
+.comp-top-item:hover{border-color:var(--coral)}
+.comp-top-ava{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.comp-top-info{flex:1;min-width:0}
+.comp-top-name{font-size:13px;font-weight:700;color:var(--text)}
+.comp-top-reason{font-size:11px;color:var(--text2);margin-top:1px}
+.comp-top-count{font-size:18px;font-weight:800;color:var(--amber)}
+.comp-top-label{font-size:10px;color:var(--muted)}
+.comp-pie-section{display:flex;flex-direction:column}
+.comp-pie-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px}
+.comp-pie-bars{display:flex;flex-direction:column;gap:8px}
+.comp-pie-row{display:flex;align-items:center;gap:8px}
+.comp-pie-label{font-size:12px;color:var(--text);min-width:80px}
+.comp-pie-bar-bg{flex:1;height:8px;background:var(--surface-alt);border-radius:4px;overflow:hidden}
+.comp-pie-bar-fill{height:100%;border-radius:4px}
+.comp-pie-val{font-size:12px;font-weight:700;color:var(--text);width:36px;text-align:right}
+.comp-alert-strip{margin-top:12px;padding:10px 14px;background:var(--coral-light);border:1px solid rgba(224,116,97,.12);border-radius:10px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .15s}
+.comp-alert-strip:hover{border-color:var(--coral)}
+.comp-alert-strip-icon{color:var(--coral);flex-shrink:0}
+.comp-alert-strip-text{font-size:13px;color:var(--text)}
+.comp-alert-strip-text b{color:var(--coral)}
+.comp-alert-strip-action{margin-left:auto;font-size:12px;font-weight:600;color:var(--coral);white-space:nowrap}
+
+/* ── CRM PLACEHOLDER ── */
+.crm-block{background:var(--surface);border:2px dashed var(--border);border-radius:14px;padding:32px 24px;text-align:center;margin-bottom:20px;animation:fadeIn .4s ease .35s both}
+.crm-icon{font-size:36px;margin-bottom:10px;opacity:.5}
+.crm-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px}
+.crm-desc{font-size:14px;color:var(--text2);margin-bottom:16px;line-height:1.6;max-width:500px;margin-left:auto;margin-right:auto}
+.crm-metrics{display:flex;justify-content:center;gap:32px;margin-bottom:18px}
+.crm-m{text-align:center}
+.crm-m-val{font-size:22px;font-weight:800;color:var(--border)}
+.crm-m-name{font-size:12px;color:var(--muted);margin-top:2px}
+.btn-crm{padding:10px 24px;border-radius:8px;background:var(--purple);color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s}
+.btn-crm:hover{opacity:.85}
+
+/* ── HEATMAP ── */
+.heat-label{text-align:center;font-size:10px;color:var(--muted);padding:2px 0}
+.heat-cell{aspect-ratio:1;border-radius:4px;cursor:default}
+.heat-0{background:var(--surface-alt)}
+.heat-1{background:var(--green-light)}
+.heat-2{background:rgba(91,166,122,.3)}
+.heat-3{background:rgba(91,166,122,.5)}
+.heat-4{background:rgba(91,166,122,.7)}
+.heat-5{background:var(--green)}
+
+/* ── CONTROLS ── */
+.ctrls{position:fixed;bottom:20px;right:20px;z-index:100;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.btn-c{width:40px;height:40px;border-radius:10px;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.06);color:var(--text2)}
+.btn-c:hover{border-color:var(--coral);color:var(--coral)}
+
+/* ── NEO CHAT ── */
+@keyframes neoSlideUp{from{opacity:0;transform:translateY(20px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes neoPulse{0%,100%{box-shadow:0 0 0 0 rgba(139,110,181,.3)}50%{box-shadow:0 0 0 8px rgba(139,110,181,0)}}
+.neo-fab{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#8B6EB5,#6B4E95);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(139,110,181,.35);color:#fff;font-size:20px;font-weight:800;transition:all .2s;animation:neoPulse 3s infinite}
+.neo-fab:hover{transform:scale(1.08);box-shadow:0 6px 24px rgba(139,110,181,.45)}
+.neo-fab.active{animation:none;background:var(--surface);color:var(--purple);border:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.neo-window{display:none;width:390px;height:520px;background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:0 12px 48px rgba(0,0,0,.12);flex-direction:column;overflow:hidden;animation:neoSlideUp .25s ease}
+.neo-window.show{display:flex}
+.neo-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.neo-head-ava{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8B6EB5,#6B4E95);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800}
+.neo-head-info{flex:1}
+.neo-head-name{font-size:14px;font-weight:700;color:var(--text)}
+.neo-head-status{font-size:11px;color:var(--green);display:flex;align-items:center;gap:4px}
+.neo-head-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green)}
+.neo-close{width:28px;height:28px;border-radius:6px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.neo-close:hover{background:var(--surface-alt);color:var(--coral)}
+.neo-body{flex:1;overflow-y:auto;padding:16px}
+.neo-welcome{text-align:center;margin-bottom:16px}
+.neo-welcome-icon{width:48px;height:48px;border-radius:50%;background:var(--purple-light);display:inline-flex;align-items:center;justify-content:center;color:var(--purple);font-size:18px;font-weight:800;margin-bottom:8px}
+.neo-welcome-text{font-size:14px;color:var(--text);font-weight:600;margin-bottom:4px}
+.neo-welcome-sub{font-size:12px;color:var(--text2);line-height:1.5}
+.neo-screen-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;background:var(--purple-light);color:var(--purple);margin-top:8px;text-transform:uppercase;letter-spacing:.5px}
+.neo-chips{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.neo-chip{padding:10px 14px;background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;font-size:13px;color:var(--text);cursor:pointer;transition:all .15s;text-align:left;font-family:inherit;display:flex;align-items:center;gap:8px}
+.neo-chip:hover{border-color:var(--purple);background:var(--purple-light);color:var(--purple)}
+.neo-chip-icon{font-size:15px;flex-shrink:0}
+.neo-msg{display:flex;gap:8px;margin-bottom:12px;animation:fadeIn .3s ease}
+.neo-msg-ava{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.neo-msg-ava.neo{background:linear-gradient(135deg,#8B6EB5,#6B4E95)}
+.neo-msg-ava.user{background:var(--coral)}
+.neo-msg-bubble{max-width:300px;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6}
+.neo-msg.from-neo .neo-msg-bubble{background:var(--surface-alt);color:var(--text);border-bottom-left-radius:4px}
+.neo-msg.from-user{flex-direction:row-reverse}
+.neo-msg.from-user .neo-msg-bubble{background:var(--purple);color:#fff;border-bottom-right-radius:4px}
+.neo-msg-link{display:inline-flex;align-items:center;gap:4px;color:var(--purple);font-size:12px;font-weight:600;margin-top:6px;cursor:pointer}
+.neo-msg-link:hover{text-decoration:underline}
+.neo-input{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;background:var(--surface)}
+.neo-input input{flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface-alt);font-size:13px;color:var(--text);font-family:inherit;outline:none}
+.neo-input input:focus{border-color:var(--purple)}
+.neo-input input::placeholder{color:var(--muted)}
+.neo-send{width:36px;height:36px;border-radius:10px;background:var(--purple);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;transition:all .15s}
+.neo-send:hover{background:#6B4E95}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+  <div class="side">
+    <div class="side-logo">
+      <div class="logo-text">neovida<span class="logo-slash">/</span><span class="logo-product">sales</span></div>
+      <span class="side-role">РОП</span>
+    </div>
+    <div class="side-nav">
+      <div class="nav-section">Управление</div>
+      <div class="nav-item" data-href="SalesAI_Admin.html">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Команда
+      </div>
+    </div>
+    <div class="side-bottom">
+      <div class="side-user">
+        <div class="side-avatar">ИС</div>
+        <div><div class="side-uname">Иван Смирнов</div><div class="side-urole">Руководитель ОП</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="top-bar">
+      <span class="top-title">Дашборд</span>
+      <div class="top-right">
+        <select class="period-select">
+          <option>Сегодня</option>
+          <option selected>Эта неделя</option>
+          <option>Этот месяц</option>
+          <option>Квартал</option>
+        </select>
+        <button class="btn-c" id="themeBtn" style="width:34px;height:34px;border-radius:8px;box-shadow:none"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <!-- ═══ A — АКТИВНОСТЬ ═══ -->
+      <div class="section-head">
+        <span class="section-label">Активность</span>
+        <span class="section-badge badge-own">Данные neovida</span>
+        <div class="section-line"></div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-top">
+            <span class="kpi-label">Звонков</span>
+            <div class="kpi-icon" style="background:var(--blue-light);color:var(--blue)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></div>
+          </div>
+          <div class="kpi-value">247</div>
+          <div class="kpi-change kpi-up"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg> +12% к пр. неделе</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top">
+            <span class="kpi-label">Ср. длительность</span>
+            <div class="kpi-icon" style="background:var(--amber-light);color:var(--amber)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          </div>
+          <div class="kpi-value">4:32</div>
+          <div class="kpi-change kpi-up"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg> +18 сек</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top">
+            <span class="kpi-label">Пропущено</span>
+            <div class="kpi-icon" style="background:var(--coral-light);color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+          </div>
+          <div class="kpi-value">18</div>
+          <div class="kpi-change kpi-up"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg> было 24</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top">
+            <span class="kpi-label">Ср. время ответа</span>
+            <div class="kpi-icon" style="background:var(--green-light);color:var(--green)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          </div>
+          <div class="kpi-value">12 сек</div>
+          <div class="kpi-change kpi-up"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg> -3 сек</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-title">
+            Звонки по дням
+            <div class="chart-legend">
+              <span><span style="color:var(--blue)">●</span> всего</span>
+              <span><span style="color:var(--green)">●</span> полож. исход</span>
+            </div>
+          </div>
+          <div class="bar-chart" id="barChart">
+            <div class="bar-group"><div class="bar-wrap"><div class="bar bar-calls" data-h="54"></div><div class="bar bar-good" data-h="22"></div></div><div class="bar-label">Пн</div></div>
+            <div class="bar-group"><div class="bar-wrap"><div class="bar bar-calls" data-h="68"></div><div class="bar bar-good" data-h="30"></div></div><div class="bar-label">Вт</div></div>
+            <div class="bar-group"><div class="bar-wrap"><div class="bar bar-calls" data-h="48"></div><div class="bar bar-good" data-h="18"></div></div><div class="bar-label">Ср</div></div>
+            <div class="bar-group"><div class="bar-wrap"><div class="bar bar-calls" data-h="78"></div><div class="bar bar-good" data-h="35"></div></div><div class="bar-label">Чт</div></div>
+            <div class="bar-group"><div class="bar-wrap"><div class="bar bar-calls" data-h="62"></div><div class="bar bar-good" data-h="28"></div></div><div class="bar-label">Пт</div></div>
+            <div class="bar-group"><div class="bar-wrap"><div class="bar bar-calls" data-h="22"></div><div class="bar bar-good" data-h="8"></div></div><div class="bar-label">Сб</div></div>
+            <div class="bar-group"><div class="bar-wrap"><div class="bar bar-calls" data-h="8"></div><div class="bar bar-good" data-h="3"></div></div><div class="bar-label">Вс</div></div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">Результаты звонков</div>
+          <div class="disp-list">
+            <div class="disp-item"><div class="disp-dot" style="background:var(--green)"></div><div class="disp-name">Отправлено КП</div><div class="disp-bar-bg"><div class="disp-bar-fill" style="width:0%;background:var(--green)" data-w="69"></div></div><div class="disp-val">69</div><div class="disp-pct">28%</div></div>
+            <div class="disp-item"><div class="disp-dot" style="background:var(--blue)"></div><div class="disp-name">Перезвон</div><div class="disp-bar-bg"><div class="disp-bar-fill" style="width:0%;background:var(--blue)" data-w="55"></div></div><div class="disp-val">55</div><div class="disp-pct">22%</div></div>
+            <div class="disp-item"><div class="disp-dot" style="background:var(--amber)"></div><div class="disp-name">Думает / ЛПР</div><div class="disp-bar-bg"><div class="disp-bar-fill" style="width:0%;background:var(--amber)" data-w="42"></div></div><div class="disp-val">42</div><div class="disp-pct">17%</div></div>
+            <div class="disp-item"><div class="disp-dot" style="background:var(--coral)"></div><div class="disp-name">Отказ</div><div class="disp-bar-bg"><div class="disp-bar-fill" style="width:0%;background:var(--coral)" data-w="39"></div></div><div class="disp-val">39</div><div class="disp-pct">16%</div></div>
+            <div class="disp-item"><div class="disp-dot" style="background:var(--muted)"></div><div class="disp-name">Не дозвонились</div><div class="disp-bar-bg"><div class="disp-bar-fill" style="width:0%;background:var(--muted)" data-w="24"></div></div><div class="disp-val">24</div><div class="disp-pct">10%</div></div>
+            <div class="disp-item"><div class="disp-dot" style="background:var(--purple)"></div><div class="disp-name">Нецелевой</div><div class="disp-bar-bg"><div class="disp-bar-fill" style="width:0%;background:var(--purple)" data-w="18"></div></div><div class="disp-val">18</div><div class="disp-pct">7%</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ I — КАЧЕСТВО (AI-скоринг) ═══ -->
+      <div class="section-head">
+        <span class="section-label">Качество</span>
+        <span class="section-badge badge-own">AI-скоринг neovida</span>
+        <div class="section-line"></div>
+      </div>
+      <div class="kpi-row kpi-row-3">
+        <div class="kpi">
+          <div class="kpi-top">
+            <span class="kpi-label">Ср. оценка по скрипту</span>
+            <div class="kpi-icon" style="background:var(--green-light);color:var(--green)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          </div>
+          <div class="kpi-value">78 <span class="kpi-sub">/ 100</span></div>
+          <div class="kpi-change kpi-up"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg> +5 баллов</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top">
+            <span class="kpi-label">Соблюдение скрипта</span>
+            <div class="kpi-icon" style="background:var(--blue-light);color:var(--blue)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
+          </div>
+          <div class="kpi-value">72%</div>
+          <div class="kpi-change kpi-up"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg> +8%</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top">
+            <span class="kpi-label">Положительный исход</span>
+            <div class="kpi-icon" style="background:var(--coral-light);color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          </div>
+          <div class="kpi-value">46%</div>
+          <div class="kpi-change kpi-up"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg> +3%</div>
+        </div>
+      </div>
+
+      <!-- MANAGERS -->
+      <div class="mgr-card">
+        <div class="mgr-title">Рейтинг менеджеров</div>
+        <table class="mgr-table">
+          <thead>
+            <tr><th style="width:36px">#</th><th>Менеджер</th><th>Звонков</th><th>Ср. время</th><th>AI-оценка</th><th>Скрипт</th><th>Полож. исход</th><th>Статус</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mgr-rank">1</td>
+              <td><div class="mgr-name"><div class="mgr-ava" style="background:var(--green)">АК</div>Анна Козлова</div></td>
+              <td>68</td>
+              <td>5:10</td>
+              <td><div class="score-wrap">91 <div class="score-bar"><div class="score-fill" style="width:91%;background:var(--green)"></div></div></div></td>
+              <td>88%</td>
+              <td>52%</td>
+              <td><span class="mgr-badge badge-top">Топ</span></td>
+            </tr>
+            <tr>
+              <td class="mgr-rank">2</td>
+              <td><div class="mgr-name"><div class="mgr-ava" style="background:var(--blue)">ДМ</div>Дмитрий Морозов</div></td>
+              <td>55</td>
+              <td>4:45</td>
+              <td><div class="score-wrap">84 <div class="score-bar"><div class="score-fill" style="width:84%;background:var(--green)"></div></div></div></td>
+              <td>79%</td>
+              <td>48%</td>
+              <td><span class="mgr-badge badge-top">Топ</span></td>
+            </tr>
+            <tr>
+              <td class="mgr-rank">3</td>
+              <td><div class="mgr-name"><div class="mgr-ava" style="background:var(--purple)">ЕВ</div>Елена Волкова</div></td>
+              <td>52</td>
+              <td>4:20</td>
+              <td><div class="score-wrap">76 <div class="score-bar"><div class="score-fill" style="width:76%;background:var(--amber)"></div></div></div></td>
+              <td>71%</td>
+              <td>42%</td>
+              <td><span class="mgr-badge badge-mid">Норма</span></td>
+            </tr>
+            <tr>
+              <td class="mgr-rank">4</td>
+              <td><div class="mgr-name"><div class="mgr-ava" style="background:var(--amber)">ИП</div>Игорь Петров</div></td>
+              <td>42</td>
+              <td>3:50</td>
+              <td><div class="score-wrap">71 <div class="score-bar"><div class="score-fill" style="width:71%;background:var(--amber)"></div></div></div></td>
+              <td>64%</td>
+              <td>38%</td>
+              <td><span class="mgr-badge badge-mid">Норма</span></td>
+            </tr>
+            <tr>
+              <td class="mgr-rank">5</td>
+              <td><div class="mgr-name"><div class="mgr-ava" style="background:var(--coral)">МС</div>Мария Соколова</div></td>
+              <td>30</td>
+              <td>3:10</td>
+              <td><div class="score-wrap">58 <div class="score-bar"><div class="score-fill" style="width:58%;background:var(--coral)"></div></div></div></td>
+              <td>48%</td>
+              <td>28%</td>
+              <td><span class="mgr-badge badge-low">Внимание</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- BOTTOM ROW -->
+      <div class="bottom-row">
+        <div class="card">
+          <div class="card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+            Инсайты Neo
+          </div>
+          <div class="insight-item">
+            <div class="insight-icon" style="background:var(--coral-light);color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+            <div><div class="insight-text">Мария Соколова пропускает «Квалификацию» в 70% звонков. Ср. длительность 3:10 - самая низкая в команде.</div><div class="insight-label">Рекомендация: обучение по этапам скрипта</div></div>
+          </div>
+          <div class="insight-item">
+            <div class="insight-icon" style="background:var(--green-light);color:var(--green)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div><div class="insight-text">Анна Козлова предлагает допродажи в 85% звонков. Положительный исход 52% - лучший в команде.</div><div class="insight-label">Рекомендация: разобрать звонки как образец</div></div>
+          </div>
+          <div class="insight-item">
+            <div class="insight-icon" style="background:var(--amber-light);color:var(--amber)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div><div class="insight-text">Пик нагрузки: Вт и Чт 10:00-12:00. Потеряно 12 входящих из-за ожидания на линии.</div><div class="insight-label">Рекомендация: усилить смену в пиковые часы</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Активность по часам</div>
+          <div style="display:flex;gap:4px;margin-bottom:6px">
+            <div class="heat-label" style="width:36px"></div>
+            <div class="heat-label" style="flex:1">Пн</div><div class="heat-label" style="flex:1">Вт</div><div class="heat-label" style="flex:1">Ср</div><div class="heat-label" style="flex:1">Чт</div><div class="heat-label" style="flex:1">Пт</div><div class="heat-label" style="flex:1">Сб</div><div class="heat-label" style="flex:1">Вс</div>
+          </div>
+          <div id="heatmap"></div>
+        </div>
+      </div>
+
+      <!-- ═══ КОНКУРЕНТНАЯ РАЗВЕДКА ═══ -->
+      <div class="comp-intel">
+        <div class="comp-intel-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          Конкурентная разведка
+        </div>
+
+        <div class="comp-intel-grid">
+
+          <!-- Left: Top competitors -->
+          <div class="comp-top">
+            <div class="comp-top-item">
+              <div class="comp-top-ava" style="background:var(--blue)">ПС</div>
+              <div class="comp-top-info">
+                <div class="comp-top-name">Принт Сервис</div>
+                <div class="comp-top-reason">78% упоминаний — цена</div>
+              </div>
+              <div style="text-align:center">
+                <div class="comp-top-count">23</div>
+                <div class="comp-top-label">за месяц</div>
+              </div>
+            </div>
+            <div class="comp-top-item">
+              <div class="comp-top-ava" style="background:var(--purple)">РМ</div>
+              <div class="comp-top-info">
+                <div class="comp-top-name">Рекламный мир</div>
+                <div class="comp-top-reason">64% — ассортимент</div>
+              </div>
+              <div style="text-align:center">
+                <div class="comp-top-count">11</div>
+                <div class="comp-top-label">за месяц</div>
+              </div>
+            </div>
+            <div class="comp-top-item">
+              <div class="comp-top-ava" style="background:var(--amber)">БО</div>
+              <div class="comp-top-info">
+                <div class="comp-top-name">БаннерОпт</div>
+                <div class="comp-top-reason">75% — сроки</div>
+              </div>
+              <div style="text-align:center">
+                <div class="comp-top-count">8</div>
+                <div class="comp-top-label">за месяц</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: By reason + reaction -->
+          <div class="comp-pie-section">
+            <div class="comp-pie-title">Почему упоминают конкурентов</div>
+            <div class="comp-pie-bars">
+              <div class="comp-pie-row">
+                <div class="comp-pie-label">Цена</div>
+                <div class="comp-pie-bar-bg"><div class="comp-pie-bar-fill" style="width:68%;background:var(--coral)"></div></div>
+                <div class="comp-pie-val">68%</div>
+              </div>
+              <div class="comp-pie-row">
+                <div class="comp-pie-label">Сроки</div>
+                <div class="comp-pie-bar-bg"><div class="comp-pie-bar-fill" style="width:18%;background:var(--amber)"></div></div>
+                <div class="comp-pie-val">18%</div>
+              </div>
+              <div class="comp-pie-row">
+                <div class="comp-pie-label">Ассортимент</div>
+                <div class="comp-pie-bar-bg"><div class="comp-pie-bar-fill" style="width:9%;background:var(--blue)"></div></div>
+                <div class="comp-pie-val">9%</div>
+              </div>
+              <div class="comp-pie-row">
+                <div class="comp-pie-label">Качество</div>
+                <div class="comp-pie-bar-bg"><div class="comp-pie-bar-fill" style="width:5%;background:var(--green)"></div></div>
+                <div class="comp-pie-val">5%</div>
+              </div>
+            </div>
+            <div class="comp-pie-title" style="margin-top:14px">Реакция менеджеров</div>
+            <div class="comp-pie-bars">
+              <div class="comp-pie-row">
+                <div class="comp-pie-label">Отработал</div>
+                <div class="comp-pie-bar-bg"><div class="comp-pie-bar-fill" style="width:40%;background:var(--green)"></div></div>
+                <div class="comp-pie-val">40%</div>
+              </div>
+              <div class="comp-pie-row">
+                <div class="comp-pie-label">Частично</div>
+                <div class="comp-pie-bar-bg"><div class="comp-pie-bar-fill" style="width:35%;background:var(--amber)"></div></div>
+                <div class="comp-pie-val">35%</div>
+              </div>
+              <div class="comp-pie-row">
+                <div class="comp-pie-label">Проигнорировал</div>
+                <div class="comp-pie-bar-bg"><div class="comp-pie-bar-fill" style="width:25%;background:var(--coral)"></div></div>
+                <div class="comp-pie-val">25%</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- New competitor alert -->
+        <div class="comp-alert-strip">
+          <div class="comp-alert-strip-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="comp-alert-strip-text"><b>2 новых конкурента</b> обнаружены в звонках. Добавьте карточки для автоподсказок.</div>
+          <div class="comp-alert-strip-action">Добавить →</div>
+        </div>
+      </div>
+
+      <!-- ═══ R — РЕЗУЛЬТАТЫ (CRM) ═══ -->
+      <div class="section-head">
+        <span class="section-label">Результаты</span>
+        <span class="section-badge badge-crm">Требуется CRM</span>
+        <div class="section-line"></div>
+      </div>
+      <div class="crm-block">
+        <div class="crm-icon">🔗</div>
+        <div class="crm-title">Подключите CRM для отслеживания выручки</div>
+        <div class="crm-desc">Свяжите Битрикс24 или amoCRM чтобы видеть конверсию в оплату, выручку по менеджерам, средний чек и цикл сделки. Без CRM эти метрики недоступны.</div>
+        <div class="crm-metrics">
+          <div class="crm-m"><div class="crm-m-val">—</div><div class="crm-m-name">Выручка</div></div>
+          <div class="crm-m"><div class="crm-m-val">—</div><div class="crm-m-name">Конверсия в оплату</div></div>
+          <div class="crm-m"><div class="crm-m-val">—</div><div class="crm-m-name">Ср. чек</div></div>
+          <div class="crm-m"><div class="crm-m-val">—</div><div class="crm-m-name">Цикл сделки</div></div>
+        </div>
+        <button class="btn-crm">Подключить CRM</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- NEO CHAT -->
+  <div class="neo-window" id="neoWindow">
+    <div class="neo-head">
+      <div class="neo-head-ava">N</div>
+      <div class="neo-head-info">
+        <div class="neo-head-name">Neo-помощник</div>
+        <div class="neo-head-status">Онлайн</div>
+      </div>
+      <button class="neo-close" onclick="toggleNeo()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="neo-body" id="neoBody">
+
+      <div class="neo-welcome">
+        <div class="neo-welcome-icon">N</div>
+        <div class="neo-welcome-text">Привет! Я Neo, ваш помощник.</div>
+        <div class="neo-welcome-sub">Спросите что угодно или выберите вопрос ниже.</div>
+        <div class="neo-screen-tag"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg> Экран: Дашборд</div>
+      </div>
+
+      <div class="neo-chips" id="neoChips">
+        <button class="neo-chip" onclick="askNeo(this,'dashboard-1')">
+          <span class="neo-chip-icon">🔴</span> Кто из менеджеров требует внимания?
+        </button>
+        <button class="neo-chip" onclick="askNeo(this,'dashboard-2')">
+          <span class="neo-chip-icon">📉</span> Почему упала средняя оценка?
+        </button>
+        <button class="neo-chip" onclick="askNeo(this,'dashboard-3')">
+          <span class="neo-chip-icon">⚔️</span> Какой конкурент упоминается чаще?
+        </button>
+        <button class="neo-chip" onclick="askNeo(this,'dashboard-4')">
+          <span class="neo-chip-icon">⚙️</span> Что изменить в настройках?
+        </button>
+      </div>
+
+    </div>
+    <div class="neo-input">
+      <input type="text" id="neoInput" placeholder="Спросите Neo..." onkeydown="if(event.key==='Enter')sendNeoMsg()">
+      <button class="neo-send" onclick="sendNeoMsg()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+    </div>
+  </div>
+
+  <div class="ctrls">
+    <button class="neo-fab" id="neoFab" onclick="toggleNeo()">N</button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  // Animate bars
+  setTimeout(function() {
+    var bars = document.querySelectorAll('.bar');
+    for (var i = 0; i < bars.length; i++) bars[i].style.height = bars[i].getAttribute('data-h') + '%';
+    var dbars = document.querySelectorAll('.disp-bar-fill');
+    for (var i = 0; i < dbars.length; i++) dbars[i].style.width = (dbars[i].getAttribute('data-w') / 69 * 100) + '%';
+  }, 200);
+
+  // Heatmap
+  var hd = [
+    [0,0,1,2,4,5,4,3,2,1,0,0],
+    [0,0,2,3,5,5,4,4,3,2,1,0],
+    [0,0,1,3,3,4,3,3,2,1,0,0],
+    [0,0,2,4,5,5,5,4,3,2,1,0],
+    [0,0,1,3,4,4,3,3,2,1,0,0],
+    [0,0,0,1,1,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0]
+  ];
+  var hrs = ['8','9','10','11','12','13','14','15','16','17','18','19'];
+  var el = document.getElementById('heatmap');
+  var h = '';
+  for (var i = 0; i < hrs.length; i++) {
+    h += '<div style="display:flex;gap:4px;margin-bottom:3px;align-items:center">';
+    h += '<div class="heat-label" style="width:36px;text-align:right;padding-right:6px">' + hrs[i] + ':00</div>';
+    for (var d = 0; d < 7; d++) h += '<div class="heat-cell heat-' + hd[d][i] + '" style="flex:1"></div>';
+    h += '</div>';
+  }
+  el.innerHTML = h;
+
+  // Nav
+  document.querySelectorAll('.nav-item[data-href]').forEach(function(n) {
+    n.addEventListener('click', function() { window.location.href = this.getAttribute('data-href'); });
+  });
+
+  // Neo Chat
+  var neoOpen = false;
+  window.toggleNeo = function() {
+    neoOpen = !neoOpen;
+    document.getElementById('neoWindow').classList.toggle('show', neoOpen);
+    document.getElementById('neoFab').classList.toggle('active', neoOpen);
+    document.getElementById('neoFab').innerHTML = neoOpen ? '✕' : 'N';
+  };
+
+  var neoAnswers = {
+    'dashboard-1': {
+      text: 'Игорь Петров требует внимания. За эту неделю: 3 звонка с оценкой ниже 50, средняя оценка упала с 71 до 58. Основные проблемы: пропускает этап выявления потребности, не отрабатывает ценовые возражения. Рекомендую назначить ему тренировку «Возражение по цене» и провести личный разговор.',
+      link: 'Открыть карточку Игоря →'
+    },
+    'dashboard-2': {
+      text: 'Средняя оценка за неделю 68 (было 74). Причина: 5 звонков Игоря с оценкой 38-52 и 2 звонка Анны ниже 60 (нетипично для неё — возможно сложные клиенты). Без звонков Игоря средняя была бы 73 — падение незначительное.',
+      link: 'Показать проблемные звонки →'
+    },
+    'dashboard-3': {
+      text: 'За последний месяц: «Принт Сервис» — 23 упоминания (18 раз клиенты говорили о цене), «БаннерОпт» — 8 упоминаний (в основном сроки), неизвестные конкуренты — 5 случаев. Рекомендую: у Принт Сервис добавьте в карточку ценовой контраргумент. 2 неизвестных конкурента ещё не заведены в базе.',
+      link: 'Открыть конкурентную разведку →'
+    },
+    'dashboard-4': {
+      text: 'Ваша команда работает 3 неделю. Текущие настройки в порядке, но я рекомендую:\n\n1. Включить модуль «KPI и цели» — команда стабилизировалась, средняя оценка выше 70. Начните с 2 метрик: количество звонков + средняя оценка.\n\n2. Снизить порог слов-паразитов с 8 до 6 — менеджеры привыкли, можно повышать планку.\n\n3. Включить алерт «Тренировка просрочена» — Игорь не выполнил 2 задания.',
+      link: 'Перейти в настройки →'
+    }
+  };
+
+  window.askNeo = function(btn, id) {
+    var chips = document.getElementById('neoChips');
+    var body = document.getElementById('neoBody');
+    var question = btn.textContent.trim();
+
+    // Add user message
+    var umsg = document.createElement('div');
+    umsg.className = 'neo-msg from-user';
+    umsg.innerHTML = '<div class="neo-msg-ava user">ВП</div><div><div class="neo-msg-bubble">' + question.replace(/^[^\s]+\s/, '') + '</div></div>';
+    body.appendChild(umsg);
+
+    // Hide chips
+    chips.style.display = 'none';
+
+    // Add Neo response
+    setTimeout(function() {
+      var ans = neoAnswers[id];
+      var nmsg = document.createElement('div');
+      nmsg.className = 'neo-msg from-neo';
+      nmsg.innerHTML = '<div class="neo-msg-ava neo">N</div><div><div class="neo-msg-bubble">' + ans.text.replace(/\n/g,'<br>') + '</div><div class="neo-msg-link" onclick="alert(\'Переход\')">' + ans.link + '</div></div>';
+      body.appendChild(nmsg);
+      body.scrollTop = body.scrollHeight;
+    }, 800);
+
+    body.scrollTop = body.scrollHeight;
+  };
+
+  window.sendNeoMsg = function() {
+    var input = document.getElementById('neoInput');
+    var text = input.value.trim();
+    if (!text) return;
+    var body = document.getElementById('neoBody');
+    var chips = document.getElementById('neoChips');
+    if (chips) chips.style.display = 'none';
+
+    var umsg = document.createElement('div');
+    umsg.className = 'neo-msg from-user';
+    umsg.innerHTML = '<div class="neo-msg-ava user">ВП</div><div><div class="neo-msg-bubble">' + text + '</div></div>';
+    body.appendChild(umsg);
+    input.value = '';
+
+    setTimeout(function() {
+      var nmsg = document.createElement('div');
+      nmsg.className = 'neo-msg from-neo';
+      nmsg.innerHTML = '<div class="neo-msg-ava neo">N</div><div><div class="neo-msg-bubble">Хороший вопрос! Я анализирую данные вашей команды... На основе звонков за последнюю неделю могу сказать, что ключевая зона роста — работа с ценовыми возражениями. 3 из 5 менеджеров теряются когда клиент говорит «дорого». Рекомендую добавить в скрипт блок сравнительной аргументации.</div><div class="neo-msg-link" onclick="alert(\'Переход\')">Открыть редактор скриптов →</div></div>';
+      body.appendChild(nmsg);
+      body.scrollTop = body.scrollHeight;
+    }, 1000);
+
+    body.scrollTop = body.scrollHeight;
+  };
+
+  // Theme
+  var dark = false;
+  document.getElementById('themeBtn').addEventListener('click', function() {
+    dark = !dark;
+    document.getElementById('app').classList.toggle('dark', dark);
+    this.innerHTML = dark
+      ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+  });
+})();
+</script>
+</body>
+</html>

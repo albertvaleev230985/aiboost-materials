@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neovida — Уведомления</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+  --amber:#F09030;--amber-light:#FEF4E8;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:40px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.container{max-width:640px;margin:0 auto}
+.page-head{margin-bottom:24px}
+.page-title{font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px}
+.page-sub{font-size:14px;color:var(--text2)}
+
+/* Neo */
+.neo{display:flex;gap:10px;padding:14px 16px;background:var(--purple-light);border:1px solid rgba(139,110,181,.1);border-radius:12px;margin-bottom:20px;animation:fadeIn .3s ease}
+.neo-ava{width:28px;height:28px;border-radius:8px;background:var(--purple);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
+.neo-text{font-size:13px;color:var(--text2);line-height:1.6}
+.neo-text b{color:var(--text)}
+
+/* Channels */
+.section{margin-bottom:24px}
+.section-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.channel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:8px;transition:border-color .15s}
+.channel:hover{border-color:var(--coral)}
+.ch-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+.ch-tg{background:#E3F2FD;color:#2196F3}
+.ch-email{background:var(--coral-light);color:var(--coral)}
+.ch-app{background:var(--purple-light);color:var(--purple)}
+.ch-info{flex:1}
+.ch-name{font-size:14px;font-weight:600;color:var(--text)}
+.ch-desc{font-size:12px;color:var(--text2);margin-top:2px}
+.ch-status{font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px}
+.ch-on{background:var(--green-light);color:var(--green)}
+.ch-off{background:var(--surface-alt);color:var(--muted)}
+.ch-action{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .15s}
+.ch-action:hover{border-color:var(--coral);color:var(--coral)}
+
+/* Trigger list */
+.trigger{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:border-color .15s}
+.trigger:hover{border-color:var(--coral)}
+.tr-toggle{width:40px;height:22px;border-radius:11px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.tr-toggle.on{background:var(--coral)}
+.tr-knob{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.tr-toggle.on .tr-knob{left:20px}
+.tr-info{flex:1}
+.tr-name{font-size:14px;font-weight:600;color:var(--text)}
+.tr-desc{font-size:12px;color:var(--text2);margin-top:2px}
+.tr-neo{font-size:11px;color:var(--purple);margin-top:4px;font-style:italic}
+.tr-channel{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.tr-ch-badge{font-size:10px;padding:3px 8px;border-radius:5px;font-weight:600}
+.tr-ch-tg{background:#E3F2FD;color:#2196F3}
+.tr-ch-email{background:var(--coral-light);color:var(--coral)}
+
+/* Help tooltip */
+.help{display:inline-flex;width:16px;height:16px;border-radius:50%;background:var(--surface-alt);border:1px solid var(--border);align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--muted);cursor:help;margin-left:4px;position:relative;transition:border-color .15s;vertical-align:middle}
+.help:hover{border-color:var(--coral);color:var(--coral)}
+.help:hover .tip{display:block}
+.tip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:260px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.1);font-size:12px;font-weight:400;color:var(--text2);line-height:1.5;z-index:50;text-align:left}
+
+/* Threshold */
+.tr-threshold{display:flex;align-items:center;gap:8px;margin-top:6px}
+.tr-threshold-label{font-size:11px;color:var(--muted)}
+.tr-threshold-input{width:48px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;text-align:center;color:var(--text);font-family:inherit;transition:border-color .15s}
+.tr-threshold-input:hover,.tr-threshold-input:focus{border-color:var(--coral);outline:none}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="page-head">
+    <div class="page-title">Уведомления <span class="help">?<span class="tip">Настройте каналы доставки и какие события вызывают уведомления. Neo рекомендует начать с 2-3 триггеров чтобы не превращать мессенджер в спам.</span></span></div>
+    <div class="page-sub">Каналы доставки и триггеры событий</div>
+  </div>
+
+  <div class="neo">
+    <div class="neo-ava">N</div>
+    <div class="neo-text"><b>Мой совет для команды из 5 человек:</b> не включайте больше 3 срочных триггеров. Telegram для срочного (оценка ниже порога, негатив), email для сводки в конце дня. Так вы не пропустите важное и не утонете в уведомлениях.</div>
+  </div>
+
+  <!-- CHANNELS -->
+  <div class="section">
+    <div class="section-title">Каналы доставки</div>
+
+    <div class="channel">
+      <div class="ch-icon ch-tg"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#2196F3"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.178c.068 0 .322.03.465.185a.518.518 0 0 1 .171.39c0 .1-.02.2-.038.293-.175.94-.744 3.23-1.05 4.286-.13.447-.386.596-.634.611-.538.033-.948-.356-1.47-.698-.816-.536-1.278-.87-2.07-1.394-.916-.607-.322-1.06.2-1.574.137-.133 2.515-2.306 2.56-2.502.006-.024.012-.113-.042-.16-.054-.047-.134-.031-.192-.018-.082.018-1.39.883-3.922 2.593-.371.255-.707.38-1.01.374-.332-.008-.97-.188-1.445-.342-.582-.19-1.045-.29-1.005-.573.02-.147.243-.298.667-.454 2.612-1.137 4.354-1.888 5.226-2.254 2.49-1.036 3.007-1.215 3.344-1.22z"/></svg></div>
+      <div class="ch-info">
+        <div class="ch-name">Telegram</div>
+        <div class="ch-desc">Бот @neovida_bot · быстрые уведомления</div>
+      </div>
+      <span class="ch-status ch-on">Подключён</span>
+    </div>
+
+    <div class="channel">
+      <div class="ch-icon ch-email"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
+      <div class="ch-info">
+        <div class="ch-name">Email</div>
+        <div class="ch-desc"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c8a1bea9a688aba7a5b8a9a6b1e6babd">[email&#160;protected]</a> · сводки и отчёты</div>
+      </div>
+      <span class="ch-status ch-on">Подключён</span>
+    </div>
+
+    <div class="channel">
+      <div class="ch-icon ch-app"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+      <div class="ch-info">
+        <div class="ch-name">В приложении</div>
+        <div class="ch-desc">Всплывающие уведомления в neovida/sales</div>
+      </div>
+      <span class="ch-status ch-on">Всегда активно</span>
+    </div>
+  </div>
+
+  <!-- TRIGGERS -->
+  <div class="section">
+    <div class="section-title">Триггеры событий</div>
+
+    <div class="trigger">
+      <div class="tr-toggle on" onclick="this.classList.toggle('on')"><div class="tr-knob"></div></div>
+      <div class="tr-info">
+        <div class="tr-name">Оценка ниже порога <span class="help">?<span class="tip">Сработает когда менеджер получит оценку ниже указанного значения. Вы узнаете сразу и сможете послушать звонок или поговорить с менеджером.</span></span></div>
+        <div class="tr-desc">Мгновенно при оценке звонка ниже порога</div>
+        <div class="tr-threshold">
+          <span class="tr-threshold-label">Порог:</span>
+          <input class="tr-threshold-input" type="number" value="50">
+          <span class="tr-threshold-label">баллов</span>
+        </div>
+        <div class="tr-neo">Neo: «Рекомендую 50 для старта. Если слишком много уведомлений — поднимите до 40.»</div>
+      </div>
+      <div class="tr-channel"><span class="tr-ch-badge tr-ch-tg">Telegram</span></div>
+    </div>
+
+    <div class="trigger">
+      <div class="tr-toggle on" onclick="this.classList.toggle('on')"><div class="tr-knob"></div></div>
+      <div class="tr-info">
+        <div class="tr-name">Негатив клиента</div>
+        <div class="tr-desc">Система определила негативную реакцию клиента</div>
+        <div class="tr-neo">Neo: «Рекомендую включить. За месяц было 2 звонка с негативом — оба не обработаны вовремя.»</div>
+      </div>
+      <div class="tr-channel"><span class="tr-ch-badge tr-ch-tg">Telegram</span></div>
+    </div>
+
+    <div class="trigger">
+      <div class="tr-toggle on" onclick="this.classList.toggle('on')"><div class="tr-knob"></div></div>
+      <div class="tr-info">
+        <div class="tr-name">Ежедневная сводка</div>
+        <div class="tr-desc">Итоги дня: звонки, оценки, достижения, проблемы</div>
+        <div class="tr-threshold">
+          <span class="tr-threshold-label">Время:</span>
+          <input class="tr-threshold-input" type="time" value="18:00" style="width:80px">
+          <span class="tr-threshold-label">Канал:</span>
+          <select style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='var(--coral)'" onmouseout="this.style.borderColor='var(--border)'">
+            <option selected>Email</option>
+            <option>Telegram</option>
+          </select>
+        </div>
+        <div class="tr-neo">Neo: «Рекомендую email в 18:00. Длинная сводка — удобнее читать в почте, а не в Telegram.»</div>
+      </div>
+      <div class="tr-channel"><span class="tr-ch-badge tr-ch-email">Email</span></div>
+    </div>
+
+    <div class="trigger">
+      <div class="tr-toggle on" onclick="this.classList.toggle('on')"><div class="tr-knob"></div></div>
+      <div class="tr-info">
+        <div class="tr-name">Еженедельная сводка</div>
+        <div class="tr-desc">Итоги недели: тренды, лучшие/слабые звонки, динамика команды, рекомендации Neo</div>
+        <div class="tr-threshold">
+          <span class="tr-threshold-label">День:</span>
+          <select style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='var(--coral)'" onmouseout="this.style.borderColor='var(--border)'">
+            <option>Понедельник</option>
+            <option>Вторник</option>
+            <option>Среда</option>
+            <option>Четверг</option>
+            <option selected>Пятница</option>
+          </select>
+          <span class="tr-threshold-label">в</span>
+          <input class="tr-threshold-input" type="time" value="17:00" style="width:80px">
+          <span class="tr-threshold-label">Канал:</span>
+          <select style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='var(--coral)'" onmouseout="this.style.borderColor='var(--border)'">
+            <option selected>Email</option>
+            <option>Telegram</option>
+          </select>
+        </div>
+        <div class="tr-neo">Neo: «Рекомендую в пятницу в 17:00. Подведёте итоги недели перед выходными. Включает: динамику оценок, кто вырос, кто просел, топ-3 звонка и что улучшить на следующей неделе.»</div>
+      </div>
+      <div class="tr-channel"><span class="tr-ch-badge tr-ch-email">Email</span></div>
+    </div>
+
+    <div class="trigger">
+      <div class="tr-toggle" onclick="this.classList.toggle('on')"><div class="tr-knob"></div></div>
+      <div class="tr-info">
+        <div class="tr-name">Новый конкурент</div>
+        <div class="tr-desc">Менеджер или клиент упомянул неизвестного конкурента</div>
+        <div class="tr-neo">Neo: «Включите — за месяц я обнаружил 2 неизвестных конкурента в звонках.»</div>
+      </div>
+      <div class="tr-channel"><span class="tr-ch-badge tr-ch-tg">Telegram</span></div>
+    </div>
+
+    <div class="trigger">
+      <div class="tr-toggle" onclick="this.classList.toggle('on')"><div class="tr-knob"></div></div>
+      <div class="tr-info">
+        <div class="tr-name">Цель KPI под угрозой</div>
+        <div class="tr-desc">За 2 дня до конца периода менеджер не выполняет план</div>
+        <div class="tr-neo">Neo: «Включите если используете модуль KPI. Даёт время скорректировать.»</div>
+      </div>
+      <div class="tr-channel"><span class="tr-ch-badge tr-ch-tg">Telegram</span></div>
+    </div>
+
+    <div class="trigger">
+      <div class="tr-toggle" onclick="this.classList.toggle('on')"><div class="tr-knob"></div></div>
+      <div class="tr-info">
+        <div class="tr-name">Менеджер отключил ассистента</div>
+        <div class="tr-desc">Менеджер отключил подсказки (если запрещено настройками)</div>
+        <div class="tr-neo">Neo: «Включите если есть менеджеры с запретом на отключение.»</div>
+      </div>
+      <div cla

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neovida — Тренажёр</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+  --amber:#F09030;--amber-light:#FEF4E8;
+}
+.dark{
+  --bg:#1C1B19;--surface:#262523;--surface-alt:#2E2D2A;
+  --border:#3A3835;--text:#D5D0C9;--text2:#8A857E;--muted:#5E5A54;
+  --coral:#D4806F;--coral-light:#2D2220;
+  --green:#6DAF85;--green-light:#1E2B22;
+  --blue:#7DA3C9;--blue-light:#1E2630;
+  --purple:#9A84BA;--purple-light:#262030;
+  --amber:#D9A050;--amber-light:#2A2418;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes typing{0%{opacity:.3}50%{opacity:1}100%{opacity:.3}}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.app{display:flex;height:100vh;background:var(--bg)}
+
+/* ── SIDEBAR ── */
+.side{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.side-logo{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.logo-text{font-size:22px;font-weight:800;letter-spacing:-.4px;color:var(--text);line-height:1;display:flex;align-items:baseline}
+.logo-slash{color:var(--coral);font-weight:300;margin:0 1px}.logo-product{font-weight:400;color:var(--coral)}
+.side-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-section{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;padding:8px 10px 6px;margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:var(--surface-alt);color:var(--text)}
+.nav-item.active{background:var(--coral-light);color:var(--coral);font-weight:600}
+.nav-item svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+.side-bottom{padding:12px 14px;border-top:1px solid var(--border)}
+.side-user{display:flex;align-items:center;gap:10px}
+.side-ava{width:34px;height:34px;border-radius:8px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+.side-uname{font-size:14px;font-weight:600;color:var(--text)}
+.side-urole{font-size:12px;color:var(--text2)}
+
+/* ── CONTENT ── */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.top-bar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.top-title{font-size:20px;font-weight:700;color:var(--text)}
+.top-right{display:flex;gap:10px;align-items:center}
+.top-stats{font-size:13px;color:var(--text2);background:var(--surface-alt);padding:4px 12px;border-radius:6px;font-weight:500}
+.body{flex:1;overflow-y:auto;padding:20px 24px}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--surface-alt);border-radius:10px;padding:3px;width:fit-content}
+.tab{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s}
+.tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.tab:hover:not(.active){color:var(--text)}
+
+/* ── PERSONAL BANNER ── */
+.personal-banner{display:flex;gap:14px;padding:16px 18px;background:var(--purple-light);border:1px solid rgba(139,110,181,.12);border-radius:14px;margin-bottom:20px;animation:fadeIn .3s ease}
+.pb-icon{width:42px;height:42px;border-radius:12px;background:var(--purple);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:16px;font-weight:800}
+.pb-body{flex:1}
+.pb-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+.pb-text{font-size:13px;color:var(--text2);line-height:1.5}
+.pb-actions{display:flex;gap:8px;margin-top:10px}
+.pb-btn{padding:7px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s}
+.pb-btn-primary{background:var(--purple);color:#fff}.pb-btn-primary:hover{opacity:.85}
+.pb-btn-ghost{background:transparent;color:var(--purple);border:1px solid rgba(139,110,181,.25)}.pb-btn-ghost:hover{background:rgba(139,110,181,.08)}
+
+/* ── SCENARIO CARDS ── */
+.scenarios{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;cursor:pointer;transition:all .2s;animation:fadeIn .3s ease both;position:relative;overflow:hidden}
+.sc:nth-child(2){animation-delay:.05s}.sc:nth-child(3){animation-delay:.1s}.sc:nth-child(4){animation-delay:.15s}
+.sc:hover{border-color:var(--coral);box-shadow:0 4px 16px rgba(224,116,97,.1);transform:translateY(-2px)}
+.sc-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sc-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sc-icon svg{width:18px;height:18px}
+.sc-title{font-size:15px;font-weight:700;color:var(--text);line-height:1.3}
+.sc-desc{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:12px}
+.sc-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sc-tag{font-size:11px;font-weight:600;padding:3px 8px;border-radius:5px}
+.sc-diff{font-size:11px;font-weight:600;padding:3px 8px;border-radius:5px;margin-left:auto}
+.diff-easy{background:var(--green-light);color:var(--green)}
+.diff-mid{background:var(--amber-light);color:var(--amber)}
+.diff-hard{background:var(--coral-light);color:var(--coral)}
+.sc-badge{position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.5px}
+.badge-neo{background:var(--purple-light);color:var(--purple)}
+.badge-rop{background:var(--coral-light);color:var(--coral)}
+.badge-new{background:var(--green-light);color:var(--green)}
+.sc-done{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.sc-done svg{width:12px;height:12px}
+.sc-score-sm{font-size:12px;font-weight:700;padding:2px 8px;border-radius:5px}
+
+/* ── TRAINING SESSION (overlay) ── */
+.session-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center}
+.session-overlay.show{display:flex}
+.session{width:680px;max-height:90vh;background:var(--bg);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;animation:fadeIn .3s ease}
+.session-header{padding:18px 24px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.session-title{font-size:17px;font-weight:700;color:var(--text)}
+.session-badge{font-size:12px;font-weight:600;padding:4px 12px;border-radius:6px;background:var(--amber-light);color:var(--amber);display:flex;align-items:center;gap:6px}
+.session-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--coral);animation:pulse 1.5s infinite}
+.session-close{width:32px;height:32px;border-radius:8px;border:none;background:var(--surface-alt);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.session-close:hover{color:var(--coral)}
+
+.session-body{flex:1;overflow-y:auto;padding:20px 24px}
+
+/* Client card */
+.client-card{display:flex;gap:14px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:16px}
+.client-ava{width:48px;height:48px;border-radius:12px;background:var(--amber);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.client-info{flex:1}
+.client-name{font-size:15px;font-weight:700;color:var(--text)}
+.client-role{font-size:13px;color:var(--text2);margin-top:2px}
+.client-desc{font-size:13px;color:var(--text2);line-height:1.5;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+.client-tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+
+/* Chat */
+.chat{margin-bottom:16px}
+.chat-msg{display:flex;gap:10px;margin-bottom:12px;animation:fadeIn .3s ease}
+.chat-msg.client{flex-direction:row}
+.chat-msg.manager{flex-direction:row-reverse}
+.chat-ava{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.chat-bubble{max-width:420px;padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.6}
+.client .chat-ava{background:var(--amber)}
+.client .chat-bubble{background:var(--surface);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:4px}
+.manager .chat-ava{background:var(--green)}
+.manager .chat-bubble{background:var(--coral);color:#fff;border-bottom-right-radius:4px}
+.chat-ts{font-size:10px;color:var(--muted);margin-top:4px}
+.client .chat-ts{text-align:left}
+.manager .chat-ts{text-align:right}
+.chat-typing{display:flex;gap:4px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;border-bottom-left-radius:4px;width:fit-content}
+.chat-typing span{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:typing 1.2s infinite}
+.chat-typing span:nth-child(2){animation-delay:.2s}
+.chat-typing span:nth-child(3){animation-delay:.4s}
+
+/* Hints panel */
+.hint-panel{padding:12px 14px;background:var(--green-light);border:1px solid rgba(91,166,122,.15);border-radius:10px;margin-bottom:16px;display:flex;gap:10px}
+.hint-icon{width:24px;height:24px;border-radius:6px;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+.hint-icon svg{width:12px;height:12px}
+.hint-text{font-size:13px;color:var(--text);line-height:1.5}
+.hint-text b{color:var(--green)}
+
+/* Session input */
+.session-input{padding:16px 24px;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:10px;align-items:center}
+.mic-btn{width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.mic-btn.off{background:var(--coral);color:#fff}
+.mic-btn.off:hover{background:var(--coral-dark)}
+.mic-btn.on{background:var(--coral);color:#fff;animation:pulse 1.5s infinite;box-shadow:0 0 0 6px rgba(224,116,97,.2)}
+.mic-btn svg{width:22px;height:22px}
+.input-status{flex:1;font-size:14px;color:var(--text2)}
+.input-status b{color:var(--text)}
+.end-btn{padding:10px 20px;border-radius:10px;border:none;background:var(--surface-alt);color:var(--coral);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border)}
+.end-btn:hover{background:var(--coral-light);border-color:var(--coral)}
+
+/* ── HISTORY ── */
+.history{margin-top:24px}
+.history-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.history-title svg{width:16px;height:16px;color:var(--muted)}
+.hi{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;transition:all .15s}
+.hi:hover{border-color:var(--coral)}
+.hi-scenario{flex:1;font-size:14px;font-weight:500;color:var(--text)}
+.hi-date{font-size:12px;color:var(--muted)}
+.hi-score{font-size:16px;font-weight:800;min-width:32px;text-align:center}
+.hi-score.high{color:var(--green)}.hi-score.mid{color:var(--amber)}.hi-score.low{color:var(--coral)}
+.hi-arrow{color:var(--muted)}
+
+/* ── CONTROLS ── */
+.ctrls{position:fixed;bottom:20px;right:20px;z-index:50}
+.btn-c{width:40px;height:40px;border-radius:10px;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.06);color:var(--text2)}
+.btn-c:hover{border-color:var(--coral);color:var(--coral)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+  <div class="side">
+    <div class="side-logo">
+      <div class="logo-text">neovida<span class="logo-slash">/</span><span class="logo-product">sales</span></div>
+    </div>
+    <div class="side-nav">
+      <div class="nav-section">Работа</div>
+      <div class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        База знаний
+      </div>
+      <div class="nav-section">Мой прогресс</div>
+      <div class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        Мой кабинет
+      </div>
+      <div class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        История звонков
+      </div>
+      <div class="nav-item active">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        Тренировка
+      </div>
+    </div>
+    <div class="side-bottom">
+      <div class="side-user">
+        <div class="side-ava">АК</div>
+        <div><div class="side-uname">Анна Козлова</div><div class="side-urole">Менеджер</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="top-bar">
+      <span class="top-title">Тренировка</span>
+      <div class="top-right">
+        <span class="top-stats">Пройдено: 12 тренировок</span>
+        <span class="top-stats">Средняя оценка: 76</span>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,0)">Рекомендуемые</div>
+        <div class="tab" onclick="switchTab(this,1)">Все сценарии</div>
+        <div class="tab" onclick="switchTab(this,2)">Назначенные</div>
+        <div class="tab" onclick="switchTab(this,3)">История</div>
+      </div>
+
+      <!-- Personal recommendation banner -->
+      <div class="personal-banner">
+        <div class="pb-icon">N</div>
+        <div class="pb-body">
+          <div class="pb-title">Neo подобрал 3 сценария под ваши слабые места</div>
+          <div class="pb-text">Я проанализировал ваши последние 24 звонка и заметил, что вы часто пропускаете вопрос про ЛПР и теряетесь при возражении «дорого». Подготовил тренировки специально для этого.</div>
+          <div class="pb-actions">
+            <button class="pb-btn pb-btn-primary">Начать первую тренировку</button>
+            <button class="pb-btn pb-btn-ghost">Посмотреть все 3</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scenario cards -->
+      <div class="scenarios" id="scenarioGrid">
+
+        <!-- 1. Personal — ЛПР -->
+        <div class="sc" onclick="openSession()">
+          <span class="sc-badge badge-neo">Neo рекомендует</span>
+          <div class="sc-top">
+            <div class="sc-icon" style="background:var(--purple-light);color:var(--purple)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="sc-title">Выявление ЛПР: клиент не решает сам</div>
+          </div>
+          <div class="sc-desc">Клиент заинтересован, но говорит «мне нужно согласовать с директором». Ваша задача — выяснить кто принимает решение и назначить встречу с ЛПР.</div>
+          <div class="sc-footer">
+            <span class="sc-tag" style="background:var(--purple-light);color:var(--purple)">Квалификация</span>
+            <span class="sc-tag" style="background:var(--blue-light);color:var(--blue)">Переговоры</span>
+            <span class="sc-diff diff-mid">Средне</span>
+          </div>
+        </div>
+
+        <!-- 2. Personal — Возражение по цене -->
+        <div class="sc" onclick="openSession()">
+          <span class="sc-badge badge-neo">Neo рекомендует</span>
+          <div class="sc-top">
+            <div class="sc-icon" style="background:var(--coral-light);color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+            <div class="sc-title">«У конкурентов дешевле на 15%»</div>
+          </div>
+          <div class="sc-desc">Клиент сравнивает с Принт Сервис и давит на цену. Нужно показать ценность без прямого снижения цены. Карточка конкурента подтянута из базы знаний.</div>
+          <div class="sc-footer">
+            <span class="sc-tag" style="background:var(--coral-light);color:var(--coral)">Возражения</span>
+            <span class="sc-tag" style="background:var(--amber-light);color:var(--amber)">Конкуренты</span>
+            <span class="sc-diff diff-hard">Сложно</span>
+          </div>
+        </div>
+
+        <!-- 3. General — Cold call -->
+        <div class="sc" onclick="openSession()">
+          <div class="sc-top">
+            <div class="sc-icon" style="background:var(--blue-light);color:var(--blue)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.11 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></div>
+            <div class="sc-title">Холодный звонок: скептичный клиент</div>
+          </div>
+          <div class="sc-desc">Клиент не ждал звонка, отвечает коротко, торопится. Нужно за 30 секунд захватить внимание и квалифицировать потребность.</div>
+          <div class="sc-footer">
+            <span class="sc-tag" style="background:var(--blue-light);color:var(--blue)">Холодный звонок</span>
+            <span class="sc-tag" style="background:var(--green-light);color:var(--green)">Вступление</span>
+            <span class="sc-diff diff-hard">Сложно</span>
+            <span class="sc-done"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Пройден</span>
+            <span class="sc-score-sm" style="background:var(--amber-light);color:var(--amber)">71</span>
+          </div>
+        </div>
+
+        <!-- 4. General — Upsell -->
+        <div class="sc" onclick="openSession()">
+          <div class="sc-top">
+            <div class="sc-icon" style="background:var(--green-light);color:var(--green)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></div>
+            <div class="sc-title">Допродажи: клиент берёт минимум</div>
+          </div>
+          <div class="sc-desc">Входящий звонок: клиент хочет только баннеры, но по контексту ему нужны ролл-апы и раздаточные материалы. Тренирует выявление допов.</div>
+          <div class="sc-footer">
+            <span class="sc-tag" style="background:var(--green-light);color:var(--green)">Допродажи</span>
+            <span class="sc-diff diff-easy">Легко</span>
+          </div>
+        </div>
+
+        <!-- 5. Assigned by ROP -->
+        <div class="sc" onclick="openSession()">
+          <span class="sc-badge badge-rop">Задание от РОПа</span>
+          <div class="sc-top">
+            <div class="sc-icon" style="background:var(--amber-light);color:var(--amber)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div class="sc-title">Возврат клиента после отказа</div>
+          </div>
+          <div class="sc-desc">Клиент месяц назад отказал. Вы перезваниваете с новым предложением. Нужно не давить, а выяснить что изменилось и предложить решение.</div>
+          <div class="sc-footer">
+            <span class="sc-tag" style="background:var(--amber-light);color:var(--amber)">Удержание</span>
+            <span class="sc-tag" style="background:var(--coral-light);color:var(--coral)">до пятницы</span>
+            <span class="sc-diff diff-mid">Средне</span>
+          </div>
+        </div>
+
+        <!-- 6. Personal — паразиты -->
+        <div class="sc" onclick="openSession()">
+          <span class="sc-badge badge-neo">Neo рекомендует</span>
+          <div class="sc-top">
+            <div class="sc-icon" style="background:var(--purple-light);color:var(--purple)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></div>
+            <div class="sc-title">Чистая речь: прайс без запинок</div>
+          </div>
+          <div class="sc-desc">Клиент запрашивает цены на 5 позиций подряд. Ваша задача — назвать все без «э-э», «ну», пауз. Тренирует уверенность при озвучивании цен.</div>
+          <div class="sc-footer">
+            <span class="sc-tag" style="background:var(--purple-light);color:var(--purple)">Речь</span>
+            <span class="sc-tag" style="background:var(--blue-light);color:var(--blue)">Продуктовое знание</span>
+            <span class="sc-diff diff-easy">Легко</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- History -->
+      <div class="history">
+        <div class="history-title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Последние тренировки</div>
+        <div class="hi">
+          <div class="hi-scenario">Холодный звонок: скептичный клиент</div>
+          <div class="hi-date">Вчера, 18:30</div>
+          <div class="hi-score mid">71</div>
+          <svg xmlns="http://www.w3.org/2000/svg" class="hi-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="hi">
+          <div class="hi-scenario">Допродажи: клиент берёт минимум</div>
+          <div class="hi-date">05 фев, 14:15</div>
+          <div class="hi-score high">88</div>
+          <svg xmlns="http://www.w3.org/2000/svg" class="hi-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="hi">
+          <div class="hi-scenario">Выявление ЛПР: клиент не решает сам</div>
+          <div class="hi-date">03 фев, 10:00</div>
+          <div class="hi-score low">54</div>
+          <svg xmlns="http://www.w3.org/2000/svg" class="hi-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SESSION OVERLAY -->
+  <div class="session-overlay" id="sessionOverlay">
+    <div class="session">
+      <div class="session-header">
+        <div>
+          <div class="session-title">Выявление ЛПР: клиент не решает сам</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="session-badge"><span class="dot"></span>Тренировка · 01:47</div>
+          <button class="session-close" onclick="closeSession()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+      </div>
+
+      <div class="session-body">
+
+        <!-- Client info -->
+        <div class="client-card">
+          <div class="client-ava">🏢</div>
+          <div class="client-info">
+            <div class="client-name">Марина Игнатьева</div>
+            <div class="client-role">Маркетолог, ООО «ЭкспоГрупп»</div>
+            <div class="client-desc">Входящий звонок. Клиент интересуется оформлением стенда на выставку. Бюджет средний. Марина не является ЛПР — решение принимает коммерческий директор.</div>
+            <div class="client-tags">
+              <span class="sc-tag" style="background:var(--purple-light);color:var(--purple)">Не ЛПР</span>
+              <span class="sc-tag" style="background:var(--amber-light);color:var(--amber)">Средний бюджет</span>
+              <span class="sc-tag" style="background:var(--blue-light);color:var(--blue)">Выставка</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hint -->
+        <div class="hint-panel">
+          <div class="hint-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></div>
+          <div class="hint-text"><b>Подсказка скрипта:</b> Спросите кто будет принимать финальное решение. Если не клиент — предложите совместный звонок или встречу с ЛПР.</div>
+        </div>
+
+        <!-- Chat messages -->
+        <div class="chat">
+          <div class="chat-msg client">
+            <div class="chat-ava">МИ</div>
+            <div>
+              <div class="chat-bubble">Здравствуйте! Мы в апреле участвуем в ExpoTech и хотели бы узнать про оформление стенда. Нам нужны баннеры и ролл-апы.</div>
+              <div class="chat-ts">0:05</div>
+            </div>
+          </div>
+          <div class="chat-msg manager">
+            <div class="chat-ava">АК</div>
+            <div>
+              <div class="chat-bubble">Здравствуйте, Марина! Отлично, ExpoTech — крупная выставка. Какого размера стенд у вас будет? И сколько ролл-апов планируете?</div>
+              <div class="chat-ts">0:12</div>
+            </div>
+          </div>
+          <div class="chat-msg client">
+            <div class="chat-ava">МИ</div>
+            <div>
+              <div class="chat-bubble">Стенд 4 на 3 метра. Ролл-апов штуки 3-4 наверное. Мне бы прайс посмотреть, чтобы я директору показала, он решает по бюджету.</div>
+              <div class="chat-ts">0:25</div>
+            </div>
+          </div>
+          <div class="chat-msg manager">
+            <div class="chat-ava">АК</div>
+            <div>
+              <div class="chat-bubble">Конечно, подготовлю КП. Подскажите, а ваш директор — он по оформлению тоже решает, или больше по бюджету?</div>
+              <div class="chat-ts">0:38</div>
+            </div>
+          </div>
+          <div class="chat-msg client">
+            <div class="chat-ava">МИ</div>
+            <div>
+              <div class="chat-typing"><span></span><span></span><span></span></div>
+              <div class="chat-ts">Марина печатает...</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="session-input">
+        <button class="mic-btn on" id="micBtn" onclick="toggleMic()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+        <div class="input-status"><b>Микрофон включён</b> — говорите как при обычном звонке</div>
+        <button class="end-btn" onclick="closeSession();alert('Тренировка завершена! Открывается пост-звонковый экран с оценкой, ошибками, рекомендациями и анализом речи.')">Завершить</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ctrls">
+    <button class="btn-c" id="themeBtn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+  </div>
+</div>
+
+<script>
+(function(){
+  window.switchTab = function(el,idx) {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+  };
+
+  window.openSession = function() {
+    document.getElementById('sessionOverlay').classList.add('show');
+  };
+  window.closeSession = function() {
+    document.getElementById('sessionOverlay').classList.remove('show');
+  };
+
+  var micOn = true;
+  window.toggleMic = function() {
+    micOn = !micOn;
+    var btn = document.getElementById('micBtn');
+    btn.className = micOn ? 'mic-btn on' : 'mic-btn off';
+    document.querySelector('.input-status').innerHTML = micOn
+      ? '<b>Микрофон включён</b> — говорите как при обычном звонке'
+      : '<b>Микрофон выключен</b> — нажмите чтобы продолжить';
+  };
+
+  var dark = false;
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    dark = !dark;
+    document.getElementById('app').classList.toggle('dark', dark);
+    this.innerHTML = dark
+      ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+  });
+})();
+</script>
+</body>
+</html>

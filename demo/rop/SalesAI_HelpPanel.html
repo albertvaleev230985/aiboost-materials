@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neovida — Справка (демо шторки)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+  --amber:#F09030;--amber-light:#FEF4E8;
+}
+.dark{
+  --bg:#1C1B19;--surface:#262523;--surface-alt:#2E2D2A;
+  --border:#3A3835;--text:#D5D0C9;--text2:#8A857E;--muted:#5E5A54;
+  --coral:#D4806F;--coral-light:#2D2220;
+  --green:#6DAF85;--green-light:#1E2B22;
+  --blue:#7DA3C9;--blue-light:#1E2630;
+  --purple:#9A84BA;--purple-light:#262030;
+  --amber:#D9A050;--amber-light:#2A2418;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@keyframes slideOut{from{transform:translateX(0)}to{transform:translateX(100%)}}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.app{display:flex;height:100vh;background:var(--bg)}
+
+/* ── SIDEBAR ── */
+.side{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.side-logo{padding:16px 18px;border-bottom:1px solid var(--border)}
+.logo-text{font-size:22px;font-weight:800;letter-spacing:-.4px;color:var(--text);line-height:1;display:flex;align-items:baseline}
+.logo-slash{color:var(--coral);font-weight:300;margin:0 1px}.logo-product{font-weight:400;color:var(--coral)}
+.side-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-section{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;padding:8px 10px 6px;margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:var(--surface-alt);color:var(--text)}
+.nav-item.active{background:var(--coral-light);color:var(--coral);font-weight:600}
+.nav-item svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+.side-bottom{padding:12px 14px;border-top:1px solid var(--border)}
+.side-user{display:flex;align-items:center;gap:10px}
+.side-ava{width:34px;height:34px;border-radius:8px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text2)}
+.side-uname{font-size:14px;font-weight:600;color:var(--text)}
+.side-urole{font-size:12px;color:var(--text2)}
+
+/* ── CONTENT ── */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.top-bar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.top-title{font-size:20px;font-weight:700;color:var(--text)}
+.top-right{display:flex;gap:10px;align-items:center}
+.btn-c{width:34px;height:34px;border-radius:8px;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:border-color .15s}
+.btn-c:hover{border-color:var(--coral);color:var(--coral)}
+.btn-help{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);font-family:inherit;transition:all .15s}
+.btn-help:hover{border-color:var(--coral);color:var(--coral)}
+.btn-help svg{width:16px;height:16px}
+.body{flex:1;overflow-y:auto;padding:20px 24px}
+
+/* Placeholder content */
+.placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);text-align:center}
+.placeholder-icon{width:64px;height:64px;border-radius:16px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.placeholder-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px}
+.placeholder-text{font-size:14px;color:var(--text2);max-width:400px;line-height:1.6}
+
+/* ── HELP PANEL (drawer) ── */
+.help-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:200;cursor:pointer}
+.help-overlay.show{display:block}
+.help-panel{position:fixed;top:0;right:0;width:420px;height:100vh;background:var(--surface);border-left:1px solid var(--border);box-shadow:-8px 0 32px rgba(0,0,0,.08);z-index:201;display:flex;flex-direction:column;animation:slideIn .25s ease}
+.help-panel.closing{animation:slideOut .2s ease forwards}
+
+/* Panel header */
+.hp-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.hp-head-icon{width:34px;height:34px;border-radius:10px;background:var(--purple-light);display:flex;align-items:center;justify-content:center;color:var(--purple);flex-shrink:0}
+.hp-head-icon svg{width:18px;height:18px}
+.hp-head-title{flex:1;font-size:16px;font-weight:700;color:var(--text)}
+.hp-close{width:30px;height:30px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s}
+.hp-close:hover{background:var(--surface-alt);color:var(--coral)}
+
+/* Search */
+.hp-search{padding:12px 20px;border-bottom:1px solid var(--border)}
+.hp-search input{width:100%;padding:10px 14px 10px 36px;border:1px solid var(--border);border-radius:10px;font-size:13px;color:var(--text);background:var(--surface-alt) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23B5AFA8' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='6' cy='6' r='5'/%3E%3Cline x1='10' y1='10' x2='13' y2='13'/%3E%3C/svg%3E") no-repeat 12px center;font-family:inherit;transition:border-color .15s}
+.hp-search input:hover{border-color:var(--coral)}
+.hp-search input:focus{border-color:var(--coral);outline:none;background-color:var(--surface)}
+.hp-search input::placeholder{color:var(--muted)}
+
+/* Panel body */
+.hp-body{flex:1;overflow-y:auto;padding:16px 20px}
+
+/* Article list view */
+.hp-section-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px}
+.hp-section-label:first-child{margin-top:0}
+.hp-article-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:all .15s;margin-bottom:2px}
+.hp-article-item:hover{background:var(--surface-alt)}
+.hp-article-item:hover .hai-title{color:var(--coral)}
+.hai-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hai-icon svg{width:14px;height:14px}
+.hai-info{flex:1}
+.hai-title{font-size:13px;font-weight:600;color:var(--text);transition:color .15s}
+.hai-desc{font-size:11px;color:var(--text2);margin-top:1px}
+.hai-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;flex-shrink:0}
+.badge-rop{background:var(--coral-light);color:var(--coral)}
+.badge-mgr{background:var(--blue-light);color:var(--blue)}
+.badge-all{background:var(--surface-alt);color:var(--text2)}
+
+/* Article detail view */
+.hp-article{display:none}
+.hp-article.show{display:block;animation:fadeIn .3s ease}
+.hp-back{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--purple);cursor:pointer;margin-bottom:16px;padding:6px 0}
+.hp-back:hover{text-decoration:underline}
+.hp-art-badge{display:inline-flex;font-size:10px;font-weight:600;padding:3px 10px;border-radius:5px;margin-bottom:10px}
+.hp-art-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.3}
+.hp-art-text{font-size:14px;color:var(--text);line-height:1.7;margin-bottom:16px}
+.hp-art-text b{font-weight:600}
+
+/* Screenshot placeholder */
+.hp-screenshot{width:100%;aspect-ratio:16/9;background:var(--surface-alt);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:16px;overflow:hidden}
+.hp-screenshot-label{font-size:12px;color:var(--muted);font-weight:600;margin-top:8px}
+.hp-screenshot-inner{width:85%;height:60%;background:var(--bg);border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+.hp-screenshot-inner svg{width:32px;height:32px;color:var(--border)}
+
+/* Video placeholder */
+.hp-video{width:100%;aspect-ratio:16/9;background:#1a1a1a;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:16px;cursor:pointer;position:relative;overflow:hidden}
+.hp-video:hover .hp-video-play{transform:scale(1.1)}
+.hp-video-play{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;transition:transform .15s;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.hp-video-play svg{width:20px;height:20px;color:#1a1a1a;margin-left:3px}
+.hp-video-label{font-size:12px;color:rgba(255,255,255,.6);margin-top:10px}
+.hp-video-duration{position:absolute;bottom:10px;right:12px;font-size:11px;font-weight:600;color:#fff;background:rgba(0,0,0,.6);padding:2px 8px;border-radius:4px}
+
+/* Related links */
+.hp-related{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.hp-related-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.hp-related-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--purple);font-weight:600;padding:6px 0;cursor:pointer;transition:color .15s}
+.hp-related-item:hover{color:var(--coral);text-decoration:underline}
+.hp-related-item svg{width:12px;height:12px;flex-shrink:0}
+
+/* Tour replay */
+.hp-tour-btn{display:flex;align-items:center;gap:8px;width:100%;padding:12px 14px;background:var(--purple-light);border:1px solid rgba(139,110,181,.12);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--purple);font-family:inherit;margin-top:20px;transition:all .15s}
+.hp-tour-btn:hover{border-color:var(--purple)}
+.hp-tour-btn svg{width:16px;height:16px}
+
+/* ── CONTROLS ── */
+.ctrls{position:fixed;bottom:20px;right:20px;z-index:100}
+@keyframes neoPulse{0%,100%{box-shadow:0 0 0 0 rgba(139,110,181,.3)}50%{box-shadow:0 0 0 8px rgba(139,110,181,0)}}
+.neo-fab{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#8B6EB5,#6B4E95);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(139,110,181,.35);color:#fff;font-size:20px;font-weight:800;transition:all .2s;animation:neoPulse 3s infinite}
+.neo-fab:hover{transform:scale(1.08)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+  <div class="side">
+    <div class="side-logo"><div class="logo-text">neovida<span class="logo-slash">/</span><span class="logo-product">sales</span></div></div>
+    <div class="side-nav">
+      <div class="nav-section">Управление</div>
+      <div class="nav-item active">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Настройки
+      </div>
+    </div>
+    <div class="side-bottom">
+      <div class="side-user">
+        <div class="side-ava">ИС</div>
+        <div><div class="side-uname">Иван Смирнов</div><div class="side-urole">Руководитель ОП</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="top-bar">
+      <span class="top-title">Дашборд</span>
+      <div class="top-right">
+        <button class="btn-help" id="openHelp">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          Справка
+        </button>
+        <button class="btn-c" id="themeBtn"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="placeholder">
+        <div class="placeholder-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg></div>
+        <div class="placeholder-title">Дашборд</div>
+        <div class="placeholder-text">Это демо-страница для показа боковой панели «Справка». Нажмите кнопку «Справка» в правом верхнем углу или иконку книги.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HELP OVERLAY -->
+  <div class="help-overlay" id="helpOverlay"></div>
+
+  <!-- HELP PANEL -->
+  <div class="help-panel" id="helpPanel" style="display:none">
+    <div class="hp-head">
+      <div class="hp-head-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>
+      <div class="hp-head-title">Справка</div>
+      <button class="hp-close" id="closeHelp"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+
+    <div class="hp-search">
+      <input type="text" placeholder="Поиск по справке..." id="helpSearch">
+    </div>
+
+    <div class="hp-body">
+
+      <!-- === LIST VIEW === -->
+      <div id="helpList">
+
+        <div class="hp-section-label">Для РОПа</div>
+
+        <div class="hp-article-item" onclick="showArticle('competitors')">
+          <div class="hai-icon" style="background:var(--amber-light);color:var(--amber)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
+          <div class="hai-info">
+            <div class="hai-title">Трекинг конкурентов: как это работает</div>
+            <div class="hai-desc">Автоматическое обнаружение, карточки, подсказки</div>
+          </div>
+          <span class="hai-badge badge-rop">РОП</span>
+        </div>
+
+        <div class="hp-article-item" onclick="showArticle('dashboard')">
+          <div class="hai-icon" style="background:var(--coral-light);color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg></div>
+          <div class="hai-info">
+            <div class="hai-title">Как читать дашборд</div>
+            <div class="hai-desc">Метрики, графики, на что обращать внимание</div>
+          </div>
+          <span class="hai-badge badge-rop">РОП</span>
+        </div>
+
+        <div class="hp-article-item">
+          <div class="hai-icon" style="background:var(--green-light);color:var(--green)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="hai-info">
+            <div class="hai-title">Как настроить скрипт продаж</div>
+            <div class="hai-desc">Этапы, обязательные фразы, Neo-помощник</div>
+          </div>
+          <span class="hai-badge badge-rop">РОП</span>
+        </div>
+
+        <div class="hp-article-item">
+          <div class="hai-icon" style="background:var(--purple-light);color:var(--purple)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div>
+          <div class="hai-info">
+            <div class="hai-title">Как назначить тренировку менеджеру</div>
+            <div class="hai-desc">Сценарии, дедлайны, целевые баллы</div>
+          </div>
+          <span class="hai-badge badge-rop">РОП</span>
+        </div>
+
+        <div class="hp-article-item">
+          <div class="hai-icon" style="background:var(--blue-light);color:var(--blue)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+          <div class="hai-info">
+            <div class="hai-title">Как настроить алерты</div>
+            <div class="hai-desc">Telegram-уведомления, триггеры, пороги</div>
+          </div>
+          <span class="hai-badge badge-rop">РОП</span>
+        </div>
+
+        <div class="hp-article-item">
+          <div class="hai-icon" style="background:var(--surface-alt);color:var(--text2)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33"/></svg></div>
+          <div class="hai-info">
+            <div class="hai-title">Как включить/выключить модули</div>
+            <div class="hai-desc">Управление функциями, план адаптации</div>
+          </div>
+          <span class="hai-badge badge-rop">РОП</span>
+        </div>
+
+        <div class="hp-section-label">Для менеджера</div>
+
+        <div class="hp-article-item" onclick="showArticle('speech')">
+          <div class="hai-icon" style="background:var(--blue-light);color:var(--blue)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></div>
+          <div class="hai-info">
+            <div class="hai-title">Блок «Речь и коммуникация» в досье</div>
+            <div class="hai-desc">Паразиты, темп, паузы, как улучшить</div>
+          </div>
+          <span class="hai-badge badge-mgr">Менеджер</span>
+        </div>
+
+        <div class="hp-article-item">
+          <div class="hai-icon" style="background:var(--coral-light);color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></div>
+          <div class="hai-info">
+            <div class="hai-title">Как работают подсказки во время звонка</div>
+            <div class="hai-desc">Режимы, скрипт, база знаний</div>
+          </div>
+          <span class="hai-badge badge-mgr">Менеджер</span>
+        </div>
+
+        <div class="hp-article-item">
+          <div class="hai-icon" style="background:var(--green-light);color:var(--green)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div class="hai-info">
+            <div class="hai-title">Что значит оценка 0-100</div>
+            <div class="hai-desc">Из чего складывается, как повысить</div>
+          </div>
+          <span class="hai-badge badge-mgr">Менеджер</span>
+        </div>
+
+        <div class="hp-article-item">
+          <div class="hai-icon" style="background:var(--purple-light);color:var(--purple)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div>
+          <div class="hai-info">
+            <div class="hai-title">Как пройти тренировку</div>
+            <div class="hai-desc">Сценарии, микрофон, оценка после</div>
+          </div>
+          <span class="hai-badge badge-mgr">Менеджер</span>
+        </div>
+
+        <div class="hp-section-label">Общее</div>
+
+        <div class="hp-article-item" onclick="showArticle('neo')">
+          <div class="hai-icon" style="background:var(--purple-light);color:var(--purple)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+          <div class="hai-info">
+            <div class="hai-title">Как пользоваться Neo-помощником</div>
+            <div class="hai-desc">Контекстные подсказки, свободные вопросы</div>
+          </div>
+          <span class="hai-badge badge-all">Все</span>
+        </div>
+
+        <div class="hp-article-item">
+          <div class="hai-icon" style="background:var(--surface-alt);color:var(--text2)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <div class="hai-info">
+            <div class="hai-title">Как устроена neovida (обзор)</div>
+            <div class="hai-desc">Общий обзор платформы за 3 минуты</div>
+          </div>
+          <span class="hai-badge badge-all">Все</span>
+        </div>
+
+        <!-- Tour replay -->
+        <button class="hp-tour-btn" onclick="alert('Запуск интерактивного тура по текущему экрану')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          Пройти тур по этому экрану заново
+        </button>
+
+      </div>
+
+      <!-- === ARTICLE: Competitors === -->
+      <div class="hp-article" id="art-competitors">
+        <div class="hp-back" onclick="showList()"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg> Назад к списку</div>
+        <div class="hp-art-badge badge-rop" style="display:inline-flex">РОП</div>
+        <div class="hp-art-title">Трекинг конкурентов: как это работает</div>
+
+        <div class="hp-art-text">
+          Ваш клиент говорит: «Мы ещё с Принт Сервис общаемся, они вроде дешевле.» Система автоматически находит конкурента в речи, подтягивает карточку с вашими преимуществами и показывает менеджеру подсказку прямо во время звонка.
+        </div>
+
+        <div class="hp-art-text">
+          <b>Как настроить:</b> перейдите в Конкуренты (сайдбар → Конкуренты). Нажмите «Добавить конкурента». Укажите название, варианты написания (как клиенты могут называть), их слабые и сильные стороны, ваши преимущества и рекомендуемый ответ для менеджера.
+        </div>
+
+        <!-- Screenshot -->
+        <div class="hp-screenshot">
+          <div class="hp-screenshot-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="hp-screenshot-label">Скриншот: карточка конкурента в разделе «Конкуренты»</div>
+        </div>
+
+        <div class="hp-art-text">
+          <b>Что происходит автоматически:</b> если клиент упоминает компанию которой нет в базе — вы получите уведомление «Новый конкурент обнаружен». Это сигнал изучить конкурента и добавить карточку. На дашборде в разделе «Конкурентная разведка» вы видите: какие конкуренты упоминаются чаще, по каким параметрам сравнивают, как менеджеры реагируют.
+        </div>
+
+        <!-- Video -->
+        <div class="hp-video" onclick="alert('Воспроизведение видео: 45 сек — как добавить карточку конкурента')">
+          <div class="hp-video-play"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+          <div class="hp-video-label">Как добавить карточку конкурента</div>
+          <div class="hp-video-duration">0:45</div>
+        </div>
+
+        <!-- Related -->
+        <div class="hp-related">
+          <div class="hp-related-label">Связанные статьи</div>
+          <div class="hp-related-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg> Как настроить базу знаний</div>
+          <div class="hp-related-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg> Алерты о новых конкурентах</div>
+          <div class="hp-related-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg> Подсказки во время звонка</div>
+        </div>
+      </div>
+
+      <!-- === ARTICLE: Speech === -->
+      <div class="hp-article" id="art-speech">
+        <div class="hp-back" onclick="showList()"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg> Назад к списку</div>
+        <div class="hp-art-badge badge-mgr" style="display:inline-flex">Менеджер</div>
+        <div class="hp-art-title">Что значит блок «Речь и коммуникация» в досье</div>
+
+        <div class="hp-art-text">
+          После каждого звонка система анализирует вашу речь. В блоке «Речь и коммуникация» вы видите три показателя.
+        </div>
+
+        <div class="hp-art-text">
+          <b>Слова-паразиты:</b> сколько раз вы сказали «э-э», «ну», «как бы». Нажмите на слово — увидите в каком контексте вы его использовали. Например, когда называли цену и не были уверены.
+        </div>
+
+        <div class="hp-art-text">
+          <b>Темп речи:</b> сколько слов в минуту. Если выше 150 — клиент может не успевать. Старайтесь замедляться при озвучивании цен и условий.
+        </div>
+
+        <div class="hp-art-text">
+          <b>Neo даёт совет:</b> конкретную рекомендацию что исправить. Например: «Используйте короткую паузу вместо э-э — это звучит увереннее.»
+        </div>
+
+        <!-- Screenshot -->
+        <div class="hp-screenshot">
+          <div class="hp-screenshot-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="hp-screenshot-label">Скриншот: блок «Речь» в пост-звонковом досье</div>
+        </div>
+
+        <!-- Video -->
+        <div class="hp-video" onclick="alert('Воспроизведение видео: 40 сек')">
+          <div class="hp-video-play"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+          <div class="hp-video-label">Как читать блок речи и работать с рекомендацией</div>
+          <div class="hp-video-duration">0:40</div>
+        </div>
+
+        <div class="hp-related">
+          <div class="hp-related-label">Связанные статьи</div>
+          <div class="hp-related-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg> Что значит оценка 0-100</div>
+          <div class="hp-related-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg> Как пройти тренировку</div>
+        </div>
+      </div>
+
+      <!-- === ARTICLE: Neo === -->
+      <div class="hp-article" id="art-neo">
+        <div class="hp-back" onclick="showList()"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg> Назад к списку</div>
+        <div class="hp-art-badge badge-all" style="display:inline-flex">Все</div>
+        <div class="hp-art-title">Как пользоваться Neo-помощником</div>
+
+        <div class="hp-art-text">
+          Neo — ваш персональный помощник. Нажмите на фиолетовую кнопку <b>N</b> в правом нижнем углу на любом экране.
+        </div>
+
+        <div class="hp-art-text">
+          <b>Что важно знать:</b> Neo понимает на каком экране вы находитесь. Если вы смотрите досье звонка и спрашиваете «почему у меня такая оценка» — он разберёт именно этот звонок. Если вы в личном кабинете и спрашиваете «над чем поработать» — он проанализирует все ваши звонки за неделю.
+        </div>
+
+        <div class="hp-art-text">
+          <b>Не знаете что спросить?</b> Не надо формулировать вопрос. При открытии Neo сам предлагает 3-4 вопроса которые актуальны прямо сейчас на вашем экране. Просто нажмите на подходящий.
+        </div>
+
+        <!-- Screenshot -->
+        <div class="hp-screenshot">
+          <div class="hp-screenshot-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="hp-screenshot-label">Скриншот: окно Neo с контекстными кнопками на экране досье</div>
+        </div>
+
+        <div class="hp-art-text">
+          <b>Совет:</b> если вы на одном экране, а вопрос про другой — Neo всё равно ответит и предложит перейти куда нужно.
+        </div>
+
+        <!-- Video -->
+        <div class="hp-video" onclick="alert('Воспроизведение видео: 60 сек')">
+          <div class="hp-video-play"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+          <div class="hp-video-label">Neo на разных экранах: подсказки, вопросы, ответы</div>
+          <div class="hp-video-duration">1:00</div>
+        </div>
+
+        <div class="hp-related">
+          <div class="hp-related-label">Связанные статьи</div>
+          <div class="hp-related-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg> Как устроена neovida (обзор)</div>
+          <div class="hp-related-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg> Горячие клавиши</div>
+        </div>
+      </div>
+
+      <!-- === ARTICLE: Dashboard === -->
+      <div class="hp-article" id="art-dashboard">
+        <div class="hp-back" onclick="showList()"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg> Назад к списку</div>
+        <div class="hp-art-badge badge-rop" style="display:inline-flex">РОП</div>
+        <div class="hp-art-title">Как читать дашборд: что искать и на что реагировать</div>
+
+        <div class="hp-art-text">
+          Дашборд — ваш главный экран. Здесь вы видите состояние команды за выбранный период. Разберём каждый блок.
+        </div>
+
+        <div class="hp-art-text">
+          <b>Метрики вверху:</b> звонки, средняя оценка, конверсия. Если число красное — оно ниже нормы и требует внимания. Зелёное — всё хорошо. Стрелка вверх/вниз показывает динамику по сравнению с прошлым периодом.
+        </div>
+
+        <div class="hp-art-text">
+          <b>Рейтинг команды:</b> менеджеры отсортированы по средней оценке. Нажмите на любого — откроется его детальная карточка с историей звонков и прогрессом. Обратите внимание на тех кто внизу списка — им может потребоваться тренировка или разговор.
+        </div>
+
+        <div class="hp-art-text">
+          <b>Что делать если всё красное:</b> не паникуйте. Откройте Neo (кнопка N внизу) и спросите: «Кто требует внимания?» Neo покажет конкретных менеджеров и конкретные проблемы.
+        </div>
+
+        <div class="hp-screenshot">
+          <div class="hp-screenshot-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="hp-screenshot-label">Скриншот: дашборд РОПа с метриками и рейтингом</div>
+        </div>
+
+        <div class="hp-video" onclick="alert('Воспроизведение видео')">
+          <div class="hp-video-play"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+          <div class="hp-video-label">Обзор дашборда за 90 секунд</div>
+          <div class="hp-video-duration">1:30</div>
+        </div>
+
+        <div class="hp-related">
+          <div class="hp-related-label">Связанные статьи</div>
+          <div class="hp-related-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg> Как настроить алерты</div>
+          <div class="hp-related-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg> Как пользоваться Neo-помощником</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="ctrls">
+    <button class="neo-fab" onclick="alert('Neo-помощник')">N</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var panel = document.getElementById('helpPanel');
+  var overlay = document.getElementById('helpOverlay');
+
+  window.openHelp = function() {
+    panel.style.display = 'flex';
+    panel.classList.remove('closing');
+    overlay.classList.add('show');
+    showList();
+  };
+
+  window.closeHelp = function() {
+    panel.classList.add('closing');
+    overlay.classList.remove('show');
+    setTimeout(function(){ panel.style.display = 'none'; panel.classList.remove('closing'); }, 200);
+  };
+
+  document.getElementById('openHelp').addEventListener('click', openHelp);
+  document.getElementById('closeHelp').addEventListener('click', closeHelp);
+  overlay.addEventListener('click', closeHelp);
+
+  window.showArticle = function(id) {
+    document.getElementById('helpList').style.display = 'none';
+    document.querySelectorAll('.hp-article').forEach(function(a){ a.classList.remove('show'); });
+    var art = document.getElementById('art-' + id);
+    if (art) art.classList.add('show');
+  };
+
+  window.showList = function() {
+    document.querySelectorAll('.hp-article').forEach(function(a){ a.classList.remove('show'); });
+    document.getElementById('helpList').style.display = 'block';
+  };
+
+  // Search filter
+  document.getElementById('helpSearch').addEventListener('input', function(){
+    var q = this.value.toLowerCase();
+    document.querySelectorAll('.hp-article-item').forEach(function(item){
+      var title = item.querySelector('.hai-title').textContent.toLowerCase();
+      var desc = item.querySelector('.hai-desc').textContent.toLowerCase();
+      item.style.display = (title.includes(q) || desc.includes(q)) ? '' : 'none';
+    });
+  });
+
+  // Theme
+  var dark = false;
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    dark = !dark;
+    document.getElementById('app').classList.toggle('dark', dark);
+    this.innerHTML = dark
+      ? '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+  });
+})();
+</script>
+</body>
+</html>

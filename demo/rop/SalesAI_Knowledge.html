@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neovida — База знаний</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+  --amber:#F09030;--amber-light:#FEF4E8;
+}
+.dark{
+  --bg:#1C1B19;--surface:#262523;--surface-alt:#2E2D2A;
+  --border:#3A3835;--text:#D5D0C9;--text2:#8A857E;--muted:#5E5A54;
+  --coral:#D4806F;--coral-light:#2D2220;
+  --green:#6DAF85;--green-light:#1E2B22;
+  --blue:#7DA3C9;--blue-light:#1E2630;
+  --purple:#9A84BA;--purple-light:#262030;
+  --amber:#D9A050;--amber-light:#2A2418;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.app{display:flex;height:100vh;background:var(--bg)}
+
+/* ── SIDEBAR ── */
+.side{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.side-logo{padding:16px 18px;border-bottom:1px solid var(--border)}
+.logo-text{font-size:22px;font-weight:800;letter-spacing:-.4px;color:var(--text);line-height:1;display:flex;align-items:baseline}
+.logo-slash{color:var(--coral);font-weight:300;margin:0 1px}.logo-product{font-weight:400;color:var(--coral)}
+.side-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-section{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;padding:8px 10px 6px;margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:var(--surface-alt);color:var(--text)}
+.nav-item.active{background:var(--coral-light);color:var(--coral);font-weight:600}
+.nav-item svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+.side-bottom{padding:12px 14px;border-top:1px solid var(--border)}
+.side-user{display:flex;align-items:center;gap:10px}
+.side-ava{width:34px;height:34px;border-radius:8px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text2)}
+.side-uname{font-size:14px;font-weight:600;color:var(--text)}
+.side-urole{font-size:12px;color:var(--text2)}
+
+/* ── CONTENT ── */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.top-bar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.top-title{font-size:20px;font-weight:700;color:var(--text)}
+.top-right{display:flex;gap:10px;align-items:center}
+.btn{padding:9px 18px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all .15s}
+.btn-coral{background:var(--coral);color:#fff}.btn-coral:hover{background:var(--coral-dark)}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}.btn-ghost:hover{border-color:var(--coral);color:var(--coral)}
+.btn-c{width:34px;height:34px;border-radius:8px;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:border-color .15s}
+.btn-c:hover{border-color:var(--coral);color:var(--coral)}
+.body{flex:1;overflow-y:auto;padding:20px 24px}
+
+/* ── BREADCRUMB ── */
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:16px}
+.bc-link{color:var(--purple);font-weight:600;cursor:pointer}.bc-link:hover{text-decoration:underline}
+.bc-sep{color:var(--muted)}
+.bc-current{color:var(--text);font-weight:600}
+
+/* ── SECTIONS GRID ── */
+.sections-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;cursor:pointer;transition:border-color .15s;animation:fadeIn .3s ease both}
+.section-card:nth-child(2){animation-delay:.05s}.section-card:nth-child(3){animation-delay:.1s}.section-card:nth-child(4){animation-delay:.15s}
+.section-card:hover{border-color:var(--coral)}
+.sc-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.sc-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sc-icon svg{width:18px;height:18px}
+.sc-name{font-size:15px;font-weight:700;color:var(--text)}
+.sc-count{font-size:12px;color:var(--text2)}
+.sc-desc{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:10px}
+.sc-footer{display:flex;align-items:center;justify-content:space-between}
+.sc-status{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600}
+.sc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sc-dot-ok{background:var(--green)}
+.sc-dot-sync{background:var(--amber)}
+.sc-dot-err{background:var(--coral)}
+.sc-date{font-size:11px;color:var(--muted)}
+
+/* Upload card */
+.upload-card{background:var(--surface);border:2px dashed var(--border);border-radius:14px;padding:30px 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s;text-align:center}
+.upload-card:hover{border-color:var(--coral)}
+.upload-card svg{color:var(--muted);margin-bottom:8px}
+.upload-card-title{font-size:14px;font-weight:600;color:var(--text2)}
+.upload-card-hint{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* ── DOCUMENTS LIST ── */
+.doc-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.doc-table th{text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface-alt)}
+.doc-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:14px;color:var(--text)}
+.doc-table tr:last-child td{border:none}
+.doc-table tr:hover td{background:var(--surface-alt)}
+.doc-name{display:flex;align-items:center;gap:10px;cursor:pointer}
+.doc-name:hover .doc-title{color:var(--coral)}
+.doc-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
+.doc-icon-pdf{background:#E05D44}
+.doc-icon-docx{background:#4285F4}
+.doc-icon-xlsx{background:#34A853}
+.doc-icon-csv{background:var(--purple)}
+.doc-icon-txt{background:var(--text2)}
+.doc-title{font-weight:600;transition:color .15s}
+.doc-size{color:var(--text2);font-size:13px}
+
+/* Status badges */
+.idx-status{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600}
+.idx-ok{color:var(--green)}
+.idx-progress{color:var(--amber)}
+.idx-err{color:var(--coral)}
+
+/* Progress bar for indexing */
+.idx-bar{width:80px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:3px}
+.idx-bar-fill{height:100%;background:var(--amber);border-radius:2px;transition:width .5s}
+
+/* Chunks count */
+.chunks{font-size:13px;color:var(--text2)}
+
+/* Actions */
+.doc-actions{display:flex;gap:4px}
+.doc-act{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s}
+.doc-act:hover{border-color:var(--coral);color:var(--coral)}
+.doc-act svg{width:13px;height:13px}
+
+/* Upload zone */
+.upload-zone{margin-top:14px;border:2px dashed var(--border);border-radius:12px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:border-color .15s}
+.upload-zone:hover{border-color:var(--coral)}
+.upload-zone-icon{color:var(--muted);margin-bottom:6px}
+.upload-zone-text{font-size:14px;font-weight:600;color:var(--text2)}
+.upload-zone-hint{font-size:12px;color:var(--muted);margin-top:3px}
+
+/* ── DOCUMENT DETAIL PANEL ── */
+.doc-detail{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-top:14px;animation:fadeIn .3s ease}
+.dd-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.dd-title{font-size:16px;font-weight:700;color:var(--text);flex:1}
+.dd-close{width:28px;height:28px;border-radius:6px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s}
+.dd-close:hover{background:var(--surface-alt);color:var(--coral)}
+.dd-meta{display:flex;gap:20px;margin-bottom:16px;font-size:13px;color:var(--text2)}
+.dd-meta-item{display:flex;align-items:center;gap:4px}
+.dd-preview{padding:14px 16px;background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;font-size:13px;color:var(--text);line-height:1.7;margin-bottom:16px;max-height:200px;overflow-y:auto}
+.dd-section-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.dd-chunks{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.dd-chunk{padding:10px 14px;background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text2);line-height:1.5;display:flex;gap:10px}
+.dd-chunk-num{font-weight:700;color:var(--muted);min-width:20px}
+.dd-chunk-text{flex:1;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.dd-actions{display:flex;gap:8px}
+
+/* Tooltip help */
+.help{position:relative;width:16px;height:16px;border-radius:50%;background:var(--surface-alt);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--muted);cursor:help;border:1px solid var(--border);flex-shrink:0;transition:border-color .15s;vertical-align:middle;margin-left:4px}
+.help:hover{border-color:var(--coral);color:var(--coral)}
+.help:hover .tip{display:block}
+.tip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:280px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.1);font-size:12px;font-weight:400;color:var(--text2);line-height:1.5;z-index:50;text-align:left;cursor:default}
+.tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border)}
+.tip-right{left:auto;right:0;transform:none}.tip-right::after{left:auto;right:12px}
+
+/* Chunks expandable */
+.chunks-toggle{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--purple);cursor:pointer;padding:8px 0;transition:color .15s}
+.chunks-toggle:hover{color:var(--coral)}
+.chunks-toggle svg{width:12px;height:12px;transition:transform .2s}
+.chunks-toggle.open svg{transform:rotate(180deg)}
+.chunks-list{display:none;margin-bottom:14px}
+.chunks-list.show{display:block}
+.chunk-item{display:flex;gap:10px;padding:8px 12px;background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:4px}
+.chunk-num{font-weight:700;color:var(--muted);min-width:24px;flex-shrink:0}
+.chunk-text{flex:1;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.chunk-edit{width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s;flex-shrink:0;align-self:center}
+.chunk-edit:hover{border-color:var(--coral);color:var(--coral)}
+
+/* ── NEO FAB ── */
+.ctrls{position:fixed;bottom:20px;right:20px;z-index:100}
+@keyframes neoPulse{0%,100%{box-shadow:0 0 0 0 rgba(139,110,181,.3)}50%{box-shadow:0 0 0 8px rgba(139,110,181,0)}}
+.neo-fab{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#8B6EB5,#6B4E95);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(139,110,181,.35);color:#fff;font-size:20px;font-weight:800;transition:all .2s;animation:neoPulse 3s infinite}
+.neo-fab:hover{transform:scale(1.08)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+  <div class="side">
+    <div class="side-logo"><div class="logo-text">neovida<span class="logo-slash">/</span><span class="logo-product">sales</span></div></div>
+    <div class="side-nav">
+      <div class="nav-section">Управление</div>
+      <div class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        Дашборд
+      </div>
+      <div class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Команда
+      </div>
+      <div class="nav-section">Контент</div>
+      <div class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Скрипты
+      </div>
+      <div class="nav-item active">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        База знаний
+      </div>
+      <div class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+        Конкуренты
+      </div>
+      <div class="nav-section">Система</div>
+      <div class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Настройки
+      </div>
+    </div>
+    <div class="side-bottom">
+      <div class="side-user">
+        <div class="side-ava">ИС</div>
+        <div><div class="side-uname">Иван Смирнов</div><div class="side-urole">Руководитель ОП</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="top-bar">
+      <span class="top-title" id="topTitle">База знаний</span>
+      <div class="top-right">
+        <button class="btn btn-coral" id="topBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span id="topBtnText">Добавить раздел</span>
+        </button>
+        <button class="btn-c" id="themeBtn"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <!-- VIEW 1: Sections grid -->
+      <div id="viewSections">
+
+        <!-- Neo completeness banner -->
+        <div style="display:flex;gap:14px;padding:18px 20px;background:var(--purple-light);border:1px solid rgba(139,110,181,.12);border-radius:14px;margin-bottom:20px;animation:fadeIn .3s ease">
+          <div style="width:42px;height:42px;border-radius:12px;background:var(--purple);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800;flex-shrink:0">N</div>
+          <div style="flex:1">
+            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:8px">
+              Полнота базы знаний: 60%
+              <span class="help">?<span class="tip">Чем полнее база знаний, тем точнее подсказки для менеджеров. 100% — это когда загружены все 7 категорий документов и система может ответить на любой типовой вопрос клиента.</span></span>
+            </div>
+            <!-- Progress bar -->
+            <div style="width:100%;height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:10px">
+              <div style="width:60%;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--amber),var(--coral))"></div>
+            </div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:10px">
+              У вас есть: каталог, FAQ, возражения, условия. Не хватает для 100%:
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+                <span style="width:18px;height:18px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;flex-shrink:0">✓</span>
+                <span style="color:var(--text2)">Каталог продукции (цены, характеристики, сроки)</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+                <span style="width:18px;height:18px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;flex-shrink:0">✓</span>
+                <span style="color:var(--text2)">Частые вопросы клиентов</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+                <span style="width:18px;height:18px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;flex-shrink:0">✓</span>
+                <span style="color:var(--text2)">Ответы на возражения</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+                <span style="width:18px;height:18px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;flex-shrink:0">✓</span>
+                <span style="color:var(--text2)">Условия и политики</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+                <span style="width:18px;height:18px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;flex-shrink:0">✓</span>
+                <span style="color:var(--text2)">Акции и спецпредложения</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+                <span style="width:18px;height:18px;border-radius:50%;border:2px solid var(--coral);display:flex;align-items:center;justify-content:center;flex-shrink:0"></span>
+                <span style="color:var(--coral);font-weight:600">О компании</span>
+                <span style="font-size:11px;color:var(--text2)">— история, миссия, преимущества. Когда клиент спросит «чем вы лучше» — менеджер получит ответ.</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+                <span style="width:18px;height:18px;border-radius:50%;border:2px solid var(--coral);display:flex;align-items:center;justify-content:center;flex-shrink:0"></span>
+                <span style="color:var(--coral);font-weight:600">Кейсы клиентов</span>
+                <span style="font-size:11px;color:var(--text2)">— истории успеха. Менеджер может сказать: «Компания X решила такую же задачу за 2 недели».</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sections-grid">
+
+          <div class="section-card" onclick="openSection('catalog')">
+            <div class="sc-head">
+              <div class="sc-icon" style="background:var(--coral-light);color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+              <div>
+                <div class="sc-name">Каталог продукции 2026</div>
+                <div class="sc-count">5 документов · 248 позиций</div>
+              </div>
+            </div>
+            <div class="sc-desc">Ролл-апы, баннеры, флаги, визитки, буклеты. Цены, размеры, сроки изготовления.</div>
+            <div class="sc-footer">
+              <div class="sc-status"><span class="sc-dot sc-dot-ok"></span> <span style="color:var(--green)">Актуален</span></div>
+              <div class="sc-date">Обновлён 05.02</div>
+            </div>
+          </div>
+
+          <div class="section-card" onclick="openSection('catalog')">
+            <div class="sc-head">
+              <div class="sc-icon" style="background:var(--blue-light);color:var(--blue)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+              <div>
+                <div class="sc-name">Частые вопросы</div>
+                <div class="sc-count">2 документа · 64 вопроса</div>
+              </div>
+            </div>
+            <div class="sc-desc">Доставка, оплата, сроки, гарантии, минимальный заказ, скидки для постоянных.</div>
+            <div class="sc-footer">
+              <div class="sc-status"><span class="sc-dot sc-dot-ok"></span> <span style="color:var(--green)">Актуален</span></div>
+              <div class="sc-date">Обновлён 03.02</div>
+            </div>
+          </div>
+
+          <div class="section-card" onclick="openSection('catalog')">
+            <div class="sc-head">
+              <div class="sc-icon" style="background:var(--amber-light);color:var(--amber)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+              <div>
+                <div class="sc-name">Ответы на возражения</div>
+                <div class="sc-count">1 документ · 32 сценария</div>
+              </div>
+            </div>
+            <div class="sc-desc">«Дорого», «подумаю», «у конкурентов дешевле», «нет бюджета», «не сейчас».</div>
+            <div class="sc-footer">
+              <div class="sc-status"><span class="sc-dot sc-dot-sync"></span> <span style="color:var(--amber)">Обрабатывается...</span></div>
+              <div class="sc-date">Обновлён 01.02</div>
+            </div>
+          </div>
+
+          <div class="section-card" onclick="openSection('catalog')">
+            <div class="sc-head">
+              <div class="sc-icon" style="background:var(--green-light);color:var(--green)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+              <div>
+                <div class="sc-name">Условия и политики</div>
+                <div class="sc-count">4 документа</div>
+              </div>
+            </div>
+            <div class="sc-desc">Договор, оферта, возвраты, рекламации, NDA.</div>
+            <div class="sc-footer">
+              <div class="sc-status"><span class="sc-dot sc-dot-ok"></span> <span style="color:var(--green)">Актуален</span></div>
+              <div class="sc-date">Обновлён 28.01</div>
+            </div>
+          </div>
+
+          <div class="section-card" onclick="openSection('catalog')">
+            <div class="sc-head">
+              <div class="sc-icon" style="background:var(--purple-light);color:var(--purple)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+              <div>
+                <div class="sc-name">Акции и спецпредложения</div>
+                <div class="sc-count">3 записи</div>
+              </div>
+            </div>
+            <div class="sc-desc">Текущие акции, скидки, бонусы для новых клиентов. Ручные записи.</div>
+            <div class="sc-footer">
+              <div class="sc-status"><span class="sc-dot sc-dot-ok"></span> <span style="color:var(--green)">Актуален</span></div>
+              <div class="sc-date">Обновлён 06.02</div>
+            </div>
+          </div>
+
+          <div class="upload-card" onclick="alert('Создать новый раздел')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <div class="upload-card-title">Добавить раздел</div>
+            <div class="upload-card-hint">Создайте тематическую группу документов</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- VIEW 2: Documents inside section -->
+      <div id="viewDocs" style="display:none">
+
+        <div class="breadcrumb">
+          <span class="bc-link" onclick="showSections()">База знаний</span>
+          <span class="bc-sep">›</span>
+          <span class="bc-current">Каталог продукции 2026</span>
+        </div>
+
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th style="width:40%">Документ</th>
+              <th>Размер</th>
+              <th>Статус <span class="help">?<span class="tip">«Готов» — документ обработан и доступен менеджерам в подсказках. «Обрабатывается» — система читает файл, подождите. «Ошибка» — файл повреждён или пуст, замените его.</span></span></th>
+              <th>Найдено <span class="help">?<span class="tip">Сколько записей, позиций или страниц система нашла и обработала в этом документе. Это то что будет доступно менеджерам в подсказках.</span></span></th>
+              <th>Загружен</th>
+              <th style="width:80px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="doc-name" onclick="showDetail()">
+                  <div class="doc-icon doc-icon-xlsx">XLS</div>
+                  <div>
+                    <div class="doc-title">Прайс-лист 2026.xlsx</div>
+                    <div class="doc-size">248 позиций</div>
+                  </div>
+                </div>
+              </td>
+              <td>1.2 МБ</td>
+              <td><div class="idx-status idx-ok"><span class="sc-dot sc-dot-ok"></span> Готов</div></td>
+              <td style="font-size:13px;color:var(--text2)">248 позиций</td>
+              <td><span style="font-size:13px;color:var(--text2)">05.02 · ИС</span></td>
+              <td>
+                <div class="doc-actions">
+                  <button class="doc-act" title="Просмотр" onclick="showDetail()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                  <button class="doc-act" title="Заменить"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+                  <button class="doc-act" title="Удалить"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="doc-name">
+                  <div class="doc-icon doc-icon-pdf">PDF</div>
+                  <div>
+                    <div class="doc-title">Характеристики материалов.pdf</div>
+                    <div class="doc-size">Плотность, износостойкость, UV-защита</div>
+                  </div>
+                </div>
+              </td>
+              <td>3.8 МБ</td>
+              <td><div class="idx-status idx-ok"><span class="sc-dot sc-dot-ok"></span> Готов</div></td>
+              <td style="font-size:13px;color:var(--text2)">18 страниц</td>
+              <td><span style="font-size:13px;color:var(--text2)">01.02 · ИС</span></td>
+              <td>
+                <div class="doc-actions">
+                  <button class="doc-act" title="Просмотр"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                  <button class="doc-act" title="Заменить"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+                  <button class="doc-act" title="Удалить"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="doc-name">
+                  <div class="doc-icon doc-icon-docx">DOC</div>
+                  <div>
+                    <div class="doc-title">Описания для менеджеров.docx</div>
+                    <div class="doc-size">Продающие описания каждой категории</div>
+                  </div>
+                </div>
+              </td>
+              <td>540 КБ</td>
+              <td><div class="idx-status idx-ok"><span class="sc-dot sc-dot-ok"></span> Готов</div></td>
+              <td style="font-size:13px;color:var(--text2)">12 описаний</td>
+              <td><span style="font-size:13px;color:var(--text2)">28.01 · ИС</span></td>
+              <td>
+                <div class="doc-actions">
+                  <button class="doc-act" title="Просмотр"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                  <button class="doc-act" title="Заменить"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+                  <button class="doc-act" title="Удалить"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="doc-name">
+                  <div class="doc-icon doc-icon-csv">CSV</div>
+                  <div>
+                    <div class="doc-title">Сроки изготовления.csv</div>
+                    <div class="doc-size">Сроки по категориям и тиражам</div>
+                  </div>
+                </div>
+              </td>
+              <td>28 КБ</td>
+              <td>
+                <div class="idx-status idx-progress"><span class="sc-dot sc-dot-sync"></span> Обрабатывается...</div>
+                <div class="idx-bar"><div class="idx-bar-fill" style="width:65%"></div></div>
+              </td>
+              <td style="font-size:13px;color:var(--muted)">—</td>
+              <td><span style="font-size:13px;color:var(--text2)">Только что</span></td>
+              <td>
+                <div class="doc-actions">
+                  <button class="doc-act" title="Просмотр" disabled style="opacity:.4"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                  <button class="doc-act" title="Отменить"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="doc-name">
+                  <div class="doc-icon doc-icon-pdf">PDF</div>
+                  <div>
+                    <div class="doc-title">Размерная сетка баннеров.pdf</div>
+                    <div class="doc-size" style="color:var(--coral)">Ошибка: файл повреждён</div>
+                  </div>
+                </div>
+              </td>
+              <td>0 КБ</td>
+              <td><div class="idx-status idx-err"><span class="sc-dot sc-dot-err"></span> Ошибка</div></td>
+              <td style="font-size:13px;color:var(--muted)">—</td>
+              <td><span style="font-size:13px;color:var(--text2)">04.02 · ИС</span></td>
+              <td>
+                <div class="doc-actions">
+                  <button class="doc-act" title="Перезагрузить"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></button>
+                  <button class="doc-act" title="Удалить"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Upload zone -->
+        <div class="upload-zone">
+          <div class="upload-zone-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+          <div class="upload-zone-text">Перетащите файлы сюда или нажмите для выбора</div>
+          <div class="upload-zone-hint">PDF, DOCX, XLSX, CSV, TXT — до 50 МБ. Только текстовые данные, без картинок.</div>
+        </div>
+
+        <!-- Document detail panel -->
+        <div class="doc-detail" id="docDetail" style="display:none">
+          <div class="dd-head">
+            <div class="doc-icon doc-icon-xlsx" style="width:36px;height:36px;font-size:11px">XLS</div>
+            <div class="dd-title">Прайс-лист 2026.xlsx</div>
+            <button class="dd-close" onclick="document.getElementById('docDetail').style.display='none'"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+          <div class="dd-meta">
+            <div class="dd-meta-item"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg> 05.02.2026</div>
+            <div class="dd-meta-item">1.2 МБ</div>
+            <div class="dd-meta-item">248 позиций</div>
+            <div class="dd-meta-item" style="color:var(--green)">Готов к использованию <span class="help">?<span class="tip tip-right">Документ обработан и доступен менеджерам. Когда клиент упоминает товар из этого файла — менеджер увидит цену и характеристики в подсказках во время звонка.</span></span></div>
+          </div>
+
+          <!-- Neo explanation -->
+          <div style="display:flex;gap:10px;padding:14px 16px;background:var(--purple-light);border:1px solid rgba(139,110,181,.1);border-radius:10px;margin-bottom:14px">
+            <div style="width:28px;height:28px;border-radius:8px;background:var(--purple);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;flex-shrink:0">N</div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.6"><b style="color:var(--text)">Я обработал этот файл.</b> Нашёл 248 товарных позиций с ценами, размерами и сроками изготовления. Теперь если клиент спросит про ролл-ап 85×200 — менеджер увидит цену 4 200 руб и срок 1 день.</div>
+          </div>
+
+          <div class="dd-section-title">Что в документе <span class="help">?<span class="tip">Превью первых строк файла. Здесь вы можете убедиться что система прочитала документ правильно. Если данные выглядят некорректно — замените файл.</span></span></div>
+          <div class="dd-preview">
+Ролл-ап 85×200 см, экосольвент, 1440 dpi — 4 200 руб. Срок: 1 день.
+Ролл-ап 100×200 см, экосольвент, 1440 dpi — 5 100 руб. Срок: 1 день.
+Баннер литой 1×2 м, интерьерная печать — 2 800 руб. Срок: 2 дня.
+Баннер литой 2×3 м, экосольвент — 5 400 руб. Срок: 2 дня.
+Флаг виндер 60×160 см, сублимация — 6 500 руб. Срок: 3 дня.
+Визитки 90×50 мм, 350г мелованная, 4+4, 100 шт — 1 200 руб. Срок: 1 день.
+...</div>
+
+          <!-- Chunks — hidden by default -->
+          <div class="chunks-toggle" id="chunksToggle" onclick="toggleChunks()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            Как разбит файл (86 фрагментов)
+            <span class="help">?<span class="tip">Система разбивает документ на небольшие фрагменты чтобы находить нужную информацию по запросу клиента. Если фрагмент разбит неудачно (например, цена оказалась в одном фрагменте, а название товара в другом) — вы можете отредактировать его вручную.</span></span>
+          </div>
+          <div class="chunks-list" id="chunksList">
+            <div class="chunk-item">
+              <span class="chunk-num">#1</span>
+              <span class="chunk-text">Ролл-ап 85×200 см, экосольвент, 1440 dpi — 4 200 руб. Срок: 1 день. Ролл-ап 100×200 см, экосольвент, 1440 dpi — 5 100 руб. Срок: 1 день. Ролл-ап 120×200 см...</span>
+              <button class="chunk-edit" title="Редактировать"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            </div>
+            <div class="chunk-item">
+              <span class="chunk-num">#2</span>
+              <span class="chunk-text">Баннер литой 1×2 м, интерьерная печать — 2 800 руб. Срок: 2 дня. Баннер литой 2×3 м, экосольвент — 5 400 руб. Срок: 2 дня. Баннер сетка...</span>
+              <button class="chunk-edit" title="Редактировать"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            </div>
+            <div class="chunk-item">
+              <span class="chunk-num">#3</span>
+              <span class="chunk-text">Флаг виндер 60×160 см, сублимация — 6 500 руб. Срок: 3 дня. Флаг перо 70×180 см, сублимация — 7 200 руб. Срок: 3 дня. Флаг прямоугольный...</span>
+              <button class="chunk-edit" title="Редактировать"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            </div>
+            <div class="chunk-item">
+              <span class="chunk-num">#4</span>
+              <span class="chunk-text">Визитки 90×50 мм, 350г мелованная, 4+4, 100 шт — 1 200 руб. Визитки 90×50 мм, дизайнерская бумага, 4+0, 100 шт — 2 400 руб...</span>
+              <button class="chunk-edit" title="Редактировать"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            </div>
+            <div style="text-align:center;padding:8px;font-size:12px;color:var(--muted)">Показано 4 из 86 · <span style="color:var(--purple);cursor:pointer;font-weight:600">Показать все</span></div>
+          </div>
+
+          <div class="dd-actions">
+            <button class="btn btn-ghost"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Заменить файл</button>
+            <button class="btn btn-ghost"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Разбить заново <span class="help">?<span class="tip tip-right">Если вы редактировали фрагменты и хотите вернуть автоматическую разбивку — нажмите эту кнопку. Все ручные правки будут потеряны.</span></span></button>
+            <button class="btn btn-ghost" style="color:var(--coral);border-color:rgba(224,116,97,.25)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Удалить</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="ctrls">
+    <button class="neo-fab">N</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  window.toggleChunks = function() {
+    var toggle = document.getElementById('chunksToggle');
+    var list = document.getElementById('chunksList');
+    toggle.classList.toggle('open');
+    list.classList.toggle('show');
+  };
+
+  window.openSection = function(id) {
+    document.getElementById('viewSections').style.display = 'none';
+    document.getElementById('viewDocs').style.display = 'block';
+    document.getElementById('topTitle').textContent = 'Каталог продукции 2026';
+    document.getElementById('topBtnText').textContent = 'Загрузить документы';
+  };
+  window.showSections = function() {
+    document.getElementById('viewSections').style.display = 'block';
+    document.getElementById('viewDocs').style.display = 'none';
+    document.getElementById('topTitle').textContent = 'База знаний';
+    document.getElementById('topBtnText').textContent = 'Добавить раздел';
+    document.getElementById('docDetail').style.display = 'none';
+  };
+  window.showDetail = function() {
+    document.getElementById('docDetail').style.display = 'block';
+    document.getElementById('docDetail').scrollIntoView({behavior:'smooth'});
+  };
+
+  var dark = false;
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    dark = !dark;
+    document.getElementById('app').classList.toggle('dark', dark);
+    this.innerHTML = dark
+      ? '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+  });
+})();
+</script>
+</body>
+</html>

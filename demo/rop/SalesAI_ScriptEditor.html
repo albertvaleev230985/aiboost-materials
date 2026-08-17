@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neovida — Редактор скрипта</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+  --amber:#F09030;--amber-light:#FEF4E8;
+}
+.dark{
+  --bg:#1C1B19;--surface:#262523;--surface-alt:#2E2D2A;
+  --border:#3A3835;--text:#D5D0C9;--text2:#8A857E;--muted:#5E5A54;
+  --coral:#D4806F;--coral-light:#2D2220;--coral-dark:#B5635A;
+  --green:#6DAF85;--green-light:#1E2B22;
+  --blue:#7DA3C9;--blue-light:#1E2630;
+  --purple:#9A84BA;--purple-light:#262030;
+  --amber:#D9A050;--amber-light:#2A2418;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.app{display:flex;height:100vh;background:var(--bg)}
+
+/* ── SIDEBAR (slim) ── */
+.side{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.side-logo{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.logo-text{font-size:22px;font-weight:800;letter-spacing:-.4px;color:var(--text);line-height:1;display:flex;align-items:baseline}
+.logo-slash{color:var(--coral);font-weight:300;margin:0 1px}.logo-product{font-weight:400;color:var(--coral)}
+.side-role{font-size:11px;color:var(--muted);background:var(--surface-alt);padding:3px 9px;border-radius:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.side-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-section{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;padding:8px 10px 6px;margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:var(--surface-alt);color:var(--text)}
+.nav-item.active{background:var(--coral-light);color:var(--coral);font-weight:600}
+.nav-item svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+.side-bottom{padding:12px 14px;border-top:1px solid var(--border)}
+.side-user{display:flex;align-items:center;gap:10px}
+.side-avatar{width:34px;height:34px;border-radius:8px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text2)}
+.side-uname{font-size:14px;font-weight:600;color:var(--text)}
+.side-urole{font-size:12px;color:var(--text2)}
+
+/* ── CONTENT ── */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.top-bar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.top-left{display:flex;align-items:center;gap:14px}
+.top-back{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--text2);cursor:pointer;font-weight:500;padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:transparent}
+.top-back:hover{border-color:var(--coral);color:var(--coral)}
+.top-title{font-size:20px;font-weight:700;color:var(--text)}
+.top-type{font-size:11px;font-weight:600;padding:3px 10px;border-radius:8px;text-transform:uppercase;letter-spacing:.5px;background:var(--green-light);color:var(--green)}
+.top-right{display:flex;gap:8px}
+.btn{border-radius:8px;padding:9px 20px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;border:none;transition:all .15s}
+.btn-coral{background:var(--coral);color:#fff}
+.btn-coral:hover{background:var(--coral-dark)}
+.btn-outline{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--text2)}
+.body{flex:1;overflow-y:auto;padding:20px 24px}
+
+/* ── SCRIPT META ── */
+.meta-row{display:flex;gap:16px;margin-bottom:20px}
+.meta-field{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.meta-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.meta-input{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);font-size:15px;color:var(--text);font-family:inherit}
+.meta-input:focus{outline:none;border-color:var(--coral)}
+.meta-select{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);font-size:15px;color:var(--text);font-family:inherit;appearance:none;cursor:pointer}
+
+/* ── STAGE CARD ── */
+.stage{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden;transition:border-color .15s}
+.stage:hover{border-color:rgba(224,116,97,.3)}
+.stage-head{display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;user-select:none}
+.stage-num{width:34px;height:34px;border-radius:50%;background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.stage-info{flex:1}
+.stage-name{font-size:16px;font-weight:600;color:var(--text)}
+.stage-hint{font-size:13px;color:var(--text2);margin-top:2px}
+.stage-chev{color:var(--muted);transition:transform .2s;flex-shrink:0}
+.stage-chev.open{transform:rotate(180deg)}
+.stage-body{display:none;padding:0 18px 18px;padding-left:64px}
+.stage-body.show{display:block;animation:fadeIn .3s ease}
+
+/* ── STAGE SECTIONS ── */
+.ss{margin-bottom:16px}
+.ss-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ss-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ss-icon-blue{background:var(--blue-light);color:var(--blue)}
+.ss-icon-green{background:var(--green-light);color:var(--green)}
+.ss-icon-purple{background:var(--purple-light);color:var(--purple)}
+.ss-icon-amber{background:var(--amber-light);color:var(--amber)}
+.ss-icon-coral{background:var(--coral-light);color:var(--coral)}
+.ss-title{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px}
+.ss-desc{font-size:12px;color:var(--text2);font-weight:400;text-transform:none;letter-spacing:0;margin-left:4px}
+.ss-textarea{width:100%;min-height:60px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:14px;color:var(--text);font-family:inherit;line-height:1.6;resize:vertical}
+.ss-textarea:focus{outline:none;border-color:var(--coral)}
+
+/* ── PHRASES ── */
+.phrase{display:flex;align-items:flex-start;gap:8px;padding:10px 14px;background:var(--surface-alt);border-radius:10px;margin-bottom:6px;border:1px solid var(--border)}
+.phrase-icon{color:var(--coral);margin-top:2px;flex-shrink:0}
+.phrase-text{flex:1;font-size:14px;color:var(--text);line-height:1.5;border:none;background:transparent;font-family:inherit;resize:none;min-height:20px;outline:none}
+.phrase-del{color:var(--muted);cursor:pointer;padding:2px;flex-shrink:0}
+.phrase-del:hover{color:var(--coral)}
+.add-phrase{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:2px dashed var(--border);cursor:pointer;font-size:13px;color:var(--text2);font-weight:500;transition:all .15s}
+.add-phrase:hover{border-color:var(--coral);color:var(--coral)}
+
+/* ── TRIGGERS ── */
+.trigger{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--green-light);border-radius:8px;margin-bottom:5px;border:1px solid transparent}
+.trigger-icon{color:var(--green);flex-shrink:0}
+.trigger-text{flex:1;font-size:14px;color:var(--text);border:none;background:transparent;font-family:inherit;outline:none}
+.trigger-del{color:var(--muted);cursor:pointer;padding:2px;flex-shrink:0}
+.trigger-del:hover{color:var(--coral)}
+
+/* ── OBJECTION PAIRS ── */
+.obj-pair{background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.obj-q{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}
+.obj-label{font-size:11px;font-weight:700;color:var(--coral);text-transform:uppercase;letter-spacing:.5px;width:70px;flex-shrink:0;margin-top:3px}
+.obj-label-a{color:var(--green)}
+.obj-input{flex:1;font-size:14px;color:var(--text);border:none;background:transparent;font-family:inherit;outline:none;resize:none;min-height:20px;line-height:1.5}
+
+/* ── AI ASSISTANT ── */
+@keyframes borderRotate{
+  0%{background-position:0% 50%}
+  100%{background-position:300% 50%}
+}
+@keyframes sparkle{
+  0%{opacity:.4;transform:scale(.8)}
+  50%{opacity:1;transform:scale(1.1)}
+  100%{opacity:.4;transform:scale(.8)}
+}
+@keyframes sparkle2{
+  0%{opacity:.6;transform:scale(1)}
+  50%{opacity:.3;transform:scale(.7)}
+  100%{opacity:.6;transform:scale(1)}
+}
+.ai-panel{background:var(--surface);border-radius:14px;margin-bottom:20px;overflow:visible;position:relative;padding:1px}
+.ai-panel::before{content:'';position:absolute;top:-1px;left:-1px;right:-1px;bottom:-1px;border-radius:15px;background:linear-gradient(90deg,var(--coral),var(--amber),var(--green),var(--blue),var(--purple),var(--coral),var(--amber),var(--green));background-size:300% 100%;animation:borderRotate 6s linear infinite;z-index:0}
+.ai-panel-inner{position:relative;z-index:1;background:var(--surface);border-radius:13px;overflow:hidden}
+.ai-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer}
+.ai-header-left{display:flex;align-items:center;gap:12px}
+@keyframes starPulse{
+  0%{transform:scale(1);opacity:.7}
+  50%{transform:scale(1.6);opacity:1}
+  100%{transform:scale(1);opacity:.7}
+}
+.ai-avatar{width:38px;height:38px;border-radius:10px;background:var(--coral);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+.ai-avatar svg{animation:starPulse 2s ease-in-out infinite}
+.ai-sparkles{position:absolute;top:-4px;right:-4px;width:16px;height:16px}
+.ai-sparkle{position:absolute;fill:var(--coral)}
+.ai-sparkle:nth-child(1){top:0;right:0;width:8px;height:8px;animation:sparkle 2s ease-in-out infinite}
+.ai-sparkle:nth-child(2){top:6px;right:8px;width:5px;height:5px;animation:sparkle2 2.5s ease-in-out infinite .5s}
+.ai-sparkle:nth-child(3){top:-2px;right:9px;width:4px;height:4px;animation:sparkle 3s ease-in-out infinite 1s}
+.ai-title{font-size:15px;font-weight:700;color:var(--coral)}
+.ai-subtitle{font-size:12px;color:var(--text2)}
+.ai-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:linear-gradient(135deg,var(--coral-light),var(--purple-light));color:var(--purple);letter-spacing:.5px;text-transform:uppercase;display:inline-block;margin-left:6px}
+.ai-toggle{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;transition:transform .2s}
+.ai-toggle.open{transform:rotate(180deg)}
+.ai-body{display:none;border-top:1px solid var(--border);padding:14px 18px}
+.ai-body.show{display:block;animation:fadeIn .3s ease}
+.ai-chat{max-height:300px;overflow-y:auto;margin-bottom:12px}
+.ai-msg{margin-bottom:10px}
+.ai-msg-bot .ai-msg-text{background:var(--coral-light);border-radius:12px 12px 12px 2px;padding:12px 14px;font-size:14px;line-height:1.6;color:var(--text);max-width:85%}
+.ai-msg-user .ai-msg-text{background:var(--surface-alt);border-radius:12px 12px 2px 12px;padding:12px 14px;font-size:14px;line-height:1.6;color:var(--text);max-width:85%;margin-left:auto}
+.ai-msg-action{display:flex;gap:8px;margin-top:8px}
+.ai-msg-action .btn{font-size:12px;padding:6px 14px}
+.ai-input-row{display:flex;gap:8px;align-items:flex-end}
+.ai-input{flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:14px;color:var(--text);font-family:inherit;resize:none;outline:none;line-height:1.5}
+.ai-input:focus{border-color:var(--coral)}
+.ai-send{width:40px;height:40px;border-radius:10px;background:var(--coral);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.ai-send:hover{background:var(--coral-dark)}
+
+/* ── AI PATHS ── */
+.ai-paths{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.ai-path{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s}
+.ai-path:hover{border-color:var(--coral);background:var(--coral-light)}
+.ai-path-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ai-path-name{font-size:14px;font-weight:600;color:var(--text)}
+.ai-path-desc{font-size:12px;color:var(--text2)}
+
+/* ── TEMPLATES ── */
+.tpl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.tpl-card{padding:12px;background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;text-align:center}
+.tpl-card:hover{border-color:var(--coral);background:var(--coral-light)}
+.tpl-emoji{font-size:24px;margin-bottom:4px}
+.tpl-name{font-size:13px;font-weight:600;color:var(--text)}
+.tpl-desc{font-size:11px;color:var(--text2);margin-top:2px}
+
+/* ── URL INPUT ── */
+.url-row{display:flex;gap:8px;margin-top:8px;align-items:center}
+
+/* ── WIZARD ── */
+.ai-wizard{margin-top:8px}
+.wiz-progress{height:3px;background:var(--border);border-radius:2px;margin-bottom:14px;overflow:hidden}
+.wiz-bar{height:100%;background:var(--coral);border-radius:2px;transition:width .4s ease}
+.wiz-q{font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px}
+.wiz-input{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:14px;color:var(--text);font-family:inherit;resize:none;outline:none;line-height:1.5}
+.wiz-input:focus{border-color:var(--coral)}
+.wiz-nav{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.wiz-counter{font-size:12px;color:var(--muted)}
+.wiz-next{display:flex;align-items:center;gap:4px}
+.wiz-done{text-align:center;padding:16px;font-size:14px;color:var(--text2);line-height:1.6}
+
+/* ── NEO BUTTON IN STAGES ── */
+.stage-neo{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--coral);cursor:pointer;padding:4px 10px;border-radius:6px;background:var(--coral-light);border:none;margin-left:auto;margin-right:8px;transition:all .15s}
+.stage-neo:hover{background:var(--coral);color:#fff}
+.stage-neo svg{width:12px;height:12px;fill:currentColor;stroke:none}
+
+/* ── PHRASE TYPES ── */
+.phrase-section-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;margin-bottom:6px;margin-top:12px;padding:5px 10px;border-radius:6px}
+.phrase-section-manual{background:var(--coral-light);color:var(--coral)}
+.phrase-section-auto{background:var(--purple-light);color:var(--purple)}
+
+/* ── ADD STAGE ── */
+.add-stage{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border-radius:14px;border:2px dashed var(--border);cursor:pointer;font-size:15px;color:var(--text2);font-weight:500;transition:all .15s;margin-bottom:12px}
+.add-stage:hover{border-color:var(--coral);color:var(--coral);background:var(--coral-light)}
+
+/* ── CONTROLS ── */
+.ctrls{position:fixed;bottom:20px;right:20px;z-index:100}
+.btn-c{width:40px;height:40px;border-radius:10px;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.06);color:var(--text2)}
+.btn-c:hover{border-color:var(--coral);color:var(--coral)}
+.ic{display:inline-flex;align-items:center;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+  <div class="side">
+    <div class="side-logo">
+      <div class="logo-text">neovida<span class="logo-slash">/</span><span class="logo-product">sales</span></div>
+      <span class="side-role">РОП</span>
+    </div>
+    <div class="side-nav">
+      <div class="nav-section">Управление</div>
+      <div class="nav-item active">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Настройки
+      </div>
+    </div>
+    <div class="side-bottom">
+      <div class="side-user">
+        <div class="side-avatar">ИС</div>
+        <div><div class="side-uname">Иван Смирнов</div><div class="side-urole">Руководитель ОП</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="top-bar">
+      <div class="top-left">
+        <button class="top-back" id="btnBack">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Назад
+        </button>
+        <span class="top-title">Входящий — новый клиент</span>
+        <span class="top-type">Входящий</span>
+      </div>
+      <div class="top-right">
+        <button class="btn btn-outline">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          Сбросить
+        </button>
+        <button class="btn btn-coral" id="btnSave">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Сохранить
+        </button>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <!-- AI ASSISTANT PANEL -->
+      <div class="ai-panel" id="aiPanel">
+        <div class="ai-panel-inner">
+        <div class="ai-header">
+          <div class="ai-header-left">
+            <div class="ai-avatar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#fff" stroke="none"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+              <div class="ai-sparkles">
+                <svg xmlns="http://www.w3.org/2000/svg" class="ai-sparkle" viewBox="0 0 24 24"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="ai-sparkle" viewBox="0 0 24 24"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="ai-sparkle" viewBox="0 0 24 24"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+              </div>
+            </div>
+            <div>
+              <div class="ai-title">Neo - ассистент <span class="ai-tag">✦ AI</span></div>
+              <div class="ai-subtitle">Опишите бизнес — я создам скрипт</div>
+            </div>
+          </div>
+          <button class="ai-toggle" id="aiToggle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+        <div class="ai-body" id="aiBody">
+          <div class="ai-chat" id="aiChat">
+            <div class="ai-msg ai-msg-bot">
+              <div class="ai-msg-text">Привет! Я Neo. Помогу создать скрипт продаж. Как начнём?</div>
+            </div>
+
+            <!-- CHOOSE PATH -->
+            <div class="ai-paths" id="aiPaths">
+              <div class="ai-path" data-path="template">
+                <div class="ai-path-icon" style="background:var(--green-light);color:var(--green)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
+                <div>
+                  <div class="ai-path-name">Готовый шаблон</div>
+                  <div class="ai-path-desc">Выберу нишу — получу скрипт</div>
+                </div>
+              </div>
+              <div class="ai-path" data-path="url">
+                <div class="ai-path-icon" style="background:var(--coral-light);color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>
+                <div>
+                  <div class="ai-path-name">Ссылка на сайт</div>
+                  <div class="ai-path-desc">Neo изучит сайт и задаст пару вопросов</div>
+                </div>
+              </div>
+              <div class="ai-path" data-path="wizard">
+                <div class="ai-path-icon" style="background:var(--purple-light);color:var(--purple)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+                <div>
+                  <div class="ai-path-name">Подробный опрос</div>
+                  <div class="ai-path-desc">12 вопросов — максимально точный скрипт</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TEMPLATES -->
+            <div class="ai-templates" id="aiTemplates" style="display:none">
+              <div class="ai-msg ai-msg-bot"><div class="ai-msg-text">Выберите нишу, ближайшую к вашему бизнесу:</div></div>
+              <div class="tpl-grid">
+                <div class="tpl-card" data-tpl="print">
+                  <div class="tpl-emoji">🖨️</div>
+                  <div class="tpl-name">Полиграфия и реклама</div>
+                  <div class="tpl-desc">Баннеры, вывески, сувенирка, печать</div>
+                </div>
+                <div class="tpl-card" data-tpl="it">
+                  <div class="tpl-emoji">💻</div>
+                  <div class="tpl-name">IT-услуги и SaaS</div>
+                  <div class="tpl-desc">Разработка, внедрение, подписки</div>
+                </div>
+                <div class="tpl-card" data-tpl="build">
+                  <div class="tpl-emoji">🏗️</div>
+                  <div class="tpl-name">Строительство и ремонт</div>
+                  <div class="tpl-desc">Отделка, материалы, проектирование</div>
+                </div>
+                <div class="tpl-card" data-tpl="consult">
+                  <div class="tpl-emoji">📊</div>
+                  <div class="tpl-name">Консалтинг и услуги</div>
+                  <div class="tpl-desc">Бухгалтерия, юристы, маркетинг</div>
+                </div>
+                <div class="tpl-card" data-tpl="trade">
+                  <div class="tpl-emoji">📦</div>
+                  <div class="tpl-name">Оптовая торговля</div>
+                  <div class="tpl-desc">Продукты, оборудование, запчасти</div>
+                </div>
+                <div class="tpl-card" data-tpl="beauty">
+                  <div class="tpl-emoji">💇</div>
+                  <div class="tpl-name">Красота и здоровье</div>
+                  <div class="tpl-desc">Салоны, клиники, фитнес</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- URL INPUT -->
+            <div class="ai-url-step" id="aiUrlStep" style="display:none">
+              <div class="ai-msg ai-msg-bot"><div class="ai-msg-text">Дайте ссылку на сайт компании. Я изучу что продаёте, цены, условия — и задам только уточняющие вопросы.</div></div>
+              <div class="url-row">
+                <input class="wiz-input" id="urlInput" placeholder="https://вашсайт.ru" style="flex:1">
+                <button class="btn btn-coral" id="urlGo" style="white-space:nowrap">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  Изучить сайт
+                </button>
+              </div>
+            </div>
+
+            <!-- WIZARD -->
+            <div class="ai-wizard" id="aiWizard" style="display:none">
+              <div class="wiz-progress"><div class="wiz-bar" id="wizBar" style="width:0%"></div></div>
+              <div class="wiz-step" id="wizStep">
+                <div class="wiz-q" id="wizQ"></div>
+                <textarea class="wiz-input" id="wizInput" rows="2" placeholder=""></textarea>
+                <div class="wiz-nav">
+                  <span class="wiz-counter" id="wizCounter"></span>
+                  <button class="btn btn-coral wiz-next" id="wizNext">Далее <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ai-input-row" id="aiInputRow" style="display:none">
+            <textarea class="ai-input" id="aiInput" rows="1" placeholder="Спросите Neo или попросите доработать..."></textarea>
+            <button class="ai-send" id="aiSend">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <!-- META -->
+      <div class="meta-row">
+        <div class="meta-field">
+          <div class="meta-label">Название скрипта</div>
+          <input class="meta-input" value="Входящий — новый клиент">
+        </div>
+        <div class="meta-field" style="max-width:200px">
+          <div class="meta-label">Тип звонка</div>
+          <select class="meta-select"><option selected>Входящий</option><option>Исходящий</option></select>
+        </div>
+        <div class="meta-field" style="max-width:200px">
+          <div class="meta-label">Статус CRM</div>
+          <select class="meta-select"><option selected>Новый контакт</option><option>Есть лид</option><option>Постоянный</option></select>
+        </div>
+      </div>
+
+      <!-- STAGES -->
+
+      <!-- STAGE 1: Приветствие -->
+      <div class="stage">
+        <div class="stage-head">
+          <div class="stage-num">1</div>
+          <div class="stage-info">
+            <div class="stage-name">Приветствие</div>
+            <div class="stage-hint">Установить контакт, представиться, понять кто звонит</div>
+          </div>
+          <button class="stage-neo" onclick="event.stopPropagation()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>Neo</button><span class="stage-chev"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+        <div class="stage-body">
+          <div class="ss">
+            <div class="ss-head">
+              <div class="ss-icon ss-icon-blue"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+              <span class="ss-title">Цель этапа</span>
+            </div>
+            <textarea class="ss-textarea">Установить контакт. Представиться. Узнать имя клиента и причину звонка. Создать дружелюбную атмосферу.</textarea>
+          </div>
+
+          <div class="ss">
+            <div class="ss-head">
+              <div class="ss-icon ss-icon-coral"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+              <span class="ss-title">Подсказки менеджеру</span>
+            </div>
+
+            <div class="phrase-section-label phrase-section-manual">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Обязательные фразы от РОПа — менеджер должен произнести
+            </div>
+            <div class="phrase">
+              <span class="phrase-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
+              <textarea class="phrase-text" rows="1">Добрый день! Компания [название], меня зовут [имя]. Чем могу вам помочь?</textarea>
+              <span class="phrase-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+            </div>
+            <div class="phrase">
+              <span class="phrase-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
+              <textarea class="phrase-text" rows="1">Подскажите, как к вам обращаться?</textarea>
+              <span class="phrase-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+            </div>
+            <div class="add-phrase">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Добавить фразу
+            </div>
+
+            <div class="phrase-section-label phrase-section-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              AI генерирует сам — на основе базы знаний и контекста разговора
+            </div>
+            <div style="padding:10px 14px;background:var(--purple-light);border-radius:10px;border:1px dashed var(--purple);font-size:13px;color:var(--purple);line-height:1.5">
+              AI автоматически: приветствие с именем клиента из CRM (если есть), контекст предыдущих звонков, подстройка тона под настроение клиента.
+            </div>
+          </div>
+
+          <div class="ss">
+            <div class="ss-head">
+              <div class="ss-icon ss-icon-green"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="ss-title">Триггеры перехода <span class="ss-desc">когда AI двигает прогресс</span></span>
+            </div>
+            <div class="trigger">
+              <span class="trigger-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <input class="trigger-text" value="Менеджер представился и назвал компанию">
+              <span class="trigger-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+            </div>
+            <div class="trigger">
+              <span class="trigger-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <input class="trigger-text" value="Клиент назвал причину звонка">
+              <span class="trigger-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 2: Потребность -->
+      <div class="stage">
+        <div class="stage-head">
+          <div class="stage-num">2</div>
+          <div class="stage-info">
+            <div class="stage-name">Выявление потребности</div>
+            <div class="stage-hint">Понять что нужно, для чего, в каком объёме, какие сроки</div>
+          </div>
+          <button class="stage-neo" onclick="event.stopPropagation()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>Neo</button><span class="stage-chev"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+        <div class="stage-body">
+          <div class="ss">
+            <div class="ss-head">
+              <div class="ss-icon ss-icon-blue"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+              <span class="ss-title">Цель этапа</span>
+            </div>
+            <textarea class="ss-textarea">Выяснить конкретную потребность: какой продукт, для какого мероприятия, сроки, объёмы. Зафиксировать ключевые данные для КП.</textarea>
+          </div>
+          <div class="ss">
+            <div class="ss-head">
+              <div class="ss-icon ss-icon-coral"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+              <span class="ss-title">Фразы-подсказки</span>
+            </div>
+            <div class="phrase"><span class="phrase-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span><textarea class="phrase-text" rows="1">Расскажите подробнее, какую задачу решаете?</textarea><span class="phrase-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+            <div class="phrase"><span class="phrase-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span><textarea class="phrase-text" rows="1">Для какого мероприятия / выставки?</textarea><span class="phrase-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+            <div class="phrase"><span class="phrase-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span><textarea class="phrase-text" rows="1">Какие сроки? Когда нужно к готовности?</textarea><span class="phrase-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+            <div class="add-phrase"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Добавить фразу</div>
+          </div>
+          <div class="ss">
+            <div class="ss-head">
+              <div class="ss-icon ss-icon-green"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="ss-title">Триггеры перехода</span>
+            </div>
+            <div class="trigger"><span class="trigger-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><input class="trigger-text" value="Клиент назвал продукт или услугу"><span class="trigger-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+            <div class="trigger"><span class="trigger-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><input class="trigger-text" value="Известны сроки или объём"><span class="trigger-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 3: Квалификация -->
+      <div class="stage">
+        <div class="stage-head">
+          <div class="stage-num">3</div>
+          <div class="stage-info">
+            <div class="stage-name">Квалификация</div>
+            <div class="stage-hint">Определить бюджет, ЛПР, температуру клиента</div>
+          </div>
+          <button class="stage-neo" onclick="event.stopPropagation()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>Neo</button><span class="stage-chev"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+        <div class="stage-body">
+          <div class="ss"><div class="ss-head"><div class="ss-icon ss-icon-blue"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><span class="ss-title">Цель этапа</span></div><textarea class="ss-textarea">Определить бюджет, кто принимает решение, когда планируют заказ. Поставить теги квалификации.</textarea></div>
+          <div class="ss"><div class="ss-head"><div class="ss-icon ss-icon-coral"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><span class="ss-title">Фразы-подсказки</span></div>
+            <div class="phrase"><span class="phrase-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span><textarea class="phrase-text" rows="1">Какой бюджет закладываете на это направление?</textarea><span class="phrase-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+            <div class="phrase"><span class="phrase-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span><textarea class="phrase-text" rows="1">Вы принимаете решение или нужно согласовать?</textarea><span class="phrase-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+            <div class="add-phrase"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Добавить фразу</div>
+          </div>
+          <div class="ss"><div class="ss-head"><div class="ss-icon ss-icon-green"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="ss-title">Триггеры перехода</span></div>
+            <div class="trigger"><span class="trigger-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><input class="trigger-text" value="Клиент озвучил бюджет или диапазон"><span class="trigger-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+            <div class="trigger"><span class="trigger-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><input class="trigger-text" value="Определён ЛПР"><span class="trigger-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 4: Презентация -->
+      <div class="stage">
+        <div class="stage-head">
+          <div class="stage-num">4</div>
+          <div class="stage-info">
+            <div class="stage-name">Презентация</div>
+            <div class="stage-hint">Предложить решение, озвучить цены, выгоды</div>
+          </div>
+          <button class="stage-neo" onclick="event.stopPropagation()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>Neo</button><span class="stage-chev"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+        <div class="stage-body">
+          <div class="ss"><div class="ss-head"><div class="ss-icon ss-icon-blue"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><span class="ss-title">Цель этапа</span></div><textarea class="ss-textarea">Предложить конкретное решение под потребность. Озвучить цены из каталога. Подчеркнуть преимущества перед конкурентами.</textarea></div>
+          <div class="ss"><div class="ss-head"><div class="ss-icon ss-icon-coral"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><span class="ss-title">Фразы-подсказки</span></div>
+            <div class="phrase"><span class="phrase-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span><textarea class="phrase-text" rows="1">По вашему запросу отлично подойдёт [продукт] — [цена]. При заказе от [кол-во] — скидка [%].</textarea><span class="phrase-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+            <div class="phrase"><span class="phrase-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span><textarea class="phrase-text" rows="1">Доставка бесплатно при заказе от 15 000 руб.</textarea><span class="phrase-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+            <div class="add-phrase"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Добавить фразу</div>
+          </div>
+          <div class="ss"><div class="ss-head"><div class="ss-icon ss-icon-purple"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div><span class="ss-title">AI-действие <span class="ss-desc">автопоиск в базе знаний</span></span></div>
+            <textarea class="ss-textarea">Когда клиент упоминает конкретный товар — AI автоматически ищет в каталоге цену, характеристики и наличие, и выводит карточку менеджеру.</textarea>
+          </div>
+          <div class="ss"><div class="ss-head"><div class="ss-icon ss-icon-green"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="ss-title">Триггеры перехода</span></div>
+            <div class="trigger"><span class="trigger-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><input class="trigger-text" value="Менеджер озвучил цену или предложение"><span class="trigger-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 5: Возражения -->
+      <div class="stage">
+        <div class="stage-head">
+          <div class="stage-num">5</div>
+          <div class="stage-info">
+            <div class="stage-name">Работа с возражениями</div>
+            <div class="stage-hint">Отработать сомнения, дать аргументы</div>
+          </div>
+          <button class="stage-neo" onclick="event.stopPropagation()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>Neo</button><span class="stage-chev"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+        <div class="stage-body">
+          <div class="ss"><div class="ss-head"><div class="ss-icon ss-icon-blue"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><span class="ss-title">Цель этапа</span></div><textarea class="ss-textarea">Выслушать возражение, не спорить. Дать аргумент из базы знаний. Перевести в позитив.</textarea></div>
+          <div class="ss">
+            <div class="ss-head">
+              <div class="ss-icon ss-icon-amber"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+              <span class="ss-title">Пары возражение → ответ <span class="ss-desc">AI подскажет в реальном времени</span></span>
+            </div>
+            <div class="obj-pair">
+              <div class="obj-q"><span class="obj-label">Клиент:</span><textarea class="obj-input" rows="1">Дорого / у конкурентов дешевле</textarea></div>
+              <div class="obj-q"><span class="obj-label obj-label-a">Ответ:</span><textarea class="obj-input" rows="2">Давайте сравним: у нас в цену входит дизайн, печать 720dpi и доставка. У конкурентов это обычно за доплату. Итоговая сумма будет сопоставима, а качество выше.</textarea></div>
+            </div>
+            <div class="obj-pair">
+              <div class="obj-q"><span class="obj-label">Клиент:</span><textarea class="obj-input" rows="1">Надо подумать / посоветоваться</textarea></div>
+              <div class="obj-q"><span class="obj-label obj-label-a">Ответ:</span><textarea class="obj-input" rows="2">Конечно! Давайте я подготовлю КП с расчётом — будет проще обсудить с коллегами. Когда удобно созвониться по итогу?</textarea></div>
+            </div>
+            <div class="obj-pair">
+              <div class="obj-q"><span class="obj-label">Клиент:</span><textarea class="obj-input" rows="1">Не сейчас / позже закажем</textarea></div>
+              <div class="obj-q"><span class="obj-label obj-label-a">Ответ:</span><textarea class="obj-input" rows="2">Понимаю. Учтите что на изготовление нужно [X] дней + доставка. Чтобы успеть к выставке, заказ лучше разместить до [дата]. Зафиксирую вам цены на 2 недели.</textarea></div>
+            </div>
+            <div class="add-phrase"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Добавить пару</div>
+          </div>
+          <div class="ss"><div class="ss-head"><div class="ss-icon ss-icon-green"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="ss-title">Триггеры перехода</span></div>
+            <div class="trigger"><span class="trigger-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><input class="trigger-text" value="Клиент согласился или перестал возражать"><span class="trigger-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 6: Закрытие -->
+      <div class="stage">
+        <div class="stage-head">
+          <div class="stage-num">6</div>
+          <div class="stage-info">
+            <div class="stage-name">Закрытие</div>
+            <div class="stage-hint">Зафиксировать следующий шаг, договориться о действии</div>
+          </div>
+          <button class="stage-neo" onclick="event.stopPropagation()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>Neo</button><span class="stage-chev"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+        <div class="stage-body">
+          <div class="ss"><div class="ss-head"><div class="ss-icon ss-icon-blue"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><span class="ss-title">Цель этапа</span></div><textarea class="ss-textarea">Зафиксировать конкретный следующий шаг: КП, встреча, перезвон. Без следующего шага этап НЕ считается пройденным — AI снизит оценку.</textarea></div>
+          <div class="ss"><div class="ss-head"><div class="ss-icon ss-icon-coral"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><span class="ss-title">Обязательные фразы <span class="ss-desc">менеджер должен произнести</span></span></div>
+            <div class="phrase"><span class="phrase-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span><textarea class="phrase-text" rows="1">Давайте я подготовлю КП и отправлю вам сегодня на [email]. Когда удобно обсудить?</textarea><span class="phrase-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+            <div class="phrase"><span class="phrase-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span><textarea class="phrase-text" rows="1">Спасибо, [Имя]! Перезвоню [дата/время]. Хорошего дня!</textarea><span class="phrase-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+            <div class="add-phrase"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Добавить фразу</div>
+          </div>
+          <div class="ss"><div class="ss-head"><div class="ss-icon ss-icon-green"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="ss-title">Триггеры завершения</span></div>
+            <div class="trigger"><span class="trigger-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><input class="trigger-text" value="Назначена конкретная дата/время следующего контакта"><span class="trigger-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+            <div class="trigger"><span class="trigger-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><input class="trigger-text" value="Менеджер резюмировал договорённости"><span class="trigger-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADD STAGE -->
+      <div class="add-stage">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Добавить этап
+      </div>
+
+    </div>
+  </div>
+
+  <div class="ctrls">
+    <button class="btn-c" id="themeBtn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  // AI Panel toggle
+  var aiHeader = document.querySelector('.ai-header');
+  aiHeader.addEventListener('click', function(e) {
+    if (e.target.closest('.ai-toggle') || e.target.closest('.ai-header-left') || e.target === aiHeader) {
+      document.getElementById('aiBody').classList.toggle('show');
+      document.getElementById('aiToggle').classList.toggle('open');
+    }
+  });
+
+  // Helper
+  function showResult(chat) {
+    var div = document.createElement('div');
+    div.className = 'ai-msg ai-msg-bot';
+    div.innerHTML = '<div class="ai-msg-text">✦ Готово! Создал скрипт из 6 этапов с фразами, возражениями и триггерами. Посмотрите ниже и отредактируйте. Нужно что-то поменять — спрашивайте!</div><div class="ai-msg-action"><button class="btn btn-coral" style="font-size:12px;padding:6px 14px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Применить скрипт</button><button class="btn btn-outline" style="font-size:12px;padding:6px 14px">Переделать</button></div>';
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    document.getElementById('aiInputRow').style.display = 'flex';
+  }
+
+  // Path selection
+  var paths = document.querySelectorAll('.ai-path');
+  for (var i = 0; i < paths.length; i++) {
+    paths[i].addEventListener('click', function() {
+      var path = this.getAttribute('data-path');
+      document.getElementById('aiPaths').style.display = 'none';
+
+      if (path === 'template') {
+        document.getElementById('aiTemplates').style.display = '';
+      } else if (path === 'url') {
+        document.getElementById('aiUrlStep').style.display = '';
+      } else if (path === 'wizard') {
+        document.getElementById('aiWizard').style.display = '';
+        wizIdx = 0;
+        updateWiz();
+      }
+    });
+  }
+
+  // Templates
+  var tpls = document.querySelectorAll('.tpl-card');
+  for (var i = 0; i < tpls.length; i++) {
+    tpls[i].addEventListener('click', function() {
+      var name = this.querySelector('.tpl-name').textContent;
+      document.getElementById('aiTemplates').style.display = 'none';
+      var chat = document.getElementById('aiChat');
+
+      var sel = document.createElement('div');
+      sel.className = 'ai-msg ai-msg-user';
+      sel.innerHTML = '<div class="ai-msg-text">' + name + '</div>';
+      chat.appendChild(sel);
+
+      var load = document.createElement('div');
+      load.className = 'ai-msg ai-msg-bot';
+      load.innerHTML = '<div class="ai-msg-text">✦ Загружаю шаблон «' + name + '» и адаптирую под вас...</div>';
+      chat.appendChild(load);
+      chat.scrollTop = chat.scrollHeight;
+
+      setTimeout(function() { load.remove(); showResult(chat); }, 2000);
+    });
+  }
+
+  // URL
+  document.getElementById('urlGo').addEventListener('click', function() {
+    var url = document.getElementById('urlInput').value.trim();
+    if (!url) { document.getElementById('urlInput').focus(); return; }
+    document.getElementById('aiUrlStep').style.display = 'none';
+    var chat = document.getElementById('aiChat');
+
+    var uMsg = document.createElement('div');
+    uMsg.className = 'ai-msg ai-msg-user';
+    uMsg.innerHTML = '<div class="ai-msg-text">' + url + '</div>';
+    chat.appendChild(uMsg);
+
+    var scan = document.createElement('div');
+    scan.className = 'ai-msg ai-msg-bot';
+    scan.innerHTML = '<div class="ai-msg-text">✦ Изучаю сайт... Нашёл каталог, цены, условия доставки. Ещё пару вопросов:</div>';
+    chat.appendChild(scan);
+    chat.scrollTop = chat.scrollHeight;
+
+    // Show short wizard after URL
+    setTimeout(function() {
+      document.getElementById('aiWizard').style.display = '';
+      wizQuestions = [
+        {q:'Кто обычно звонит? Должности, типы клиентов?', ph:'Например: маркетологи, владельцы малого бизнеса...'},
+        {q:'Какие возражения слышите чаще всего?', ph:'Например: дорого, долго, надо подумать...'},
+        {q:'Что менеджер обязательно должен сказать/спросить?', ph:'Например: всегда спрашивать бюджет, предлагать дизайн...'}
+      ];
+      wizIdx = 0;
+      updateWiz();
+    }, 1500);
+  });
+
+  // Wizard
+  var wizQuestions = [
+    {q:'Чем занимается компания? Что продаёте?', ph:'Например: рекламное агентство, печатаем баннеры, ролл-апы...'},
+    {q:'Кто ваши клиенты? Кому продаёте?', ph:'Например: маркетологи, event-менеджеры, малый бизнес...'},
+    {q:'Откуда приходят заявки? Тип звонков?', ph:'Например: сайт, Авито, повторные клиенты, входящие...'},
+    {q:'Что обычно спрашивают клиенты первым делом?', ph:'Например: цена, сроки, есть ли дизайн, минимальный заказ...'},
+    {q:'Средний чек? Разброс от мелкого до крупного?', ph:'Например: от 5К визитки до 300К комплект для выставки...'},
+    {q:'Цикл сделки? За один звонок или несколько касаний?', ph:'Например: мелкие за один звонок, крупные — КП, согласование...'},
+    {q:'Какие возражения слышите чаще всего?', ph:'Например: дорого, долго, надо подумать, есть подрядчик...'},
+    {q:'Чем вы лучше конкурентов? Ваши козыри?', ph:'Например: свой дизайнер бесплатно, доставка за 1 день, гарантия цвета...'},
+    {q:'Что можно допродать к основному заказу?', ph:'Например: к баннеру — стойку, к визиткам — конверты, к ролл-апу — сумку...'},
+    {q:'Что менеджер обязательно должен узнать у клиента?', ph:'Например: бюджет, сроки, кто ЛПР, для чего нужно...'},
+    {q:'Что менеджер обязательно должен сказать?', ph:'Например: про бесплатную доставку от 15К, скидку от 5 шт...'},
+    {q:'Как обычно закрываете? Какой следующий шаг?', ph:'Например: отправляю КП на почту, перезваниваю завтра...'}
+  ];
+  var wizIdx = 0;
+  var wizAnswers = [];
+
+  function updateWiz() {
+    if (wizIdx < wizQuestions.length) {
+      document.getElementById('wizQ').textContent = wizQuestions[wizIdx].q;
+      document.getElementById('wizInput').placeholder = wizQuestions[wizIdx].ph;
+      document.getElementById('wizInput').value = '';
+      document.getElementById('wizInput').focus();
+      document.getElementById('wizCounter').textContent = (wizIdx + 1) + ' из ' + wizQuestions.length;
+      document.getElementById('wizBar').style.width = (wizIdx / wizQuestions.length * 100) + '%';
+      if (wizIdx === wizQuestions.length - 1) {
+        document.getElementById('wizNext').innerHTML = '✦ Создать скрипт';
+      } else {
+        document.getElementById('wizNext').innerHTML = 'Далее <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+      }
+    }
+  }
+
+  document.getElementById('wizNext').addEventListener('click', function() {
+    var val = document.getElementById('wizInput').value.trim();
+    if (!val) { document.getElementById('wizInput').focus(); return; }
+    wizAnswers.push(val);
+    wizIdx++;
+
+    if (wizIdx < wizQuestions.length) {
+      updateWiz();
+    } else {
+      document.getElementById('wizBar').style.width = '100%';
+      document.getElementById('aiWizard').style.display = 'none';
+      var chat = document.getElementById('aiChat');
+
+      var load = document.createElement('div');
+      load.className = 'ai-msg ai-msg-bot';
+      load.innerHTML = '<div class="ai-msg-text">✦ Анализирую ответы и генерирую скрипт...</div>';
+      chat.appendChild(load);
+      chat.scrollTop = chat.scrollHeight;
+
+      setTimeout(function() { load.remove(); showResult(chat); }, 2000);
+    }
+  });
+
+  // Enter in wizard
+  document.getElementById('wizInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('wizNext').click(); }
+  });
+
+  // Free chat
+  document.getElementById('aiSend').addEventListener('click', function() {
+    var input = document.getElementById('aiInput');
+    var val = input.value.trim();
+    if (!val) return;
+    var chat = document.getElementById('aiChat');
+
+    var u = document.createElement('div');
+    u.className = 'ai-msg ai-msg-user';
+    u.innerHTML = '<div class="ai-msg-text">' + val + '</div>';
+    chat.appendChild(u);
+    input.value = '';
+
+    setTimeout(function() {
+      var b = document.createElement('div');
+      b.className = 'ai-msg ai-msg-bot';
+      b.innerHTML = '<div class="ai-msg-text">Сделано! Обновил этап. Посмотрите изменения ниже.</div>';
+      chat.appendChild(b);
+      chat.scrollTop = chat.scrollHeight;
+    }, 1000);
+    chat.scrollTop = chat.scrollHeight;
+  });
+  document.getElementById('aiInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('aiSend').click(); }
+  });
+
+  // Close AI panel on outside click
+  document.addEventListener('click', function(e) {
+    var panel = document.getElementById('aiPanel');
+    var body = document.getElementById('aiBody');
+    if (body.classList.contains('show') && !panel.contains(e.target)) {
+      body.classList.remove('show');
+      document.getElementById('aiToggle').classList.remove('open');
+    }
+
+    // Close open stages on outside click
+    var stages = document.querySelectorAll('.stage');
+    for (var i = 0; i < stages.length; i++) {
+      var stageBody = stages[i].querySelector('.stage-body');
+      var stageChev = stages[i].querySelector('.stage-chev');
+      if (stageBody && stageBody.classList.contains('show') && !stages[i].contains(e.target)) {
+        stageBody.classList.remove('show');
+        stageChev.classList.remove('open');
+      }
+    }
+  });
+  var heads = document.querySelectorAll('.stage-head');
+  for (var i = 0; i < heads.length; i++) {
+    heads[i].addEventListener('click', function() {
+      var body = this.nextElementSibling;
+      var chev = this.querySelector('.stage-chev');
+      body.classList.toggle('show');
+      chev.classList.toggle('open');
+    });
+  }
+
+  // Back button
+  document.getElementById('btnBack').addEventListener('click', function() {
+    window.location.href = 'SalesAI_Admin.html';
+  });
+
+  // Save button
+  document.getElementById('btnSave').addEventListener('click', function() {
+    var self = this;
+    self.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Сохранено!';
+    setTimeout(function() {
+      self.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Сохранить';
+    }, 2000);
+  });
+
+  // Theme
+  var dark = false;
+  document.getElementById('themeBtn').addEventListener('click', function() {
+    dark = !dark;
+    document.getElementById('app').classList.toggle('dark', dark);
+    this.innerHTML = dark
+      ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neovida — Сделки</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+  --amber:#F09030;--amber-light:#FEF4E8;
+  --red:#D4564A;--red-light:#FDECEB;
+}
+.dark{
+  --bg:#1C1B19;--surface:#262523;--surface-alt:#2E2D2A;
+  --border:#3A3835;--text:#D5D0C9;--text2:#8A857E;--muted:#5E5A54;
+  --coral:#D4806F;--coral-light:#2D2220;--coral-dark:#B5635A;
+  --green:#6DAF85;--green-light:#1E2B22;
+  --blue:#7DA3C9;--blue-light:#1E2630;
+  --purple:#9A84BA;--purple-light:#262030;
+  --amber:#D9A050;--amber-light:#2A2418;
+  --red:#C46B62;--red-light:#2D2220;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.app{display:flex;height:100vh;background:var(--bg)}
+
+/* ── SIDEBAR ── */
+.side{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.side-logo{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.logo-text{font-size:22px;font-weight:800;letter-spacing:-.4px;color:var(--text);line-height:1;display:flex;align-items:baseline}
+.logo-slash{color:var(--coral);font-weight:300;margin:0 1px}.logo-product{font-weight:400;color:var(--coral)}
+.side-role{font-size:11px;color:var(--muted);background:var(--surface-alt);padding:3px 9px;border-radius:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.side-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-section{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;padding:8px 10px 6px;margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:var(--surface-alt);color:var(--text)}
+.nav-item.active{background:var(--coral-light);color:var(--coral);font-weight:600}
+.nav-item svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+.side-bottom{padding:12px 14px;border-top:1px solid var(--border)}
+.side-user{display:flex;align-items:center;gap:10px}
+.side-avatar{width:34px;height:34px;border-radius:8px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text2)}
+.side-uname{font-size:14px;font-weight:600;color:var(--text)}
+.side-urole{font-size:12px;color:var(--text2)}
+
+/* ── CONTENT ── */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.top-bar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.top-title{font-size:20px;font-weight:700;color:var(--text)}
+.top-right{display:flex;gap:8px;align-items:center}
+.btn{padding:8px 16px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer;transition:all .15s;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--coral);color:var(--coral)}
+.btn-coral{background:var(--coral);border-color:var(--coral);color:#fff}
+.btn-coral:hover{background:var(--coral-dark);color:#fff}
+.view-toggle{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.view-toggle button{padding:7px 12px;border:none;background:transparent;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit}
+.view-toggle button.active{background:var(--surface-alt);color:var(--text);font-weight:600}
+.view-toggle button:hover{color:var(--coral)}
+
+/* ── FILTER BAR ── */
+.filter-bar{padding:10px 24px;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface)}
+.filter-select{padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer;font-family:inherit}
+.filter-select:hover,.filter-select:focus{border-color:var(--coral);outline:none}
+.filter-stats{margin-left:auto;font-size:13px;color:var(--text2)}
+.filter-stats b{color:var(--text);font-weight:600}
+
+/* ── KANBAN ── */
+.kanban{display:flex;gap:14px;padding:20px 24px;overflow-x:auto;flex:1;align-items:flex-start}
+.column{min-width:260px;max-width:280px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;display:flex;flex-direction:column;max-height:calc(100vh - 160px)}
+.col-head{padding:12px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);flex-shrink:0}
+.col-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.col-name{font-size:13px;font-weight:600;flex:1}
+.col-count{font-size:12px;color:var(--text2);background:var(--surface-alt);padding:2px 8px;border-radius:8px;font-weight:600}
+.col-body{padding:8px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px}
+
+/* ── DEAL CARD ── */
+.deal{background:var(--surface-alt);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:grab;transition:all .15s;animation:fadeIn .3s ease both}
+.deal:hover{border-color:var(--coral);box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.deal-company{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px}
+.deal-contact{font-size:12px;color:var(--text2)}
+.deal-amount{font-size:17px;font-weight:800;color:var(--text);margin:8px 0}
+.deal-footer{display:flex;align-items:center;justify-content:space-between}
+.deal-mgr{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.deal-ava{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0}
+.deal-date{font-size:11px;color:var(--muted)}
+.deal-meta{font-size:11px;color:var(--text2);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;align-items:center;gap:4px}
+.deal-meta svg{width:12px;height:12px}
+.deal-promise{font-size:11px;color:var(--amber);margin-top:6px;display:flex;align-items:flex-start;gap:4px}
+
+/* Tags */
+.tag{display:inline-flex;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600;margin-right:3px;margin-top:6px}
+.tag-blue{background:var(--blue-light);color:var(--blue)}
+.tag-green{background:var(--green-light);color:var(--green)}
+.tag-coral{background:var(--coral-light);color:var(--coral)}
+.tag-purple{background:var(--purple-light);color:var(--purple)}
+.tag-amber{background:var(--amber-light);color:var(--amber)}
+
+/* Task indicator */
+.deal-task{font-size:11px;margin-top:6px;display:flex;align-items:center;gap:4px}
+.deal-task.ok{color:var(--green)}
+.deal-task.overdue{color:var(--red);font-weight:600}
+.deal-task.none{color:var(--red);font-weight:600}
+
+/* Conversion */
+.col-conv{font-size:10px;color:var(--text2);font-weight:500}
+.col-sum{font-size:11px;color:var(--text2);font-weight:500}
+
+/* Pipeline selector */
+.pipeline-select{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer}
+.pipeline-select:hover,.pipeline-select:focus{border-color:var(--coral);outline:none}
+.deal-tags{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.deal-tag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600}
+.deal-task{font-size:11px;margin-top:6px;display:flex;align-items:center;gap:5px;color:var(--text2)}
+.deal-task.overdue{color:var(--red)}
+.deal-task svg{width:12px;height:12px;flex-shrink:0}
+.col-sum{font-size:11px;color:var(--text2);margin-left:auto}
+.col-conv{text-align:center;font-size:10px;color:var(--muted);padding:8px 0;min-width:30px;display:flex;flex-direction:column;align-items:center;justify-content:center;align-self:stretch}
+.col-conv span{font-size:14px}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:100}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:580px;max-height:82vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-head h2{font-size:18px;font-weight:700}
+.modal-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{border-color:var(--coral);color:var(--coral)}
+.modal-body{padding:24px}
+.fg{margin-bottom:16px}
+.fg label{font-size:12px;color:var(--text2);display:block;margin-bottom:5px;font-weight:500}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface-alt);color:var(--text);font-size:14px;font-family:inherit}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--coral);outline:none}
+.fg-row{display:flex;gap:12px}
+.fg-row .fg{flex:1}
+.modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+
+/* ── TIMELINE ── */
+.timeline{margin-top:20px}
+.tl-item{display:flex;gap:12px;padding:10px 0;font-size:13px;border-bottom:1px solid var(--border)}
+.tl-item:last-child{border:none}
+.tl-date{color:var(--text2);font-size:12px;white-space:nowrap;min-width:80px}
+.tl-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.tl-icon.call{background:var(--blue-light);color:var(--blue)}
+.tl-icon.stage{background:var(--purple-light);color:var(--purple)}
+.tl-icon.create{background:var(--green-light);color:var(--green)}
+.tl-text{flex:1;line-height:1.4}
+.tl-link{color:var(--coral);text-decoration:none;font-size:12px}
+.tl-link:hover{text-decoration:underline}
+
+/* ── THEME TOGGLE ── */
+.theme-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:16px}
+.theme-btn:hover{border-color:var(--coral);color:var(--coral)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+  <div class="side">
+    <div class="side-logo">
+      <div class="logo-text">neovida<span class="logo-slash">/</span><span class="logo-product">sales</span></div>
+      <span class="side-role">РОП</span>
+    </div>
+    <div class="side-nav">
+      <div class="nav-section">Менеджер</div>
+      <div class="nav-item" data-href="SalesAI_Dashboard.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Дашборд</div>
+      <div class="nav-item" data-href="SalesAI_Call.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg> Звонок</div>
+      <div class="nav-item" data-href="SalesAI_CallLog.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Журнал</div>
+      <div class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg> <span style="color:var(--coral);font-weight:700">neo</span>CRM</div>
+      <div class="nav-item" data-href="SalesAI_Search.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Поиск</div>
+
+      <div class="nav-section">Руководитель</div>
+      <div class="nav-item" data-href="SalesAI_Admin.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> Команда</div>
+      <div class="nav-item" data-href="SalesAI_Settings.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Настройки</div>
+    </div>
+    <div class="side-bottom">
+      <div class="side-user">
+        <div class="side-avatar">ИС</div>
+        <div><div class="side-uname">Иван Смирнов</div><div class="side-urole">Руководитель ОП</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="top-bar">
+      <span class="top-title"><span style="color:var(--coral);font-weight:800">neo</span>vida CRM — Сделки</span>
+      <div class="top-right">
+        <div class="view-toggle"><button class="active">▦ Канбан</button><button>☰ Таблица</button></div>
+        <button class="btn btn-coral" onclick="document.getElementById('newModal').classList.add('open')">+ Новая сделка</button>
+        <button class="theme-btn" onclick="document.getElementById('app').classList.toggle('dark')">🌙</button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <select class="filter-select"><option>Все менеджеры</option><option>Игорь Петров</option><option>Мария Иванова</option><option>Алексей Сидоров</option></select>
+      <select class="filter-select"><option>Этот месяц</option><option>Эта неделя</option><option>Этот квартал</option><option>Всё время</option></select>
+      <div class="filter-stats">Всего: <b>12 сделок</b> на <b>2 340 000 ₽</b> · Прогноз: <b>~820 000 ₽</b></div>
+    </div>
+
+    <!-- KANBAN -->
+    <div class="kanban">
+
+      <!-- Новый лид -->
+      <div class="column">
+        <div class="col-head"><div class="col-dot" style="background:var(--muted)"></div><div class="col-name">Новый лид</div><div class="col-count">3</div><div class="col-sum">—</div></div>
+        <div class="col-body">
+          <div class="deal"><div class="deal-company">ООО «ПринтМастер»</div><div class="deal-contact">Сергей Козлов</div><div class="deal-amount">—</div><div class="deal-footer"><div class="deal-mgr"><div class="deal-ava" style="background:var(--blue)">АС</div> Алексей С.</div><div class="deal-date">сегодня</div></div><div class="deal-tags"><span class="deal-tag" style="background:var(--blue-light);color:var(--blue)">Холодный</span></div><div class="deal-meta"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg> 1 звонок · оценка 72</div></div>
+          <div class="deal"><div class="deal-company">ИП Волков</div><div class="deal-contact">Дмитрий Волков</div><div class="deal-amount">—</div><div class="deal-footer"><div class="deal-mgr"><div class="deal-ava" style="background:var(--purple)">МИ</div> Мария И.</div><div class="deal-date">вчера</div></div></div>
+          <div class="deal"><div class="deal-company">«СтройГрупп»</div><div class="deal-contact">Анна Белова</div><div class="deal-amount">—</div><div class="deal-footer"><div class="deal-mgr"><div class="deal-ava" style="background:var(--coral)">ИП</div> Игорь П.</div><div class="deal-date">2 дня</div></div><div class="deal-task"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Перезвонить завтра</div></div>
+        </div>
+      </div>
+
+      <div class="col-conv"><span>→</span>67%</div>
+
+      <!-- Квалификация -->
+      <div class="column">
+        <div class="col-head"><div class="col-dot" style="background:var(--blue)"></div><div class="col-name">Квалификация</div><div class="col-count">2</div><div class="col-sum">270 000 ₽</div></div>
+        <div class="col-body">
+          <div class="deal"><div class="deal-company">«МедиаЛаб»</div><div class="deal-contact">Елена Соколова</div><div class="deal-amount">180 000 ₽</div><div class="deal-footer"><div class="deal-mgr"><div class="deal-ava" style="background:var(--purple)">МИ</div> Мария И.</div><div class="deal-date">3 дня</div></div><div class="deal-tags"><span class="deal-tag" style="background:var(--amber-light);color:var(--amber)">Тёплый</span></div><div class="deal-meta"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg> 3 звонка · оценка 81</div><div class="deal-task"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Подготовить КП · завтра</div></div>
+          <div class="deal"><div class="deal-company">ООО «Фабрика»</div><div class="deal-contact">Олег Миронов</div><div class="deal-amount">90 000 ₽</div><div class="deal-footer"><div class="deal-mgr"><div class="deal-ava" style="background:var(--blue)">АС</div> Алексей С.</div><div class="deal-date">5 дней</div></div><div class="deal-task overdue"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> ⚠️ Перезвонить · просрочено</div></div>
+        </div>
+      </div>
+
+      <div class="col-conv"><span>→</span>57%</div>
+
+      <!-- Предложение -->
+      <div class="column">
+        <div class="col-head"><div class="col-dot" style="background:var(--amber)"></div><div class="col-name">КП отправлено</div><div class="col-count">3</div><div class="col-sum">745 000 ₽</div></div>
+        <div class="col-body">
+          <div class="deal" onclick="document.getElementById('detailModal').classList.add('open')" style="cursor:pointer"><div class="deal-company">ТехноЭкспо</div><div class="deal-contact">Алексей Петров</div><div class="deal-amount">450 000 ₽</div><div class="deal-footer"><div class="deal-mgr"><div class="deal-ava" style="background:var(--coral)">ИП</div> Игорь П.</div><div class="deal-date">2 дня</div></div><div class="deal-tags"><span class="deal-tag" style="background:var(--red-light);color:var(--red)">Горячий</span><span class="deal-tag" style="background:var(--green-light);color:var(--green)">VIP</span></div><div class="deal-meta"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg> 7 звонков · оценка 78</div><div class="deal-promise">⏰ Обещали макет до 14.02</div><div class="deal-task"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Согласовать скидку · сегодня</div></div>
+          <div class="deal"><div class="deal-company">«ЭкоСтрой»</div><div class="deal-contact">Виктор Лебедев</div><div class="deal-amount">220 000 ₽</div><div class="deal-footer"><div class="deal-mgr"><div class="deal-ava" style="background:var(--purple)">МИ</div> Мария И.</div><div class="deal-date">1 день</div></div></div>
+          <div class="deal"><div class="deal-company">ИП Кузнецов</div><div class="deal-contact">Павел Кузнецов</div><div class="deal-amount">75 000 ₽</div><div class="deal-footer"><div class="deal-mgr"><div class="deal-ava" style="background:var(--coral)">ИП</div> Игорь П.</div><div class="deal-date">4 дня</div></div></div>
+        </div>
+      </div>
+
+      <div class="col-conv"><span>→</span>38%</div>
+
+      <!-- Переговоры -->
+      <div class="column">
+        <div class="col-head"><div class="col-dot" style="background:var(--purple)"></div><div class="col-name">Переговоры</div><div class="col-count">2</div><div class="col-sum">475 000 ₽</div></div>
+        <div class="col-body">
+          <div class="deal"><div class="deal-company">«ДизайнПро»</div><div class="deal-contact">Наталья Орлова</div><div class="deal-amount">350 000 ₽</div><div class="deal-footer"><div class="deal-mgr"><div class="deal-ava" style="background:var(--coral)">ИП</div> Игорь П.</div><div class="deal-date">сегодня</div></div><div class="deal-meta"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg> 5 звонков · оценка 85</div><div class="deal-promise">⏰ Согласовать скидку 5%</div></div>
+          <div class="deal"><div class="deal-company">«АвтоЗапчасти»</div><div class="deal-contact">Роман Федоров</div><div class="deal-amount">125 000 ₽</div><div class="deal-footer"><div class="deal-mgr"><div class="deal-ava" style="background:var(--blue)">АС</div> Алексей С.</div><div class="deal-date">3 дня</div></div></div>
+        </div>
+      </div>
+
+      <div class="col-conv"><span>→</span>15%</div>
+
+      <!-- Закрыто (выиграно) -->
+      <div class="column">
+        <div class="col-head"><div class="col-dot" style="background:var(--green)"></div><div class="col-name">Закрыто ✓</div><div class="col-count">1</div><div class="col-sum" style="color:var(--green)">280 000 ₽</div></div>
+        <div class="col-body">
+          <div class="deal" style="border-left:3px solid var(--green)"><div class="deal-company">«РекламаПлюс»</div><div class="deal-contact">Ирина Новикова</div><div class="deal-amount" style="color:var(--green)">280 000 ₽</div><div class="deal-footer"><div class="deal-mgr"><div class="deal-ava" style="background:var(--purple)">МИ</div> Мария И.</div><div class="deal-date">вчера</div></div></div>
+        </div>
+      </div>
+
+      <!-- Закрыто (проиграно) -->
+      <div class="column">
+        <div class="col-head"><div class="col-dot" style="background:var(--red)"></div><div class="col-name">Проиграно ✗</div><div class="col-count">1</div></div>
+        <div class="col-body">
+          <div class="deal" style="border-left:3px solid var(--red);opacity:.7"><div class="deal-company">ООО «Гарант»</div><div class="deal-contact">Максим Егоров</div><div class="deal-amount" style="color:var(--red);text-decoration:line-through">170 000 ₽</div><div class="deal-footer"><div class="deal-mgr"><div class="deal-ava" style="background:var(--blue)">АС</div> Алексей С.</div><div class="deal-date">3 дня</div></div><div class="deal-meta" style="color:var(--red)">✗ Выбрали конкурента</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal: New Deal -->
+<div class="modal-bg" id="newModal">
+  <div class="modal">
+    <div class="modal-head"><h2>Новая сделка</h2><button class="modal-close" onclick="this.closest('.modal-bg').classList.remove('open')">✕</button></div>
+    <div class="modal-body">
+      <div class="fg"><label>Клиент *</label><input type="text" placeholder="Имя, телефон или ИНН..."></div>
+      <div class="fg"><label>Название сделки</label><input type="text" placeholder="Например: Баннеры для выставки"></div>
+      <div class="fg-row"><div class="fg"><label>Сумма, ₽</label><input type="number" placeholder="0"></div><div class="fg"><label>Этап</label><select><option>Новый лид</option><option>Квалификация</option><option>Предложение</option><option>Переговоры</option></select></div></div>
+      <div class="fg-row"><div class="fg"><label>Ответственный</label><select><option>Игорь Петров</option><option>Мария Иванова</option><option>Алексей Сидоров</option></select></div><div class="fg"><label>Ожидаемое закрытие</label><input type="date"></div></div>
+      <div class="fg"><label>Комментарий</label><textarea rows="2" placeholder="Заметки..."></textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="this.closest('.modal-bg').classList.remove('open')">Отмена</button><button class="btn btn-coral" onclick="this.closest('.modal-bg').classList.remove('open')">Создать</button></div>
+  </div>
+</div>
+
+<!-- Modal: Deal Detail -->
+<div class="modal-bg" id="detailModal">
+  <div class="modal" style="width:640px">
+    <div class="modal-head"><h2>ТехноЭкспо — 450 000 ₽</h2><button class="modal-close" onclick="this.closest('.modal-bg').classList.remove('open')">✕</button></div>
+    <div class="modal-body">
+      <div class="fg-row">
+        <div class="fg"><label>Клиент</label><div style="font-size:15px;font-weight:600">Алексей Петров</div><div style="font-size:13px;color:var(--text2)">+7 (495) 123-45-67 · ИНН 7701234567</div></div>
+        <div class="fg"><label>Этап</label><select style="color:var(--amber);font-weight:600"><option>Новый лид</option><option>Квалификация</option><option selected>Предложение</option><option>Переговоры</option><option>Закрыто (выиграно)</option><option>Закрыто (проиграно)</option></select></div>
+      </div>
+      <div class="fg-row"><div class="fg"><label>Сумма, ₽</label><input type="number" value="450000"></div><div class="fg"><label>Ответственный</label><select><option selected>Игорь Петров</option><option>Мария Иванова</option></select></div></div>
+      <div class="fg-row"><div class="fg"><label>Создана</label><div style="font-size:14px">10.02.2026</div></div><div class="fg"><label>Ожидаемое закрытие</label><input type="date" value="2026-03-01"></div></div>
+      <div class="fg"><label>Комментарий</label><textarea rows="2">50 ролл-апов к выставке 1 марта. Обсуждали скидку 10% при заказе от 30 шт.</textarea></div>
+      <div class="timeline">
+        <label style="font-size:12px;color:var(--text2);font-weight:500">История</label>
+        <div class="tl-item"><div class="tl-date">14.02 14:23</div><div class="tl-icon call">📞</div><div class="tl-text">Звонок 5:12, оценка 78. Обсудили сроки, клиент запросил макет. <a class="tl-link" href="#">Открыть досье →</a></div></div>
+        <div class="tl-item"><div class="tl-date">12.02 11:30</div><div class="tl-icon stage">→</div><div class="tl-text">Этап: Квалификация → <span style="color:var(--amber)">Предложение</span></div></div>
+        <div class="tl-item"><div class="tl-date">12.02 11:15</div><div class="tl-icon call">📞</div><div class="tl-text">Звонок 8:34, оценка 82. Отправили КП на 450 000 ₽. <a class="tl-link" href="#">Открыть досье →</a></div></div>
+        <div class="tl-item"><div class="tl-date">10.02 16:40</div><div class="tl-icon call">📞</div><div class="tl-text">Звонок 4:22, оценка 75. Выявление потребностей. <a class="tl-link" href="#">Открыть досье →</a></div></div>
+        <div class="tl-item"><div class="tl-date">10.02 11:40</div><div class="tl-icon create">+</div><div class="tl-text">Сделка создана (из звонка)</div></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn" style="color:var(--red);border-color:var(--red)">Удалить</button><div style="flex:1"></div><button class="btn" onclick="this.closest('.modal-bg').classList.remove('open')">Отмена</button><button class="btn btn-coral" onclick="this.closest('.modal-bg').classList.remove('open')">Сохранить</button></div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.nav-item[data-href]').forEach(function(n){n.addEventListener('click',function(){window.location.href=this.dataset.href})});
+</script>
+</body>
+</html>

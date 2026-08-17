@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neovida - SalesAI</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+  --amber:#C4943A;--amber-light:#FBF5EA;
+}
+.dark{
+  --bg:#1C1B19;--surface:#262523;--surface-alt:#2E2D2A;
+  --border:#3A3835;--text:#E8E4DD;--text2:#9B958E;--muted:#6B665F;
+  --coral-light:#2e1f1a;--green-light:#1a2e1f;
+  --blue-light:#1a2535;--purple-light:#251a30;--amber-light:#2e2a1a;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes slideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glowCoral{0%,100%{box-shadow:0 0 0 2px rgba(224,116,97,.3)}50%{box-shadow:0 0 0 5px rgba(224,116,97,.12)}}
+@keyframes glowBlue{0%,100%{box-shadow:0 0 0 2px rgba(91,142,196,.3)}50%{box-shadow:0 0 0 5px rgba(91,142,196,.12)}}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.app{display:flex;flex-direction:column;height:100vh;background:var(--bg)}
+
+.icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.icon svg{width:16px;height:16px;stroke-width:2;stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.icon-sm svg{width:13px;height:13px}
+
+/* STATUS BAR */
+.status-bar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.status-left{display:flex;align-items:center;gap:14px}
+.logo{display:flex;align-items:center;padding-right:20px;border-right:1px solid var(--border);margin-right:6px}
+.logo-text{font-size:22px;font-weight:800;letter-spacing:-.4px;color:var(--text);line-height:1;display:flex;align-items:baseline}
+.logo-slash{color:var(--coral);font-weight:300;margin:0 1px}.logo-product{font-weight:400;color:var(--coral)}
+.status-live{display:flex;align-items:center;gap:7px;background:var(--green-light);padding:3px 10px;border-radius:16px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.status-live span{font-size:12px;color:var(--green);font-weight:600}
+.status-name{font-size:15px;font-weight:600;color:var(--text)}
+.status-time{font-size:13px;color:var(--text2);font-family:monospace;background:var(--surface-alt);padding:3px 10px;border-radius:5px}
+.status-btns{display:flex;gap:6px;align-items:center}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:7px;padding:7px 14px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.btn-ghost:hover{border-color:var(--text2)}
+.btn-coral{background:var(--coral);color:#fff;border:none;border-radius:7px;padding:7px 18px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
+.btn-coral:hover{background:var(--coral-dark)}
+
+/* PANELS */
+.main{flex:1;display:flex;overflow:hidden}
+.panel{display:flex;flex-direction:column;overflow:hidden}
+.panel-left{flex:.85;border-right:1px solid var(--border)}
+.panel-center{flex:1.4;border-right:1px solid var(--border)}
+.panel-right{flex:.75}
+.panel-header{padding:12px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.panel-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;display:flex;align-items:center;gap:6px}
+.panel-body{flex:1;overflow-y:auto;padding:10px 14px}
+
+/* TRANSCRIPT */
+.msg{padding:7px 12px;border-radius:8px;margin-bottom:5px;animation:slideIn .3s ease;transition:opacity .5s}
+.msg.faded{opacity:.3;cursor:default}
+.msg.faded:hover{opacity:1;transition:opacity .15s ease}
+.msg-manager{background:var(--green-light);border-left:2px solid var(--green)}
+.msg-client{background:var(--amber-light);border-left:2px solid var(--amber)}
+.msg-head{display:flex;justify-content:space-between;margin-bottom:2px}
+.msg-speaker{font-size:11px;font-weight:600;letter-spacing:.3px}
+.msg-speaker.manager{color:var(--green)}
+.msg-speaker.client{color:var(--amber)}
+.msg-time{font-size:10px;color:var(--muted);font-family:monospace}
+.msg-text{font-size:14px;line-height:1.5;color:var(--text)}
+
+/* PROMPTS */
+.prompt{border-radius:12px;padding:14px 16px;margin-bottom:9px;border-left:3px solid;transition:all .5s ease;position:relative}
+.prompt.faded{opacity:.25;transform:scale(.97);cursor:default}
+.prompt.faded:hover{opacity:1;transform:scale(1);transition:all .15s ease}
+.prompt.active.glow-coral{animation:glowCoral 2s ease infinite}
+.prompt.active.glow-blue{animation:glowBlue 2s ease infinite}
+.prompt-script{background:var(--blue-light);border-color:var(--blue)}
+.prompt-objection{background:var(--coral-light);border-color:var(--coral)}
+.prompt-knowledge{background:var(--purple-light);border-color:var(--purple)}
+.prompt-positive{background:var(--green-light);border-color:var(--green)}
+.prompt-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.prompt-label{font-size:11px;font-weight:600;letter-spacing:.5px}
+.prompt-badge{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600}
+.prompt-stage-ref{font-size:10px;background:var(--blue-light);border:1px solid rgba(91,142,196,.2);padding:2px 7px;border-radius:5px;color:var(--blue);font-weight:600}
+.prompt-text{font-size:15px;line-height:1.6;color:var(--text)}
+.prompt-dismiss{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;opacity:0;transition:opacity .2s;display:flex;padding:2px}
+.prompt:hover .prompt-dismiss{opacity:1}
+.cursor-blink{display:inline-block;width:2px;height:14px;margin-left:1px;vertical-align:text-bottom;animation:blink .7s infinite}
+.prompt-new{position:absolute;top:-6px;right:12px;background:var(--coral);color:#fff;font-size:8px;font-weight:700;padding:2px 8px;border-radius:8px;letter-spacing:.5px;text-transform:uppercase}
+.prompt.faded .prompt-new{display:none}
+
+.listening{display:flex;align-items:center;gap:5px;background:var(--coral-light);padding:2px 8px;border-radius:10px}
+.listening-dot{width:4px;height:4px;border-radius:50%;background:var(--coral);animation:pulse 1.5s infinite}
+.listening span{font-size:11px;color:var(--coral);font-weight:500}
+
+/* CRM CARD — variant C */
+.crm-card{border-radius:14px;overflow:hidden;display:flex;border:1px solid var(--border);background:var(--surface);margin-bottom:10px}
+.crm-bar{width:4px;flex-shrink:0;background:linear-gradient(180deg,var(--coral),var(--purple))}
+.crm-body{padding:14px 16px;flex:1}
+.crm-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.crm-name{font-size:15px;font-weight:600;color:var(--text)}
+.crm-company{font-size:12px;color:var(--text2);margin-bottom:8px}
+.crm-inline{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.crm-stat{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:3px}
+.crm-dot{width:3px;height:3px;border-radius:50%;background:var(--muted)}
+.crm-warmth{font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px}
+.warmth-hot{background:var(--coral-light);color:var(--coral)}
+.crm-actions{display:flex;gap:4px}
+.crm-btn{font-size:11px;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--text2);display:inline-flex;align-items:center;gap:4px}
+.crm-btn:hover{border-color:var(--blue);color:var(--blue)}
+.crm-btn-primary{background:var(--blue-light);color:var(--blue);border-color:transparent}
+.crm-btn-primary:hover{background:var(--blue);color:#fff}
+.crm-expanded{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:none}
+.crm-expanded.show{display:block;animation:fadeIn .3s ease}
+.crm-section-title{font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;margin-top:8px}
+.crm-deal{padding:6px 8px;background:var(--surface-alt);border-radius:6px;border:1px solid var(--border);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;font-size:11px}
+.crm-deal-amount{font-weight:600;color:var(--green);font-family:monospace}
+.crm-deal-stage{font-size:9px;color:var(--text2);padding:1px 5px;background:var(--surface);border-radius:3px}
+.crm-detail{font-size:11px;color:var(--text2);line-height:1.7;display:flex;align-items:center;gap:6px;margin-bottom:2px}
+
+/* KNOWLEDGE */
+.k-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;transition:border-color .15s,opacity .5s}
+.k-card.faded{opacity:.3;cursor:default}
+.k-card.faded:hover{opacity:1;transition:opacity .15s ease}
+.k-card:hover{border-color:rgba(139,110,181,.3)}
+.k-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.k-title{font-size:13.5px;font-weight:600;color:var(--text)}
+.k-price{font-size:15px;font-weight:700;color:var(--green);font-family:monospace;white-space:nowrap}
+.k-details{font-size:12.5px;line-height:1.5;color:var(--text2);margin-bottom:3px}
+.k-source{font-size:10px;color:var(--muted)}
+.k-section-title{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+
+/* SCRIPT BAR */
+.script-bar{border-top:1px solid var(--border);background:var(--surface);padding:12px 32px 14px;flex-shrink:0}
+.script-progress{display:flex;align-items:center;justify-content:center}
+.script-track{display:flex;align-items:center;width:100%;max-width:800px;position:relative}
+.script-line-bg{position:absolute;top:14px;left:24px;right:24px;height:3px;background:var(--border);border-radius:2px;z-index:0}
+.script-line-fill{position:absolute;top:14px;left:24px;height:3px;background:linear-gradient(90deg,var(--blue),var(--coral));border-radius:2px;z-index:1;transition:width .6s ease}
+.script-nodes{display:flex;align-items:flex-start;justify-content:space-between;width:100%;position:relative;z-index:2}
+.script-node{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1}
+.script-circle{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid transparent;transition:all .4s ease}
+.script-circle.done{background:var(--blue);color:#fff;border-color:var(--blue)}
+.script-circle.active{background:#fff;color:var(--coral);border-color:var(--coral);box-shadow:0 0 0 4px var(--coral-light),0 2px 8px rgba(224,116,97,.2);animation:glowCoral 2.5s ease infinite}
+.dark .script-circle.active{background:var(--surface)}
+.script-circle.pending{background:var(--surface-alt);color:var(--muted);border-color:var(--border)}
+.script-node-label{font-size:11.5px;font-weight:500;text-align:center;max-width:85px;line-height:1.2}
+.script-node-label.done{color:var(--blue)}
+.script-node-label.active{color:var(--coral);font-weight:700}
+.script-node-label.pending{color:var(--muted)}
+
+/* CONTROLS */
+.controls{position:fixed;bottom:76px;right:16px;display:flex;flex-direction:column;gap:6px;z-index:100}
+.btn-ctrl{width:38px;height:38px;border-radius:10px;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.06);color:var(--text2)}
+.btn-ctrl:hover{border-color:var(--coral);color:var(--coral)}
+.btn-demo{background:var(--coral);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(224,116,97,.3);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.btn-demo:hover{transform:scale(1.03)}
+
+/* LEGEND */
+.legend{position:fixed;top:64px;right:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.06);display:none;width:230px}
+.legend.show{display:block;animation:fadeIn .2s ease}
+.legend-title{font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px;color:var(--text2)}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <div class="status-left">
+      <div class="logo">
+        <div class="logo-text">neovida<span class="logo-slash">/</span><span class="logo-product">sales</span></div>
+      </div>
+      <div class="status-live"><div class="status-dot"></div><span>Активен</span></div>
+      <span class="status-name">Алексей Петров — ТехноЭкспо</span>
+      <span class="status-time" id="timer">00:47</span>
+    </div>
+    <div class="status-btns">
+      <button class="btn-ghost">
+        <span class="icon icon-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></span>Не рабочий
+      </button>
+      <button class="btn-coral">
+        <span class="icon icon-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10.68 13.31a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0124 20.92v3a2 2 0 01-2.18 2A21.79 21.79 0 013 3.18 2 2 0 015 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 8.91"/><line x1="1" y1="1" x2="23" y2="23"/></svg></span>Завершить
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN PANELS -->
+  <div class="main">
+
+    <!-- LEFT: Transcript -->
+    <div class="panel panel-left">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="icon" style="color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></span>
+          Транскрипция
+        </div>
+      </div>
+      <div class="panel-body" id="transcript"></div>
+    </div>
+
+    <!-- CENTER: Prompts -->
+    <div class="panel panel-center">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="icon" style="color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></span>
+          Подсказки
+        </div>
+        <div class="listening"><div class="listening-dot"></div><span>Слушаю</span></div>
+      </div>
+      <div class="panel-body" id="prompts"></div>
+    </div>
+
+    <!-- RIGHT: Client + Knowledge -->
+    <div class="panel panel-right">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="icon" style="color:var(--blue)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+          Клиент
+        </div>
+      </div>
+      <div class="panel-body">
+
+        <!-- CRM Card -->
+        <div class="crm-card">
+          <div class="crm-bar"></div>
+          <div class="crm-body">
+            <div class="crm-row">
+              <div>
+                <div class="crm-name">Алексей Петров</div>
+                <div class="crm-company">ТехноЭкспо ООО</div>
+              </div>
+              <span class="crm-warmth warmth-hot">Тёплый</span>
+            </div>
+            <div class="crm-inline">
+              <span class="crm-stat"><span class="icon icon-sm" style="color:var(--blue)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></span>2 сделки</span>
+              <span class="crm-dot"></span>
+              <span class="crm-stat"><span class="icon icon-sm" style="color:var(--green)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.11 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></span>+7 (495) 123-45-67</span>
+              <span class="crm-dot"></span>
+              <span class="crm-stat"><span class="icon icon-sm" style="color:var(--amber)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>Звонил 05.02</span>
+            </div>
+            <div class="crm-actions">
+              <button class="crm-btn" id="crmToggleBtn"><span class="icon icon-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>Подробнее</button>
+              <button class="crm-btn crm-btn-primary"><span class="icon icon-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span>В CRM</button>
+            </div>
+            <div class="crm-expanded" id="crmExpanded">
+              <div class="crm-section-title">Сделки</div>
+              <div class="crm-deal"><div>Стенд ExpoTech <span class="crm-deal-stage">Переговоры</span></div><span class="crm-deal-amount">280K</span></div>
+              <div class="crm-deal"><div>Визитки + буклеты <span class="crm-deal-stage">Согласование</span></div><span class="crm-deal-amount">45K</span></div>
+              <div class="crm-section-title">Контакт</div>
+              <div class="crm-detail"><span class="icon icon-sm" style="color:var(--blue)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a7d7c2d3d5c8d1e7d3c2c4cfc9c8c2dfd7c889d5d2">[email&#160;protected]</a></div>
+              <div class="crm-detail"><span class="icon icon-sm" style="color:var(--purple)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></span>Директор по маркетингу</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="knowledge"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT BAR -->
+  <div class="script-bar">
+    <div class="script-progress">
+      <div class="script-track">
+        <div class="script-line-bg"></div>
+        <div class="script-line-fill" id="scriptFill"></div>
+        <div class="script-nodes" id="scriptNodes"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend" id="legend">
+    <div class="legend-title">Цвета подсказок</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Скрипт — куда вести разговор</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--coral)"></div>Возражение — реагируй!</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Каталог — цены, данные</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Позитив — клиент готов</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Пауза — заполни тишину</div>
+    <div style="margin-top:8px;padding-top:6px;border-top:1px solid var(--border)">
+      <div class="legend-title">Яркость = актуальность</div>
+      <div class="legend-item" style="opacity:.25">Тусклое — обработано</div>
+      <div class="legend-item" style="font-weight:600">Яркое — внимание</div>
+    </div>
+  </div>
+
+  <!-- CONTROL BUTTONS -->
+  <div class="controls">
+    <button class="btn-ctrl" id="legendBtn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></button>
+    <button class="btn-ctrl" id="themeBtn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+    <button class="btn-demo" id="demoBtn"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>Демо</button>
+  </div>
+
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ═══ ICONS ═══
+var IC = {
+  script: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  objection: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  knowledge: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>',
+  positive: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+  search: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  x: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  sun: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+  moon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>'
+};
+
+// ═══ DATA ═══
+var STAGES = [
+  {id:1, name:"Приветствие", st:"done"},
+  {id:2, name:"Потребность", st:"done"},
+  {id:3, name:"Квалификация", st:"active"},
+  {id:4, name:"Презентация", st:"pending"},
+  {id:5, name:"Возражения", st:"pending"},
+  {id:6, name:"Закрытие", st:"pending"}
+];
+
+var INIT_MSGS = [
+  {s:"client", t:"Здравствуйте, мне нужно заказать рекламную продукцию для выставки.", ts:"14:23:01"},
+  {s:"manager", t:"Добрый день! Подскажите, какая выставка и когда?", ts:"14:23:05"},
+  {s:"client", t:"ExpoTech в апреле. Баннеры, флаги, промо-материалы.", ts:"14:23:12"},
+  {s:"manager", t:"Отлично. Какой бюджет на это направление?", ts:"14:23:18"},
+  {s:"client", t:"Где-то 200-300 тысяч. Зависит от предложения.", ts:"14:23:25"}
+];
+
+var DEMO_MSGS = [
+  {s:"client", t:"А ещё нас интересуют ролл-апы. Сколько стоит ролл-ап 200 на 80?", ts:"14:23:42"},
+  {s:"manager", t:"Ролл-ап 200 на 80 — уточню стоимость.", ts:"14:23:48"},
+  {s:"client", t:"И доставку до выставочного центра делаете?", ts:"14:24:02"}
+];
+
+// ═══ RENDER ═══
+function renderMsg(m) {
+  return '<div class="msg msg-' + m.s + '"><div class="msg-head"><span class="msg-speaker ' + m.s + '">' + (m.s === 'manager' ? 'Менеджер' : 'Клиент') + '</span><span class="msg-time">' + m.ts + '</span></div><div class="msg-text">' + m.t + '</div></div>';
+}
+
+function renderScriptBar() {
+  var html = '';
+  for (var i = 0; i < STAGES.length; i++) {
+    var s = STAGES[i];
+    html += '<div class="script-node"><div class="script-circle ' + s.st + '">' + (s.st === 'done' ? '&#10003;' : s.id) + '</div><div class="script-node-label ' + s.st + '">' + s.name + '</div></div>';
+  }
+  document.getElementById('scriptNodes').innerHTML = html;
+  var ai = 0;
+  for (var j = 0; j < STAGES.length; j++) {
+    if (STAGES[j].st === 'active') { ai = j; break; }
+  }
+  document.getElementById('scriptFill').style.width = (ai / (STAGES.length - 1) * 100) + '%';
+}
+
+function fadeOldMsgs(container, keep) {
+  var msgs = container.querySelectorAll('.msg');
+  for (var i = 0; i < msgs.length; i++) {
+    if (i < msgs.length - keep) msgs[i].classList.add('faded');
+    else msgs[i].classList.remove('faded');
+  }
+}
+
+function addPrompt(p) {
+  var CATS = {
+    script:    {l:"Скрипт",    ic:IC.script,    c:"blue",   g:"glow-blue"},
+    objection: {l:"Возражение", ic:IC.objection, c:"coral",  g:"glow-coral"},
+    knowledge: {l:"Каталог",    ic:IC.knowledge, c:"purple", g:""},
+    positive:  {l:"Позитив",    ic:IC.positive,  c:"green",  g:""}
+  };
+  var cat = CATS[p.cat] || CATS.script;
+  var container = document.getElementById('prompts');
+
+  // Fade old
+  var old = container.querySelectorAll('.prompt');
+  for (var i = 0; i < old.length; i++) {
+    old[i].classList.add('faded');
+    old[i].classList.remove('active');
+  }
+
+  var badge = p.priority === 'high' ? '<span class="prompt-badge" style="background:var(--' + cat.c + '-light);color:var(--' + cat.c + ')">Важно</span>' : '';
+  var stRef = p.stageRef ? '<span class="prompt-stage-ref">Этап ' + p.stageRef + '</span>' : '';
+
+  var div = document.createElement('div');
+  div.className = 'prompt prompt-' + p.cat + ' active ' + cat.g;
+  div.innerHTML = '<span class="prompt-new">Новая</span>' +
+    '<button class="prompt-dismiss" title="Убрать">' + IC.x + '</button>' +
+    '<div class="prompt-head"><span style="color:var(--' + cat.c + ')">' + cat.ic + '</span>' +
+    '<span class="prompt-label" style="color:var(--' + cat.c + ')">' + cat.l + '</span>' + badge + stRef + '</div>' +
+    '<div class="prompt-text"' + (p.id ? ' id="' + p.id + '"' : '') + '>' + (p.text || '') + '</div>';
+
+  // Dismiss button
+  div.querySelector('.prompt-dismiss').addEventListener('click', function() {
+    div.style.transition = 'opacity .3s, transform .3s';
+    div.style.opacity = '0';
+    div.style.transform = 'translateX(20px)';
+    setTimeout(function() { div.remove(); }, 300);
+  });
+
+  // Remove NEW badge after 5s
+  setTimeout(function() {
+    var n = div.querySelector('.prompt-new');
+    if (n) n.remove();
+  }, 5000);
+
+  container.prepend(div);
+  return div;
+}
+
+function streamText(el, text, speed) {
+  return new Promise(function(resolve) {
+    var i = 0;
+    el.innerHTML = '';
+    var cursor = document.createElement('span');
+    cursor.className = 'cursor-blink';
+    cursor.style.background = 'var(--purple)';
+    var iv = setInterval(function() {
+      if (i < text.length) {
+        el.textContent = text.slice(0, i + 1);
+        el.appendChild(cursor);
+        i++;
+      } else {
+        clearInterval(iv);
+        cursor.remove();
+        resolve();
+      }
+    }, speed || 18);
+  });
+}
+
+// ═══ INIT ═══
+function init() {
+  var tp = document.getElementById('transcript');
+  var html = '';
+  for (var i = 0; i < INIT_MSGS.length; i++) html += renderMsg(INIT_MSGS[i]);
+  tp.innerHTML = html;
+  fadeOldMsgs(tp, 3);
+  document.getElementById('prompts').innerHTML = '';
+  addPrompt({cat:"script", priority:"normal", stageRef:"3", text:"Уточните объём заказа: сколько единиц каждого вида? Это поможет предложить скидку."});
+  renderScriptBar();
+}
+
+// ═══ TIMER ═══
+var sec = 47;
+setInterval(function() {
+  sec++;
+  var m = Math.floor(sec / 60);
+  var s = sec % 60;
+  document.getElementById('timer').textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}, 1000);
+
+// ═══ THEME ═══
+var isDark = false;
+document.getElementById('themeBtn').addEventListener('click', function() {
+  isDark = !isDark;
+  document.getElementById('app').classList.toggle('dark', isDark);
+  this.innerHTML = isDark ? IC.sun : IC.moon;
+});
+
+// ═══ LEGEND ═══
+var legendOpen = false;
+document.getElementById('legendBtn').addEventListener('click', function() {
+  legendOpen = !legendOpen;
+  document.getElementById('legend').classList.toggle('show', legendOpen);
+});
+
+// ═══ CRM TOGGLE ═══
+var crmOpen = false;
+document.getElementById('crmToggleBtn').addEventListener('click', function() {
+  crmOpen = !crmOpen;
+  document.getElementById('crmExpanded').classList.toggle('show', crmOpen);
+  this.innerHTML = crmOpen
+    ? '<span class="icon icon-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg></span>Свернуть'
+    : '<span class="icon icon-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>Подробнее';
+});
+
+// ═══ DEMO ═══
+var demoRun = false;
+document.getElementById('demoBtn').addEventListener('click', function() {
+  if (demoRun) return;
+  demoRun = true;
+  this.style.display = 'none';
+
+  var tp = document.getElementById('transcript');
+
+  // Objection prompt
+  addPrompt({cat:"objection", priority:"high", text:"Клиент назвал бюджет 200-300К. Предложите «Выставка под ключ» — закроет потребности в рамках бюджета."});
+
+  // Messages with delay
+  var msgIdx = 0;
+  function nextMsg() {
+    if (msgIdx >= DEMO_MSGS.length) {
+      setTimeout(showKnowledge, 500);
+      return;
+    }
+    setTimeout(function() {
+      tp.insertAdjacentHTML('beforeend', renderMsg(DEMO_MSGS[msgIdx]));
+      fadeOldMsgs(tp, 3);
+      tp.lastElementChild.scrollIntoView({behavior:'smooth'});
+      msgIdx++;
+      nextMsg();
+    }, 1300);
+  }
+  setTimeout(function() { nextMsg(); }, 2000);
+
+  function showKnowledge() {
+    document.getElementById('knowledge').innerHTML =
+      '<div class="k-section-title">' + IC.search + ' Найдено в каталоге</div>' +
+      '<div class="k-card" style="animation:fadeIn .3s ease"><div class="k-top"><span class="k-title">Ролл-ап Premium 200x80</span><span class="k-price">4 800</span></div><div class="k-details">Алюминий, сумка, 720dpi. Срок 3 дня.</div><span class="k-source">Каталог 2026</span></div>' +
+      '<div class="k-card" style="animation:fadeIn .3s ease .1s both"><div class="k-top"><span class="k-title">Баннер виниловый</span><span class="k-price">890/м2</span></div><div class="k-details">Винил 440г, люверсы. Срок 2 дня.</div><span class="k-source">Каталог 2026</span></div>';
+
+    setTimeout(function() {
+      var p1 = addPrompt({id:'s1', cat:'knowledge', priority:'high', text:''});
+      streamText(document.getElementById('s1'), 'Ролл-ап Premium 200x80: 4 800 руб (от 5 шт. — 4 200). Доставка бесплатно от 15 000.', 18).then(function() {
+        setTimeout(function() {
+          var p2 = addPrompt({id:'s2', cat:'script', priority:'normal', stageRef:'3', text:''});
+          streamText(document.getElementById('s2'), 'Клиент вовлечён. Спросите: «Нужны раздаточные — буклеты, визитки? На ExpoTech это +30% к конверсии стенда.»', 18).then(function() {
+            setTimeout(function() {
+              addPrompt({cat:'positive', text:'Клиент задал 3+ воп

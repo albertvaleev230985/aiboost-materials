@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neovida — Пост-звонок</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+  --amber:#F09030;--amber-light:#FEF4E8;
+}
+.dark{
+  --bg:#1C1B19;--surface:#262523;--surface-alt:#2E2D2A;
+  --border:#3A3835;--text:#D5D0C9;--text2:#8A857E;--muted:#5E5A54;
+  --coral:#D4806F;--coral-light:#2D2220;--coral-dark:#B5635A;
+  --green:#6DAF85;--green-light:#1E2B22;
+  --blue:#7DA3C9;--blue-light:#1E2630;
+  --purple:#9A84BA;--purple-light:#262030;
+  --amber:#D9A050;--amber-light:#2A2418;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.app{display:flex;flex-direction:column;height:100vh;background:var(--bg)}
+
+/* ── TOP BAR ── */
+.top{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.top-left{display:flex;align-items:center;gap:14px}
+.logo{display:flex;align-items:center;padding-right:20px;border-right:1px solid var(--border);margin-right:6px}
+.logo-text{font-size:22px;font-weight:800;letter-spacing:-.4px;color:var(--text);line-height:1;display:flex;align-items:baseline}
+.logo-slash{color:var(--coral);font-weight:300;margin:0 1px}.logo-product{font-weight:400;color:var(--coral)}
+.top-badge{display:flex;align-items:center;gap:6px;background:var(--surface-alt);padding:4px 12px;border-radius:16px;font-size:13px;color:var(--text2);font-weight:600;border:1px solid var(--border)}
+.top-info{font-size:15px;color:var(--text2)}
+.top-info b{color:var(--text);font-weight:600}
+.top-right{display:flex;gap:8px}
+.btn{border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;border:none}
+.btn-outline{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--text2)}
+.btn-green{background:var(--coral);color:#fff}
+.btn-green:hover{background:var(--coral-dark)}
+
+/* ── LAYOUT ── */
+.main{flex:1;display:flex;overflow:hidden}
+.col{display:flex;flex-direction:column;overflow:hidden}
+.col-left{flex:1;border-right:1px solid var(--border)}
+.col-right{flex:1}
+.col-head{padding:12px 20px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.col-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;display:flex;align-items:center;gap:6px}
+.col-body{flex:1;overflow-y:auto;padding:16px 20px}
+
+/* ── SCORE ── */
+.score{display:flex;align-items:center;gap:18px;padding:16px 20px;background:var(--surface);border-radius:14px;border:1px solid var(--border);margin-bottom:12px}
+.score-num{width:72px;height:72px;position:relative;flex-shrink:0}
+.score-num svg{transform:rotate(-90deg)}
+.score-ring-bg{fill:none;stroke:var(--border);stroke-width:5}
+.score-ring-fill{fill:none;stroke-width:5;stroke-linecap:round}
+.score-val{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800}
+.score-good .score-ring-fill{stroke:var(--green)}
+.score-good .score-val{color:var(--green)}
+.score-mid .score-ring-fill{stroke:var(--amber)}
+.score-mid .score-val{color:var(--amber)}
+.score-bad .score-ring-fill{stroke:var(--coral)}
+.score-bad .score-val{color:var(--coral)}
+.score-body{flex:1}
+.score-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px}
+.score-tags{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.score-tag{font-size:13px;display:flex;align-items:center;gap:4px}
+.stg{color:var(--green)}
+.stb{color:var(--coral)}
+.score-expand{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--purple);font-weight:600;cursor:pointer;padding:4px 0;margin-top:2px}
+.score-expand:hover{opacity:.8}
+
+/* ── RECOMMENDATIONS ── */
+.reco{display:none;margin-bottom:14px}
+.reco.show{display:block;animation:fadeIn .3s ease}
+.ri{padding:14px 16px;border-radius:12px;margin-bottom:8px;border-left:3px solid}
+.ri-bad{background:var(--coral-light);border-color:var(--coral)}
+.ri-tip{background:var(--amber-light);border-color:var(--amber)}
+.ri-good{background:var(--green-light);border-color:var(--green)}
+.ri-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ri-title{font-size:14px;font-weight:600;color:var(--text);flex:1}
+.ri-ts{font-size:11px;color:var(--muted);font-family:monospace;background:var(--surface-alt);padding:2px 8px;border-radius:5px}
+.ri-text{font-size:14px;line-height:1.6;color:var(--text2);margin-bottom:8px}
+.ri-quote{font-size:13px;color:var(--muted);font-style:italic;display:flex;align-items:flex-start;gap:6px;padding:8px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)}
+
+/* ── SECTIONS ── */
+.sec{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}
+
+/* ── SPEECH BLOCK ── */
+.speech-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.speech-head{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.speech-head:hover{background:var(--surface-alt)}
+.speech-head-left{display:flex;align-items:center;gap:8px}
+.speech-head-title{font-size:14px;font-weight:600;color:var(--text)}
+.speech-body{padding:0 18px 16px}
+.speech-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.speech-metric{text-align:center;padding:12px 8px;border-radius:10px;background:var(--surface-alt)}
+.speech-metric-val{font-size:22px;font-weight:800;margin-bottom:2px}
+.speech-metric-label{font-size:11px;color:var(--text2);font-weight:500}
+.speech-metric-norm{font-size:10px;color:var(--muted);margin-top:2px}
+.speech-metric.warn .speech-metric-val{color:var(--amber)}
+.speech-metric.bad .speech-metric-val{color:var(--coral)}
+.speech-metric.ok .speech-metric-val{color:var(--green)}
+
+.filler-table{width:100%;margin-bottom:14px}
+.filler-table th{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.filler-table th:last-child{text-align:right}
+.filler-table td{padding:8px 10px;font-size:14px;border-bottom:1px solid var(--border)}
+.filler-table td:last-child{text-align:right}
+.filler-word{font-weight:600;color:var(--text)}
+.filler-count{font-weight:700;padding:2px 8px;border-radius:5px;font-size:13px}
+.filler-high{background:var(--coral-light);color:var(--coral)}
+.filler-mid{background:var(--amber-light);color:var(--amber)}
+.filler-low{background:var(--green-light);color:var(--green)}
+
+.filler-context{margin-bottom:10px}
+.filler-ctx-item{padding:10px 12px;border-radius:8px;background:var(--surface-alt);margin-bottom:6px;font-size:13px;line-height:1.6;color:var(--text2);cursor:pointer;transition:all .15s;border:1px solid transparent}
+.filler-ctx-item:hover{border-color:var(--border);background:var(--surface)}
+.filler-ctx-item .filler-hl{background:var(--coral-light);color:var(--coral);font-weight:600;padding:1px 4px;border-radius:3px}
+.filler-ctx-ts{font-size:11px;color:var(--muted);font-family:monospace;margin-right:8px}
+
+.speech-neo{display:flex;gap:10px;padding:12px 14px;border-radius:10px;background:var(--purple-light);border:1px solid rgba(139,110,181,.12)}
+.speech-neo-icon{width:28px;height:28px;border-radius:8px;background:var(--purple);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:12px;font-weight:800}
+.speech-neo-text{font-size:13px;line-height:1.6;color:var(--text)}
+
+/* ── COMPETITORS ── */
+.comp-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.comp-item{padding:12px 16px;border-bottom:1px solid var(--border)}
+.comp-item:last-child{border-bottom:none}
+.comp-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.comp-name{font-size:15px;font-weight:700;color:var(--text)}
+.comp-tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:5px}
+.comp-tag-price{background:var(--coral-light);color:var(--coral)}
+.comp-tag-speed{background:var(--amber-light);color:var(--amber)}
+.comp-tag-quality{background:var(--blue-light);color:var(--blue)}
+.comp-tag-unknown{background:var(--surface-alt);color:var(--text2)}
+.comp-quote{font-size:13px;color:var(--text2);font-style:italic;padding:8px 12px;background:var(--surface-alt);border-radius:8px;border-left:3px solid var(--border);margin-bottom:8px;display:flex;align-items:flex-start;gap:6px}
+.comp-quote svg{flex-shrink:0;margin-top:1px}
+.comp-advantage{font-size:13px;color:var(--green);display:flex;align-items:flex-start;gap:6px;padding:6px 10px;background:var(--green-light);border-radius:8px}
+.comp-advantage svg{flex-shrink:0;margin-top:1px}
+.comp-summary{padding:12px 16px;background:var(--purple-light);font-size:13px;color:var(--text2);line-height:1.6;display:flex;gap:10px;border:1px solid rgba(139,110,181,.12)}
+.comp-summary-icon{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--purple),#6B4E95);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:12px;font-weight:800}
+.sec-head{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.sec-head:hover{background:var(--surface-alt)}
+.sec-left{display:flex;align-items:center;gap:8px}
+.sec-name{font-size:14px;font-weight:600;color:var(--text)}
+.sec-chev{color:var(--muted);transition:transform .2s}
+.sec-chev.up{transform:rotate(180deg)}
+.sec-body{padding:0 18px 16px}
+.sec-body.hide{display:none}
+
+/* ── FIELDS ── */
+.fld{margin-bottom:10px}
+.fld-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.fld-val{font-size:15px;color:var(--text);line-height:1.5;padding:7px 12px;border-radius:8px;border:1px solid transparent;transition:border-color .15s;cursor:text;min-height:30px}
+.fld-val:hover{border-color:var(--border)}
+.fld-val:focus{outline:none;border-color:var(--blue);background:var(--blue-light)}
+.fld-row{display:flex;gap:12px}
+.fld-row .fld{flex:1}
+
+/* ── TAGS ── */
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:4px 11px;border-radius:8px;font-weight:500}
+.tag-bl{background:var(--blue-light);color:var(--blue)}
+.tag-gr{background:var(--green-light);color:var(--green)}
+.tag-co{background:var(--coral-light);color:var(--coral)}
+.tag-am{background:var(--amber-light);color:var(--amber)}
+.tag-pu{background:var(--purple-light);color:var(--purple)}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;margin-top:6px}
+.tbl th{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+.tbl td{font-size:14px;color:var(--text);padding:9px 10px;border-bottom:1px solid var(--border)}
+.tbl tr:last-child td{border:none;font-weight:600}
+.tbl-total{font-size:16px;font-weight:700;color:var(--green);font-family:monospace}
+
+/* ── STEPS ── */
+.stp{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--surface-alt);border-radius:10px;margin-bottom:6px}
+.stp-box{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-top:1px;transition:all .15s}
+.stp-box.on{background:var(--green);border-color:var(--green);color:#fff}
+.stp-txt{font-size:14px;color:var(--text);line-height:1.5}
+.stp-meta{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* ── TRANSCRIPT ── */
+.tm{padding:8px 12px;border-radius:8px;margin-bottom:5px}
+.tm-m{background:var(--green-light);border-left:2px solid var(--green)}
+.tm-c{background:var(--amber-light);border-left:2px solid var(--amber)}
+.tm-top{display:flex;justify-content:space-between;margin-bottom:2px}
+.tm-who{font-size:12px;font-weight:600}
+.tm-who.manager{color:var(--green)}
+.tm-who.client{color:var(--amber)}
+.tm-ts{font-size:11px;color:var(--muted);font-family:monospace}
+.tm-txt{font-size:14px;line-height:1.5;color:var(--text)}
+.tm-search{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface-alt);border-radius:10px;margin-bottom:12px;border:1px solid var(--border)}
+.tm-search input{border:none;background:transparent;flex:1;font-size:14px;color:var(--text);outline:none}
+.tm-search input::placeholder{color:var(--muted)}
+
+/* ── CRM BOTTOM ── */
+.crm-bot{height:44px;border-top:1px solid var(--border);background:var(--surface);display:flex;align-items:center;padding:0 24px;flex-shrink:0}
+.crm-bot-left{display:flex;align-items:center;gap:8px}
+
+/* ── CONTROLS ── */
+.ctrls{position:fixed;bottom:20px;right:20px;z-index:100}
+.btn-c{width:40px;height:40px;border-radius:10px;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.06);color:var(--text2)}
+.btn-c:hover{border-color:var(--coral);color:var(--coral)}
+
+/* SVG icon helper */
+.ic{display:inline-flex;align-items:center;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <div class="top">
+    <div class="top-left">
+      <div class="logo"><div class="logo-text">neovida<span class="logo-slash">/</span><span class="logo-product">sales</span></div></div>
+      <div class="top-badge">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Звонок завершён
+      </div>
+      <span class="top-info"><b>Алексей Петров</b> — ТехноЭкспо — 4:23</span>
+    </div>
+    <div class="top-right">
+      <button class="btn-c" id="themeBtn" style="width:34px;height:34px;border-radius:8px"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+      <button class="btn btn-outline" id="btnBack">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        К списку звонков
+      </button>
+      <button class="btn btn-green" id="btnCRM">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Отправить в CRM
+      </button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- LEFT -->
+    <div class="col col-left">
+      <div class="col-head">
+        <div class="col-title">
+          <span class="ic" style="color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+          Досье сделки
+        </div>
+        <span style="font-size:12px;color:var(--purple);font-weight:500">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>Neo заполнил — проверьте и отправьте</span>
+      </div>
+      <div class="col-body">
+
+        <!-- SCORE -->
+        <div class="score">
+          <div class="score-num score-mid" id="scoreRing" data-value="78">
+            <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72">
+              <circle class="score-ring-bg" cx="36" cy="36" r="32"/>
+              <circle class="score-ring-fill" id="ringFill" cx="36" cy="36" r="32" stroke-dasharray="201.06" stroke-dashoffset="201.06"/>
+            </svg>
+            <div class="score-val" id="scoreVal">0</div>
+          </div>
+          <div class="score-body">
+            <div class="score-title">Оценка звонка</div>
+            <div class="score-tags">
+              <span class="score-tag stg"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Выявил потребность</span>
+              <span class="score-tag stg"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Квалифицировал</span>
+              <span class="score-tag stg"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Предложил допы</span>
+              <span class="score-tag stg"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Назначил следующий шаг</span>
+            </div>
+            <div class="score-expand" id="recoToggle">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+              Рекомендации Neo &nbsp;
+              <svg xmlns="http://www.w3.org/2000/svg" id="recoChev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECOMMENDATIONS -->
+        <div class="reco" id="recoPanel">
+          <div class="ri ri-bad">
+            <div class="ri-head">
+              <span class="ic" style="color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>
+              <span class="ri-title">Не предложил допродажу</span>
+              <span class="ri-ts">14:23:38</span>
+            </div>
+            <div class="ri-text">Когда клиент перечислил «баннеры, флаги, ролл-апы» — идеальный момент спросить: «А раздаточные материалы нужны? Буклеты и визитки на выставке увеличивают конверсию стенда на 30%.» Клиент уже в режиме закупки — сопутствующие товары воспринимаются как забота.</div>
+            <div class="ri-quote">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+              Клиент: «Ролл-апов штук 5, баннеров 2-3 больших, и флаги нужны.»
+            </div>
+          </div>
+          <div class="ri ri-tip">
+            <div class="ri-head">
+              <span class="ic" style="color:var(--amber)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></span>
+              <span class="ri-title">Можно было закрепить бюджет</span>
+              <span class="ri-ts">14:23:25</span>
+            </div>
+            <div class="ri-text">Клиент сказал «200-300 тысяч, зависит от предложения». Хороший ход — зафиксировать верхнюю границу: «Отлично, подготовлю оптимальный вариант в рамках 300 тысяч.» Это психологически закрепляет бюджет на максимуме.</div>
+            <div class="ri-quote">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+              Клиент: «Где-то 200-300 тысяч. Зависит от предложения.»
+            </div>
+          </div>
+          <div class="ri ri-good">
+            <div class="ri-head">
+              <span class="ic" style="color:var(--green)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+              <span class="ri-title">Хорошо назначил следующий шаг</span>
+              <span class="ri-ts">14:24:15</span>
+            </div>
+            <div class="ri-text">Конкретика: «КП с тремя вариантами сегодня до 18:00, перезвоню завтра в 10.» Это создаёт обязательство с обеих сторон и не оставляет сделку подвешенной. Отличная работа.</div>
+            <div class="ri-quote">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+              Менеджер: «Подготовлю КП с тремя вариантами и отправлю сегодня.»
+            </div>
+          </div>
+        </div>
+
+        <!-- SPEECH & COMMUNICATION -->
+        <div class="speech-card">
+          <div class="speech-head" onclick="this.nextElementSibling.classList.toggle('hide');this.querySelector('.sec-chev').classList.toggle('up')">
+            <div class="speech-head-left">
+              <span class="ic" style="color:var(--purple)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></span>
+              <span class="speech-head-title">Речь и коммуникация</span>
+              <span class="tag tag-am" style="margin-left:8px;font-size:11px">12 слов-паразитов</span>
+            </div>
+            <span class="sec-chev up"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+          </div>
+          <div class="speech-body">
+
+            <!-- Metrics -->
+            <div class="speech-metrics">
+              <div class="speech-metric bad">
+                <div class="speech-metric-val">12</div>
+                <div class="speech-metric-label">Слова-паразиты</div>
+                <div class="speech-metric-norm">норма: до 5</div>
+              </div>
+              <div class="speech-metric warn">
+                <div class="speech-metric-val">174</div>
+                <div class="speech-metric-label">Слов/мин</div>
+                <div class="speech-metric-norm">норма: 120–150</div>
+              </div>
+              <div class="speech-metric ok">
+                <div class="speech-metric-val">1</div>
+                <div class="speech-metric-label">Длинные паузы</div>
+                <div class="speech-metric-norm">более 5 сек</div>
+              </div>
+            </div>
+
+            <!-- Filler words table -->
+            <table class="filler-table">
+              <thead>
+                <tr>
+                  <th>Слово</th>
+                  <th style="text-align:right">Кол-во</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="filler-word">э-э</td>
+                  <td><span class="filler-count filler-high">5</span></td>
+                </tr>
+                <tr>
+                  <td class="filler-word">ну</td>
+                  <td><span class="filler-count filler-high">4</span></td>
+                </tr>
+                <tr>
+                  <td class="filler-word">как бы</td>
+                  <td><span class="filler-count filler-mid">2</span></td>
+                </tr>
+                <tr>
+                  <td class="filler-word">короче</td>
+                  <td><span class="filler-count filler-low">1</span></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Contexts — clickable fragments -->
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Примеры в контексте <span style="font-weight:400;text-transform:none;letter-spacing:0">(нажмите чтобы перейти в транскрипцию)</span></div>
+            <div class="filler-context">
+              <div class="filler-ctx-item" onclick="alert('Переход к 02:15 в транскрипции')">
+                <span class="filler-ctx-ts">02:15</span>
+                «...и мы можем предложить вам, <span class="filler-hl">э-э</span>, баннерную рекламу с полной...»
+              </div>
+              <div class="filler-ctx-item" onclick="alert('Переход к 03:42 в транскрипции')">
+                <span class="filler-ctx-ts">03:42</span>
+                «<span class="filler-hl">Ну</span>, по ценам это будет <span class="filler-hl">как бы</span> зависеть от тиража...»
+              </div>
+              <div class="filler-ctx-item" onclick="alert('Переход к 04:18 в транскрипции')">
+                <span class="filler-ctx-ts">04:18</span>
+                «Сроки, <span class="filler-hl">э-э</span>, <span class="filler-hl">ну</span>, обычно 3-5 рабочих дней...»
+              </div>
+              <div class="filler-ctx-item" onclick="alert('Переход к 04:55 в транскрипции')">
+                <span class="filler-ctx-ts">04:55</span>
+                «<span class="filler-hl">Короче</span>, я вам подготовлю <span class="filler-hl">э-э</span> три варианта...»
+              </div>
+              <div class="filler-ctx-item" onclick="alert('Переход к 05:30 в транскрипции')">
+                <span class="filler-ctx-ts">05:30</span>
+                «<span class="filler-hl">Ну</span>, давайте я <span class="filler-hl">э-э</span> всё посчитаю и отправлю...»
+              </div>
+            </div>
+
+            <!-- Neo recommendation -->
+            <div class="speech-neo">
+              <div class="speech-neo-icon">N</div>
+              <div class="speech-neo-text">Вы часто используете «э-э» в момент перехода между темами — когда вспоминаете цену или характеристику. Попробуйте короткую паузу (1-2 сек) вместо заполнения — это звучит увереннее и профессиональнее. Темп речи выше нормы — старайтесь замедляться при озвучивании цен и условий, клиенту нужно время записать.</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- CLIENT -->
+        <div class="sec">
+          <div class="sec-head">
+            <div class="sec-left">
+              <span class="ic" style="color:var(--blue)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+              <span class="sec-name">Клиент</span>
+            </div>
+            <span class="sec-chev up"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+          </div>
+          <div class="sec-body">
+            <div class="fld-row"><div class="fld"><div class="fld-label">Имя</div><div class="fld-val" contenteditable="true">Алексей Петров</div></div><div class="fld"><div class="fld-label">Должность</div><div class="fld-val" contenteditable="true">Директор по маркетингу</div></div></div>
+            <div class="fld-row"><div class="fld"><div class="fld-label">Компания</div><div class="fld-val" contenteditable="true">ТехноЭкспо ООО</div></div><div class="fld"><div class="fld-label">Отрасль</div><div class="fld-val" contenteditable="true">Выставки / Event</div></div></div>
+            <div class="fld-row"><div class="fld"><div class="fld-label">Телефон</div><div class="fld-val" contenteditable="true">+7 (495) 123-45-67</div></div><div class="fld"><div class="fld-label">Email</div><div class="fld-val" contenteditable="true"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="90e0f5e4e2ffe6d0e4f5f3f8fefff5e8e0ffbee2e5">[email&#160;protected]</a></div></div></div>
+          </div>
+        </div>
+
+        <!-- NEED -->
+        <div class="sec">
+          <div class="sec-head">
+            <div class="sec-left">
+              <span class="ic" style="color:var(--purple)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+              <span class="sec-name">Потребность</span>
+            </div>
+            <span class="sec-chev up"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+          </div>
+          <div class="sec-body">
+            <div class="fld"><div class="fld-label">Что нужно</div><div class="fld-val" contenteditable="true">Баннеры, флаги, ролл-апы, промо-материалы для выставки ExpoTech (апрель 2026)</div></div>
+            <div class="fld"><div class="fld-label">Зачем</div><div class="fld-val" contenteditable="true">Оформление выставочного стенда, привлечение посетителей</div></div>
+            <div class="fld-row"><div class="fld"><div class="fld-label">Дедлайн</div><div class="fld-val" contenteditable="true">Апрель 2026</div></div><div class="fld"><div class="fld-label">Бюджет</div><div class="fld-val" contenteditable="true">200 000 — 300 000 руб</div></div></div>
+          </div>
+        </div>
+
+        <!-- COMPETITORS -->
+        <div class="comp-card">
+          <div class="sec-head" onclick="this.nextElementSibling.classList.toggle('hide');this.querySelector('.sec-chev').classList.toggle('up')">
+            <div class="sec-left">
+              <span class="ic" style="color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></span>
+              <span class="sec-name">Конкуренты</span>
+              <span class="tag tag-co" style="margin-left:8px;font-size:11px">2 упоминания</span>
+            </div>
+            <span class="sec-chev up"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+          </div>
+          <div class="sec-body" style="padding:0">
+
+            <!-- Competitor 1 -->
+            <div class="comp-item">
+              <div class="comp-header">
+                <span class="comp-name">Принт Сервис</span>
+                <span class="comp-tag comp-tag-price">Цена</span>
+              </div>
+              <div class="comp-quote">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+                <span>Клиент: «Мы ещё с Принт Сервис общаемся, они вроде дешевле процентов на 15.»</span>
+              </div>
+              <div class="comp-advantage">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Наше преимущество: срок 3 дня vs 7, гарантия цветопередачи по Pantone, бесплатная доставка до объекта</span>
+              </div>
+            </div>
+
+            <!-- Competitor 2 -->
+            <div class="comp-item">
+              <div class="comp-header">
+                <span class="comp-name">Неизвестный конкурент</span>
+                <span class="comp-tag comp-tag-unknown">Не назван</span>
+                <span class="comp-tag comp-tag-speed">Сроки</span>
+              </div>
+              <div class="comp-quote">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+                <span>Клиент: «Нам ещё одна компания обещала за 2 дня всё сделать, но я не уверен в качестве.»</span>
+              </div>
+              <div class="comp-advantage">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Клиент сам выразил сомнение в качестве — акцентируйте портфолио и отзывы</span>
+              </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="comp-summary">
+              <div class="comp-summary-icon">N</div>
+              <div><b>Конкурентная ситуация:</b> клиент активно сравнивает, основной фактор — цена. Менеджер не отработал возражение по цене Принт Сервис. Рекомендация: в КП добавить сравнительную таблицу «цена vs ценность» с акцентом на сроки, гарантии и доставку.</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- QUALIFICATION -->
+        <div class="sec">
+          <div class="sec-head">
+            <div class="sec-left">
+              <span class="ic" style="color:var(--amber)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg></span>
+              <span class="sec-name">Квалификация</span>
+            </div>
+            <span class="sec-chev up"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+          </div>
+          <div class="sec-body">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+              <span class="tag tag-gr">ЛПР: Да</span>
+              <span class="tag tag-am">Стадия: Сравнивает</span>
+              <span class="tag tag-co">Температура: Тёплый</span>
+              <span class="tag tag-pu">Вероятность: 65%</span>
+            </div>
+            <div class="fld"><div class="fld-label">Особые условия</div><div class="fld-val" contenteditable="true">Интересуется доставкой до выставочного центра</div></div>
+          </div>
+        </div>
+
+        <!-- CALCULATION -->
+        <div class="sec">
+          <div class="sec-head">
+            <div class="sec-left">
+              <span class="ic" style="color:var(--green)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+              <span class="sec-name">Расчёт</span>
+            </div>
+            <span class="sec-chev up"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+          </div>
+          <div class="sec-body">
+            <table class="tbl">
+              <tr><th>Позиция</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr>
+              <tr><td>Ролл-ап Premium 200x80</td><td>5 шт</td><td>4 200</td><td>21 000</td></tr>
+              <tr><td>Баннер виниловый 3x2м</td><td>3 шт</td><td>5 340</td><td>16 020</td></tr>
+              <tr><td>Флаг с логотипом</td><td>10 шт</td><td>1 800</td><td>18 000</td></tr>
+              <tr><td colspan="3" style="text-align:right">Итого:</td><td><span class="tbl-total">55 020</span></td></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- NEXT STEPS -->
+        <div class="sec">
+          <div class="sec-head">
+            <div class="sec-left">
+              <span class="ic" style="color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+              <span class="sec-name">Следующие шаги</span>
+            </div>
+            <span class="sec-chev up"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+          </div>
+          <div class="sec-body">
+            <div class="stp"><div class="stp-box on"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="stp-txt">Подготовить КП с 3 вариантами (базовый / оптимальный / премиум)</div><div class="stp-meta">Сегодня до 18:00 — отправить на <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="80f0e5f4f2eff6c0f4e5e3e8eeefe5f8f0efaef2f5">[email&#160;protected]</a></div></div></div>
+            <div class="stp"><div class="stp-box"></div><div><div class="stp-txt">Перезвонить для обсуждения КП</div><div class="stp-meta">Завтра, 10:00 — создать задачу в CRM</div></div></div>
+            <div class="stp"><div class="stp-box"></div><div><div class="stp-txt">Уточнить точные размеры баннеров</div><div class="stp-meta">При следующем контакте</div></div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Transcript -->
+    <div class="col col-right">
+      <div class="col-head">
+        <div class="col-title">
+          <span class="ic" style="color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></span>
+          Транскрипция
+        </div>
+        <span style="font-size:12px;color:var(--muted)">4:23 — 12 реплик</span>
+      </div>
+      <div class="col-body" id="tBody">
+        <div class="tm-search">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#B5AFA8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Поиск по транскрипции..." id="tSearch">
+        </div>
+        <div id="tList"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CRM STATUS -->
+  <div class="crm-bot">
+    <div class="crm-bot-left">
+      <span class="ic" style="color:var(--green)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+      <span style="font-size:13px;color:var(--text2)">Битрикс24 подключен</span>
+      <span style="font-size:12px;color:var(--muted)">— контакт, сделка и задача будут созданы автоматически</span>
+    </div>
+  </div>
+
+
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+(function(){
+  // ── Transcript ──
+  var msgs = [
+    {s:"manager",t:"Добрый день! Подскажите, какая выставка и когда?",ts:"14:23:05"},
+    {s:"client",t:"ExpoTech в апреле. Баннеры, флаги, промо-материалы.",ts:"14:23:12"},
+    {s:"manager",t:"Отлично. Какой бюджет на это направление?",ts:"14:23:18"},
+    {s:"client",t:"Где-то 200-300 тысяч. Зависит от предложения.",ts:"14:23:25"},
+    {s:"manager",t:"Понял. А сколько единиц каждого вида планируете?",ts:"14:23:32"},
+    {s:"client",t:"Ролл-апов штук 5, баннеров 2-3 больших, и флаги нужны.",ts:"14:23:38"},
+    {s:"client",t:"А ещё нас интересуют ролл-апы. Сколько стоит ролл-ап 200 на 80?",ts:"14:23:42"},
+    {s:"manager",t:"Ролл-ап Premium 200 на 80 — 4 800 рублей, от 5 штук 4 200.",ts:"14:23:48"},
+    {s:"client",t:"И доставку до выставочного центра делаете?",ts:"14:24:02"},
+    {s:"manager",t:"Да, доставка бесплатно при заказе от 15 000. Давайте я подготовлю КП с тремя вариантами и отправлю вам сегодня.",ts:"14:24:15"},
+    {s:"client",t:"Хорошо, давайте. Жду на почту.",ts:"14:24:22"},
+    {s:"manager",t:"Отлично! Отправлю до 18:00. Завтра в 10 перезвоню обсудить. Спасибо, Алексей!",ts:"14:24:30"}
+  ];
+  var html = '';
+  for(var i=0;i<msgs.length;i++){
+    var m=msgs[i];
+    html+='<div class="tm tm-'+(m.s==='manager'?'m':'c')+'"><div class="tm-top"><span class="tm-who '+m.s+'">'+(m.s==='manager'?'Менеджер':'Клиент')+'</span><span class="tm-ts">'+m.ts+'</span></div><div class="tm-txt">'+m.t+'</div></div>';
+  }
+  document.getElementById('tList').innerHTML=html;
+
+  // ── Search ──
+  document.getElementById('tSearch').addEventListener('input',function(){
+    var q=this.value.toLowerCase();
+    var items=document.querySelectorAll('.tm');
+    for(var i=0;i<items.length;i++){
+      var txt=items[i].querySelector('.tm-txt').textContent.toLowerCase();
+      items[i].style.display=(!q||txt.indexOf(q)!==-1)?'':'none';
+    }
+  });
+
+  // ── Score ring animation with color transitions ──
+  var scoreValue = 87;
+  var radius = 32;
+  var circumference = 2 * Math.PI * radius;
+  var ring = document.getElementById('ringFill');
+  var valEl = document.getElementById('scoreVal');
+  var scoreEl = document.getElementById('scoreRing');
+
+  function getScoreColor(val) {
+    if (val < 70) return 'bad';
+    if (val < 85) return 'mid';
+    return 'good';
+  }
+
+  // Animate step by step
+  var current = 0;
+  var duration = 1800; // ms total
+  var steps = scoreValue;
+  var interval = duration / steps;
+
+  setTimeout(function() {
+    var timer = setInterval(function() {
+      current++;
+      if (current > scoreValue) {
+        current = scoreValue;
+        clearInterval(timer);
+      }
+
+      // Update number
+      valEl.textContent = current;
+
+      // Update ring fill
+      var offset = circumference - (current / 100) * circumference;
+      ring.style.strokeDashoffset = offset;
+      ring.style.transition = 'none';
+
+      // Update color class dynamically
+      var colorClass = getScoreColor(current);
+      scoreEl.className = 'score-num score-' + colorClass;
+
+    }, interval);
+  }, 400);
+
+  // ── Reco toggle ──
+  document.getElementById('recoToggle').addEventListener('click',function(){
+    var p=document.getElementById('recoPanel');
+    var c=document.getElementById('recoChev');
+    p.classList.toggle('show');
+    c.style.transform=p.classList.contains('show')?'rotate(180deg)':'';
+  });
+
+  // ── Section toggles ──
+  var heads=document.querySelectorAll('.sec-head');
+  for(var i=0;i<heads.length;i++){
+    heads[i].addEventListener('click',function(){
+      var body=this.nextElementSibling;
+      var chev=this.querySelector('.sec-chev');
+      body.classList.toggle('hide');
+      chev.classList.toggle('up');
+    });
+  }
+
+  // ── Step checkboxes ──
+  var boxes=document.querySelectorAll('.stp-box');
+  for(var i=0;i<boxes.length;i++){
+    boxes[i].addEventListener('click',function(){
+      this.classList.toggle('on');
+      this.innerHTML=this.classList.contains('on')?'<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'';
+    });
+  }
+
+  // ── Send CRM ──
+  document.getElementById('btnCRM').addEventListener('click',function(){
+    var self=this;
+    self.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Отправлено!';
+    self.style.background='var(--coral-dark)';
+    setTimeout(function(){
+      self.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Отправить в CRM';
+      self.style.background='';
+    },2000);
+  });
+
+  // ── Theme ──
+  var dark=false;
+  document.getElementById('themeBtn').addEventListener('click',function(){
+    dark=!dark;
+    document.getElementById('app').classList.toggle('dark',dark);
+    this.innerHTML=dark
+      ?'<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1=

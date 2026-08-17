@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neovida — Онбординг менеджера</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+.container{width:100%;max-width:480px;animation:fadeIn .4s ease}
+.logo{font-size:24px;font-weight:800;letter-spacing:-.4px;text-align:center;margin-bottom:32px}
+.logo-slash{color:var(--coral);font-weight:300;margin:0 1px}
+.logo-product{font-weight:400;color:var(--coral)}
+.steps{display:flex;align-items:center;gap:8px;margin-bottom:24px;justify-content:center}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .2s}
+.step-dot.active{background:var(--coral);width:24px;border-radius:4px}
+.step-dot.done{background:var(--green)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:16px}
+.card-title{font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px}
+.card-sub{font-size:14px;color:var(--text2);margin-bottom:24px}
+
+/* Neo block */
+.neo{display:flex;gap:10px;padding:14px 16px;background:var(--purple-light);border:1px solid rgba(139,110,181,.1);border-radius:10px;margin-bottom:20px}
+.neo-ava{width:28px;height:28px;border-radius:8px;background:var(--purple);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
+.neo-text{font-size:13px;color:var(--text2);line-height:1.6}
+.neo-text b{color:var(--text)}
+
+/* Inputs */
+.field{margin-bottom:16px}
+.field-label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.field-input{width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:10px;font-size:15px;color:var(--text);background:var(--surface);font-family:inherit;transition:border-color .15s}
+.field-input:hover{border-color:var(--coral)}
+.field-input:focus{border-color:var(--coral);outline:none}
+.field-input::placeholder{color:var(--muted)}
+.field-pass-wrap{position:relative}
+.field-pass-wrap .field-input{padding-right:44px}
+.pass-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;transition:color .15s}
+.pass-toggle:hover{color:var(--coral)}
+
+/* Avatar upload */
+.ava-upload{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.ava-circle{width:72px;height:72px;border-radius:50%;background:var(--surface-alt);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s;flex-shrink:0;overflow:hidden}
+.ava-circle:hover{border-color:var(--coral)}
+.ava-circle svg{color:var(--muted)}
+.ava-info{flex:1}
+.ava-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px}
+.ava-hint{font-size:12px;color:var(--text2);line-height:1.5}
+
+/* Buttons */
+.btn-primary{width:100%;padding:14px;border-radius:10px;border:none;background:var(--coral);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;margin-top:8px}
+.btn-primary:hover{background:var(--coral-dark)}
+.btn-ghost{width:100%;padding:14px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;margin-top:8px}
+.btn-ghost:hover{border-color:var(--coral);color:var(--coral)}
+.skip{margin-top:12px;text-align:center;font-size:12px;color:var(--muted);cursor:pointer;transition:color .15s}
+.skip:hover{color:var(--coral)}
+
+/* Test call preview */
+.call-preview{background:var(--surface-alt);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+.call-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.call-ava{width:36px;height:36px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.call-name{font-size:14px;font-weight:600;color:var(--text)}
+.call-role{font-size:12px;color:var(--text2)}
+.call-hints{display:flex;flex-direction:column;gap:6px}
+.call-hint{padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.5}
+.call-hint-blue{background:var(--blue-light);border-left:3px solid var(--blue);color:var(--text)}
+.call-hint-purple{background:var(--purple-light);border-left:3px solid var(--purple);color:var(--text)}
+
+/* Checklist */
+.checklist{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.check-item{display:flex;align-items:center;gap:10px;font-size:14px}
+.check-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px}
+.check-done{background:var(--green-light);color:var(--green)}
+.check-pending{background:var(--surface-alt);color:var(--muted)}
+
+.footer{text-align:center;font-size:11px;color:var(--muted);margin-top:24px}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="logo">neovida<span class="logo-slash">/</span><span class="logo-product">sales</span></div>
+
+  <!-- STEP 1: Change password -->
+  <div id="step1">
+    <div class="steps"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div>
+    <div class="card">
+      <div class="card-title">Добро пожаловать!</div>
+      <div class="card-sub">Шаг 1 из 3 — смените временный пароль</div>
+
+      <div class="neo">
+        <div class="neo-ava">N</div>
+        <div class="neo-text"><b>Привет! Я Neo, ваш AI-помощник.</b> Буду подсказывать вам во время звонков — цены, характеристики, ответы на возражения. Но сначала настроим ваш аккаунт.</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Текущий пароль (временный)</label>
+        <div class="field-pass-wrap">
+          <input class="field-input" type="password" placeholder="Пароль от руководителя" id="p1">
+          <button class="pass-toggle" onclick="togglePass('p1')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Новый пароль</label>
+        <div class="field-pass-wrap">
+          <input class="field-input" type="password" placeholder="Минимум 8 символов" id="p2">
+          <button class="pass-toggle" onclick="togglePass('p2')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Повторите новый пароль</label>
+        <div class="field-pass-wrap">
+          <input class="field-input" type="password" placeholder="Ещё раз" id="p3">
+          <button class="pass-toggle" onclick="togglePass('p3')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="showStep(2)">Далее →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Photo + name -->
+  <div id="step2" style="display:none">
+    <div class="steps"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div>
+    <div class="card">
+      <div class="card-title">Ваш профиль</div>
+      <div class="card-sub">Шаг 2 из 3 — фото и контакты</div>
+
+      <div class="neo">
+        <div class="neo-ava">N</div>
+        <div class="neo-text">Фото будет видно руководителю и коллегам на дашборде и в рейтинге. Можно загрузить позже в настройках.</div>
+      </div>
+
+      <div class="ava-upload">
+        <div class="ava-circle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="ava-info">
+          <div class="ava-title">Загрузить фото</div>
+          <div class="ava-hint">JPG или PNG, до 5 МБ. Будет видно коллегам и руководителю.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Имя (как вас видят коллеги)</label>
+        <input class="field-input" type="text" value="Анна Козлова">
+      </div>
+      <div class="field">
+        <label class="field-label">Телефон (рабочий)</label>
+        <input class="field-input" type="tel" placeholder="+7 (___) ___-__-__">
+      </div>
+
+      <button class="btn-primary" onclick="showStep(3)">Далее →</button>
+      <div class="skip" onclick="showStep(3)">Пропустить, настрою позже</div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Test call -->
+  <div id="step3" style="display:none">
+    <div class="steps"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div></div>
+    <div class="card">
+      <div class="card-title">Тестовый звонок</div>
+      <div class="card-sub">Шаг 3 из 3 — попробуйте как работают подсказки</div>
+
+      <div class="neo">
+        <div class="neo-ava">N</div>
+        <div class="neo-text"><b>Давайте попробуем!</b> Я покажу как выглядят подсказки во время звонка. Это тестовый звонок — ничего не записывается, ошибаться можно.</div>
+      </div>
+
+      <div class="call-preview">
+        <div class="call-header">
+          <div class="call-ava">🤖</div>
+          <div>
+            <div class="call-name">Тестовый клиент</div>
+            <div class="call-role">AI-бот · тренировочный звонок</div>
+          </div>
+        </div>
+        <div class="call-hints">
+          <div class="call-hint call-hint-blue">
+            <div style="font-size:10px;font-weight:600;color:var(--blue);margin-bottom:4px">ПОДСКАЗКА ПО СКРИПТУ</div>
+            Начните с приветствия: представьтесь и назовите компанию. Спросите с кем вы разговариваете.
+          </div>
+          <div class="call-hint call-hint-purple">
+            <div style="font-size:10px;font-weight:600;color:var(--purple);margin-bottom:4px">БАЗА ЗНАНИЙ</div>
+            Ролл-ап 85×200 см — 4 200 руб. Срок: 1 день. Экосольвентная печать 1440 dpi.
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="showStep(4)">Начать тестовый звонок →</button>
+      <div class="skip" onclick="showStep(4)">Пропустить, начну работать</div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Done -->
+  <div id="step4" style="display:none">
+    <div class="steps"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div></div>
+    <div class="card" style="text-align:center">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+      <div class="card-title">Всё готово, Анна!</div>
+      <div class="card-sub" style="max-width:320px;margin:0 auto 20px">Ваш аккаунт настроен. Когда начнётся звонок — я буду рядом с подсказками.</div>
+
+      <div class="checklist">
+        <div class="check-item"><div class="check-icon check-done">✓</div> Пароль изменён</div>
+        <div class="check-item"><div class="check-icon check-done">✓</div> Профиль заполнен</div>
+        <div class="check-item"><div class="check-icon check-done">✓</div> Тестовый звонок пройден</div>
+      </div>
+
+      <div class="neo">
+        <div class="neo-ava">N</div>
+        <div class="neo-text">Я подготовил интерактивный тур по интерфейсу — покажу где что находится. Это займёт 2 минуты. Или можете начать работать сразу, а тур пройти позже.</div>
+      </div>
+
+      <button class="btn-primary" onclick="alert('→ Интерактивный тур')">Пройти тур по интерфейсу</button>
+      <button class="btn-ghost" onclick="alert('→ Кабинет менеджера')">Начать работать →</button>
+    </div>
+  </div>
+
+  <div class="footer">neovida.ai · © 2026</div>
+</div>
+
+<script>
+function showStep(n){
+  for(var i=1;i<=4;i++){
+    var el=document.getElementById('step'+i);
+    if(el) el.style.display=i===n?'block':'none';
+    if(i===n && el) el.style.animation='slideIn .3s ease';
+  }
+}
+function togglePass(id){
+  var inp=document.getElementById(id);
+  inp.type=inp.type==='password'?'text':'password';
+}
+</script>
+</body>
+</html>

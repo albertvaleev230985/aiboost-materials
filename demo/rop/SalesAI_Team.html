@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neovida — Команда</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+  --amber:#F09030;--amber-light:#FEF4E8;
+}
+.dark{
+  --bg:#1C1B19;--surface:#262523;--surface-alt:#2E2D2A;
+  --border:#3A3835;--text:#D5D0C9;--text2:#8A857E;--muted:#5E5A54;
+  --coral:#D4806F;--coral-light:#2D2220;--coral-dark:#B5635A;
+  --green:#6DAF85;--green-light:#1E2B22;
+  --blue:#7DA3C9;--blue-light:#1E2630;
+  --purple:#9A84BA;--purple-light:#262030;
+  --amber:#D9A050;--amber-light:#2A2418;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes fadeOverlay{from{opacity:0}to{opacity:1}}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.app{display:flex;height:100vh;background:var(--bg)}
+
+/* ── SIDEBAR ── */
+.side{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.side-logo{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.logo-text{font-size:22px;font-weight:800;letter-spacing:-.4px;color:var(--text);line-height:1;display:flex;align-items:baseline}
+.logo-slash{color:var(--coral);font-weight:300;margin:0 1px}.logo-product{font-weight:400;color:var(--coral)}
+.side-role{font-size:11px;color:var(--muted);background:var(--surface-alt);padding:3px 9px;border-radius:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.side-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-section{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;padding:8px 10px 6px;margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:var(--surface-alt);color:var(--text)}
+.nav-item.active{background:var(--coral-light);color:var(--coral);font-weight:600}
+.nav-item svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+.side-bottom{padding:12px 14px;border-top:1px solid var(--border)}
+.side-user{display:flex;align-items:center;gap:10px}
+.side-avatar{width:34px;height:34px;border-radius:8px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text2)}
+.side-uname{font-size:14px;font-weight:600;color:var(--text)}
+.side-urole{font-size:12px;color:var(--text2)}
+
+/* ── CONTENT ── */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.top-bar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.top-title{font-size:20px;font-weight:700;color:var(--text)}
+.top-right{display:flex;gap:10px;align-items:center}
+.btn-add{display:flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;background:var(--coral);color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s}
+.btn-add:hover{background:var(--coral-dark)}
+.btn-add svg{width:16px;height:16px}
+.body{flex:1;overflow-y:auto;padding:20px 24px}
+
+/* ── STATS ROW ── */
+.stats-row{display:flex;gap:14px;margin-bottom:20px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;flex:1;animation:fadeIn .4s ease both}
+.stat:nth-child(2){animation-delay:.05s}.stat:nth-child(3){animation-delay:.1s}.stat:nth-child(4){animation-delay:.15s}
+.stat-val{font-size:24px;font-weight:800;color:var(--text)}
+.stat-label{font-size:13px;color:var(--text2);margin-top:2px}
+
+/* ── SEARCH ── */
+.search-row{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+.search-input{flex:1;max-width:320px;padding:9px 14px 9px 36px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:14px;color:var(--text);font-family:inherit;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23B5AFA8' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='5'/%3E%3Cline x1='11' y1='11' x2='14' y2='14'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center}
+.search-input:focus{outline:none;border-color:var(--coral)}
+.filter-btn{padding:9px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .15s}
+.filter-btn:hover{border-color:var(--coral);color:var(--coral)}
+.filter-btn.active{background:var(--coral-light);color:var(--coral);border-color:var(--coral)}
+
+/* ── MANAGER CARDS ── */
+.mgr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.mgr-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;transition:all .15s;cursor:pointer;animation:fadeIn .4s ease both;position:relative}
+.mgr-card:nth-child(2){animation-delay:.05s}.mgr-card:nth-child(3){animation-delay:.1s}.mgr-card:nth-child(4){animation-delay:.15s}.mgr-card:nth-child(5){animation-delay:.2s}
+.mgr-card:hover{border-color:var(--coral);box-shadow:0 4px 16px rgba(224,116,97,.06)}
+
+.mgr-head{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.mgr-ava{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0}
+.mgr-info{flex:1}
+.mgr-name{font-size:16px;font-weight:600;color:var(--text)}
+.mgr-role{font-size:13px;color:var(--text2)}
+.mgr-online{width:10px;height:10px;border-radius:50%;position:absolute;top:20px;right:20px}
+.online-yes{background:var(--green);box-shadow:0 0 6px rgba(91,166,122,.4)}
+.online-no{background:var(--muted)}
+
+.mgr-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.mgr-stat{text-align:center;padding:8px 4px;background:var(--surface-alt);border-radius:8px}
+.mgr-stat-val{font-size:16px;font-weight:700;color:var(--text)}
+.mgr-stat-label{font-size:11px;color:var(--text2);margin-top:2px}
+
+.mgr-bottom{display:flex;align-items:center;justify-content:space-between}
+.mgr-contact{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2)}
+.mgr-contact svg{width:14px;height:14px;stroke-width:1.8}
+.mgr-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px}
+.badge-active{background:var(--green-light);color:var(--green)}
+.badge-inactive{background:var(--surface-alt);color:var(--muted)}
+.badge-new{background:var(--blue-light);color:var(--blue)}
+
+.mgr-menu{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all .15s;opacity:0}
+.mgr-card:hover .mgr-menu{opacity:1}
+.mgr-menu:hover{background:var(--surface-alt);color:var(--text)}
+
+/* ── SIDE PANEL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:200;animation:fadeOverlay .2s ease}
+.overlay.show{display:block}
+.panel{position:fixed;top:0;right:-480px;width:480px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:201;transition:right .3s ease;display:flex;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.08)}
+.panel.show{right:0}
+.panel-head{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.panel-title{font-size:18px;font-weight:700;color:var(--text)}
+.panel-close{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:all .15s;border:none;background:none}
+.panel-close:hover{background:var(--surface-alt);color:var(--coral)}
+.panel-body{flex:1;overflow-y:auto;padding:20px 24px}
+.panel-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0}
+
+/* ── PROFILE IN PANEL ── */
+.profile-top{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.profile-ava{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff}
+.profile-name{font-size:20px;font-weight:700;color:var(--text)}
+.profile-role{font-size:14px;color:var(--text2)}
+.profile-status{display:flex;align-items:center;gap:6px;font-size:13px;margin-top:4px}
+.profile-status-dot{width:8px;height:8px;border-radius:50%}
+
+.detail-section{margin-bottom:22px}
+.detail-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.detail-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.detail-row:last-child{border:none}
+.detail-label{font-size:14px;color:var(--text2)}
+.detail-val{font-size:14px;font-weight:500;color:var(--text)}
+
+.mini-chart{display:flex;align-items:flex-end;gap:3px;height:40px;margin-top:8px}
+.mini-bar{width:12px;border-radius:3px 3px 0 0;background:var(--blue);transition:height .6s ease}
+
+/* ── FORM ── */
+.form-group{margin-bottom:16px}
+.form-label{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:block}
+.form-input{width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:14px;color:var(--text);font-family:inherit}
+.form-input:focus{outline:none;border-color:var(--coral)}
+.form-select{width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:14px;color:var(--text);font-family:inherit;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%238B8580' stroke-width='2'%3E%3Cpolyline points='2 4 6 8 10 4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.form-hint{font-size:12px;color:var(--text2);margin-top:4px}
+.btn-save{padding:10px 24px;border-radius:8px;background:var(--coral);color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s;flex:1}
+.btn-save:hover{opacity:.85}
+.btn-secondary{padding:10px 24px;border-radius:8px;background:var(--surface);color:var(--text);border:1px solid var(--border);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-secondary:hover{border-color:var(--coral);color:var(--coral)}
+.btn-danger{padding:10px 24px;border-radius:8px;background:var(--surface);color:var(--coral);border:1px solid var(--coral-light);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-danger:hover{background:var(--coral-light)}
+
+/* ── CONTROLS ── */
+.ctrls{position:fixed;bottom:20px;right:20px;z-index:100}
+.btn-c{width:40px;height:40px;border-radius:10px;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.06);color:var(--text2)}
+.btn-c:hover{border-color:var(--coral);color:var(--coral)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+  <div class="side">
+    <div class="side-logo">
+      <div class="logo-text">neovida<span class="logo-slash">/</span><span class="logo-product">sales</span></div>
+      <span class="side-role">РОП</span>
+    </div>
+    <div class="side-nav">
+      <div class="nav-section">Управление</div>
+      <div class="nav-item" data-href="SalesAI_Admin.html">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Команда
+      </div>
+    </div>
+    <div class="side-bottom">
+      <div class="side-user">
+        <div class="side-avatar">ИС</div>
+        <div><div class="side-uname">Иван Смирнов</div><div class="side-urole">Руководитель ОП</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="top-bar">
+      <span class="top-title">Команда</span>
+      <div class="top-right">
+        <button class="btn-add" onclick="openPanel('add')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Добавить менеджера
+        </button>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-val">5 <span style="font-size:14px;font-weight:500;color:var(--text2)">/ 10</span></div>
+          <div class="stat-label">Менеджеров</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" style="color:var(--green)">3</div>
+          <div class="stat-label">Сейчас онлайн</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">78</div>
+          <div class="stat-label">Ср. оценка команды</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">247</div>
+          <div class="stat-label">Звонков за неделю</div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="search-row">
+        <input class="search-input" placeholder="Поиск по имени...">
+        <button class="filter-btn active">Все</button>
+        <button class="filter-btn">Онлайн</button>
+        <button class="filter-btn">Неактивные</button>
+      </div>
+
+      <!-- Manager cards -->
+      <div class="mgr-grid">
+
+        <!-- Козлова -->
+        <div class="mgr-card" onclick="openPanel('view',0)">
+          <div class="mgr-online online-yes"></div>
+          <div class="mgr-head">
+            <div class="mgr-ava" style="background:var(--green)">АК</div>
+            <div class="mgr-info">
+              <div class="mgr-name">Анна Козлова</div>
+              <div class="mgr-role">Менеджер по продажам</div>
+            </div>
+          </div>
+          <div class="mgr-stats">
+            <div class="mgr-stat"><div class="mgr-stat-val">91</div><div class="mgr-stat-label">Neo-оценка</div></div>
+            <div class="mgr-stat"><div class="mgr-stat-val">68</div><div class="mgr-stat-label">Звонков</div></div>
+            <div class="mgr-stat"><div class="mgr-stat-val">52%</div><div class="mgr-stat-label">Полож. исход</div></div>
+          </div>
+          <div class="mgr-bottom">
+            <div class="mgr-contact"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>+7 (903) 123-45-01</div>
+            <span class="mgr-badge badge-active">Активна</span>
+          </div>
+        </div>
+
+        <!-- Морозов -->
+        <div class="mgr-card" onclick="openPanel('view',1)">
+          <div class="mgr-online online-yes"></div>
+          <div class="mgr-head">
+            <div class="mgr-ava" style="background:var(--blue)">ДМ</div>
+            <div class="mgr-info">
+              <div class="mgr-name">Дмитрий Морозов</div>
+              <div class="mgr-role">Менеджер по продажам</div>
+            </div>
+          </div>
+          <div class="mgr-stats">
+            <div class="mgr-stat"><div class="mgr-stat-val">84</div><div class="mgr-stat-label">Neo-оценка</div></div>
+            <div class="mgr-stat"><div class="mgr-stat-val">55</div><div class="mgr-stat-label">Звонков</div></div>
+            <div class="mgr-stat"><div class="mgr-stat-val">48%</div><div class="mgr-stat-label">Полож. исход</div></div>
+          </div>
+          <div class="mgr-bottom">
+            <div class="mgr-contact"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>+7 (903) 123-45-02</div>
+            <span class="mgr-badge badge-active">Активен</span>
+          </div>
+        </div>
+
+        <!-- Волкова -->
+        <div class="mgr-card" onclick="openPanel('view',2)">
+          <div class="mgr-online online-yes"></div>
+          <div class="mgr-head">
+            <div class="mgr-ava" style="background:var(--purple)">ЕВ</div>
+            <div class="mgr-info">
+              <div class="mgr-name">Елена Волкова</div>
+              <div class="mgr-role">Менеджер по продажам</div>
+            </div>
+          </div>
+          <div class="mgr-stats">
+            <div class="mgr-stat"><div class="mgr-stat-val">76</div><div class="mgr-stat-label">Neo-оценка</div></div>
+            <div class="mgr-stat"><div class="mgr-stat-val">52</div><div class="mgr-stat-label">Звонков</div></div>
+            <div class="mgr-stat"><div class="mgr-stat-val">42%</div><div class="mgr-stat-label">Полож. исход</div></div>
+          </div>
+          <div class="mgr-bottom">
+            <div class="mgr-contact"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>+7 (903) 123-45-03</div>
+            <span class="mgr-badge badge-active">Активна</span>
+          </div>
+        </div>
+
+        <!-- Петров -->
+        <div class="mgr-card" onclick="openPanel('view',3)">
+          <div class="mgr-online online-no"></div>
+          <div class="mgr-head">
+            <div class="mgr-ava" style="background:var(--amber)">ИП</div>
+            <div class="mgr-info">
+              <div class="mgr-name">Игорь Петров</div>
+              <div class="mgr-role">Менеджер по продажам</div>
+            </div>
+          </div>
+          <div class="mgr-stats">
+            <div class="mgr-stat"><div class="mgr-stat-val">71</div><div class="mgr-stat-label">Neo-оценка</div></div>
+            <div class="mgr-stat"><div class="mgr-stat-val">42</div><div class="mgr-stat-label">Звонков</div></div>
+            <div class="mgr-stat"><div class="mgr-stat-val">38%</div><div class="mgr-stat-label">Полож. исход</div></div>
+          </div>
+          <div class="mgr-bottom">
+            <div class="mgr-contact"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>+7 (903) 123-45-04</div>
+            <span class="mgr-badge badge-inactive">Офлайн</span>
+          </div>
+        </div>
+
+        <!-- Соколова -->
+        <div class="mgr-card" onclick="openPanel('view',4)">
+          <div class="mgr-online online-no"></div>
+          <div class="mgr-head">
+            <div class="mgr-ava" style="background:var(--coral)">МС</div>
+            <div class="mgr-info">
+              <div class="mgr-name">Мария Соколова</div>
+              <div class="mgr-role">Стажёр</div>
+            </div>
+          </div>
+          <div class="mgr-stats">
+            <div class="mgr-stat"><div class="mgr-stat-val">58</div><div class="mgr-stat-label">Neo-оценка</div></div>
+            <div class="mgr-stat"><div class="mgr-stat-val">30</div><div class="mgr-stat-label">Звонков</div></div>
+            <div class="mgr-stat"><div class="mgr-stat-val">28%</div><div class="mgr-stat-label">Полож. исход</div></div>
+          </div>
+          <div class="mgr-bottom">
+            <div class="mgr-contact"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>+7 (903) 123-45-05</div>
+            <span class="mgr-badge badge-new">Стажёр</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- OVERLAY -->
+  <div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+  <!-- SIDE PANEL -->
+  <div class="panel" id="panel">
+    <div class="panel-head">
+      <span class="panel-title" id="panelTitle">Менеджер</span>
+      <button class="panel-close" onclick="closePanel()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="panel-body" id="panelBody"></div>
+    <div class="panel-footer" id="panelFooter"></div>
+  </div>
+
+  <div class="ctrls">
+    <button class="btn-c" id="themeBtn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var managers = [
+    {name:'Анна Козлова',initials:'АК',color:'var(--green)',role:'Менеджер по продажам',phone:'+7 (903) 123-45-01',email:'a.kozlova@company.ru',login:'a.kozlova',online:true,score:91,calls:68,pos:52,script:88,since:'15.03.2024',scores:[82,85,87,88,90,91,91]},
+    {name:'Дмитрий Морозов',initials:'ДМ',color:'var(--blue)',role:'Менеджер по продажам',phone:'+7 (903) 123-45-02',email:'d.morozov@company.ru',login:'d.morozov',online:true,score:84,calls:55,pos:48,script:79,since:'20.05.2024',scores:[75,78,80,82,83,84,84]},
+    {name:'Елена Волкова',initials:'ЕВ',color:'var(--purple)',role:'Менеджер по продажам',phone:'+7 (903) 123-45-03',email:'e.volkova@company.ru',login:'e.volkova',online:true,score:76,calls:52,pos:42,script:71,since:'10.08.2024',scores:[68,70,72,73,75,76,76]},
+    {name:'Игорь Петров',initials:'ИП',color:'var(--amber)',role:'Менеджер по продажам',phone:'+7 (903) 123-45-04',email:'i.petrov@company.ru',login:'i.petrov',online:false,score:71,calls:42,pos:38,script:64,since:'01.09.2024',scores:[60,63,65,68,70,71,71]},
+    {name:'Мария Соколова',initials:'МС',color:'var(--coral)',role:'Стажёр',phone:'+7 (903) 123-45-05',email:'m.sokolova@company.ru',login:'m.sokolova',online:false,score:58,calls:30,pos:28,script:48,since:'10.01.2025',scores:[40,45,48,52,55,57,58]}
+  ];
+
+  window.openPanel = function(mode, idx) {
+    var ov = document.getElementById('overlay');
+    var pn = document.getElementById('panel');
+    var pt = document.getElementById('panelTitle');
+    var pb = document.getElementById('panelBody');
+    var pf = document.getElementById('panelFooter');
+
+    if (mode === 'view') {
+      var m = managers[idx];
+      var scoreColor = m.score >= 80 ? 'var(--green)' : m.score >= 65 ? 'var(--amber)' : 'var(--coral)';
+      var maxScore = Math.max.apply(null, m.scores);
+
+      pt.textContent = 'Профиль менеджера';
+      pb.innerHTML = '<div class="profile-top">' +
+        '<div class="profile-ava" style="background:'+m.color+'">'+m.initials+'</div>' +
+        '<div><div class="profile-name">'+m.name+'</div><div class="profile-role">'+m.role+'</div>' +
+        '<div class="profile-status"><div class="profile-status-dot" style="background:'+(m.online?'var(--green)':'var(--muted)')+'"></div>'+(m.online?'Онлайн':'Офлайн')+'</div></div></div>' +
+
+        '<div class="detail-section"><div class="detail-title">Контакты</div>' +
+        '<div class="detail-row"><span class="detail-label">Телефон</span><span class="detail-val">'+m.phone+'</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Email</span><span class="detail-val">'+m.email+'</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Логин</span><span class="detail-val">'+m.login+'</span></div>' +
+        '<div class="detail-row"><span class="detail-label">В команде с</span><span class="detail-val">'+m.since+'</span></div></div>' +
+
+        '<div class="detail-section"><div class="detail-title">Статистика за неделю</div>' +
+        '<div class="detail-row"><span class="detail-label">Neo-оценка</span><span class="detail-val" style="color:'+scoreColor+'">'+m.score+' / 100</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Звонков</span><span class="detail-val">'+m.calls+'</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Положительный исход</span><span class="detail-val">'+m.pos+'%</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Соблюдение скрипта</span><span class="detail-val">'+m.script+'%</span></div></div>' +
+
+        '<div class="detail-section"><div class="detail-title">Динамика оценки (7 дней)</div>' +
+        '<div class="mini-chart" id="miniChart"></div></div>';
+
+      pf.innerHTML = '<button class="btn-secondary" style="flex:1" onclick="openPanel(\'edit\','+idx+')">Редактировать</button><button class="btn-danger" onclick="alert(\'Деактивировать '+m.name+'?\')">Деактивировать</button>';
+
+      setTimeout(function(){
+        var chart = document.getElementById('miniChart');
+        if(chart) {
+          var bars = chart.querySelectorAll('.mini-bar');
+          for(var i=0;i<bars.length;i++) bars[i].style.height=(m.scores[i]/maxScore*100)+'%';
+        }
+      },100);
+
+      var chartEl = document.getElementById('miniChart');
+      if(chartEl) {
+        var html = '';
+        for(var i=0;i<m.scores.length;i++) html += '<div class="mini-bar" style="flex:1;height:0;background:'+scoreColor+'"></div>';
+        chartEl.innerHTML = html;
+        setTimeout(function(){
+          var bars = document.getElementById('miniChart').querySelectorAll('.mini-bar');
+          for(var i=0;i<bars.length;i++) bars[i].style.height=(m.scores[i]/maxScore*100)+'%';
+        },50);
+      }
+
+    } else if (mode === 'add') {
+      pt.textContent = 'Новый менеджер';
+      pb.innerHTML = '<div class="form-group"><label class="form-label">Имя и фамилия</label><input class="form-input" placeholder="Иван Иванов"></div>' +
+        '<div class="form-group"><label class="form-label">Должность</label><select class="form-select"><option>Менеджер по продажам</option><option>Старший менеджер</option><option>Стажёр</option></select></div>' +
+        '<div class="form-group"><label class="form-label">Телефон (мобильный)</label><input class="form-input" placeholder="+7 (9XX) XXX-XX-XX"><div class="form-hint">Номер на который приходят звонки от клиентов</div></div>' +
+        '<div class="form-group"><label class="form-label">Email</label><input class="form-input" placeholder="name@company.ru"></div>' +
+        '<div class="form-group"><label class="form-label">Логин для входа</label><input class="form-input" placeholder="i.ivanov"><div class="form-hint">Менеджер будет входить в приложение по этому логину</div></div>' +
+        '<div class="form-group"><label class="form-label">Пароль</label><input class="form-input" type="password" placeholder="Минимум 8 символов"><div class="form-hint">Менеджер сможет сменить пароль при первом входе</div></div>' +
+        '<div class="form-group"><label class="form-label">Скрипт по умолчанию</label><select class="form-select"><option>Входящий — новый клиент</option><option>Входящий — заявка с сайта</option><option>Исходящий — холодный</option><option>Входящий — постоянный клиент</option></select></div>';
+      pf.innerHTML = '<button class="btn-save" onclick="alert(\'Менеджер добавлен! Осталось 4 из 10 мест.\');closePanel()">Добавить менеджера</button><button class="btn-secondary" onclick="closePanel()">Отмена</button>';
+
+    } else if (mode === 'edit') {
+      var m = managers[idx];
+      pt.textContent = 'Редактировать';
+      pb.innerHTML = '<div class="form-group"><label class="form-label">Имя и фамилия</label><input class="form-input" value="'+m.name+'"></div>' +
+        '<div class="form-group"><label class="form-label">Должность</label><select class="form-select"><option'+(m.role==='Менеджер по продажам'?' selected':'')+'>Менеджер по продажам</option><option>Старший менеджер</option><option'+(m.role==='Стажёр'?' selected':'')+'>Стажёр</option></select></div>' +
+        '<div class="form-group"><label class="form-label">Телефон</label><input class="form-input" value="'+m.phone+'"></div>' +
+        '<div class="form-group"><label class="form-label">Email</label><input class="form-input" value="'+m.email+'"></div>' +
+        '<div class="form-group"><label class="form-label">Логин</label><input class="form-input" value="'+m.login+'"></div>' +
+        '<div class="form-group"><label class="form-label">Новый пароль</label><input class="form-input" type="password" placeholder="Оставьте пустым чтобы не менять"></div>';
+      pf.innerHTML = '<button class="btn-save" onclick="alert(\'Сохранено\');closePanel()">Сохранить</button><button class="btn-secondary" onclick="openPanel(\'view\','+idx+')">Назад</button>';
+    }
+
+    ov.classList.add('show');
+    setTimeout(function(){ pn.classList.add('show'); }, 10);
+  };
+
+  window.closePanel = function() {
+    document.getElementById('panel').classList.remove('show');
+    setTimeout(function(){ document.getElementById('overlay').classList.remove('show'); }, 300);
+  };
+
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.filter-btn').forEach(function(x){x.classList.remove('active')});
+      b.classList.add('active');
+    });
+  });
+
+  // Nav
+  document.querySelectorAll('.nav-item[data-href]').forEach(function(n){
+    n.addEventListener('click', function(){ window.location.href = this.getAttribute('data-href'); });
+  });
+
+  // Theme
+  var dark = false;
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    dark = !dark;
+    document.getElementById('app').classList.toggle('dark', dark);
+    this.innerHTML = dark
+      ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+  });
+})();
+</script>
+</body>
+</html>

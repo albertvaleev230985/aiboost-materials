@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>neovida — CRM-контекст в подсказках</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+  --amber:#F09030;--amber-light:#FEF4E8;
+  --red:#D4564A;--red-light:#FDECEB;
+}
+.dark{
+  --bg:#1C1B19;--surface:#262523;--surface-alt:#2E2D2A;
+  --border:#3A3835;--text:#D5D0C9;--text2:#8A857E;--muted:#5E5A54;
+  --coral:#D4806F;--coral-light:#2D2220;--coral-dark:#B5635A;
+  --green:#6DAF85;--green-light:#1E2B22;
+  --blue:#7DA3C9;--blue-light:#1E2630;
+  --purple:#9A84BA;--purple-light:#262030;
+  --amber:#D9A050;--amber-light:#2A2418;
+  --red:#C46B62;--red-light:#2D2220;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;padding:24px}
+.page-title{font-size:20px;font-weight:700;margin-bottom:4px}
+.page-sub{font-size:14px;color:var(--text2);margin-bottom:24px}
+.theme-btn{position:fixed;top:16px;right:16px;width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:16px;z-index:10}
+.theme-btn:hover{border-color:var(--coral);color:var(--coral)}
+
+.demo{display:grid;grid-template-columns:280px 1fr;gap:20px;max-width:1000px;margin-bottom:40px}
+.variant{font-size:12px;color:var(--coral);font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+
+/* Client Card */
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.cc-head{padding:16px}
+.cc-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;font-weight:600}
+.cc-name{font-size:18px;font-weight:700}
+.cc-comp{font-size:14px;color:var(--text2);margin-top:2px}
+.cc-phone{font-size:13px;color:var(--text2);margin-top:6px}
+.cc-stats{display:flex;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.cc-stat{flex:1;text-align:center;padding:12px 8px}
+.cc-stat:not(:last-child){border-right:1px solid var(--border)}
+.cc-stat-v{font-size:18px;font-weight:800}
+.cc-stat-l{font-size:10px;color:var(--text2);margin-top:2px}
+.cc-deal{padding:12px 16px;border-bottom:1px solid var(--border)}
+.cc-deal-label{font-size:11px;color:var(--text2);margin-bottom:6px}
+.cc-deal-amount{font-size:17px;font-weight:800;margin:4px 0}
+.cc-badge{display:inline-flex;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600}
+.cc-promises{padding:12px 16px}
+.cc-promises-title{font-size:11px;font-weight:600;margin-bottom:8px}
+.cc-promise{font-size:12px;color:var(--text2);padding:3px 0}
+.cc-enriched{padding:8px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text2);background:var(--surface-alt)}
+.cc-new{padding:28px 16px;text-align:center}
+.cc-new-icon{font-size:32px;margin-bottom:8px}
+.cc-new-text{font-size:14px;font-weight:600}
+.cc-new-sub{font-size:12px;color:var(--text2);margin-top:4px}
+.cc-loading{padding:20px 16px;text-align:center}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Hints */
+.hints{background:var(--surface);border:1px solid var(--border);border-radius:14px}
+.hints-head{padding:14px 16px;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:600}
+.hint{padding:14px 16px;border-bottom:1px solid var(--border)}
+.hint:last-child{border:none}
+.hint-text{font-size:14px;line-height:1.55}
+.hint-src{font-size:10px;color:var(--text2);margin-top:6px;display:flex;align-items:center;gap:5px}
+.hint-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.hint-dot.script{background:var(--blue)}.hint-dot.rag{background:var(--green)}.hint-dot.crm{background:var(--coral)}
+.hint.crm{border-left:3px solid var(--coral);background:var(--coral-light)}
+.hint.warn{border-left:3px solid var(--amber);background:var(--amber-light)}
+.hint.promise{border-left:3px solid var(--purple);background:var(--purple-light)}
+.hint.deal{border-left:3px solid var(--green);background:var(--green-light)}
+</style>
+</head>
+<body id="app">
+<button class="theme-btn" onclick="document.getElementById('app').classList.toggle('dark')">🌙</button>
+
+<div class="page-title">Экран звонка: CRM-контекст в подсказках</div>
+<div class="page-sub">Как карточка клиента и подсказки обогащаются данными из CRM (Битрикс24 / AmoCRM / встроенный модуль)</div>
+
+<!-- VARIANT 1 -->
+<div class="variant">Вариант 1: Повторный клиент с активной сделкой</div>
+<div class="demo">
+  <div class="cc">
+    <div class="cc-head"><div class="cc-label">Клиент</div><div class="cc-name">Алексей Петров</div><div class="cc-comp">ТехноЭкспо</div><div class="cc-phone">📞 +7 (495) 123-45-67</div></div>
+    <div class="cc-stats">
+      <div class="cc-stat"><div class="cc-stat-v">7</div><div class="cc-stat-l">звонков</div></div>
+      <div class="cc-stat"><div class="cc-stat-v">78</div><div class="cc-stat-l">ср. оценка</div></div>
+      <div class="cc-stat"><div class="cc-stat-v">14д</div><div class="cc-stat-l">знакомы</div></div>
+    </div>
+    <div class="cc-deal"><div class="cc-deal-label">💰 Активная сделка</div><div class="cc-deal-amount">450 000 ₽</div><div class="cc-badge" style="background:var(--amber-light);color:var(--amber)">Предложение</div></div>
+    <div class="cc-promises"><div class="cc-promises-title" style="color:var(--amber)">⏰ Обещания</div><div class="cc-promise">· Отправить макет до 14.02</div><div class="cc-promise">· Уточнить скидку при заказе от 30 шт.</div></div>
+    <div class="cc-enriched">ИНН 7701234567 · ООО · выставочное оборудование · ~150 чел.</div>
+  </div>
+  <div class="hints">
+    <div class="hints-head">Подсказки Neo</div>
+    <div class="hint promise"><div class="hint-text">📋 <strong>Вы обещали отправить макет до 14.02.</strong> Сегодня 14 февраля. Проверьте и начните с этого.</div><div class="hint-src"><span class="hint-dot crm"></span> CRM-контекст</div></div>
+    <div class="hint crm"><div class="hint-text">💡 В прошлый раз клиент спрашивал о скидке 10% при заказе от 30 шт. <strong>Предложите 7% + бесплатную доставку</strong> — для нас выгоднее.</div><div class="hint-src"><span class="hint-dot crm"></span> CRM-контекст · звонок 12.02</div></div>
+    <div class="hint deal"><div class="hint-text">🎯 Сделка на 450 000 ₽ на этапе «Предложение». <strong>Фокус: согласовать условия.</strong> Не возвращайтесь к выявлению потребностей.</div><div class="hint-src"><span class="hint-dot crm"></span> CRM-контекст · этап сделки</div></div>
+    <div class="hint"><div class="hint-text">📦 Ролл-ап 85×200 — <strong>4 200 ₽</strong> за шт. При 30+ шт. — 3 780 ₽. Срок: 1-2 рабочих дня.</div><div class="hint-src"><span class="hint-dot rag"></span> База знаний · Прайс-лист</div></div>
+    <div class="hint" style="opacity:.5"><div class="hint-text">📝 Скрипт: <strong>Работа с возражениями</strong>. Если «дорого» — сравните стоимость за год.</div><div class="hint-src"><span class="hint-dot script"></span> Скрипт · Этап 5</div></div>
+  </div>
+</div>
+
+<!-- VARIANT 2 -->
+<div class="variant">Вариант 2: Клиент, который был недоволен</div>
+<div class="demo">
+  <div class="cc">
+    <div class="cc-head"><div class="cc-label">Клиент</div><div class="cc-name">Роман Федоров</div><div class="cc-comp">АвтоЗапчасти</div><div class="cc-phone">📞 +7 (495) 555-33-22</div></div>
+    <div class="cc-stats">
+      <div class="cc-stat"><div class="cc-stat-v">4</div><div class="cc-stat-l">звонков</div></div>
+      <div class="cc-stat"><div class="cc-stat-v" style="color:var(--amber)">62</div><div class="cc-stat-l">ср. оценка</div></div>
+      <div class="cc-stat"><div class="cc-stat-v">21д</div><div class="cc-stat-l">знакомы</div></div>
+    </div>
+    <div class="cc-deal"><div class="cc-deal-label">💰 Активная сделка</div><div class="cc-deal-amount">125 000 ₽</div><div class="cc-badge" style="background:var(--purple-light);color:var(--purple)">Переговоры</div></div>
+    <div class="cc-promises"><div class="cc-promises-title" style="color:var(--red)">⚠️ Внимание</div><div class="cc-promise" style="color:var(--red)">· Последний звонок: клиент жаловался на задержку 3 дня</div></div>
+  </div>
+  <div class="hints">
+    <div class="hints-head">Подсказки Neo</div>
+    <div class="hint warn"><div class="hint-text">⚠️ <strong>В прошлый раз клиент был недоволен задержкой на 3 дня.</strong> Начните с извинения. Озвучивайте реалистичные сроки.</div><div class="hint-src"><span class="hint-dot crm"></span> CRM-контекст · звонок 07.02</div></div>
+    <div class="hint crm"><div class="hint-text">💡 Клиент обсуждал заказ на 125 000 ₽. <strong>Предложите компенсацию:</strong> бесплатная ламинация или +10% тираж.</div><div class="hint-src"><span class="hint-dot crm"></span> CRM-контекст · история сделки</div></div>
+  </div>
+</div>
+
+<!-- VARIANT 3 -->
+<div class="variant">Вариант 3: Новый клиент (нет в CRM)</div>
+<div class="demo">
+  <div class="cc">
+    <div class="cc-head"><div class="cc-label">Клиент</div></div>
+    <div class="cc-new"><div class="cc-new-icon">👤</div><div class="cc-new-text">Новый клиент</div><div class="cc-new-sub">+7 (495) 777-88-99</div><div class="cc-new-sub">Первый звонок</div></div>
+  </div>
+  <div class="hints">
+    <div class="hints-head">Подсказки Neo</div>
+    <div class="hint"><div class="hint-text">📝 Скрипт: <strong>Приветствие</strong>. Представьтесь, назовите компанию, уточните имя клиента.</div><div class="hint-src"><span class="hint-dot script"></span> Скрипт · Этап 1</div></div>
+    <div class="hint" style="opacity:.5"><div class="hint-text" style="color:var(--text2)">ℹ️ neovida CRM: клиент не найден в базе. Подсказки из скрипта и базы знаний.</div><div class="hint-src"><span class="hint-dot crm" style="opacity:.3"></span> CRM-контекст</div></div>
+  </div>
+</div>
+
+<!-- VARIANT 4 -->
+<div class="variant">Вариант 4: Загрузка CRM-контекста (200-800мс)</div>
+<div style="max-width:280px">
+  <div class="cc">
+    <div class="cc-head"><div class="cc-label">Клиент</div><div class="cc-name" style="color:var(--text2)">Определяем...</div><div class="cc-phone">📞 +7 (495) 123-45-67</div></div>
+    <div class="cc-loading"><div class="spinner"></div><div style="font-size:12px;color:var(--text2);margin-top:8px">Загрузка из CRM...</div></div>
+  </div>
+</div>
+
+</body>
+</html>

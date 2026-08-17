@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neovida — Создание менеджера + Профиль</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+  --amber:#F09030;--amber-light:#FEF4E8;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:40px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.page-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:20px;text-align:center}
+.layout{display:flex;gap:24px;max-width:1000px;margin:0 auto;justify-content:center;flex-wrap:wrap}
+
+/* ── MODAL: Create manager ── */
+.modal-wrap{width:440px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;animation:fadeIn .3s ease}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:18px;font-weight:800;color:var(--text)}
+.modal-close{width:28px;height:28px;border-radius:6px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.modal-close:hover{background:var(--surface-alt);color:var(--coral)}
+.neo{display:flex;gap:10px;padding:12px 14px;background:var(--purple-light);border:1px solid rgba(139,110,181,.1);border-radius:10px;margin-bottom:16px}
+.neo-ava{width:24px;height:24px;border-radius:6px;background:var(--purple);display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:800;flex-shrink:0}
+.neo-text{font-size:12px;color:var(--text2);line-height:1.5}
+.field{margin-bottom:14px}
+.field-label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px}
+.field-input{width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--surface);font-family:inherit;transition:border-color .15s}
+.field-input:hover{border-color:var(--coral)}
+.field-input:focus{border-color:var(--coral);outline:none}
+.field-input::placeholder{color:var(--muted)}
+.field-hint{font-size:11px;color:var(--muted);margin-top:3px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* Generated password */
+.pass-gen{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;margin-bottom:14px}
+.pass-gen-value{font-family:'SF Mono',Monaco,Consolas,monospace;font-size:14px;font-weight:600;color:var(--text);flex:1;letter-spacing:.5px}
+.pass-gen-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .15s}
+.pass-gen-btn:hover{border-color:var(--coral);color:var(--coral)}
+
+/* Toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border)}
+.toggle-label{font-size:13px;color:var(--text)}
+.toggle-hint{font-size:11px;color:var(--text2);margin-top:2px}
+.toggle{width:40px;height:22px;border-radius:11px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--coral)}
+.toggle-knob{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle.on .toggle-knob{left:20px}
+
+.btn-primary{width:100%;padding:12px;border-radius:10px;border:none;background:var(--coral);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;margin-top:8px}
+.btn-primary:hover{background:var(--coral-dark)}
+.btn-ghost{width:100%;padding:12px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;margin-top:8px}
+.btn-ghost:hover{border-color:var(--coral);color:var(--coral)}
+
+/* ── PROFILE CARD ── */
+.profile-wrap{width:440px}
+.profile{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;animation:fadeIn .3s ease .1s both}
+.profile-header{padding:24px 28px;text-align:center;border-bottom:1px solid var(--border)}
+.profile-ava{width:80px;height:80px;border-radius:50%;background:var(--coral-light);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--coral);margin:0 auto 12px}
+.profile-name{font-size:18px;font-weight:700;color:var(--text)}
+.profile-role{font-size:13px;color:var(--text2);margin-top:2px}
+.profile-status{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:8px;margin-top:8px}
+.status-online{background:var(--green-light);color:var(--green)}
+.status-offline{background:var(--surface-alt);color:var(--muted)}
+
+.profile-body{padding:20px 28px}
+.profile-section{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;margin-top:16px}
+.profile-section:first-child{margin-top:0}
+.profile-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.profile-row:last-child{border:none}
+.pr-label{font-size:13px;color:var(--text2)}
+.pr-value{font-size:13px;font-weight:600;color:var(--text)}
+
+/* Stats */
+.profile-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
+.stat-card{background:var(--surface-alt);border-radius:10px;padding:12px;text-align:center}
+.stat-num{font-size:20px;font-weight:700;color:var(--text)}
+.stat-label{font-size:11px;color:var(--text2);margin-top:2px}
+
+/* Permissions */
+.perm{display:flex;align-items:center;gap:8px;padding:6px 0}
+.perm-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.perm-on{background:var(--green)}
+.perm-off{background:var(--muted)}
+.perm-text{font-size:12px;color:var(--text2)}
+
+.profile-footer{padding:16px 28px;border-top:1px solid var(--border);display:flex;gap:8px}
+.pf-btn{flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;font-family:inherit;text-align:center;transition:all .15s}
+.pf-btn:hover{border-color:var(--coral);color:var(--coral)}
+.pf-btn-danger{border-color:rgba(224,116,97,.2);color:var(--coral)}
+.pf-btn-danger:hover{background:var(--coral-light)}
+</style>
+</head>
+<body>
+
+<div class="page-title">Слева — модальное окно «Добавить менеджера» (РОП). Справа — профиль менеджера.</div>
+
+<div class="layout">
+
+  <!-- CREATE MANAGER MODAL -->
+  <div class="modal-wrap">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title">Добавить менеджера</div>
+        <button class="modal-close"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+
+      <div class="neo">
+        <div class="neo-ava">N</div>
+        <div class="neo-text">Менеджер получит email с приглашением и временным паролем. При первом входе он сменит пароль, загрузит фото и пройдёт тестовый звонок.</div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Имя</label>
+          <input class="field-input" type="text" placeholder="Дмитрий">
+        </div>
+        <div class="field">
+          <label class="field-label">Фамилия</label>
+          <input class="field-input" type="text" placeholder="Сидоров">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Email</label>
+        <input class="field-input" type="email" placeholder="dmitry@company.ru">
+        <div class="field-hint">Приглашение и временный пароль придут на этот email</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Телефон (рабочий)</label>
+        <input class="field-input" type="tel" placeholder="+7 (___) ___-__-__">
+      </div>
+
+      <div class="field">
+        <label class="field-label">Временный пароль</label>
+        <div class="pass-gen">
+          <span class="pass-gen-value">Xk7m#9Lp</span>
+          <button class="pass-gen-btn" onclick="this.previousElementSibling.textContent='Rm4q$2Wn'">↻</button>
+          <button class="pass-gen-btn">Копировать</button>
+        </div>
+        <div class="field-hint">Менеджер сменит его при первом входе</div>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Переключение режимов</div>
+          <div class="toggle-hint">Менеджер сможет сам менять режим подсказок</div>
+        </div>
+        <div class="toggle" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Отключение ассистента</div>
+          <div class="toggle-hint">Менеджер сможет полностью выключить подсказки</div>
+        </div>
+        <div class="toggle" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+      </div>
+
+      <button class="btn-primary">Добавить менеджера</button>
+      <button class="btn-ghost">Добавить и создать ещё</button>
+    </div>
+  </div>
+
+  <!-- MANAGER PROFILE -->
+  <div class="profile-wrap">
+    <div class="profile">
+      <div class="profile-header">
+        <div class="profile-ava">АК</div>
+        <div class="profile-name">Анна Козлова</div>
+        <div class="profile-role">Менеджер по продажам</div>
+        <div class="profile-status status-online"><span style="width:6px;height:6px;border-radius:50%;background:var(--green)"></span> Онлайн · на звонке</div>
+      </div>
+
+      <div class="profile-body">
+        <div class="profile-section">Статистика</div>
+        <div class="profile-stats">
+          <div class="stat-card">
+            <div class="stat-num" style="color:var(--green)">78</div>
+            <div class="stat-label">Ср. оценка</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">156</div>
+            <div class="stat-label">Звонков</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">32%</div>
+            <div class="stat-label">Конверсия</div>
+          </div>
+        </div>
+
+        <div class="profile-section">Контакты</div>
+        <div class="profile-row"><span class="pr-label">Email</span><span class="pr-value"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="70111e1e1130131f1d00111e095e0205">[email&#160;protected]</a></span></div>
+        <div class="profile-row"><span class="pr-label">Телефон</span><span class="pr-value">+7 (495) 123-45-67</span></div>
+        <div class="profile-row"><span class="pr-label">В системе с</span><span class="pr-value">15.01.2026</span></div>
+        <div class="profile-row"><span class="pr-label">Последний вход</span><span class="pr-value">Сегодня, 10:34</span></div>
+
+        <div class="profile-section">Разрешения</div>
+        <div class="perm"><span class="perm-dot perm-on"></span><span class="perm-text">Переключение режимов — разрешено</span></div>
+        <div class="perm"><span class="perm-dot perm-off"></span><span class="perm-text">Отключение ассистента — запрещено</span></div>
+        <div class="perm"><span class="perm-dot perm-on"></span><span class="perm-text">Тренажёр — доступен</span></div>
+      </div>
+
+      <div class="profile-footer">
+        <button class="pf-btn">Редактировать</button>
+        <button class="pf-btn">Сбросить пароль</button>
+        <button class="

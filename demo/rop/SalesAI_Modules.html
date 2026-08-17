@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neovida — Управление модулями</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAF9F7;--surface:#FFFFFF;--surface-alt:#F5F3EF;
+  --border:#E8E4DD;--text:#2D2B28;--text2:#8B8580;--muted:#B5AFA8;
+  --coral:#E07461;--coral-light:#FDF0ED;--coral-dark:#C4594A;
+  --green:#5BA67A;--green-light:#EEF7F1;
+  --blue:#5B8EC4;--blue-light:#EEF3FA;
+  --purple:#8B6EB5;--purple-light:#F3EEF9;
+  --amber:#F09030;--amber-light:#FEF4E8;
+}
+.dark{
+  --bg:#1C1B19;--surface:#262523;--surface-alt:#2E2D2A;
+  --border:#3A3835;--text:#D5D0C9;--text2:#8A857E;--muted:#5E5A54;
+  --coral:#D4806F;--coral-light:#2D2220;
+  --green:#6DAF85;--green-light:#1E2B22;
+  --blue:#7DA3C9;--blue-light:#1E2630;
+  --purple:#9A84BA;--purple-light:#262030;
+  --amber:#D9A050;--amber-light:#2A2418;
+}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.app{display:flex;height:100vh;background:var(--bg)}
+
+/* ── SIDEBAR ── */
+.side{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.side-logo{padding:16px 18px;border-bottom:1px solid var(--border)}
+.logo-text{font-size:22px;font-weight:800;letter-spacing:-.4px;color:var(--text);line-height:1;display:flex;align-items:baseline}
+.logo-slash{color:var(--coral);font-weight:300;margin:0 1px}.logo-product{font-weight:400;color:var(--coral)}
+.side-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-section{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;padding:8px 10px 6px;margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:var(--surface-alt);color:var(--text)}
+.nav-item.active{background:var(--coral-light);color:var(--coral);font-weight:600}
+.nav-item svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+.side-bottom{padding:12px 14px;border-top:1px solid var(--border)}
+.side-user{display:flex;align-items:center;gap:10px}
+.side-ava{width:34px;height:34px;border-radius:8px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text2)}
+.side-uname{font-size:14px;font-weight:600;color:var(--text)}
+.side-urole{font-size:12px;color:var(--text2)}
+
+/* ── CONTENT ── */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.top-bar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.top-title{font-size:20px;font-weight:700;color:var(--text)}
+.top-right{display:flex;gap:10px;align-items:center}
+.top-sub{font-size:13px;color:var(--text2)}
+.btn-c{width:34px;height:34px;border-radius:8px;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);box-shadow:none;transition:border-color .15s}
+.btn-c:hover{border-color:var(--coral);color:var(--coral)}
+.body{flex:1;overflow-y:auto;padding:20px 24px;max-width:820px}
+
+/* ── NEO PLAN BANNER ── */
+.neo-plan{display:flex;gap:14px;padding:18px 20px;background:var(--purple-light);border:1px solid rgba(139,110,181,.12);border-radius:14px;margin-bottom:24px;animation:fadeIn .3s ease}
+.neo-plan-icon{width:42px;height:42px;border-radius:12px;background:var(--purple);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800;flex-shrink:0}
+.neo-plan-body{flex:1}
+.neo-plan-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px}
+.neo-plan-text{font-size:13px;color:var(--text2);line-height:1.6}
+.neo-plan-steps{margin-top:10px;display:flex;flex-direction:column;gap:4px}
+.neo-step{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text)}
+.neo-step-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.neo-step-dot.done{background:var(--green)}
+.neo-step-dot.current{background:var(--amber)}
+.neo-step-dot.future{background:var(--border)}
+.neo-step.done{color:var(--text2);text-decoration:line-through}
+.neo-step.current{font-weight:600}
+
+/* ── MODULE CARDS ── */
+.modules{display:flex;flex-direction:column;gap:10px}
+.module{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .15s;animation:fadeIn .3s ease both}
+.module:nth-child(2){animation-delay:.03s}.module:nth-child(3){animation-delay:.06s}.module:nth-child(4){animation-delay:.09s}.module:nth-child(5){animation-delay:.12s}
+.module:hover{border-color:var(--coral)}
+.module.disabled{opacity:.7}
+.module-head{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer}
+.module-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.module-icon svg{width:18px;height:18px}
+.module-info{flex:1;min-width:0}
+.module-name{font-size:15px;font-weight:700;color:var(--text)}
+.module-desc{font-size:12px;color:var(--text2);margin-top:2px}
+.module-right{display:flex;align-items:center;gap:12px}
+.module-status{font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px}
+.status-on{background:var(--green-light);color:var(--green)}
+.status-off{background:var(--surface-alt);color:var(--muted)}
+
+/* Toggle */
+.toggle{position:relative;width:44px;height:24px;border-radius:12px;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle.off{background:var(--border)}
+.toggle-knob{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.15);transition:left .2s}
+.toggle.on .toggle-knob{left:22px}
+.toggle.off .toggle-knob{left:2px}
+
+/* Chevron */
+.module-chev{color:var(--muted);transition:transform .2s;flex-shrink:0}
+.module-chev.open{transform:rotate(180deg)}
+
+/* Expandable body */
+.module-body{display:none;padding:0 20px 18px 72px;animation:fadeIn .2s ease}
+.module-body.show{display:block}
+
+/* Neo tip inside module */
+.neo-tip{display:flex;gap:10px;padding:12px 14px;background:var(--purple-light);border:1px solid rgba(139,110,181,.1);border-radius:10px;margin-bottom:14px}
+.neo-tip-icon{width:24px;height:24px;border-radius:6px;background:var(--purple);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:800;flex-shrink:0}
+.neo-tip-text{font-size:12px;color:var(--text2);line-height:1.5}
+.neo-tip-text b{color:var(--text)}
+
+/* Tooltip help */
+.help{position:relative;width:16px;height:16px;border-radius:50%;background:var(--surface-alt);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--muted);cursor:help;border:1px solid var(--border);flex-shrink:0;transition:border-color .15s}
+.help:hover{border-color:var(--coral);color:var(--coral)}
+.help:hover .tip{display:block}
+.tip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:260px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.1);font-size:12px;font-weight:400;color:var(--text2);line-height:1.5;z-index:50;text-align:left;cursor:default}
+.tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border)}
+.mod-setting{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.mod-setting:last-child{border-bottom:none}
+.mod-setting-info{flex:1}
+.mod-setting-name{font-size:13px;font-weight:600;color:var(--text)}
+.mod-setting-desc{font-size:11px;color:var(--text2);margin-top:1px}
+.mod-setting-val{display:flex;align-items:center;gap:8px}
+.mod-input{width:70px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-alt);font-family:inherit;text-align:center;transition:border-color .15s}
+.mod-input:hover{border-color:var(--coral)}
+.mod-input:focus{border-color:var(--coral);outline:none}
+.mod-select{padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-alt);font-family:inherit;cursor:pointer;transition:border-color .15s;appearance:none;padding-right:24px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='none' stroke='%238B8580' stroke-width='2'%3E%3Cpolyline points='2 3 5 7 8 3'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.mod-select:hover{border-color:var(--coral)}
+.mod-select:focus{border-color:var(--coral);outline:none}
+.toggle-sm{width:36px;height:20px;border-radius:10px}
+.toggle-sm .toggle-knob{width:16px;height:16px}
+.toggle-sm.on .toggle-knob{left:18px}
+
+/* ── CONTROLS ── */
+.ctrls{position:fixed;bottom:20px;right:20px;z-index:100}
+@keyframes neoPulse{0%,100%{box-shadow:0 0 0 0 rgba(139,110,181,.3)}50%{box-shadow:0 0 0 8px rgba(139,110,181,0)}}
+.neo-fab{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#8B6EB5,#6B4E95);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(139,110,181,.35);color:#fff;font-size:20px;font-weight:800;transition:all .2s;animation:neoPulse 3s infinite}
+.neo-fab:hover{transform:scale(1.08)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+  <div class="side">
+    <div class="side-logo"><div class="logo-text">neovida<span class="logo-slash">/</span><span class="logo-product">sales</span></div></div>
+    <div class="side-nav">
+      <div class="nav-section">Управление</div>
+      <div class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Настройки
+      </div>
+    </div>
+    <div class="side-bottom">
+      <div class="side-user">
+        <div class="side-ava">ИС</div>
+        <div><div class="side-uname">Иван Смирнов</div><div class="side-urole">Руководитель ОП</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="top-bar">
+      <div>
+        <span class="top-title">Настройки</span>
+        <span class="top-sub" style="margin-left:12px">Управление модулями</span>
+      </div>
+      <div class="top-right">
+        <button class="btn-c" id="themeBtn"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <!-- Neo plan banner -->
+      <div class="neo-plan">
+        <div class="neo-plan-icon">N</div>
+        <div class="neo-plan-body">
+          <div class="neo-plan-title">Мой план адаптации для вашей команды</div>
+          <div class="neo-plan-text">Вы работаете 3 неделю. Не включайте всё сразу — менеджеры перегрузятся. Вот мой план:</div>
+          <div class="neo-plan-steps">
+            <div class="neo-step done"><span class="neo-step-dot done"></span> <s>Неделя 1-2: подсказки + оценка + база знаний</s> ✓ Сделано</div>
+            <div class="neo-step current"><span class="neo-step-dot current"></span> Сейчас: добавьте анализ речи и трекинг конкурентов</div>
+            <div class="neo-step"><span class="neo-step-dot future"></span> Месяц 2: включите KPI с 2 метриками + геймификацию</div>
+            <div class="neo-step"><span class="neo-step-dot future"></span> Месяц 3: запустите тренажёр</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modules -->
+      <div class="modules">
+
+        <!-- 1. AI-подсказки -->
+        <div class="module" data-mod="hints">
+          <div class="module-head" onclick="toggleModule(this)">
+            <div class="module-icon" style="background:var(--coral-light);color:var(--coral)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></div>
+            <div class="module-info">
+              <div class="module-name">AI-подсказки во время звонка</div>
+              <div class="module-desc">Панель подсказок, рекомендации по скрипту, карточки из базы знаний</div>
+            </div>
+            <div class="module-right">
+              <span class="module-status status-on">Включён</span>
+              <div class="toggle on" onclick="event.stopPropagation();toggleSwitch(this)"><div class="toggle-knob"></div></div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="module-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="module-body">
+            <div class="neo-tip">
+              <div class="neo-tip-icon">N</div>
+              <div class="neo-tip-text"><b>Базовый модуль.</b> Рекомендую держать включённым всегда. Без подсказок менеджеры возвращаются к старым привычкам за 1-2 недели.</div>
+            </div>
+            <div class="mod-setting">
+              <div class="mod-setting-info">
+                <div class="mod-setting-name">Режим по умолчанию для новых менеджеров <span class="help">?<span class="tip">Ассистент — максимум подсказок: скрипт, возражения, продукты. База знаний — только факты по запросу. Тишина — без подсказок, AI только оценивает. Для новичков рекомендуется Ассистент.</span></span></div>
+                <div class="mod-setting-desc">Какой режим подсказок включён при добавлении менеджера</div>
+              </div>
+              <div class="mod-setting-val">
+                <select class="mod-select">
+                  <option selected>Ассистент (максимум)</option>
+                  <option>База знаний</option>
+                  <option>Тишина</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Оценка звонков -->
+        <div class="module" data-mod="scoring">
+          <div class="module-head" onclick="toggleModule(this)">
+            <div class="module-icon" style="background:var(--green-light);color:var(--green)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div class="module-info">
+              <div class="module-name">Оценка звонков</div>
+              <div class="module-desc">Скоринг 0-100, рекомендации AI после звонка</div>
+            </div>
+            <div class="module-right">
+              <span class="module-status status-on">Включён</span>
+              <div class="toggle on" onclick="event.stopPropagation();toggleSwitch(this)"><div class="toggle-knob"></div></div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="module-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="module-body">
+            <div class="neo-tip">
+              <div class="neo-tip-icon">N</div>
+              <div class="neo-tip-text"><b>У команды средняя оценка 74, минимальная — 52.</b> Рекомендую порог красной зоны 50 — отсечёт только провальные звонки. Если поставите 60, будете получать 3-4 алерта в день.</div>
+            </div>
+            <div class="mod-setting">
+              <div class="mod-setting-info">
+                <div class="mod-setting-name">Порог красной зоны <span class="help">?<span class="tip">Звонки с оценкой ниже этого числа считаются проблемными. Они выделяются красным в журнале, РОП получает алерт. Стандартное значение — 50.</span></span></div>
+                <div class="mod-setting-desc">Звонки ниже этого значения помечаются как проблемные</div>
+              </div>
+              <div class="mod-setting-val"><input class="mod-input" type="number" value="50"></div>
+            </div>
+            <div class="mod-setting">
+              <div class="mod-setting-info">
+                <div class="mod-setting-name">Вес «Работа с возражениями» <span class="help">?<span class="tip">Вес определяет насколько сильно этот критерий влияет на итоговую оценку. x1 = стандарт, x2 = вдвое важнее, x3 = втрое. Если клиенты часто торгуются — ставьте x2 или x3, чтобы этот навык был в приоритете.</span></span></div>
+                <div class="mod-setting-desc">Увеличьте если это критично для вашей ниши</div>
+              </div>
+              <div class="mod-setting-val">
+                <select class="mod-select"><option>x1</option><option selected>x2</option><option>x3</option></select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Анализ речи -->
+        <div class="module" data-mod="speech">
+          <div class="module-head" onclick="toggleModule(this)">
+            <div class="module-icon" style="background:var(--blue-light);color:var(--blue)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></div>
+            <div class="module-info">
+              <div class="module-name">Анализ речи</div>
+              <div class="module-desc">Слова-паразиты, темп речи, длинные паузы</div>
+            </div>
+            <div class="module-right">
+              <span class="module-status status-on">Включён</span>
+              <div class="toggle on" onclick="event.stopPropagation();toggleSwitch(this)"><div class="toggle-knob"></div></div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="module-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="module-body">
+            <div class="neo-tip">
+              <div class="neo-tip-icon">N</div>
+              <div class="neo-tip-text"><b>У ваших менеджеров в среднем 11 паразитов на звонок.</b> Рекомендую начать с порога 8 — не демотивируйте сразу. Через месяц снизьте до 5.</div>
+            </div>
+            <div class="mod-setting">
+              <div class="mod-setting-info">
+                <div class="mod-setting-name">Порог слов-паразитов (норма) <span class="help">?<span class="tip">Если менеджер использует больше этого числа паразитов за звонок — блок «Речь» в досье подсвечивается как проблема. Средний показатель для B2B продаж: 3-5. Для новой команды начните с 8, потом снижайте.</span></span></div>
+                <div class="mod-setting-desc">Выше этого значения — подсвечивается как проблема</div>
+              </div>
+              <div class="mod-setting-val"><input class="mod-input" type="number" value="8"></div>
+            </div>
+            <div class="mod-setting">
+              <div class="mod-setting-info">
+                <div class="mod-setting-name">Норма темпа речи (слов/мин) <span class="help">?<span class="tip">Скорость речи менеджера. Ниже 120 — слишком медленно, клиент скучает. Выше 150 — слишком быстро, клиент не успевает. Для технических продуктов допустимо 110-140.</span></span></div>
+                <div class="mod-setting-desc">Диапазон комфортного темпа</div>
+              </div>
+              <div class="mod-setting-val"><input class="mod-input" type="number" value="120" style="width:50px"> — <input class="mod-input" type="number" value="150" style="width:50px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Трекинг конкурентов -->
+        <div class="module" data-mod="competitors">
+          <div class="module-head" onclick="toggleModule(this)">
+            <div class="module-icon" style="background:var(--amber-light);color:var(--amber)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
+            <div class="module-info">
+              <div class="module-name">Трекинг конкурентов</div>
+              <div class="module-desc">Упоминания конкурентов в звонках, карточки, подсказки</div>
+            </div>
+            <div class="module-right">
+              <span class="module-status status-on">Включён</span>
+              <div class="toggle on" onclick="event.stopPropagation();toggleSwitch(this)"><div class="toggle-knob"></div></div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="module-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="module-body">
+            <div class="neo-tip">
+              <div class="neo-tip-icon">N</div>
+              <div class="neo-tip-text"><b>Менеджеры в 60% случаев не отрабатывают упоминание конкурента.</b> Рекомендую включить подсказки во время звонка. У вас заведено 3 конкурента, но обнаружено ещё 2 новых — добавьте карточки.</div>
+            </div>
+            <div class="mod-setting">
+              <div class="mod-setting-info">
+                <div class="mod-setting-name">Подсказки по конкурентам во время звонка <span class="help">?<span class="tip">Когда клиент упоминает конкурента — менеджер видит подсказку с вашими преимуществами прямо на экране. Если выключить — информация о конкурентах будет только в досье после звонка.</span></span></div>
+                <div class="mod-setting-desc">Если выключить — конкуренты будут только в досье</div>
+              </div>
+              <div class="mod-setting-val"><div class="toggle on toggle-sm" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+            </div>
+            <div class="mod-setting">
+              <div class="mod-setting-info">
+                <div class="mod-setting-name">Уведомление о новых конкурентах</div>
+                <div class="mod-setting-desc">Push когда AI обнаружит неизвестного конкурента</div>
+              </div>
+              <div class="mod-setting-val"><div class="toggle on toggle-sm" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Тренажёр — OFF -->
+        <div class="module disabled" data-mod="training">
+          <div class="module-head" onclick="toggleModule(this)">
+            <div class="module-icon" style="background:var(--surface-alt);color:var(--muted)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div>
+            <div class="module-info">
+              <div class="module-name">AI-тренажёр</div>
+              <div class="module-desc">Ролевые игры с виртуальным клиентом, персональные сценарии</div>
+            </div>
+            <div class="module-right">
+              <span class="module-status status-off">Выключен</span>
+              <div class="toggle off" onclick="event.stopPropagation();toggleSwitch(this)"><div class="toggle-knob"></div></div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="module-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="module-body">
+            <div class="neo-tip">
+              <div class="neo-tip-icon">N</div>
+              <div class="neo-tip-text"><b>Рекомендую включить на месяц 3.</b> Команда ещё привыкает к основным функциям. Когда средняя оценка стабилизируется выше 75 — тренажёр поможет точечно прокачать слабые места.</div>
+            </div>
+            <div class="mod-setting">
+              <div class="mod-setting-info">
+                <div class="mod-setting-name">Персональные сценарии Neo <span class="help">?<span class="tip">Neo анализирует реальные звонки каждого менеджера, находит повторяющиеся ошибки и автоматически создаёт тренировочные сценарии под слабые места конкретного человека.</span></span></div>
+                <div class="mod-setting-desc">Neo анализирует звонки и создаёт сценарии под слабости</div>
+              </div>
+              <div class="mod-setting-val"><div class="toggle off toggle-sm" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+            </div>
+            <div class="mod-setting">
+              <div class="mod-setting-info">
+                <div class="mod-setting-name">Свободный доступ <span class="help">?<span class="tip">Если включено — менеджер сам выбирает любые сценарии из библиотеки. Если выключено — менеджер видит только те, которые назначил РОП. Для мотивированной команды — свободный. Для контроля — только назначенные.</span></span></div>
+                <div class="mod-setting-desc">Менеджер сам выбирает сценарии (иначе — только назначенные)</div>
+              </div>
+              <div class="mod-setting-val"><div class="toggle on toggle-sm" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Геймификация — OFF -->
+        <div class="module disabled" data-mod="gamification">
+          <div class="module-head" onclick="toggleModule(this)">
+            <div class="module-icon" style="background:var(--surface-alt);color:var(--muted)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+            <div class="module-info">
+              <div class="module-name">Геймификация</div>
+              <div class="module-desc">XP, уровни, достижения, рейтинг команды</div>
+            </div>
+            <div class="module-right">
+              <span class="module-status status-off">Выключен</span>
+              <div class="toggle off" onclick="event.stopPropagation();toggleSwitch(this)"><div class="toggle-knob"></div></div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="module-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="module-body">
+            <div class="neo-tip">
+              <div class="neo-tip-icon">N</div>
+              <div class="neo-tip-text"><b>Включайте на месяц 2 вместе с KPI.</b> У вас разброс оценок между менеджерами небольшой (62-81) — публичный рейтинг не демотивирует отстающих. Рекомендую включить.</div>
+            </div>
+            <div class="mod-setting">
+              <div class="mod-setting-info">
+                <div class="mod-setting-name">Публичный рейтинг <span class="help">?<span class="tip">Менеджеры видят свои позиции относительно коллег. Стимулирует конкуренцию. Но если один менеджер сильно отстаёт — может демотивировать. Тогда лучше оставить только личный прогресс.</span></span></div>
+                <div class="mod-setting-desc">Менеджеры видят позиции друг друга</div>
+              </div>
+              <div class="mod-setting-val"><div class="toggle on toggle-sm" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+            </div>
+            <div class="mod-setting">
+              <div class="mod-setting-info">
+                <div class="mod-setting-name">Уведомления о достижениях коллег <span class="help">?<span class="tip">Все менеджеры видят когда кто-то из команды достиг нового уровня или выполнил цель. Работает как мотиватор для 70% команд. Можно выключить если вызывает напряжение.</span></span></div>
+                <div class="mod-setting-desc">«Анна достигла уровня Профи!»</div>
+              </div>
+              <div class="mod-setting-val"><div class="toggle on toggle-sm" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. KPI — OFF -->
+        <div class="module disabled" data-mod="kpi">
+          <div class="module-head" onclick="toggleModule(this)">
+            <div class="module-icon" style="background:var(--surface-alt);color:var(--muted)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg></div>
+            <div class="module-info">
+              <div class="module-name">KPI и цели</div>
+              <div class="module-desc">Дневные/недельные планы, прогресс-бары</div>
+            </div>
+            <div class="module-right">
+              <span class="module-status status-off">Выключен</span>
+              <div class="toggle off" onclick="event.stopPropagation();toggleSwitch(this)"><div class="toggle-knob"></div></div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="module-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="module-body">
+            <div class="neo-tip">
+              <div class="neo-tip-icon">N</div>
+              <div class="neo-tip-text"><b>Ваши менеджеры делают в среднем 14 звонков в день.</b> Рекомендую начать с 2 метрик: количество звонков (план 16) + средняя оценка (план 70+). Не ставьте больше 3 метрик на старте.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8. База знаний -->
+        <div class="module" data-mod="kb">
+          <div class="module-head" onclick="toggleModule(this)">
+            <div class="module-icon" style="background:var(--purple-light);color:var(--purple)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>
+            <div class="module-info">
+              <div class="module-name">База знаний</div>
+              <div class="module-desc">Продукты, цены, характеристики для RAG-подсказок</div>
+            </div>
+            <div class="module-right">
+              <span class="module-status status-on">Включён</span>
+              <div class="toggle on" onclick="event.stopPropagation();toggleSwitch(this)"><div class="toggle-knob"></div></div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="module-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="module-body">
+            <div class="neo-tip">
+              <div class="neo-tip-icon">N</div>
+              <div class="neo-tip-text"><b>Базовый модуль.</b> Без него подсказки будут работать только по скрипту. С базой знаний — менеджер получает цены, характеристики, ответы на вопросы прямо во время звонка.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 9. CRM — OFF -->
+        <div class="module disabled" data-mod="crm">
+          <div class="module-head" onclick="toggleModule(this)">
+            <div class="module-icon" style="background:var(--surface-alt);color:var(--muted)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+            <div class="module-info">
+              <div class="module-name">Интеграция с CRM</div>
+              <div class="module-desc">Отправка досье в Битрикс24 / amoCRM</div>
+            </div>
+            <div class="module-right">
+              <span class="module-status status-off">Не подключена</span>
+              <div class="toggle off" onclick="event.stopPropagation();toggleSwitch(this)"><div class="toggle-knob"></div></div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="module-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="module-body">
+            <div class="neo-tip">
+              <div class="neo-tip-icon">N</div>
+              <div class="neo-tip-text"><b>Подключите CRM чтобы досье автоматически создавало контакты и сделки.</b> Без CRM всё работает, но менеджеры переносят данные вручную. Поддерживается Битрикс24 и amoCRM.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 10. АТС — OFF -->
+        <div class="module disabled" data-mod="ats">
+          <div class="module-head" onclick="toggleModule(this)">
+            <div class="module-icon" style="background:var(--surface-alt);color:var(--muted)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+            <div class="module-info">
+              <div class="module-name">АТС и офлайн-обработка</div>
+              <div class="module-desc">Получение записей звонков с виртуальной АТС</div>
+            </div>
+            <div class="module-right">
+              <span class="module-status status-off">Не подключена</span>
+              <div class="toggle off" onclick="event.stopPropagation();toggleSwitch(this)"><div class="toggle-knob"></div></div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="module-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="module-body">
+            <div class="neo-tip">
+              <div class="neo-tip-icon">N</div>
+              <div class="neo-tip-text"><b>Подключите если менеджеры звонят с мобильного.</b> Система получит записи с АТС, обработает их и покажет досье. Вы увидите полную картину — не только звонки за компьютером.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="ctrls">
+    <button class="neo-fab" onclick="alert('Neo-помощник: Какие модули включить сейчас?')">N</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  window.toggleModule = function(head) {
+    var body = head.nextElementSibling;
+    var chev = head.querySelector('.module-chev');
+    body.classList.toggle('show');
+    chev.classList.toggle('open');
+  };
+
+  window.toggleSwitch = function(el) {
+    var isOn = el.classList.contains('on');
+    el.classList.toggle('on', !isOn);
+    el.classList.toggle('off', isOn);
+    // Update status label
+    var mod = el.closest('.module');
+    var status = mod.querySelector('.module-status');
+    var icon = mod.querySelector('.module-icon');
+    if (!isOn) {
+      status.className = 'module-status status-on';
+      status.textContent = 'Включён';
+      mod.classList.remove('disabled');
+    } else {
+      status.className = 'module-status status-off';
+      status.textContent = 'Выключен';
+      mod.classList.add('disabled');
+    }
+  };
+
+  var dark = false;
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    dark = !dark;
+    document.getElementById('app').classList.toggle('dark', dark);
+    this.innerHTML = dark
+      ? '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+  });
+})();
+</script>
+</body>
+</html>
