@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Занятие 7 · Поиск информации и аналитика · ИИ. Новая реальность</title>
+<style>
+:root{
+  --bg0:#0B1220; --bg1:#131B2E; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.1);
+  --text:#F4F1EC; --muted:#9AA3B2; --steel:#4F7CAC;
+  --proekt:#E07461; --proekt-soft:rgba(224,116,97,.16);
+  --assistant:#B69BE6; --assistant-soft:rgba(182,155,230,.15);
+  --skill:#F2C14E; --skill-soft:rgba(242,193,78,.14);
+  --google:#7FA6D0; --google-soft:rgba(127,166,208,.15);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(170deg,var(--bg0),var(--bg1));color:var(--text);-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:740px;margin:0 auto;padding:28px 20px 90px}
+.kicker{color:var(--proekt);font-size:13px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px}
+h1{font-size:32px;line-height:1.15;font-weight:800;letter-spacing:-.01em}
+h1 .a1{color:var(--proekt)}
+h1 .a2{color:var(--assistant)}
+h1 .a3{color:var(--skill)}
+.sub{color:var(--muted);font-size:16px;margin-top:10px;line-height:1.5}
+h2{font-size:22px;font-weight:750;margin:44px 0 6px;display:flex;align-items:center;gap:10px;line-height:1.2}
+h2 .n{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--proekt);color:#fff;font-size:16px;font-weight:800}
+h2.as .n{background:var(--assistant);color:#1a1230}
+h2.sk .n{background:var(--skill);color:#3a2c05}
+h2.go .n{background:var(--google);color:#0d1c2b}
+.hint{color:var(--muted);font-size:15px;margin-bottom:12px;line-height:1.5}
+.hint b{color:var(--text)}
+.copy{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--proekt);border-radius:14px;padding:16px 16px 36px;margin:10px 0;font-size:15px;line-height:1.55;cursor:pointer;transition:border-color .2s, background .2s;-webkit-user-select:none;user-select:none;white-space:pre-wrap;word-break:break-word}
+.copy:active{background:rgba(224,116,97,.12)}
+.copy .tag{position:absolute;right:12px;bottom:9px;font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.copy.done{border-color:var(--proekt)}
+.copy.done .tag{color:var(--proekt)}
+.copy .lbl{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--steel);margin-bottom:2px}
+.copy .ph{color:var(--proekt);font-weight:650}
+.copy.as{border-left-color:var(--assistant)}
+.copy.as:active{background:rgba(182,155,230,.12)}
+.copy.as.done{border-color:var(--assistant)}
+.copy.as.done .tag{color:var(--assistant)}
+.copy.as .lbl,.copy.as .ph{color:var(--assistant)}
+.copy.sk{border-left-color:var(--skill)}
+.copy.sk:active{background:rgba(242,193,78,.12)}
+.copy.sk.done{border-color:var(--skill)}
+.copy.sk.done .tag{color:var(--skill)}
+.copy.sk .lbl,.copy.sk .ph{color:var(--skill)}
+.copy.go{border-left-color:var(--google)}
+.copy.go:active{background:rgba(127,166,208,.12)}
+.copy.go.done{border-color:var(--google)}
+.copy.go.done .tag{color:var(--google)}
+.copy.go .lbl,.copy.go .ph{color:var(--google)}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:10px 0;font-size:15px;line-height:1.5}
+.step b{color:var(--proekt)}
+.step.as b{color:var(--assistant)}
+.step.sk b{color:var(--skill)}
+.step.go b{color:var(--google)}
+.note{background:var(--proekt-soft);border:1px solid rgba(224,116,97,.35);border-radius:14px;padding:14px 16px;font-size:15px;line-height:1.55;margin:14px 0}
+.note b{color:var(--proekt)}
+.note.as{background:var(--assistant-soft);border-color:rgba(182,155,230,.35)}
+.note.as b{color:var(--assistant)}
+.note.sk{background:var(--skill-soft);border-color:rgba(242,193,78,.35)}
+.note.sk b{color:var(--skill)}
+.note.go{background:var(--google-soft);border-color:rgba(127,166,208,.35)}
+.note.go b{color:var(--google)}
+.map{display:grid;grid-template-columns:1fr;gap:10px;margin:16px 0}
+.map .m{border:1px solid var(--line);border-radius:14px;padding:13px 15px;background:var(--surface)}
+.map .m b{display:block;font-size:16px;margin-bottom:3px}
+.map .m span{color:var(--muted);font-size:14.5px;line-height:1.5;display:block}
+.map .m.p{border-left:4px solid var(--proekt)} .map .m.p b{color:var(--proekt)}
+.map .m.a{border-left:4px solid var(--assistant)} .map .m.a b{color:var(--assistant)}
+.map .m.s{border-left:4px solid var(--skill)} .map .m.s b{color:var(--skill)}
+.frm{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 14px;margin:12px 0}
+.frm .r{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.45}
+.frm .r:last-child{border-bottom:none}
+.frm .r .let{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--assistant-soft);color:var(--assistant);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center}
+.frm .r b{display:block;color:var(--text);font-size:15px;margin-bottom:2px}
+.frm .r span{color:var(--muted)}
+.chk{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 14px;margin:12px 0}
+.chk .r{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.5}
+.chk .r:last-child{border-bottom:none}
+.chk .r i{flex:0 0 auto;font-style:normal;width:24px;height:24px;border-radius:7px;background:var(--assistant-soft);color:var(--assistant);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.chk .r b{display:block;color:var(--text);font-size:15px;margin-bottom:2px}
+.chk .r span{color:var(--muted)}
+.chk.sk .r i{background:var(--skill-soft);color:var(--skill)}
+.chk.go .r i{background:var(--google-soft);color:var(--google)}
+.chk.pr .r i{background:var(--proekt-soft);color:var(--proekt)}
+.tbl{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:12px 0;background:var(--surface)}
+.tbl .h{display:flex;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding:10px 14px}
+.tbl .row{padding:13px 14px;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.5}
+.tbl .row:last-child{border-bottom:none}
+.tbl .row b{display:block;font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px}
+.tbl .row span{color:var(--muted)}
+.tbl .row.ok b{color:#10b981}
+.tbl .row.warn b{color:var(--skill)}
+.tbl .row.no b{color:var(--proekt)}
+.err{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:10px 0}
+.err .et{font-size:16px;font-weight:750;line-height:1.3;display:flex;gap:9px;align-items:flex-start;margin-bottom:10px}
+.err .et .num{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--assistant-soft);color:var(--assistant);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.err .was,.err .now{border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.5;margin-bottom:8px;word-break:break-word}
+.err .was{background:rgba(255,255,255,.04);border-left:3px solid var(--muted);color:var(--muted)}
+.err .now{background:rgba(182,155,230,.1);border-left:3px solid var(--assistant)}
+.err .lb{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;color:var(--muted)}
+.err .now .lb{color:var(--assistant)}
+.way{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:10px 0;font-size:15px;line-height:1.6}
+.way h3{font-size:16px;font-weight:750;margin-bottom:8px;color:var(--assistant)}
+.way ol{margin:0 0 0 18px}
+.way li{margin:5px 0}
+.way b{color:var(--text)}
+.ladder{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:12px 0}
+.ladder i{font-style:normal;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:7px 12px;font-size:13.5px;line-height:1.2}
+.ladder i.on{background:var(--assistant-soft);border-color:rgba(182,155,230,.4);color:var(--assistant);font-weight:750}
+.ladder u{text-decoration:none;color:var(--muted);font-size:14px}
+.ladder span{display:inline-flex;align-items:center;gap:7px}
+.biglink{display:block;background:var(--skill-soft);border:1px solid rgba(242,193,78,.4);border-radius:14px;padding:16px;text-decoration:none;color:var(--text);margin:12px 0}
+.biglink b{display:block;font-size:17px;color:var(--skill)}
+.biglink span{font-size:14px;color:var(--muted);display:block;margin-top:4px;line-height:1.45}
+details.lib{margin:14px 0}
+details.lib>summary{cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;font-size:17px;font-weight:750;color:var(--text);list-style:none}
+details.lib>summary::-webkit-details-marker{display:none}
+details.lib>summary .c{color:var(--assistant)}
+details.lib>summary .cp{color:var(--proekt)}
+details.lib>summary::after{content:"развернуть ▾";float:right;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-top:3px}
+details.lib[open]>summary::after{content:"свернуть ▴"}
+.lib h3{font-size:17px;font-weight:750;margin:22px 0 4px}
+.lib .h3sub{color:var(--muted);font-size:13.5px;margin-bottom:8px;line-height:1.45}
+.lib .files{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0 4px;font-size:14px;line-height:1.6;color:var(--muted)}
+.lib .files b{display:block;color:var(--text);font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+.pl{display:grid;gap:10px;margin:12px 0}
+.pl .g{border:1px solid var(--line);border-left:4px solid var(--assistant);border-radius:14px;padding:13px 15px;background:var(--surface)}
+.pl .g b{display:block;font-size:15px;color:var(--assistant);margin-bottom:6px}
+.pl .g ol{margin:0 0 0 21px;padding:0}
+.pl .g li{font-size:14.5px;line-height:1.5;color:var(--muted);margin:3px 0}
+.foot{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;line-height:1.6;text-align:center}
+.foot b{color:var(--proekt)}
+a.sl{color:var(--proekt);font-weight:650;text-decoration:underline;text-underline-offset:3px}
+.way a.sl,.step a.sl{color:var(--proekt)}
+/* ── занятие 4: изумруд для блокнотов и голубой акцент заголовка ── */
+:root{--kb:#10b981;--kb-soft:rgba(16,185,129,.15)}
+h1 .a4{color:var(--google)}
+h2.kb .n{background:var(--kb);color:#04261a}
+.copy.kb{border-left-color:var(--kb)}
+.copy.kb:active{background:rgba(16,185,129,.12)}
+.copy.kb.done{border-color:var(--kb)}
+.copy.kb.done .tag{color:var(--kb)}
+.copy.kb .lbl,.copy.kb .ph{color:var(--kb)}
+.note.kb{border-color:var(--kb);background:var(--kb-soft)}
+</style><style>
+/* Занятие 7: акценты блоков. as = изумруд (аналитика), sk = золото (прогноз), go = стальной (инструменты) */
+:root{--assistant:#10b981;--assistant-soft:rgba(16,185,129,.15)}
+h2.as .n{background:#10b981;color:#04241a}
+.tbl .row a{color:var(--text);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25)}
+.tbl .row a:hover{border-color:var(--proekt)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="kicker">ИИ. Новая реальность · Поток 4 · Занятие 7 · 18 августа 2026</div>
+<h1>Поиск информации <span class="a1">и аналитика</span></h1>
+<div class="sub">Всё, что показывали на занятии, собрано здесь. Промпты копируются <b>в одно касание</b>: нажмите на серый блок. Квадратные скобки замените на своё.</div>
+
+<h2><span class="n">0</span>С чего начать</h2>
+<div class="hint">В ChatGPT нажмите <b>плюсик</b> слева от строки ввода. Там три разных режима, и путать их дорого.</div>
+<div class="tbl">
+  <div class="row"><b>Поиск в сети</b> Быстрый факт: цена, адрес, что вышло на неделе. Ответ за 10 секунд.</div>
+  <div class="row"><b>Глубокое исследование</b> Решение на деньги: рынок, конкуренты, поставщики. От 5 до 30 минут, окно можно закрыть.</div>
+  <div class="row"><b>Работа</b> Когда надо не узнать, а сделать: собрать файл, заполнить таблицу. Отдельный недельный лимит.</div>
+</div>
+<div class="hint">Кончился лимит: те же промпты работают в <a href="https://www.kimi.com" target="_blank">kimi.com</a>, <a href="https://chat.qwen.ai" target="_blank">chat.qwen.ai</a> и <a href="https://chat.z.ai" target="_blank">chat.z.ai</a>. Все три <b>без VPN</b>.</div>
+<div class="hint"><b>Правило трёх врачей.</b> Важную цифру спросите у трёх разных ИИ. Совпали: верим. Разошлись: открываем ссылку и смотрим первоисточник.</div>
+
+<h2><span class="n">1</span>Исследование рынка и конкурентов</h2>
+<div class="hint">Базовый промпт. Работает в любой сфере, дальше идут готовые под ваши.</div>
+<div class="copy" data-c><span class="lbl">Универсальный</span>Ты бизнес-аналитик с опытом в сфере [ваша отрасль] в России.
+Проведи глубокий анализ рынка [ваша ниша] в [город].
+Найди: топ-10 конкурентов с сайтами, цены конкретными цифрами, сильные и слабые стороны по отзывам, каналы привлечения клиентов.
+Определи мою позицию на рынке: где я отстаю, где опережаю, в чём могу отстроиться.
+Формат: таблица сравнения плюс 5 рекомендаций. Ссылка на каждый факт.<span class="tag">копировать</span></div>
+
+<div class="copy" data-c><span class="lbl">Управляющая компания</span>Ты аналитик рынка жилищно-коммунальных услуг.
+Сравни подрядчиков по [обслуживание лифтов, кровля, уборка, аварийка] в [город]: цены, условия договоров, сроки реакции, отзывы жителей и УК, судебные споры за два года.
+Отдельно: у кого чаще всего проблемы и по каким причинам.
+Формат: таблица по цене и надёжности, вывод «кого брать и кого не брать». Ссылки на источники.<span class="tag">копировать</span></div>
+
+<div class="copy" data-c><span class="lbl">Школа плавания и детские секции</span>Ты аналитик рынка детских спортивных услуг.
+Собери все школы плавания и бассейны в [город]: цены абонементов и разовых занятий, расписание, возрастные группы, тренерский состав, акции для новичков.
+Проанализируй отзывы: за что хвалят, на что жалуются чаще всего.
+Итог: таблица сравнения, где у конкурентов слабо, и 5 вещей, которые мне усилить в первую очередь. Со ссылками.<span class="tag">копировать</span></div>
+
+<div class="copy" data-c><span class="lbl">Контент, блоги, рилсы</span>Ты аналитик соцсетей и контента.
+Разбери, какие форматы в нише [тема] набирают охваты в 2026 году: темы, длина роликов, приёмы удержания в первые 3 секунды, структура сценария, что уже перестало работать.
+Посмотри 10 сильных аккаунтов в этой нише и найди у них общее.
+Итог: 10 идей роликов под меня с обоснованием, почему каждая зайдёт. Ссылки на примеры.<span class="tag">копировать</span></div>
+
+<div class="copy" data-c><span class="lbl">Медоборудование, мебель, тендеры</span>Ты отраслевой аналитик рынка медицинских изделий в России.
+Проанализируй рынок [категория изделий]: производители и импортёры, диапазон цен, требования к регистрационным удостоверениям и сертификации, ограничения по госзакупкам.
+Посмотри, кто выигрывал тендеры по этой категории за последний год и с какими ценами.
+Итог: таблица игроков, барьеры входа, и где у нас есть шанс выиграть. Ссылки на источники и закупки.<span class="tag">копировать</span></div>
+
+<div class="copy" data-c><span class="lbl">Юридическая практика</span>Ты юридический аналитик.
+Собери судебную практику по [категория споров] за последние два года в [регион или РФ]: как чаще всего решают, какие аргументы срабатывают у истца и у ответчика, типичные суммы взысканий, свежие позиции вышестоящих судов.
+Итог: краткая сводка тенденций, 5 работающих аргументов, 3 частые ошибки. Ссылки на конкретные дела.<span class="tag">копировать</span></div>
+
+<div class="copy" data-c><span class="lbl">Автобизнес, импорт</span>Ты закупщик-эксперт по импорту автомобилей.
+Сравни варианты покупки [модель, год, комплектация]: площадки Китая, аукционы Японии, предложения внутри России, Кыргызстана и Беларуси.
+Для каждого: цена закупки, логистика, таможенные платежи и утильсбор, срок доставки, риски.
+Итог: таблица с итоговой ценой под ключ в рублях, отсортированная по выгоде, и вывод, какой путь сейчас разумнее. Ссылки на предложения.<span class="tag">копировать</span></div>
+
+<div class="copy" data-c><span class="lbl">Строительство частных домов</span>Ты аналитик рынка загородного строительства.
+Собери подрядчиков по домам [технология: каркас, газобетон, брус] в [регион]: цены за квадратный метр по этапам, сроки, что входит и что нет, отзывы заказчиков, типичные конфликты и претензии.
+Отдельно: как сейчас двигались цены на основные материалы за последний год.
+Итог: таблица сравнения, где я могу отстроиться, и 5 вещей, которые чаще всего идут не так у клиентов. Ссылки.<span class="tag">копировать</span></div>
+
+<div class="copy" data-c><span class="lbl">Досье на клиента перед встречей</span>Собери досье на компанию [название], город [город].
+Чем занимается, масштаб и обороты, ключевые люди и их публичные высказывания, новости за последний год, тендеры и контракты, судебные дела, вакансии (по ним видно, куда растут).
+Определи 3 болевые точки, которые видно со стороны.
+Итог: одна страница брифинга и 3 варианта, что им предложить, чтобы попасть в реальную задачу. Ссылки на каждый факт.<span class="tag">копировать</span></div>
+
+<div class="copy" data-c><span class="lbl">Сколько это стоит на самом деле</span>Найди, сколько сейчас стоит [товар или услуга] в [город]: минимальная, средняя и максимальная цена, из чего складывается разница, что входит в дешёвый вариант и чего в нём нет.
+Не ограничивайся первой страницей: посмотри маркетплейсы, отраслевые площадки, сайты компаний, объявления.
+Итог: таблица по цене, вывод где переплачивают чаще всего, и справедливая цена для моего случая. Ссылки.<span class="tag">копировать</span></div>
+
+<div class="copy" data-c><span class="lbl">Новый канал привлечения</span>Разбери, как в нише [ниша] в России сейчас привлекают клиентов: какие каналы работают, примерная стоимость заявки по каждому, что перестало работать за последний год.
+Посмотри, что делают 5 сильных игроков ниши.
+Итог: 5 гипотез под мой бюджет [сумма] в месяц, для каждой: что делаем, сколько стоит, как поймём за 2 недели, что не сработало. Ссылки на примеры.<span class="tag">копировать</span></div>
+
+<div class="copy" data-c><span class="lbl">Рынок труда и найм</span>Ты аналитик рынка труда.
+Собери данные по позиции [должность] в [город]: зарплатные вилки по грейдам, что предлагают компании-конкуренты, дефицитные навыки, что пишут сотрудники в отзывах о работодателях этой сферы.
+Итог: вилка, которую надо ставить, чтобы получать отклики, и 5 нематериальных вещей, которыми реально удерживают. Ссылки на вакансии и отзывы.<span class="tag">копировать</span></div>
+
+<div class="copy" data-c><span class="lbl">Закон и риски</span>Что изменилось в регулировании сферы [сфера] в России за последний год и что меняется в ближайшие 6 месяцев.
+Для каждого изменения: суть простыми словами, с какой даты, кого касается, штрафы и ответственность, что нужно сделать компании моего размера [размер].
+Только действующие документы, со ссылками на официальные источники. Если данные противоречивы, скажи об этом прямо.<span class="tag">копировать</span></div>
+
+<h2><span class="n">2</span>Зеркало 360: что интернет знает о вас</h2>
+<div class="hint">Полезно перед переговорами, эфиром, выходом на новый рынок. И просто раз в квартал.</div>
+<div class="copy" data-c><span class="lbl">Репутация компании</span>Проведи глубокое исследование всех упоминаний [название компании, город] в интернете.
+Ищи: отзывы на Яндекс.Картах, 2ГИС, Google Maps, отзовики, упоминания в соцсетях и Telegram, статьи, форумы, сайты жалоб.
+Для каждого упоминания: ссылка, тональность, ключевая цитата, дата.
+Итог: оценка репутации по 10-балльной шкале, топ-3 плюса, топ-3 минуса, что исправить первым и что можно закрыть за неделю.<span class="tag">копировать</span></div>
+<div class="copy" data-c><span class="lbl">Личный бренд</span>Проведи глубокое исследование всех публичных упоминаний человека [имя фамилия, город, сфера] в интернете: соцсети, статьи, выступления, комментарии, упоминания в СМИ и профессиональных сообществах.
+Для каждого: ссылка, тональность, дата.
+Итог: как этого человека видит незнакомый клиент или партнёр перед встречей, сильные стороны образа, пробелы, и что стоит добавить в публичное поле в ближайший месяц.<span class="tag">копировать</span></div>
+<div class="copy" data-c><span class="lbl">Разведка по конкуренту</span>Проведи глубокое исследование компании [конкурент, город]: услуги и цены, позиционирование, каналы привлечения, отзывы клиентов и сотрудников, новости и изменения за год.
+Отдельно выпиши: за что их хвалят и за что ругают, дословными цитатами.
+Итог: их сильные и слабые места, и 5 конкретных ходов, которыми я могу забрать их недовольных клиентов.<span class="tag">копировать</span></div>
+
+<h2><span class="n">3</span>Поставщики, товары и настоящая цена</h2>
+<div class="hint">Фраза <b>«не ограничивайся первой страницей»</b> и есть вся ценность. Без неё вы получите три верхних результата поиска.</div>
+<div class="copy" data-c><span class="lbl">Поиск поставщика</span>Ты закупщик-эксперт в сфере [ваша сфера].
+Найди поставщиков [продукт с характеристиками: размер, материал, класс, объём].
+География поиска: [Россия, Китай, Турция].
+Не ограничивайся первой страницей: копай каталоги, оптовые площадки, отраслевые порталы, профильные выставки.
+Для каждого: цена опт и розница, минимальный заказ, срок поставки, документы и сертификаты, условия оплаты.
+Итог: таблица, отсортированная по итоговой цене с доставкой, и вывод, у кого брать и почему.<span class="tag">копировать</span></div>
+<div class="copy" data-c><span class="lbl">Подрядчик под задачу</span>Найди подрядчиков под задачу: [описание задачи] в [город или удалённо].
+Для каждого: профиль и опыт в этой задаче, примерная стоимость, сроки, портфолио и реальные отзывы, риски работы с ними.
+Не ограничивайся первой страницей выдачи: посмотри профильные площадки, сообщества, каталоги, отзывы на сторонних ресурсах.
+Итог: короткий список из 5 кандидатов с обоснованием и вопросы, которые надо задать каждому до предоплаты.<span class="tag">копировать</span></div>
+<div class="copy" data-c><span class="lbl">Сервис или программа под задачу</span>Сравни сервисы для задачи [задача]: функции, тарифы, ограничения для российских пользователей, нужен ли VPN, есть ли оплата из России, отзывы и типичные жалобы, насколько сложно внедрить.
+Итог: 3 варианта под мой случай [описание случая и бюджет], с обоснованием, и один вариант, с которого начать бесплатно.<span class="tag">копировать</span></div>
+
+<h2 class="as"><span class="n">4</span>Аналитика: свои данные под рентген</h2>
+<div class="hint"><b>Перед загрузкой вычищаем:</b> ФИО клиентов и сотрудников, телефоны, адреса, номера договоров, реквизиты, номера карт. Оставляем даты, суммы, категории, количества, статусы. Имена можно заменить на «Клиент 1, Клиент 2»: анализ не пострадает.</div>
+<div class="copy as" data-c><span class="lbl">Разбор таблицы</span>Проанализируй загруженную таблицу как опытный бизнес-аналитик.
+Шаг 1. Опиши, что видишь: какие столбцы, сколько строк, за какой период. Скажи прямо, если данные кривые, неполные или противоречивые.
+Шаг 2. Посчитай ключевые показатели, найди закономерности, связи между столбцами и аномалии.
+Шаг 3. Построй 4 графика, которые лучше всего объясняют картину.
+Шаг 4. Дай 5 выводов и 3 рекомендации: что изменить, чтобы вырасти.
+Отдельно: одно действие, которое даст максимальный эффект в ближайший месяц.<span class="tag">копировать</span></div>
+<div class="copy as" data-c><span class="lbl">Где утекают деньги</span>Проанализируй загруженную таблицу расходов как финансовый аналитик.
+Разбей расходы по категориям и по месяцам, покажи структуру в процентах.
+Найди: что растёт быстрее выручки, разовые аномальные траты, подписки и регулярные платежи, о которых легко забыть, категории с наибольшим потенциалом экономии.
+Итог: таблица по категориям, 3 места, где деньги утекают тише всего, и сколько можно вернуть за месяц без потери качества.<span class="tag">копировать</span></div>
+<div class="copy as" data-c><span class="lbl">Что прибыльно, что тянет вниз</span>Проанализируй загруженную таблицу продаж или сделок.
+Посчитай по каждой позиции или направлению: объём, выручку, долю в общем результате, динамику по месяцам.
+Найди: что даёт основную выручку, что съедает время и внимание при малой отдаче, что растёт и заслуживает усиления, что стоит закрыть.
+Итог: таблица с рекомендацией по каждой позиции (усилить, оставить, закрыть) и обоснованием.<span class="tag">копировать</span></div>
+<div class="copy as" data-c><span class="lbl">Разбор отзывов</span>Ты аналитик клиентского опыта.
+Проанализируй отзывы ниже. Не пропускай ни один, каждый важен.
+Определи: тональность каждого, топ-5 жалоб с цитатами, топ-5 похвал с цитатами, неожиданные инсайты, которые я сам бы не заметил.
+Отдельно раздели: что из жалоб можно исправить за неделю и почти бесплатно, а что требует денег и времени.
+Итог: диаграмма тональности и 3 действия на ближайшие 7 дней.
+
+Отзывы:
+[вставьте сюда 20-30 отзывов]<span class="tag">копировать</span></div>
+<div class="copy as" data-c><span class="lbl">Разбор переписок и вопросов клиентов</span>Проанализируй переписки с клиентами ниже.
+Найди: 10 самых частых вопросов, на каком шаге чаще всего срывается разговор, какие возражения повторяются, где мы отвечаем слишком долго или слишком сложно.
+Итог: список частых вопросов с готовыми короткими ответами, 5 мест, где мы теряем клиента, и что переписать в скриптах.
+
+Переписки:
+[вставьте текст]<span class="tag">копировать</span></div>
+<div class="copy as" data-c><span class="lbl">Нет своих данных</span>Создай реалистичный пример таблицы [продаж, заявок, расходов] за 12 месяцев для бизнеса [сфера, размер], со всеми типичными колонками.
+Затем проанализируй её как опытный бизнес-аналитик: закономерности, аномалии, графики, выводы и рекомендации.
+В конце объясни, какие колонки мне стоит начать вести у себя, чтобы такой анализ работал на реальных данных.<span class="tag">копировать</span></div>
+
+<h2 class="sk"><span class="n">5</span>Прогноз: что будет дальше</h2>
+<div class="hint">ИИ считает по истории. Он не знает, что в июне уходит ключевой мастер и что рядом открылся конкурент. <b>Его скорость плюс ваш контекст.</b></div>
+<div class="copy sk" data-c><span class="lbl">Прогноз на 3 месяца</span>Ты аналитик данных. Проанализируй загруженную таблицу и построй прогноз.
+Шаг 1. Найди сезонность: есть ли повторяющиеся циклы по месяцам или дням недели.
+Шаг 2. Определи тренд: растём, падаем или стоим на месте.
+Шаг 3. Построй прогноз на 3 месяца вперёд, метод подбери сам под характер данных.
+Шаг 4. Покажи на одном графике: историю, прогноз и доверительный интервал.
+В конце честно скажи, насколько ты уверен в прогнозе и что может его сломать.<span class="tag">копировать</span></div>
+<div class="copy sk" data-c><span class="lbl">Когда закончится и когда заказывать</span>Ты аналитик запасов и закупок.
+Проанализируй таблицу расхода по позициям за 12 месяцев. Для каждой позиции определи: средний расход в месяц, сезонные пики, текущий остаток.
+Спрогнозируй, когда позиция закончится при текущем темпе.
+Учти срок поставки [14 дней] и посчитай, когда нужно разместить заказ, чтобы не встать.
+Итог: таблица (позиция, остаток, дата окончания, дата заказа, рекомендуемый объём), отсортированная по срочности.<span class="tag">копировать</span></div>
+<div class="copy sk" data-c><span class="lbl">Сезонность спроса и загрузки</span>Проанализируй помесячные данные [заявок, записей, продаж, обращений] за последний год или два.
+Найди сезонные пики и провалы, объясни вероятные причины, посчитай, насколько сильно отличаются месяцы.
+Итог: календарь года по месяцам с пометками (усиливать команду, запускать акцию, делать ремонт и отпуска, готовить запас) и 3 решения, которые надо принять уже сейчас, чтобы успеть.<span class="tag">копировать</span></div>
+<div class="copy sk" data-c><span class="lbl">Проверка прогноза вашим контекстом</span>Вот твой прогноз. Теперь пересчитай его с учётом моих вводных, которых нет в цифрах: [например: в июле мы не работаем две недели, с сентября поднимаем цену на 15 процентов, рядом открылся конкурент].
+Покажи, как меняется прогноз, что становится риском и что становится возможностью.
+Дай итоговый план на 3 месяца: что делаем в каждом месяце.<span class="tag">копировать</span></div>
+
+<h2 class="go"><span class="n">6</span>Куда идти и чем добивать</h2>
+<div class="hint">Работают без VPN, проверено 18.08.2026.</div>
+<div class="tbl">
+  <div class="row"><a href="https://www.kimi.com" target="_blank"><b>Kimi</b></a> Версия K3. Глубокое исследование и таблицы в одном окне. Интерфейс по умолчанию китайский, язык переключается.</div>
+  <div class="row"><a href="https://chat.qwen.ai" target="_blank"><b>Qwen</b></a> Файлы, картинки, разбор таблиц. Платного тарифа нет вообще.</div>
+  <div class="row"><a href="https://chat.z.ai" target="_blank"><b>GLM (z.ai)</b></a> Ровный резерв, когда у остальных очередь.</div>
+  <div class="row"><a href="https://ya.ru/ai" target="_blank"><b>Алиса</b></a> и <a href="https://giga.chat" target="_blank"><b>GigaChat</b></a> Российские источники: законы, госсайты, местные новости.</div>
+</div>
+<div class="hint">С VPN: <a href="https://chatgpt.com" target="_blank">ChatGPT</a>, <a href="https://gemini.google.com" target="_blank">Gemini</a>, <a href="https://claude.ai" target="_blank">Claude</a>, <a href="https://grok.com" target="_blank">Grok</a>.</div>
+<div class="hint">Специализированные, обзором. Начинаем всегда с бесплатного:</div>
+<div class="tbl">
+  <div class="row"><a href="https://www.perplexity.ai" target="_blank"><b>Perplexity</b></a> Поисковик, который отвечает фактами со ссылкой на каждый.</div>
+  <div class="row"><a href="https://julius.ai" target="_blank"><b>Julius AI</b></a> Загрузили таблицу, получили дашборд и графики без формул.</div>
+  <div class="row"><a href="https://rows.com" target="_blank"><b>Rows</b></a> Таблица со встроенным ИИ: аномалии и прогнозы прямо в ячейках.</div>
+  <div class="row"><a href="https://www.similarweb.com" target="_blank"><b>SimilarWeb</b></a> Откуда идёт трафик к сайтам конкурентов.</div>
+  <div class="row"><a href="https://brand24.com" target="_blank"><b>Brand24</b></a> Мониторинг упоминаний бренда и тональности.</div>
+  <div class="row"><a href="https://www.apollo.io" target="_blank"><b>Apollo</b></a> База компаний и контактов ЛПР для B2B.</div>
+</div>
+<div class="hint">Где брать данные для практики: <a href="https://2gis.ru" target="_blank">2ГИС</a>, <a href="https://yandex.ru/maps" target="_blank">Яндекс.Карты</a>, выгрузки из CRM и 1С, выписка из личного кабинета банка, статистика соцсетей и рекламного кабинета.</div>
+
+<h2 class="go"><span class="n">7</span>Связка: чтобы это работало завтра</h2>
+<div class="hint">Отчёт, который остался лежать в чате, через неделю мёртв. Четыре шага, чтобы он жил.</div>
+<div class="tbl">
+  <div class="row"><b>1</b> Сохранили исследование в файл: экспорт или копия в документ.</div>
+  <div class="row"><b>2</b> Положили в <b>базу знаний ассистента</b> из занятия 3. Теперь он отвечает на фактах о рынке, а не из головы.</div>
+  <div class="row"><b>3</b> Вторую копию в <b>блокнот</b> из занятия 4. Оттуда получится презентация, пересказ и карточки.</div>
+  <div class="row"><b>4</b> Раз в квартал повторили то же исследование и сравнили два отчёта. Это уже управление, а не разовое любопытство.</div>
+</div>
+<div class="copy go" data-c><span class="lbl">Вопрос ассистенту по свежему отчёту</span>В твоей базе знаний лежит исследование рынка [ниша, город] от [дата].
+Опираясь только на него, ответь: какие 3 решения мне стоит принять в ближайший месяц, что из этого самое срочное и на какие цифры из отчёта ты опираешься.
+Если данных для вывода не хватает, скажи прямо, чего именно не хватает.<span class="tag">копировать</span></div>
+
+<h2><span class="n">8</span>Домашнее задание</h2>
+<div class="tbl">
+  <div class="row"><b>1. Исследование под реальное решение.</b> Возьмите вопрос, который стоит перед вами в ближайший месяц: поставщик, цена, канал, найм, оборудование, новая услуга. Получите отчёт со ссылками и решением.</div>
+  <div class="row"><b>2. Свои данные под рентген.</b> Таблица, отзывы, прайс, выписка или статистика. Заберите один вывод, который меняет ваше поведение на следующей неделе.</div>
+  <div class="row"><b>3. Связка.</b> Положите отчёт в базу знаний ассистента или в блокнот и задайте ему вопрос по этому отчёту. Пришлите ответ.</div>
+</div>
+<div class="hint">В чат присылайте: <b>скрин самого полезного вывода</b> и одну строку, какое решение он поменял. Персональные данные замазываем. Застряли: кидайте скрин в чат, разберём каждого.</div>
+
+<div class="foot">ИИ. Новая реальность · Поток 4 · Занятие 7 · neovida.ai</div>
+
+</div>
+
+<script>
+document.querySelectorAll('.copy').forEach(function(el){
+  var walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,null);
+  var nodes=[],n;
+  while(n=walker.nextNode()){
+    var p=n.parentNode;
+    if(p.classList&&(p.classList.contains('tag')||p.classList.contains('lbl')))continue;
+    if(/\[[^\]\n]+\]/.test(n.nodeValue))nodes.push(n);
+  }
+  nodes.forEach(function(node){
+    var frag=document.createDocumentFragment(),re=/\[[^\]\n]+\]/g,last=0,m;
+    while((m=re.exec(node.nodeValue))){
+      if(m.index>last)frag.appendChild(document.createTextNode(node.nodeValue.slice(last,m.index)));
+      var s=document.createElement('span');s.className='ph';s.textContent=m[0];frag.appendChild(s);
+      last=m.index+m[0].length;
+    }
+    if(last<node.nodeValue.length)frag.appendChild(document.createTextNode(node.nodeValue.slice(last)));
+    node.parentNode.replaceChild(frag,node);
+  });
+});
+document.querySelectorAll('[data-c]').forEach(el=>{
+  el.addEventListener('click',()=>{
+    const t=el.cloneNode(true);
+    const tag=t.querySelector('.tag'); if(tag) tag.remove();
+    const lbl=t.querySelector('.lbl'); if(lbl) lbl.remove();
+    const text=t.textContent.replace(/^\n+/,'').replace(/\n+$/,'');
+    const done=()=>{el.classList.add('done');el.querySelector('.tag').textContent='скопировано';setTimeout(()=>{el.classList.remove('done');el.querySelector('.tag').textContent='копировать';},1800);};
+    (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(done).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}ta.remove();done();
+    });
+  });
+});
+</script>
+</body>
+</html>

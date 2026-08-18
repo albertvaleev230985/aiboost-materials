@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность · Поток 4 · Занятие 7 · Поиск и аналитика</title>
+<style>
+/* ══════════ ТОКЕНЫ ══════════ */
+:root{
+  --bg0:#0B1220; --bg1:#131B2E;
+  --surface:rgba(21,30,50,.92);
+  --line:rgba(255,255,255,.09);
+  --text:#F4F1EC; --muted:#9AA3B2;
+  --coral:#E07461; --coral-soft:rgba(224,116,97,.16);
+  --emerald:#10b981; --emerald-soft:rgba(16,185,129,.16);
+  --glow:rgba(224,116,97,.42);
+  --steel:#7FA6D0;
+  --lilac:#B69BE6; --gold:#F2C14E;
+  --sh:0 24px 60px rgba(0,0,0,.45), 0 4px 14px rgba(0,0,0,.35);
+  --r:24px;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#05080F;overflow:hidden}
+body{font-family:-apple-system,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ══════════ СЦЕНА 1920x1080 ══════════ */
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{width:1920px;height:1080px;flex:0 0 auto;position:relative;background:linear-gradient(160deg,var(--bg0),var(--bg1));overflow:hidden;transform-origin:center center}
+
+/* ══════════ СЛАЙД ══════════ */
+.slide{position:absolute;inset:0;display:none;padding:96px;flex-direction:column}
+.slide.active{display:flex}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:.2}
+.bg--strong{opacity:.55}
+.bg--mid{opacity:.32}
+.veil{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(11,18,32,.25) 0%,rgba(11,18,32,.55) 55%,rgba(11,18,32,.92) 100%)}
+.veil--left{background:linear-gradient(90deg,rgba(11,18,32,.94) 0%,rgba(11,18,32,.72) 46%,rgba(11,18,32,.18) 100%)}
+.veil--flat{background:rgba(11,18,32,.76)}
+.wrap{position:relative;z-index:2;display:flex;flex-direction:column;flex:1;min-height:0}
+
+/* ══════════ АКЦЕНТЫ ПО АКТАМ ══════════ */
+.slide.as{--coral:#B69BE6;--coral-soft:rgba(182,155,230,.16);--glow:rgba(182,155,230,.40)}
+.slide.kb{--coral:#10b981;--coral-soft:rgba(16,185,129,.16);--glow:rgba(16,185,129,.40)}
+.slide.sk{--coral:#F2C14E;--coral-soft:rgba(242,193,78,.15);--glow:rgba(242,193,78,.36)}
+.slide.gg{--coral:#7FA6D0;--coral-soft:rgba(127,166,208,.17);--glow:rgba(127,166,208,.40)}
+.slide.sk .badge,.slide.sk .step-p .n{color:#241a06}
+.c-pr{color:#E07461}.c-as{color:#B69BE6}.c-sk{color:#F2C14E}.c-gg{color:#7FA6D0}.c-kb{color:#10b981}
+
+/* ══════════ ТИПОГРАФИКА ══════════ */
+.kicker{font-size:27px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--coral);margin-bottom:28px}
+h1{font-size:118px;line-height:1.04;font-weight:800;letter-spacing:-.015em;max-width:1600px}
+h2{font-size:66px;line-height:1.08;font-weight:750;letter-spacing:-.01em;max-width:1580px}
+.lead{font-size:38px;line-height:1.35;color:var(--muted);max-width:1500px;font-weight:450}
+.lead b,.lead strong{color:var(--text);font-weight:650}
+.src{font-size:25px;color:var(--muted);opacity:.85;margin-top:auto;padding-top:26px}
+.accent{color:var(--coral)}
+
+/* ══════════ АНИМАЦИИ ══════════ */
+@keyframes rise{from{opacity:0;transform:translateY(46px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes bgZoom{from{transform:scale(1.07)}to{transform:scale(1)}}
+@keyframes growW{from{width:0}}
+@keyframes growH{from{height:0}}
+@keyframes popIn{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}
+.slide.active .a{animation:rise .75s var(--ease) both}
+.slide.active .af{animation:fadeIn 1s ease both}
+.slide.active .ap{animation:popIn .6s var(--ease) both}
+.slide.active .bg{animation:bgZoom 9s ease-out both}
+@keyframes emerge{0%{opacity:.08;filter:brightness(.3) blur(9px);transform:scale(1.09)}100%{opacity:.6;filter:brightness(1) blur(0);transform:scale(1)}}
+.slide.active .bg--emerge{animation:emerge 5.5s cubic-bezier(.22,.61,.36,1) both}
+.d1{animation-delay:.09s!important}.d2{animation-delay:.18s!important}.d3{animation-delay:.27s!important}.d4{animation-delay:.36s!important}.d5{animation-delay:.45s!important}.d6{animation-delay:.54s!important}.d7{animation-delay:.63s!important}.d8{animation-delay:.72s!important}.d9{animation-delay:.81s!important}.d10{animation-delay:.9s!important}
+
+/* ══════════ ИКОНКИ ══════════ */
+.ph-i{display:inline-flex;line-height:0}
+.ph-i svg{width:var(--sz,48px);height:var(--sz,48px)}
+.logo-i{display:inline-flex;line-height:0;color:var(--text)}
+.logo-i svg{height:var(--sz,44px);width:auto;fill:currentColor}
+.mono{display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:50%;background:var(--coral-soft);border:1px solid var(--coral);color:var(--coral);font-weight:800;font-size:30px;flex:0 0 auto}
+.ico-chip{display:inline-flex;align-items:center;justify-content:center;width:96px;height:96px;border-radius:26px;background:var(--coral-soft);color:var(--coral);flex:0 0 auto}
+
+/* ══════════ КАРТОЧКИ ══════════ */
+.cards{display:grid;gap:36px;margin-top:56px}
+.cards.c2{grid-template-columns:1fr 1fr}
+.cards.c3{grid-template-columns:1fr 1fr 1fr}
+.cards.c4{grid-template-columns:repeat(4,1fr);gap:26px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:44px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:22px;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--coral),transparent 70%);opacity:.78}
+.card .num{font-size:70px;font-weight:800;color:var(--coral);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.card h3{font-size:34px;font-weight:700;line-height:1.2}
+.card p{font-size:27px;line-height:1.4;color:var(--muted)}
+.card p b{color:var(--text)}
+.card .head{display:flex;align-items:center;gap:24px;min-height:80px}
+.card--sm{padding:32px 34px;gap:16px}
+.card--sm h3{font-size:31px}
+.card--sm p{font-size:26px}
+.card--sm .head{min-height:72px;gap:20px}
+.card--xs{padding:26px 28px;gap:12px}
+.card--xs h3{font-size:29px}
+.card--xs p{font-size:25px}
+.card--xs .head{min-height:0;gap:16px}
+
+/* ══════════ БИГ-СТАТ ══════════ */
+.stat-center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:8px}
+.stat-num{font-size:200px;font-weight:800;letter-spacing:-.03em;color:var(--coral);line-height:1}
+.stat-cap{font-size:44px;font-weight:650;margin-top:10px}
+.stat-sub{font-size:32px;color:var(--muted);margin-top:14px;max-width:1440px;line-height:1.4}
+
+/* ══════════ СПЛИТ ══════════ */
+.split{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;flex:1;align-items:center;margin-top:20px}
+.split.rev{grid-template-columns:.95fr 1.05fr}
+.split .txt{display:flex;flex-direction:column;gap:24px}
+.split .txt h2{font-size:58px}
+.split .txt .kicker{margin-bottom:0}
+.split .pic{border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);border:1px solid var(--line);height:560px}
+.split .pic img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ══════════ СПИСОК-ПРАВИЛА ══════════ */
+.rules{display:flex;flex-direction:column;gap:26px;margin-top:52px;max-width:1600px}
+.rule{display:flex;align-items:center;gap:32px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px 38px}
+.rule .ico-chip{width:78px;height:78px;border-radius:20px}
+.rule .t{font-size:31px;line-height:1.35}
+.rule .t b{color:var(--coral)}
+.rules--tight{gap:16px!important}
+.rules--tight .rule{padding:20px 34px}
+.rules--tight .ico-chip{width:64px;height:64px;border-radius:18px}
+.rules--tight .t{font-size:29px}
+.rules--7{gap:11px!important}
+.rules--7 .rule{padding:14px 30px}
+.rules--7 .ico-chip{width:56px;height:56px;border-radius:15px}
+.rules--7 .t{font-size:27px;line-height:1.3}
+.rules--10{gap:7px!important}
+.rules--10 .rule{padding:9px 24px;border-radius:14px;gap:24px}
+.rules--10 .mono{width:46px;height:46px;font-size:24px}
+.rules--10 .t{font-size:26px;line-height:1.24}
+
+/* ══════════ ПРАКТИКА ══════════ */
+.badge{display:inline-flex;align-items:center;gap:14px;background:var(--coral);color:#fff;font-size:26px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;padding:14px 30px;border-radius:999px;margin-bottom:30px;box-shadow:0 10px 34px var(--glow);align-self:flex-start}
+.steps-p{display:flex;flex-direction:column;gap:22px;margin-top:40px;max-width:1600px}
+.step-p{display:flex;gap:30px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:26px 36px}
+.step-p .n{width:64px;height:64px;border-radius:50%;background:var(--coral);color:#fff;font-size:30px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.step-p .t{font-size:30px;line-height:1.38;padding-top:12px}
+.step-p .t b{color:var(--coral)}
+.steps-p--tight{gap:14px!important}
+.steps-p--tight .step-p{padding:18px 32px}
+.steps-p--tight .step-p .n{width:56px;height:56px;font-size:27px}
+.steps-p--tight .step-p .t{font-size:28px;padding-top:8px}
+
+/* ══════════ ПРОМПТ-БЛОК ══════════ */
+.prompt{font-family:"SF Mono",Menlo,Consolas,monospace;background:rgba(16,24,42,.92);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:16px;padding:26px 32px;font-size:27px;line-height:1.46;white-space:pre-wrap;color:var(--text);font-weight:450}
+.prompt .ph{color:var(--coral);font-weight:650}
+.prompt b{font-weight:750;color:#fff}
+.prompt--sm{font-size:26px;padding:24px 28px;line-height:1.4}
+.prompt--dense{font-size:26px;padding:22px 26px;line-height:1.3}
+.prompt--lg{font-size:31px;padding:32px 38px}
+.p-lbl{font-size:25px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--steel);margin-bottom:12px}
+.pgrid{display:grid;gap:30px;margin-top:32px}
+.pgrid.p2{grid-template-columns:1fr 1fr}
+.pcol{display:flex;flex-direction:column}
+.pgrid--mid{flex:1;align-content:center}
+
+/* ══════════ ТАБЛИЦА ══════════ */
+.tbl{display:grid;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface);margin-top:34px;box-shadow:var(--sh)}
+.tbl > div{padding:24px 30px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-size:27px;line-height:1.34;display:flex;align-items:center;color:var(--muted)}
+.tbl .th{font-size:25px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:rgba(255,255,255,.06);color:var(--text)}
+.tbl .q{font-weight:700;color:var(--text)}
+.tbl .hi{color:var(--text)}
+.tbl--sm > div{padding:16px 24px;font-size:25px;line-height:1.3}
+.tbl--sm .th{font-size:23px}
+.tbl.t2{grid-template-columns:1fr 1fr}
+.tbl.t2 > div:nth-child(2n){border-right:none}
+.tbl.t2 > div:nth-last-child(-n+2){border-bottom:none}
+.tbl.t3{grid-template-columns:1fr 1fr 1fr}
+.tbl.t3 > div:nth-child(3n){border-right:none}
+.tbl.t3 > div:nth-last-child(-n+3){border-bottom:none}
+.tbl--tall > div{padding:34px 30px}
+.tbl .ok{color:#6EE7B7;font-weight:800}
+.tbl .warn{color:#F2C14E;font-weight:800}
+.tbl .no{color:#F08C7A;font-weight:800}
+
+/* ══════════ ДВА СТОЛБА ══════════ */
+.big2{display:grid;grid-template-columns:1fr 3px 1fr;gap:64px;align-items:center;margin-top:34px;flex:1}
+.big2-i{text-align:center}
+.big2-l{font-size:132px;font-weight:800;letter-spacing:-.025em;line-height:1}
+.big2-t{font-size:46px;line-height:1.24;margin-top:24px;color:var(--muted);font-weight:450}
+.big2-t b{color:var(--text);font-weight:750}
+.big2-div{width:3px;height:400px;border-radius:2px;background:linear-gradient(180deg,transparent,rgba(244,241,236,.36) 22%,rgba(244,241,236,.36) 78%,transparent)}
+
+/* ══════════ КОНТУР ИЗ 4 ЭЛЕМЕНТОВ ══════════ */
+.loop{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:44px;flex:1;align-content:center;max-height:620px}
+.loop-i{background:#141d31;border:1px solid var(--line);border-radius:22px;padding:34px 28px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:16px}
+.loop-i .lc{color:var(--coral);display:inline-flex}
+.loop-i .ln{font-size:24px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--coral)}
+.loop-i h4{font-size:36px;font-weight:750;line-height:1.14}
+.loop-i p{font-size:26px;color:var(--muted);line-height:1.34}
+
+/* ══════════ ШАГИ 5 ══════════ */
+.fx{display:grid;grid-template-columns:repeat(5,1fr);gap:24px;margin-top:46px}
+.fx-i{background:#141d31;border:1px solid var(--line);border-radius:22px;padding:32px 22px;text-align:center;box-shadow:var(--sh)}
+.fx-l{font-size:92px;font-weight:800;color:var(--coral);line-height:1;letter-spacing:-.02em}
+.fx-w{font-size:32px;font-weight:750;margin-top:14px}
+.fx-s{font-size:25px;color:var(--muted);margin-top:10px;line-height:1.3}
+
+/* ══════════ ЧИПЫ ══════════ */
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:44px}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:30px 28px;display:flex;flex-direction:column;gap:16px;position:relative;overflow:hidden}
+.chip::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--coral),transparent 75%);opacity:.8}
+.chip .n{font-size:25px;font-weight:800;color:var(--coral);letter-spacing:.1em}
+.chip .hd{display:flex;align-items:center;gap:16px;color:var(--coral)}
+.chip h4{font-size:31px;font-weight:750;line-height:1.18}
+.chip p{font-size:25px;color:var(--muted);line-height:1.32}
+
+/* ══════════ ЭКРАН ИНТЕРФЕЙСА GEMINI ══════════ */
+.ui{background:#101a2c;border:1px solid var(--line);border-radius:22px;padding:22px 26px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:12px}
+.ui-row{display:flex;align-items:center;gap:22px;background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:14px;padding:14px 24px}
+.ui-row .k{width:48px;height:48px;border-radius:12px;background:var(--coral-soft);color:var(--coral);font-size:25px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.ui-row .fl{font-size:29px;font-weight:700;flex:0 0 auto}
+.ui-row .fd{font-size:26px;color:var(--muted);margin-left:auto;text-align:right;line-height:1.26;padding-left:26px}
+.ui-row.hot{border-color:var(--coral);background:var(--coral-soft)}
+.cbx{display:flex;align-items:center;gap:24px;background:rgba(240,140,122,.1);border:2px solid #F08C7A;border-radius:18px;padding:26px 32px}
+.cbx .bx{width:52px;height:52px;border-radius:10px;border:3px solid #F08C7A;flex:0 0 auto}
+.cbx .tx{font-size:32px;font-weight:700;line-height:1.3}
+.strike{position:relative}
+.strike::after{content:"";position:absolute;left:-4px;right:-4px;top:53%;height:3px;background:#F08C7A}
+
+/* ══════════ КАРТА-МЕТАФОРА ══════════ */
+.mapbox{flex:1;display:flex;align-items:center;justify-content:center;margin-top:12px}
+.mapsvg{width:1560px;height:auto;max-height:660px}
+.map--empty .mf{display:none}
+.mapsvg .mq{display:none}
+.map--empty .mq{display:block}
+
+/* ══════════ ПАЛИТРА РОЛЕЙ ══════════ */
+.pal{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin-top:30px;flex:1;align-content:center}
+.pal-g{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--sh)}
+.pal-g .gh{display:flex;align-items:center;gap:12px;color:var(--coral);margin-bottom:14px}
+.pal-g .gh h4{font-size:26px;font-weight:800;line-height:1.14}
+.pal-g ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.pal-g li{font-size:25px;line-height:1.24;color:var(--muted);padding-left:19px;position:relative}
+.pal-g li::before{content:"";position:absolute;left:0;top:13px;width:9px;height:2px;border-radius:2px;background:var(--coral);opacity:.8}
+.pal-note{background:var(--coral-soft);border:1px solid var(--coral);border-radius:20px;padding:22px 24px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.pal-note .t{font-size:27px;line-height:1.26;font-weight:750}
+.pal-note .s{font-size:25px;line-height:1.28;color:var(--muted)}
+
+/* ══════════ ХРОМ ══════════ */
+#chrome{position:absolute;left:0;right:0;bottom:0;z-index:50;padding:0 44px 20px;display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}
+#act-label{font-size:24px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:650}
+#slide-no{font-size:24px;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:650}
+#bar{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.07);z-index:51}
+#bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#E07461,#F0A08E);transition:width .45s var(--ease),background .45s ease}
+.slide.active.as ~ #bar i{background:linear-gradient(90deg,#B69BE6,#D4C2F2)}
+.slide.active.kb ~ #bar i{background:linear-gradient(90deg,#10b981,#6EE7B7)}
+.slide.active.sk ~ #bar i{background:linear-gradient(90deg,#F2C14E,#FFD980)}
+.slide.active.gg ~ #bar i{background:linear-gradient(90deg,#7FA6D0,#A9C6E6)}
+.brand-corner{position:absolute;top:44px;left:64px;z-index:40;font-size:25px;font-weight:700;color:var(--muted)}
+.brand-corner b{color:#E07461}
+#fs-btn{position:fixed;top:20px;right:20px;z-index:120;width:46px;height:46px;padding:0;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(11,18,32,.5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#9AA3B2;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.4;transition:opacity .2s,color .2s,border-color .2s,background .2s}
+#fs-btn:hover{opacity:1;color:#F4F1EC;border-color:#E07461;background:rgba(224,116,97,.16)}
+#fs-btn svg{width:23px;height:23px}
+#fs-btn .i-close{display:none}
+#fs-btn.is-fs .i-open{display:none}
+#fs-btn.is-fs .i-close{display:block}
+
+/* ══════════ ЗАНЯТИЕ 6: ДОБАВКИ ══════════ */
+.lnk{color:var(--coral);text-decoration:none;border-bottom:2px solid var(--coral-soft);transition:border-color .2s}
+.lnk:hover{border-color:var(--coral)}
+.price{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;padding:6px 20px;font-size:23px;color:var(--muted);font-weight:650;align-self:flex-start}
+.price b{color:var(--text)}
+.logo-img{height:46px;width:auto;display:inline-block}
+.tool h3{font-size:38px}
+.tool .site{font-size:24px;color:var(--muted);font-weight:600}
+.tool ul{list-style:none;display:flex;flex-direction:column;gap:10px;margin:0}
+.tool li{font-size:25px;line-height:1.32;color:var(--muted);padding-left:22px;position:relative}
+.tool li::before{content:"";position:absolute;left:0;top:13px;width:10px;height:2px;border-radius:2px;background:var(--coral);opacity:.85}
+.tool li b{color:var(--text)}
+
+/* ══════════ ПРАКТИКА: СВЕТЛЫЙ СЛАЙД ══════════ */
+.slide.practice{background:linear-gradient(160deg,#F7F4EF,#EDE7DD)}
+.slide.practice .kicker{color:var(--coral)}
+.slide.practice h2{color:#141B2B}
+.slide.practice .lead{color:#4A5468}
+.slide.practice .lead b{color:#141B2B}
+.slide.practice .step-p{background:#fff;border-color:rgba(20,27,43,.08);box-shadow:0 12px 32px rgba(20,27,43,.09)}
+.slide.practice .step-p .t{color:#333D52}
+.slide.practice .step-p .t b{color:var(--coral)}
+.slide.practice .src{color:#6B7488;opacity:1}
+.slide.practice .lnk{color:var(--coral);border-bottom-color:rgba(20,27,43,.15)}
+.slide.practice .badge{box-shadow:0 10px 30px rgba(20,27,43,.18)}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+<!-- ═════════════ АКТ 0 · МОСТИК И КАРТА ═════════════ -->
+
+<!-- 1 · Титул -->
+<section class="slide" data-act="Старт">
+  <img class="bg bg--strong" src="screens7/bg-title.jpg" alt=""><div class="veil"></div>
+  <div class="wrap" style="justify-content:flex-end">
+    <div class="kicker a">Очный курс · Поток 4 · Уфа · 18 августа 2026</div>
+    <h1 class="a d1" style="font-size:130px">Поиск и аналитика</h1>
+    <div class="lead a d2" style="margin-top:32px;font-size:41px">Занятие 7 из 8. Исследование, данные, прогноз.<br><b>Первое занятие, которое напрямую про деньги.</b></div>
+    <div class="a d3" style="margin-top:52px;font-size:28px;color:var(--muted);font-weight:650">Альберт Валеев · <span class="accent">neovida.ai</span></div>
+  </div>
+</section>
+
+<!-- 2 · Мостик -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <div class="kicker a">Где мы остановились</div>
+    <h2 class="a d1">Шесть занятий вы учили ИИ <span class="accent">делать</span>.<br>Сегодня он начнёт <span class="accent">знать</span></h2>
+    <div class="cards c4 a d2" style="flex:1;align-content:center">
+      <div class="card card--sm ap d3"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="robot" style="--sz:40px"></i></span><h3>Ассистент</h3></div><p>Пишет вашим голосом, знает ваш метод.</p></div>
+      <div class="card card--sm ap d4"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="plugs-connected" style="--sz:40px"></i></span><h3>Google-среда</h3></div><p>Gem-боты и блокноты, почта и календарь.</p></div>
+      <div class="card card--sm ap d5"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="lightning" style="--sz:40px"></i></span><h3>Codex</h3></div><p>Собрал первую рабочую вещь за вечер.</p></div>
+      <div class="card card--sm ap d6"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="sparkle" style="--sz:40px"></i></span><h3>Визуал</h3></div><p>Презентация, фото, ролик, лендинг.</p></div>
+    </div>
+    <div class="lead a d7" style="font-size:32px">Всё это про <b>исполнение</b>. Но перед исполнением есть вопрос, который дороже всего: <b>а правильно ли вы решили?</b></div>
+  </div>
+</section>
+
+<!-- 3 · Мысль урока -->
+<section class="slide" data-act="Старт">
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Одна мысль на всё занятие</div>
+    <h2 class="a d1" style="font-size:74px;line-height:1.12">Решение перестало быть <span class="accent">догадкой</span></h2>
+    <div class="lead a d2" style="margin-top:40px;font-size:36px">Любой вопрос теперь сначала проверяется.<br>Любая таблица сначала просвечивается.<br><b>«Я так чувствую» стоит дороже, чем полчаса проверки.</b></div>
+  </div>
+</section>
+
+<!-- 4 · Сколько это стоило раньше -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <div class="kicker a">Чтобы поняли масштаб</div>
+    <h2 class="a d1">Отчёт, за который платили <span class="accent">агентству</span></h2>
+    <div class="tbl t3 a d2">
+      <div class="th">Задача</div><div class="th">Как было</div><div class="th">Как сегодня</div>
+      <div class="q">Анализ конкурентов в городе</div><div>Агентство, 50 000 ₽ и две недели</div><div class="hi">15 минут, отчёт со ссылками</div>
+      <div class="q">Разбор 200 отзывов о вас</div><div>Стажёр читает три дня</div><div class="hi">2 минуты, диаграмма и план</div>
+      <div class="q">Поиск поставщика по параметрам</div><div>Менеджер обзванивает неделю</div><div class="hi">10 минут, таблица по цене</div>
+      <div class="q">Прогноз спроса на сезон</div><div>Аналитик за 80 000 ₽</div><div class="hi">3 минуты, график с интервалом</div>
+    </div>
+    <div class="src a">Стоимости даны как порядок цифр по рынку Уфы, не как прайс.</div>
+  </div>
+</section>
+
+<!-- 5 · Карта урока -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <div class="kicker a">Что сегодня заберёте</div>
+    <h2 class="a d1">Четыре блока. После каждого: <span class="accent">свой готовый результат</span></h2>
+    <div class="chips a d2" style="grid-template-columns:repeat(4,1fr);margin-top:52px">
+      <div class="chip ap d3"><div class="hd"><i class="ph-i" data-ph="detective" style="--sz:44px"></i></div><h4>Исследование</h4><p>Досье по вашей нише, репутации и поставщикам. Со ссылками на источники.</p></div>
+      <div class="chip ap d4" style="--coral:#10b981;--coral-soft:rgba(16,185,129,.16)"><div class="hd"><i class="ph-i" data-ph="scan" style="--sz:44px"></i></div><h4>Аналитика</h4><p>Своя таблица и свои отзывы превращаются в выводы и действия.</p></div>
+      <div class="chip ap d5" style="--coral:#F2C14E;--coral-soft:rgba(242,193,78,.15)"><div class="hd"><i class="ph-i" data-ph="cloud-sun" style="--sz:44px"></i></div><h4>Прогноз</h4><p>Что будет через три месяца и когда пора шевелиться.</p></div>
+      <div class="chip ap d6" style="--coral:#7FA6D0;--coral-soft:rgba(127,166,208,.17)"><div class="hd"><i class="ph-i" data-ph="binoculars" style="--sz:44px"></i></div><h4>Инструменты</h4><p>Куда идти, когда упёрлись в лимит. И как связать это с ассистентом.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · Чем работаем сегодня -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <div class="kicker a">Чтобы вопрос не висел весь вечер</div>
+    <h2 class="a d1">Всё сегодняшнее у вас <span class="accent">уже оплачено</span></h2>
+    <div class="rules rules--tight a d2" style="margin-top:44px">
+      <div class="rule ap d3"><span class="ico-chip"><span class="logo-i" data-logo="openai" style="--sz:34px"></span></span><div class="t"><b>ChatGPT, главный инструмент вечера.</b> Глубокое исследование лежит прямо в плюсике, по-русски. Подписка у вас есть</div></div>
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="globe-hemisphere-west" style="--sz:38px"></i></span><div class="t"><b>Kimi, запасной аэродром.</b> Открывается без VPN, внутри есть и глубокое исследование, и таблицы</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><span class="logo-i" data-logo="googlegemini" style="--sz:34px"></span></span><div class="t"><b>Gemini, третий номер.</b> Deep Research бесплатный, но нужен VPN. Держим на случай, когда лимит ChatGPT кончился</div></div>
+      <div class="rule ap d6"><span class="ico-chip"><i class="ph-i" data-ph="currency-circle-dollar" style="--sz:38px"></i></span><div class="t">Ничего нового <b>сегодня не покупаем</b>. Платные сервисы посмотрим издалека, в конце</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════ АКТ 1 · ИССЛЕДОВАНИЕ ═════════════ -->
+
+<!-- 7 · Разделитель -->
+<section class="slide" data-act="Исследование">
+  <img class="bg bg--strong bg--emerge" src="screens7/bg-research.jpg" alt=""><div class="veil veil--left"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Блок 1 из 4</div>
+    <h1 class="a d1" style="font-size:104px">Исследование</h1>
+    <div class="lead a d2" style="margin-top:28px">Справочная даёт десять ссылок. Детектив приносит готовое досье.</div>
+  </div>
+</section>
+
+<!-- 8 · Справочная против детектива -->
+<section class="slide" data-act="Исследование">
+  <div class="wrap">
+    <div class="kicker a">Разница, которую надо почувствовать</div>
+    <h2 class="a d1">Как вы ищете информацию <span class="accent">сегодня</span></h2>
+    <div class="cards c2 a d2" style="margin-top:36px">
+      <div class="card ap d3">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="magnifying-glass" style="--sz:44px"></i></span><h3>Справочная</h3></div>
+        <p>Вы спрашиваете: <b>«конкуренты в моём городе»</b>.</p>
+        <p>Получаете десять синих ссылок. Открываете каждую, читаете, сравниваете, сводите в блокнот. <b>Работу делаете вы.</b></p>
+      </div>
+      <div class="card ap d4">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="detective" style="--sz:44px"></i></span><h3>Детектив</h3></div>
+        <p>Вы спрашиваете то же самое, но включаете <b>Глубокое исследование</b>.</p>
+        <p>ИИ сам обходит десятки источников, сравнивает, отбрасывает мусор и приносит <b>таблицу с выводами и ссылками</b>.</p>
+      </div>
+    </div>
+    <div class="src a">Разница не в скорости. Разница в том, кто делает работу.</div>
+  </div>
+</section>
+
+<!-- 9 · Два режима в интерфейсе -->
+<section class="slide" data-act="Исследование">
+  <div class="wrap">
+    <div class="kicker a">Где это лежит физически</div>
+    <h2 class="a d1">Плюсик в ChatGPT: <span class="accent">два разных режима</span></h2>
+    <div class="tbl t3 a d2">
+      <div class="th">Режим</div><div class="th">Когда включать</div><div class="th">Сколько ждать</div>
+      <div class="q">Поиск в сети</div><div>Быстрый факт: цена, адрес, что вышло на неделе, кто выиграл тендер</div><div class="hi">10 секунд</div>
+      <div class="q">Глубокое исследование</div><div>Решение на деньги: рынок, поставщик, конкуренты, стратегия входа</div><div class="hi">от 5 до 30 минут</div>
+      <div class="q">Работа (агент)</div><div>Когда надо не только узнать, но и сделать: собрать файл, заполнить таблицу</div><div class="hi">отдельный лимит недели</div>
+    </div>
+    <div class="lead a d3" style="margin-top:30px;font-size:31px">Главная ошибка зала: <b>гонять глубокое исследование на вопрос «сколько стоит бетон»</b>. Лимит сгорит, а ответ был в поиске за десять секунд.</div>
+    <div class="src a">Проверено в интерфейсе 18.08.2026. Названия пунктов русские, ищите глазами, а не по памяти из английских статей.</div>
+  </div>
+</section>
+
+<!-- 10 · Карта сервисов -->
+<section class="slide" data-act="Исследование">
+  <div class="wrap">
+    <div class="kicker a">Карта на август 2026</div>
+    <h2 class="a d1">Кто умеет глубокое исследование</h2>
+    <div class="cards c2 a d2" style="margin-top:40px">
+      <div class="card ap d3">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="lock-key" style="--sz:40px"></i></span><h3>Нужен VPN</h3></div>
+        <p><b>ChatGPT.</b> Самое глубокое и структурное. Ваш основной инструмент</p>
+        <p><b>Gemini.</b> Единственный, кто тянет вашу почту и Диск прямо в исследование</p>
+        <p><b>Claude.</b> Длинные документы, аккуратность с фактами</p>
+        <p><b>Grok.</b> Живые соцсети и то, что обсуждают прямо сейчас</p>
+      </div>
+      <div class="card ap d4">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="globe-hemisphere-west" style="--sz:40px"></i></span><h3>VPN не нужен</h3></div>
+        <p><b>Kimi K3.</b> Глубокое исследование и таблицы в одном окне</p>
+        <p><b>Qwen.</b> Файлы, картинки, разбор таблиц. Платного тарифа нет вообще</p>
+        <p><b>GLM (z.ai).</b> Ровный резерв, когда у остальных очередь</p>
+        <p><b>Алиса и GigaChat.</b> Российские источники: законы, госсайты, местные новости</p>
+      </div>
+    </div>
+    <div class="src a">Проверено 18.08.2026: kimi.com, chat.qwen.ai, chat.z.ai, ya.ru/ai и giga.chat открываются из России без VPN.</div>
+  </div>
+</section>
+
+<!-- 11 · Правило трёх врачей -->
+<section class="slide" data-act="Исследование">
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Правило, которое спасает от позора</div>
+    <h2 class="a d1" style="font-size:70px">Правило <span class="accent">трёх врачей</span></h2>
+    <div class="lead a d2" style="margin-top:36px;font-size:36px">Один и тот же вопрос задайте <b>трём разным ИИ</b>.<br>Совпали: цифре можно верить.<br>Разошлись: идёте в первоисточник по ссылке.</div>
+    <div class="rules rules--tight a d3" style="margin-top:44px">
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="warning" style="--sz:38px"></i></span><div class="t"><b>Цифры, даты, названия, законы и цены</b> проверяем всегда. Это то, что ИИ придумывает увереннее всего</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="link" style="--sz:38px"></i></span><div class="t">В промпте всегда просим <b>ссылку на каждый факт</b>. Нет ссылки, значит факта, скорее всего, нет</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 · Анатомия промпта -->
+<section class="slide" data-act="Исследование">
+  <div class="wrap">
+    <div class="kicker a">Разбираем по кирпичикам</div>
+    <h2 class="a d1">Промпт на исследование: <span class="accent">пять слоёв</span></h2>
+    <div class="pgrid a d2" style="margin-top:20px">
+      <div class="pcol">
+        <div class="prompt prompt--sm">Ты <span class="ph">бизнес-аналитик</span> с опытом в сфере <span class="ph">[ваша отрасль]</span> в России.
+Проведи глубокий анализ рынка <span class="ph">[ваша ниша]</span> в <span class="ph">[город]</span>.
+Найди: топ-10 конкурентов с сайтами, цены <b>конкретными цифрами</b>, сильные и слабые стороны по отзывам, каналы привлечения.
+Определи мою позицию: где отстаю, где опережаю, в чём могу отстроиться.
+Формат: таблица сравнения плюс 5 рекомендаций. <b>Ссылка на каждый факт.</b></div>
+      </div>
+    </div>
+    <div class="rules rules--10 a d3" style="margin-top:24px">
+      <div class="rule ap d4"><span class="mono">1</span><div class="t"><b>Роль.</b> Без неё ответ поверхностный, как из рекламной статьи</div></div>
+      <div class="rule ap d5"><span class="mono">2</span><div class="t"><b>Задача и география.</b> «Рынок» без города даёт кашу по всей стране</div></div>
+      <div class="rule ap d6"><span class="mono">3</span><div class="t"><b>Список того, что искать.</b> Чем детальнее, тем глубже копает</div></div>
+      <div class="rule ap d7"><span class="mono">4</span><div class="t"><b>Вывод про вас.</b> Без него получите справочник, а не решение</div></div>
+      <div class="rule ap d8"><span class="mono">5</span><div class="t"><b>Формат и ссылки.</b> Таблица читается за минуту, ссылки защищают от выдумок</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 · Промпты под зал, часть 1 -->
+<section class="slide" data-act="Исследование">
+  <div class="wrap">
+    <div class="kicker a">Готовые запросы под ваши сферы · 1 из 2</div>
+    <h2 class="a d1">Возьмите свой и подставьте <span class="accent">свои скобки</span></h2>
+    <div class="rules rules--10 a d2" style="margin-top:34px">
+      <div class="rule ap d3"><span class="ico-chip"><i class="ph-i" data-ph="buildings" style="--sz:30px"></i></span><div class="t"><b>Управляющая компания.</b> Сравни подрядчиков по обслуживанию лифтов и кровли в [город]: цены, сроки, отзывы жителей, судебные споры. Таблица плюс кого не брать и почему</div></div>
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="swimming-pool" style="--sz:30px"></i></span><div class="t"><b>Школа плавания.</b> Собери все школы плавания и бассейны в [город]: цены абонементов, расписание, возрастные группы, отзывы. Где у них слабо и что мне усилить в первую очередь</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="chart-line-up" style="--sz:30px"></i></span><div class="t"><b>Контент и блоги.</b> Разбери, какие форматы в нише [тема] набирают охваты в 2026 году: темы, длина, приёмы удержания. Дай 10 идей роликов с обоснованием, почему они зайдут</div></div>
+      <div class="rule ap d6"><span class="ico-chip"><i class="ph-i" data-ph="stethoscope" style="--sz:30px"></i></span><div class="t"><b>Медоборудование и тендеры.</b> Проанализируй рынок [категория медизделий] в России: производители, диапазон цен, требования к регистрационным удостоверениям, кто выигрывает тендеры за последний год</div></div>
+      <div class="rule ap d7"><span class="ico-chip"><i class="ph-i" data-ph="scales" style="--sz:30px"></i></span><div class="t"><b>Юридическая практика.</b> Собери судебную практику по [категория споров] за последние два года: как чаще решают, какие аргументы срабатывают, суммы. Со ссылками на дела</div></div>
+      <div class="rule ap d8"><span class="ico-chip"><i class="ph-i" data-ph="car" style="--sz:30px"></i></span><div class="t"><b>Импорт авто.</b> Сравни цены на [модель, год] у площадок Китая, Японии и внутри России: закупка, логистика, пошлины, срок. Итоговая цена под ключ в рублях, таблица по выгоде</div></div>
+      <div class="rule ap d9"><span class="ico-chip"><i class="ph-i" data-ph="crane" style="--sz:30px"></i></span><div class="t"><b>Строительство домов.</b> Собери подрядчиков по домам [технология] в [регион]: цены за квадрат, сроки, отзывы, что чаще всего идёт не так у клиентов. Где я могу отстроиться</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 · Промпты под зал, часть 2 -->
+<section class="slide" data-act="Исследование">
+  <div class="wrap">
+    <div class="kicker a">Готовые запросы под ваши сферы · 2 из 2</div>
+    <h2 class="a d1">Работают в любой сфере</h2>
+    <div class="rules rules--10 a d2" style="margin-top:34px">
+      <div class="rule ap d3"><span class="mono">8</span><div class="t"><b>Клиент перед встречей.</b> Собери досье на компанию [название]: чем занимается, обороты, ключевые люди, новости за год, болевые точки. Что предложить, чтобы попасть в их задачу</div></div>
+      <div class="rule ap d4"><span class="mono">9</span><div class="t"><b>Цена вопроса.</b> Сколько сейчас стоит [товар или услуга] в [город]: минимум, средняя, максимум, из чего складывается разница. Таблица и где переплачивают чаще всего</div></div>
+      <div class="rule ap d5"><span class="mono">10</span><div class="t"><b>Новый канал.</b> Разбери, как в нише [ниша] сейчас привлекают клиентов: каналы, примерная стоимость заявки, что работает, что перестало. Дай 5 гипотез под мой бюджет [сумма]</div></div>
+      <div class="rule ap d6"><span class="mono">11</span><div class="t"><b>Найм.</b> Собери рынок труда по позиции [должность] в [город]: зарплатные вилки, что предлагают конкуренты, дефицитные навыки, чем реально удерживают</div></div>
+      <div class="rule ap d7"><span class="mono">12</span><div class="t"><b>Закон и риски.</b> Что изменилось в регулировании [сфера] за последний год и что меняется с ближайшей даты. Как это касается компании моего размера. Со ссылками на документы</div></div>
+      <div class="rule ap d8"><span class="mono">13</span><div class="t"><b>Инструмент под задачу.</b> Сравни сервисы для [задача]: функции, цены, ограничения российских пользователей, отзывы. Три варианта под мой случай с обоснованием</div></div>
+    </div>
+    <div class="src a">Полные версии всех промптов лежат в шпаргалке, копируются в одно касание.</div>
+  </div>
+</section>
+
+<!-- 15 · Демо -->
+<section class="slide" data-act="Исследование">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="play-circle" style="--sz:30px"></i> Демо</div>
+    <h2 class="a d1">Запускаем исследование <span class="accent">прямо сейчас</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:30px">
+      <div class="step-p ap d3"><div class="n">1</div><div class="t">Плюсик в ChatGPT, пункт <b>Глубокое исследование</b>. Вставляю промпт по нише из зала</div></div>
+      <div class="step-p ap d4"><div class="n">2</div><div class="t">ИИ задаёт <b>уточняющие вопросы</b>. Отвечаю коротко: это нормально, так он сужает поиск</div></div>
+      <div class="step-p ap d5"><div class="n">3</div><div class="t">Работает от 5 до 30 минут. <b>Мы не ждём</b>, идём дальше по уроку и вернёмся за результатом</div></div>
+      <div class="step-p ap d6"><div class="n">4</div><div class="t">Параллельно тот же запрос в <b>Kimi</b>. В конце сравним два ответа: правило трёх врачей вживую</div></div>
+    </div>
+    <div class="src a">Пока идёт исследование, окно можно закрыть. Отчёт дождётся вас в истории чатов.</div>
+  </div>
+</section>
+
+<!-- 16 · Практика 1 -->
+<section class="slide practice" data-act="Исследование">
+  <div class="wrap" style="justify-content:center">
+    <div class="badge a"><i class="ph-i" data-ph="hand-tap" style="--sz:30px"></i> Ваша очередь · 12 минут</div>
+    <h2 class="a d1">Исследуйте <span class="accent">свою нишу</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:34px">
+      <div class="step-p ap d3"><div class="n">1</div><div class="t">Открыли шпаргалку, нашли <b>свою сферу</b>, скопировали промпт</div></div>
+      <div class="step-p ap d4"><div class="n">2</div><div class="t">Подставили свой город, нишу, категорию в квадратные скобки</div></div>
+      <div class="step-p ap d5"><div class="n">3</div><div class="t">Плюсик, <b>Глубокое исследование</b>, отправили. Ответили на уточняющие вопросы</div></div>
+      <div class="step-p ap d6"><div class="n">4</div><div class="t">Пока считает, запускаете <b>второй запрос в Kimi</b> без VPN</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:30px;font-size:30px">Упёрлись в лимит: <b>kimi.com, chat.qwen.ai или chat.z.ai</b>. Тот же промпт, без VPN, бесплатно.</div>
+  </div>
+</section>
+
+<!-- 17 · Зеркало 360 -->
+<section class="slide" data-act="Исследование">
+  <div class="wrap">
+    <div class="kicker a">Второй сценарий</div>
+    <h2 class="a d1">Зеркало 360: <span class="accent">что интернет знает о вас</span></h2>
+    <div class="lead a d1" style="margin-top:10px;font-size:31px">Обычное зеркало показывает вас спереди. Это покажет так, <b>как вас видит клиент перед покупкой</b>.</div>
+    <div class="prompt prompt--sm a d2" style="margin-top:26px">Проведи глубокое исследование всех упоминаний <span class="ph">[название компании]</span> в интернете.
+Ищи: отзывы на Яндекс.Картах, 2ГИС, Google Maps, упоминания в соцсетях и Telegram, статьи, форумы, отзовики.
+Для каждого: <b>ссылка, тональность, ключевая цитата, дата.</b>
+Итог: репутация по 10-балльной шкале, топ-3 плюса, топ-3 минуса, что исправить первым.</div>
+    <div class="src a">Нет компании: подставьте своё имя (личный бренд) или конкурента (разведка).</div>
+  </div>
+</section>
+
+<!-- 18 · Практика 2 -->
+<section class="slide practice" data-act="Исследование">
+  <div class="wrap" style="justify-content:center">
+    <div class="badge a"><i class="ph-i" data-ph="hand-tap" style="--sz:30px"></i> Ваша очередь · 5 минут</div>
+    <h2 class="a d1">Проверьте <span class="accent">свою репутацию</span></h2>
+    <div class="cards c3 a d2" style="margin-top:40px">
+      <div class="card card--sm ap d3"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="storefront" style="--sz:38px"></i></span><h3>Есть компания</h3></div><p>Подставьте название и город. Смотрите, что всплывёт из того, чего вы не знали.</p></div>
+      <div class="card card--sm ap d4"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="users-three" style="--sz:38px"></i></span><h3>Личный бренд</h3></div><p>Подставьте имя и фамилию. Полезно перед выступлением, эфиром и переговорами.</p></div>
+      <div class="card card--sm ap d5"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="binoculars" style="--sz:38px"></i></span><h3>Конкурент</h3></div><p>Подставьте того, кто вас обходит. Его минусы в отзывах это ваш оффер.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 19 · Снабженец -->
+<section class="slide" data-act="Исследование">
+  <div class="wrap">
+    <div class="kicker a">Третий сценарий, самый денежный</div>
+    <h2 class="a d1">Найти товар, поставщика и <span class="accent">настоящую цену</span></h2>
+    <div class="lead a d1" style="margin-top:10px;font-size:31px">Новичок берёт то, что нашлось на первой странице. Снабженец знает пятьдесят поставщиков и торгуется.</div>
+    <div class="prompt prompt--sm a d2" style="margin-top:24px">Ты закупщик-эксперт в сфере <span class="ph">[ваша сфера]</span>.
+Найди поставщиков <span class="ph">[продукт с характеристиками: размер, материал, класс]</span>.
+География: <span class="ph">[Россия, Китай, Турция]</span>.
+<b>Не ограничивайся первой страницей: копай каталоги, оптовые площадки, отраслевые порталы.</b>
+Для каждого: цена опт и розница, минимальный заказ, срок поставки, документы и сертификаты.
+Таблица, отсортированная по итоговой цене с доставкой.</div>
+    <div class="src a">Фраза про первую страницу это не украшение. Без неё ИИ отдаёт три верхних результата поиска.</div>
+  </div>
+</section>
+
+<!-- 20 · Практика 3 -->
+<section class="slide practice" data-act="Исследование">
+  <div class="wrap" style="justify-content:center">
+    <div class="badge a"><i class="ph-i" data-ph="hand-tap" style="--sz:30px"></i> Ваша очередь · 5 минут</div>
+    <h2 class="a d1">Найдите то, что <span class="accent">скоро будете покупать</span></h2>
+    <div class="rules rules--tight a d2" style="margin-top:36px">
+      <div class="rule ap d3"><span class="ico-chip"><i class="ph-i" data-ph="package" style="--sz:36px"></i></span><div class="t">Материалы, оборудование, запчасти, расходники, мебель, техника</div></div>
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="users-three" style="--sz:36px"></i></span><div class="t">Подрядчик, бригада, сервис, логист, юрист под конкретную задачу</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="gear-six" style="--sz:36px"></i></span><div class="t">Сервис или программа под задачу, которая сейчас съедает ваше время</div></div>
+    </div>
+    <div class="lead a d6" style="margin-top:30px;font-size:30px">Норма для этой практики: <b>найти цену, которая отличается от вашей текущей</b>. В любую сторону.</div>
+  </div>
+</section>
+
+<!-- 21 · Перерыв -->
+<section class="slide" data-act="Перерыв">
+  <div class="wrap" style="justify-content:center;align-items:center;text-align:center">
+    <h1 class="a" style="font-size:150px">Перерыв</h1>
+    <div class="lead a d1" style="margin-top:26px;font-size:38px">10 минут. Исследования пусть считаются, окна не закрывайте.</div>
+  </div>
+</section>
+
+<!-- ═════════════ АКТ 2 · АНАЛИТИКА ═════════════ -->
+
+<!-- 22 · Разделитель -->
+<section class="slide kb" data-act="Аналитика">
+  <img class="bg bg--strong bg--emerge" src="screens7/bg-analytics.jpg" alt=""><div class="veil veil--left"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Блок 2 из 4</div>
+    <h1 class="a d1" style="font-size:104px">Аналитика</h1>
+    <div class="lead a d2" style="margin-top:28px">До этого мы смотрели наружу. Теперь смотрим внутрь, на свои данные.</div>
+  </div>
+</section>
+
+<!-- 23 · Рентген -->
+<section class="slide kb" data-act="Аналитика">
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Аналогия на весь блок</div>
+    <h2 class="a d1" style="font-size:70px">Аналитика это <span class="accent">рентген</span></h2>
+    <div class="lead a d2" style="margin-top:36px;font-size:36px">У вас болит спина. Можно гадать: продуло, нерв, возраст.<br>А можно сделать снимок и <b>увидеть</b>.</div>
+    <div class="lead a d3" style="margin-top:30px;font-size:34px">С бизнесом так же. Выгрузили таблицу, и ИИ показывает:<br><b>вот здесь вы теряете, вот это не окупается, вот тут спрятан рост.</b></div>
+  </div>
+</section>
+
+<!-- 24 · Что грузим -->
+<section class="slide kb" data-act="Аналитика">
+  <div class="wrap">
+    <div class="kicker a">С чем это работает</div>
+    <h2 class="a d1">Что можно загрузить <span class="accent">уже сегодня</span></h2>
+    <div class="cards c3 a d2" style="margin-top:40px">
+      <div class="card card--sm ap d3"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="table" style="--sz:38px"></i></span><h3>Таблицы</h3></div><p>Продажи, заявки, расходы, прайсы, остатки, табель, выгрузка из CRM или 1С.</p></div>
+      <div class="card card--sm ap d4"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="chats-circle" style="--sz:38px"></i></span><h3>Отзывы и переписки</h3></div><p>2ГИС, Яндекс.Карты, отзовики, комментарии, вопросы клиентов из мессенджеров.</p></div>
+      <div class="card card--sm ap d5"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="files" style="--sz:38px"></i></span><h3>Документы</h3></div><p>Договоры, сметы, КП, отчёты, техзадания, регламенты, акты.</p></div>
+      <div class="card card--sm ap d6"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="chart-bar" style="--sz:38px"></i></span><h3>Статистика</h3></div><p>Охваты и просмотры, посещаемость сайта, метрики рекламы, воронка.</p></div>
+      <div class="card card--sm ap d7"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="bank" style="--sz:38px"></i></span><h3>Финансы</h3></div><p>Выписка из банка за год, расходы по проекту, себестоимость, зарплатный фонд.</p></div>
+      <div class="card card--sm ap d8"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="calendar-check" style="--sz:38px"></i></span><h3>Заявки и загрузка</h3></div><p>Диспетчерская, записи, брони, расписание, история обращений по дням.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 25 · Приватность -->
+<section class="slide kb" data-act="Аналитика">
+  <div class="wrap">
+    <div class="kicker a">Прежде чем нажать «загрузить»</div>
+    <h2 class="a d1">Что <span class="accent">вычищаем</span> из файла</h2>
+    <div class="cards c2 a d2" style="margin-top:36px">
+      <div class="card ap d3">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="x-circle" style="--sz:40px"></i></span><h3>Убираем</h3></div>
+        <p>ФИО клиентов и сотрудников, телефоны, адреса, номера договоров, реквизиты, номера карт и счетов, паспортные данные.</p>
+      </div>
+      <div class="card ap d4">
+        <div class="head"><span class="ico-chip"><i class="ph-i" data-ph="check-circle" style="--sz:40px"></i></span><h3>Оставляем</h3></div>
+        <p>Даты, суммы, категории, количества, статусы, регионы, названия позиций. <b>ИИ нужен смысл данных, а не люди за ними.</b></p>
+      </div>
+    </div>
+    <div class="lead a d5" style="margin-top:30px;font-size:31px">Лайфхак: замените имена на «Клиент 1, Клиент 2». Анализ не пострадает, а <b>152-ФЗ, про который мы говорили на первом занятии, останется доволен</b>.</div>
+  </div>
+</section>
+
+<!-- 26 · Нет своих данных -->
+<section class="slide kb" data-act="Аналитика">
+  <div class="wrap">
+    <div class="kicker a">Чтобы никто не сидел без дела</div>
+    <h2 class="a d1">Своих данных под рукой нет? <span class="accent">Берём эти</span></h2>
+    <div class="rules rules--tight a d2" style="margin-top:40px">
+      <div class="rule ap d3"><span class="mono">1</span><div class="t"><b>Отзывы конкурента.</b> 2ГИС или Яндекс.Карты, скопировали 30 штук. Работает у всех и всегда</div></div>
+      <div class="rule ap d4"><span class="mono">2</span><div class="t"><b>Прайс конкурента.</b> Сайт или каталог, скопировали позиции с ценами. Сравним с вашими</div></div>
+      <div class="rule ap d5"><span class="mono">3</span><div class="t"><b>Выписка из банка.</b> Личный кабинет, выгрузка за год в Excel. Убрали номер карты и ФИО</div></div>
+      <div class="rule ap d6"><span class="mono">4</span><div class="t"><b>Своя статистика.</b> Просмотры роликов, охваты постов, отчёт рекламного кабинета</div></div>
+      <div class="rule ap d7"><span class="mono">5</span><div class="t"><b>Пример от самого ИИ.</b> «Создай таблицу [продаж, заявок, расходов] за 12 месяцев и проанализируй». Учебный, но механику увидите полностью</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 27 · Промпт на таблицу -->
+<section class="slide kb" data-act="Аналитика">
+  <div class="wrap">
+    <div class="kicker a">Разбираем по кирпичикам</div>
+    <h2 class="a d1">Промпт на разбор таблицы</h2>
+    <div class="prompt prompt--sm a d2" style="margin-top:22px">Проанализируй загруженную таблицу как опытный бизнес-аналитик.
+<b>Шаг 1.</b> Опиши, что видишь: какие столбцы, сколько строк, за какой период. Скажи, если данные кривые или неполные.
+<b>Шаг 2.</b> Посчитай ключевые показатели, найди закономерности, связи между столбцами и аномалии.
+<b>Шаг 3.</b> Построй 4 графика, которые лучше всего объясняют картину.
+<b>Шаг 4.</b> Дай 5 выводов и 3 рекомендации: что изменить, чтобы вырасти.
+Отдельно: <span class="ph">одно действие, которое даст максимальный эффект в ближайший месяц.</span></div>
+    <div class="rules rules--10 a d3" style="margin-top:22px">
+      <div class="rule ap d4"><span class="mono">1</span><div class="t"><b>Шаг «опиши, что видишь»</b> ловит ситуацию, когда ИИ неправильно понял ваши столбцы. Без него он молча считает не то</div></div>
+      <div class="rule ap d5"><span class="mono">2</span><div class="t"><b>«Скажи, если данные кривые»</b> разрешает ИИ спорить с вами. Иначе он вежливо посчитает мусор</div></div>
+      <div class="rule ap d6"><span class="mono">3</span><div class="t"><b>Одно действие в конце</b> превращает красивый отчёт в решение, которое можно выполнить завтра</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 28 · Демо аналитика -->
+<section class="slide kb" data-act="Аналитика">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="play-circle" style="--sz:30px"></i> Демо</div>
+    <h2 class="a d1">Таблица превращается <span class="accent">в решение</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:32px">
+      <div class="step-p ap d3"><div class="n">1</div><div class="t">Плюсик, <b>добавить файл</b>. Кидаю Excel или CSV прямо в чат</div></div>
+      <div class="step-p ap d4"><div class="n">2</div><div class="t">Вставляю промпт. ИИ сначала <b>пересказывает мою таблицу своими словами</b>: проверяю, что понял верно</div></div>
+      <div class="step-p ap d5"><div class="n">3</div><div class="t">Через пару минут: графики, аномалии, выводы, рекомендации</div></div>
+      <div class="step-p ap d6"><div class="n">4</div><div class="t">Дожимаю голосом: <b>«а если убрать три худшие позиции, что изменится?»</b></div></div>
+    </div>
+    <div class="src a">То, что аналитик делает полдня в Excel. И он редко замечает аномалии, которые видит машина.</div>
+  </div>
+</section>
+
+<!-- 29 · Практика аналитика -->
+<section class="slide kb practice" data-act="Аналитика">
+  <div class="wrap" style="justify-content:center">
+    <div class="badge a"><i class="ph-i" data-ph="hand-tap" style="--sz:30px"></i> Ваша очередь · 12 минут</div>
+    <h2 class="a d1">Просветите <span class="accent">свои данные</span></h2>
+    <div class="tbl t3 tbl--sm a d2" style="margin-top:26px">
+      <div class="th">Сфера</div><div class="th">Что грузим</div><div class="th">Что спрашиваем</div>
+      <div class="q">Управляющая компания</div><div>Заявки диспетчерской за год</div><div class="hi">Какие дома и темы съедают больше всего времени</div>
+      <div class="q">Школа плавания</div><div>Записи и оплаты по месяцам</div><div class="hi">Кто уходит после первого месяца и когда именно</div>
+      <div class="q">Контент</div><div>Статистика роликов и постов</div><div class="hi">Что общего у пяти лучших и пяти худших</div>
+      <div class="q">Завод и тендеры</div><div>Смета или прайс на позиции</div><div class="hi">Где мы дороже рынка и на чём теряем маржу</div>
+      <div class="q">Автобизнес</div><div>История сделок по моделям</div><div class="hi">Какая модель приносит деньги, а какая только время</div>
+      <div class="q">Строительство</div><div>Сметы по завершённым объектам</div><div class="hi">Где смета всегда врёт и на сколько</div>
+    </div>
+    <div class="lead a d3" style="margin-top:26px;font-size:29px">Нет файла: <b>«Создай таблицу [продаж, заявок, расходов] за 12 месяцев и проанализируй»</b>. Механику увидите полностью.</div>
+  </div>
+</section>
+
+<!-- 30 · Отзывы -->
+<section class="slide kb" data-act="Аналитика">
+  <div class="wrap">
+    <div class="kicker a">Второй сценарий блока</div>
+    <h2 class="a d1">Отзывы: <span class="accent">терапевт, который слушает всех сразу</span></h2>
+    <div class="lead a d1" style="margin-top:10px;font-size:31px">Один отзыв это один пациент. Тридцать отзывов это поликлиника, и у неё есть общий диагноз.</div>
+    <div class="prompt prompt--sm a d2" style="margin-top:24px">Ты аналитик клиентского опыта.
+Проанализируй отзывы ниже. <b>Не пропускай ни один.</b>
+Определи: тональность каждого, топ-5 жалоб <b>с цитатами</b>, топ-5 похвал <b>с цитатами</b>, неожиданные инсайты, которые я сам бы не заметил.
+Отдельно: <b>что из жалоб мы можем исправить за неделю</b>, а что требует денег и времени.
+Итог: диаграмма тональности и 3 действия на ближайшие 7 дней.</div>
+    <div class="src a">Цитаты нужны не для красоты. С ними вывод можно показать команде, и никто не скажет «это ИИ придумал».</div>
+  </div>
+</section>
+
+<!-- 31 · Практика отзывы -->
+<section class="slide kb practice" data-act="Аналитика">
+  <div class="wrap" style="justify-content:center">
+    <div class="badge a"><i class="ph-i" data-ph="hand-tap" style="--sz:30px"></i> Ваша очередь · 8 минут</div>
+    <h2 class="a d1">Разберите <span class="accent">30 отзывов</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:34px">
+      <div class="step-p ap d3"><div class="n">1</div><div class="t">2ГИС или Яндекс.Карты, ваша компания или ближайший конкурент</div></div>
+      <div class="step-p ap d4"><div class="n">2</div><div class="t">Скопировали 20-30 отзывов, вставили промпт и следом текст</div></div>
+      <div class="step-p ap d5"><div class="n">3</div><div class="t">Прочитали <b>раздел «неожиданные инсайты»</b>. Обычно самое ценное там</div></div>
+      <div class="step-p ap d6"><div class="n">4</div><div class="t">Одно открытие принесли в чат группы. Чужие находки часто и про вас тоже</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════ АКТ 3 · ПРОГНОЗ ═════════════ -->
+
+<!-- 32 · Разделитель -->
+<section class="slide sk" data-act="Прогноз">
+  <img class="bg bg--strong bg--emerge" src="screens7/bg-forecast.jpg" alt=""><div class="veil veil--left"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Блок 3 из 4</div>
+    <h1 class="a d1" style="font-size:104px">Прогноз</h1>
+    <div class="lead a d2" style="margin-top:28px">Аналитика объясняет прошлое. Прогноз показывает, к чему готовиться.</div>
+  </div>
+</section>
+
+<!-- 33 · Прогноз погоды -->
+<section class="slide sk" data-act="Прогноз">
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Аналогия на весь блок</div>
+    <h2 class="a d1" style="font-size:70px">Это <span class="accent">прогноз погоды</span> для вашей работы</h2>
+    <div class="lead a d2" style="margin-top:36px;font-size:36px">Метеоролог смотрит историю и говорит: в марте потечёт, берите резину.<br>ИИ смотрит вашу историю и говорит:<br><b>в мае у вас пик, готовьте людей и запас. В январе провал, акцию запускайте в декабре.</b></div>
+  </div>
+</section>
+
+<!-- 34 · Промпт прогноза -->
+<section class="slide sk" data-act="Прогноз">
+  <div class="wrap">
+    <div class="kicker a">Разбираем по кирпичикам</div>
+    <h2 class="a d1">Промпт на прогноз</h2>
+    <div class="prompt prompt--sm a d2" style="margin-top:22px">Ты аналитик данных. Проанализируй загруженную таблицу и построй прогноз.
+<b>Шаг 1.</b> Найди сезонность: есть ли повторяющиеся циклы по месяцам или дням недели.
+<b>Шаг 2.</b> Определи тренд: растём, падаем или стоим на месте.
+<b>Шаг 3.</b> Построй прогноз на 3 месяца вперёд, метод подбери сам под характер данных.
+<b>Шаг 4.</b> Покажи на одном графике: история, прогноз и <b>доверительный интервал</b>.
+В конце честно скажи, насколько ты уверен и что может сломать прогноз.</div>
+    <div class="rules rules--10 a d3" style="margin-top:22px">
+      <div class="rule ap d4"><span class="mono">1</span><div class="t"><b>Пошаговость.</b> Заставляет сначала понять данные, а уже потом предсказывать</div></div>
+      <div class="rule ap d5"><span class="mono">2</span><div class="t"><b>Доверительный интервал.</b> Честная вилка вместо одной красивой цифры</div></div>
+      <div class="rule ap d6"><span class="mono">3</span><div class="t"><b>«Что может сломать прогноз».</b> Список рисков, который вы и так держали в голове, но не проговаривали</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 35 · Что прогнозировать -->
+<section class="slide sk" data-act="Прогноз">
+  <div class="wrap">
+    <div class="kicker a">Под ваши сферы</div>
+    <h2 class="a d1">Что имеет смысл прогнозировать</h2>
+    <div class="rules rules--10 a d2" style="margin-top:32px">
+      <div class="rule ap d3"><span class="ico-chip"><i class="ph-i" data-ph="buildings" style="--sz:30px"></i></span><div class="t"><b>Управляющая компания.</b> Пики аварий и заявок по сезонам: когда нужен второй диспетчер и запас материалов</div></div>
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="swimming-pool" style="--sz:30px"></i></span><div class="t"><b>Школа плавания.</b> Месяцы набора и месяцы оттока: когда запускать акцию, а когда не тратить рекламный бюджет</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="car" style="--sz:30px"></i></span><div class="t"><b>Автобизнес.</b> Спрос по моделям и курс закупки: когда выгоднее везти и что будет стоять на площадке</div></div>
+      <div class="rule ap d6"><span class="ico-chip"><i class="ph-i" data-ph="crane" style="--sz:30px"></i></span><div class="t"><b>Строительство.</b> Сезон заявок и цены на материалы: когда закупать, чтобы не попасть на весенний рост</div></div>
+      <div class="rule ap d7"><span class="ico-chip"><i class="ph-i" data-ph="stethoscope" style="--sz:30px"></i></span><div class="t"><b>Тендеры и поставки.</b> Календарь закупок по году: к каким месяцам готовить документы и склад</div></div>
+      <div class="rule ap d8"><span class="ico-chip"><i class="ph-i" data-ph="chart-line-up" style="--sz:30px"></i></span><div class="t"><b>Контент.</b> Как менялись охваты и что даст выход на прежний темп: сколько роликов и когда</div></div>
+      <div class="rule ap d9"><span class="ico-chip"><i class="ph-i" data-ph="package" style="--sz:30px"></i></span><div class="t"><b>Любой склад.</b> Когда закончится позиция с учётом срока доставки и когда пора делать заказ</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 36 · Завхоз -->
+<section class="slide sk" data-act="Прогноз">
+  <div class="wrap">
+    <div class="kicker a">Самый практичный промпт блока</div>
+    <h2 class="a d1">Завхоз, который считает <span class="accent">на три шага вперёд</span></h2>
+    <div class="prompt prompt--sm a d2" style="margin-top:24px">Ты аналитик запасов и закупок.
+Проанализируй таблицу расхода по позициям за 12 месяцев. Для каждой позиции определи: средний расход в месяц, сезонные пики, текущий остаток.
+Спрогнозируй, когда позиция закончится при текущем темпе.
+<b>Учти срок поставки</b> <span class="ph">[14 дней]</span> и посчитай, когда нужно разместить заказ, чтобы не встать.
+Таблица: позиция, остаток, дата окончания, дата заказа, рекомендуемый объём. <b>Отсортируй по срочности.</b></div>
+    <div class="lead a d3" style="margin-top:26px;font-size:31px">Фраза <b>«учти срок поставки»</b> и есть вся ценность. Без неё вы получите красивую дату, когда всё уже встало.</div>
+  </div>
+</section>
+
+<!-- 37 · Навигатор и водитель -->
+<section class="slide sk" data-act="Прогноз">
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Где граница доверия</div>
+    <h2 class="a d1" style="font-size:66px">Навигатор считает. <span class="accent">Едете вы</span></h2>
+    <div class="lead a d2" style="margin-top:34px;font-size:35px">ИИ строит прогноз только по тому, что было в цифрах.<br>Он не знает, что у вас в июне уходит ключевой мастер, что рядом открылся конкурент и что дорогу к объекту закрыли на ремонт.</div>
+    <div class="lead a d3" style="margin-top:30px;font-size:35px"><b>Его скорость плюс ваш контекст.</b> Прогноз без вашей поправки это просто красивый график.</div>
+  </div>
+</section>
+
+<!-- 38 · Практика прогноз -->
+<section class="slide sk practice" data-act="Прогноз">
+  <div class="wrap" style="justify-content:center">
+    <div class="badge a"><i class="ph-i" data-ph="hand-tap" style="--sz:30px"></i> Ваша очередь · 8 минут</div>
+    <h2 class="a d1">Постройте <span class="accent">свой прогноз</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:34px">
+      <div class="step-p ap d3"><div class="n">1</div><div class="t">Тот же файл, что грузили в прошлом блоке, либо помесячные цифры за год</div></div>
+      <div class="step-p ap d4"><div class="n">2</div><div class="t">Промпт на прогноз из шпаргалки, раздел 3</div></div>
+      <div class="step-p ap d5"><div class="n">3</div><div class="t">Посмотрели на график и <b>добавили свою поправку голосом</b>: «учти, что в июле мы не работаем»</div></div>
+      <div class="step-p ap d6"><div class="n">4</div><div class="t">Записали для себя <b>одну дату</b>, к которой теперь надо подготовиться</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════ АКТ 4 · ИНСТРУМЕНТЫ И СВЯЗКА ═════════════ -->
+
+<!-- 39 · Разделитель -->
+<section class="slide gg" data-act="Инструменты">
+  <img class="bg bg--strong bg--emerge" src="screens7/bg-tools.jpg" alt=""><div class="veil veil--left"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Блок 4 из 4</div>
+    <h1 class="a d1" style="font-size:104px">Инструменты</h1>
+    <div class="lead a d2" style="margin-top:28px">Куда идти, когда упёрлись. И как сделать так, чтобы сегодняшнее работало завтра.</div>
+  </div>
+</section>
+
+<!-- 40 · Запасные аэродромы -->
+<section class="slide gg" data-act="Инструменты">
+  <div class="wrap">
+    <div class="kicker a">Когда лимит кончился прямо посреди работы</div>
+    <h2 class="a d1">Запасные аэродромы <span class="accent">без VPN</span></h2>
+    <div class="tbl t3 tbl--sm a d2">
+      <div class="th">Сервис</div><div class="th">Что берём</div><div class="th">Нюанс</div>
+      <div class="q">Kimi (kimi.com)</div><div>Глубокое исследование и таблицы в одном окне, версия K3</div><div class="hi">Интерфейс открывается по-китайски, язык переключается в настройках</div>
+      <div class="q">Qwen (chat.qwen.ai)</div><div>Файлы, картинки, разбор таблиц. Платного тарифа нет вообще</div><div class="hi">Иногда отвечает короче, чем хочется: просите развернуть</div>
+      <div class="q">GLM (chat.z.ai)</div><div>Ровный резерв, когда у остальных очередь</div><div class="hi">Хорош для быстрых сравнений и таблиц</div>
+      <div class="q">Алиса и GigaChat</div><div>Российские источники: законы, госсайты, местные новости</div><div class="hi">Глубину западных не ждите, но по РФ находят то, чего не видят другие</div>
+    </div>
+    <div class="src a">Все четыре проверены 18.08.2026: открываются из России без VPN.</div>
+  </div>
+</section>
+
+<!-- 41 · Специализированные -->
+<section class="slide gg" data-act="Инструменты">
+  <div class="wrap">
+    <div class="kicker a">Обзором, ничего сегодня не покупаем</div>
+    <h2 class="a d1">Специализированные сервисы</h2>
+    <div class="tbl t3 tbl--sm a d2">
+      <div class="th">Сервис</div><div class="th">Суперсила</div><div class="th">Кому в зале</div>
+      <div class="q">Perplexity</div><div>Поисковик, который отвечает фактами со ссылкой на каждый</div><div class="hi">Всем, у кого цена ошибки в цифре высокая</div>
+      <div class="q">Julius AI</div><div>Загрузили таблицу, получили дашборд и графики без формул</div><div class="hi">Тем, у кого много выгрузок из CRM и 1С</div>
+      <div class="q">Rows</div><div>Таблица со встроенным ИИ: аномалии и прогнозы прямо в ячейках</div><div class="hi">Тем, кто живёт в Excel</div>
+      <div class="q">SimilarWeb</div><div>Показывает, откуда идёт трафик к сайтам конкурентов</div><div class="hi">Контент, автобизнес, услуги</div>
+      <div class="q">Brand24</div><div>Мониторит упоминания бренда и тональность в реальном времени</div><div class="hi">Тем, у кого репутация это продажи</div>
+      <div class="q">Apollo</div><div>База компаний и контактов ЛПР с оценкой, кто скорее купит</div><div class="hi">Завод, тендеры, B2B-продажи</div>
+    </div>
+    <div class="src a">Правило прежнее: платим только тогда, когда упёрлись в потолок бесплатного и точно знаете, зачем.</div>
+  </div>
+</section>
+
+<!-- 42 · Связка -->
+<section class="slide gg" data-act="Инструменты">
+  <div class="wrap">
+    <div class="kicker a">Самое важное на сегодня</div>
+    <h2 class="a d1">Отчёт, который лежит в чате, <span class="accent">завтра мёртв</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:32px">
+      <div class="step-p ap d3"><div class="n">1</div><div class="t">Исследование готово. <b>Сохраняем в файл</b>: экспорт или просто копия в документ</div></div>
+      <div class="step-p ap d4"><div class="n">2</div><div class="t">Кладём его <b>в базу знаний ассистента</b> из занятия 3. Теперь он отвечает на фактах о рынке, а не из головы</div></div>
+      <div class="step-p ap d5"><div class="n">3</div><div class="t">Второй копией <b>в блокнот</b> из занятия 4. Там из него получатся презентация, пересказ и карточки</div></div>
+      <div class="step-p ap d6"><div class="n">4</div><div class="t">Раз в квартал <b>повторяем то же исследование</b> и сравниваете два отчёта. Вот это уже управление, а не разовое любопытство</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:26px;font-size:31px">Ассистент, который знает ваш рынок в цифрах, отвечает совсем не так, как ассистент, который знает только ваш стиль.</div>
+  </div>
+</section>
+
+<!-- ═════════════ ФИНАЛ ═════════════ -->
+
+<!-- 43 · Что забрали -->
+<section class="slide" data-act="Финал">
+  <div class="wrap">
+    <div class="kicker a">Что унесли сегодня</div>
+    <h2 class="a d1">Четыре суперсилы</h2>
+    <div class="cards c4 a d2" style="flex:1;align-content:center">
+      <div class="card card--sm ap d3"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="detective" style="--sz:40px"></i></span><h3>Досье</h3></div><p>Рынок, конкуренты, репутация и поставщики со ссылками на источники.</p></div>
+      <div class="card card--sm ap d4" style="--coral:#10b981;--coral-soft:rgba(16,185,129,.16)"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="scan" style="--sz:40px"></i></span><h3>Рентген</h3></div><p>Своя таблица и свои отзывы превращаются в выводы и действия.</p></div>
+      <div class="card card--sm ap d5" style="--coral:#F2C14E;--coral-soft:rgba(242,193,78,.15)"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="cloud-sun" style="--sz:40px"></i></span><h3>Прогноз</h3></div><p>Даты, к которым надо готовиться заранее, а не по факту.</p></div>
+      <div class="card card--sm ap d6" style="--coral:#7FA6D0;--coral-soft:rgba(127,166,208,.17)"><div class="head"><span class="ico-chip"><i class="ph-i" data-ph="plugs-connected" style="--sz:40px"></i></span><h3>Связка</h3></div><p>Результат уходит в базу знаний и живёт дальше, а не тонет в чате.</p></div>
+    </div>
+    <div class="lead a d7" style="font-size:32px">И одна привычка: <b>перед решением на деньги теперь есть пятнадцать минут проверки</b>.</div>
+  </div>
+</section>
+
+<!-- 44 · Домашка -->
+<section class="slide" data-act="Финал">
+  <div class="wrap">
+    <div class="kicker a">Домашнее задание</div>
+    <h2 class="a d1">Три задачи, все на <span class="accent">реальных данных</span></h2>
+    <div class="rules rules--tight a d2" style="margin-top:38px">
+      <div class="rule ap d3"><span class="mono">1</span><div class="t"><b>Исследование под реальное решение.</b> Возьмите вопрос, который стоит перед вами в ближайший месяц: поставщик, цена, канал, найм, оборудование. Получите отчёт со ссылками и решением</div></div>
+      <div class="rule ap d4"><span class="mono">2</span><div class="t"><b>Свои данные под рентген.</b> Таблица, отзывы, прайс, выписка или статистика. Заберите один вывод, который меняет ваше поведение на следующей неделе</div></div>
+      <div class="rule ap d5"><span class="mono">3</span><div class="t"><b>Связка.</b> Положите отчёт в базу знаний ассистента или в блокнот и задайте ему вопрос по этому отчёту. Пришлите ответ</div></div>
+    </div>
+    <div class="lead a d6" style="margin-top:30px;font-size:30px">В чат: <b>скрин самого полезного вывода</b> и одна строка, какое решение он поменял. Персональные данные замазываем.</div>
+  </div>
+</section>
+
+<!-- 45 · Финал -->
+<section class="slide" data-act="Финал">
+  <img class="bg bg--mid" src="screens7/bg-final.jpg" alt=""><div class="veil"></div>
+  <div class="wrap" style="justify-content:flex-end">
+    <div class="kicker a">Занятие 7 из 8</div>
+    <h1 class="a d1" style="font-size:112px">Спасибо!</h1>
+    <div class="lead a d2" style="margin-top:26px;font-size:36px">Оцените занятие от 1 до 10 и скажите, чего не хватило.<br><b>Следующее занятие последнее: собираем всё в одну систему.</b></div>
+    <div class="a d3" style="margin-top:44px;font-size:28px;color:var(--muted);font-weight:650">Шпаргалка со всеми промптами уже в чате · <span class="accent">neovida.ai</span></div>
+  </div>
+</section>
+
+</div></div>
+<div id="bar"><i></i></div>
+<button id="fs-btn" aria-label="Полный экран"></button>
+
+<script src="assets7.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.ph-i').forEach(el=>{
+    const n=el.dataset.ph; if(window.PH&&PH[n]) el.innerHTML=PH[n].replace('<svg ','<svg fill="currentColor" ');
+  });
+  document.querySelectorAll('.logo-i').forEach(el=>{
+    const n=el.dataset.logo; if(window.LOGO&&LOGO[n]) el.innerHTML=LOGO[n];
+  });
+  document.querySelectorAll('.bg').forEach(el=>{el.addEventListener('error',()=>el.remove())});
+  initDeck();
+});
+
+let cur=0,slides=[],barEl,actEl,noEl;
+function initDeck(){
+  slides=[...document.querySelectorAll('.slide')];
+  barEl=document.querySelector('#bar i');
+  const chrome=document.createElement('div');chrome.id='chrome';
+  chrome.innerHTML='<div id="act-label"></div><div id="slide-no"></div>';
+  document.getElementById('stage').appendChild(chrome);
+  actEl=document.getElementById('act-label');noEl=document.getElementById('slide-no');
+  const h=parseInt(location.hash.slice(1),10);
+  cur=(h>=1&&h<=slides.length)?h-1:0;
+  scale();window.addEventListener('resize',scale);
+  show(cur);
+  window.addEventListener('keydown',e=>{
+    if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='Home'){show(0)}
+    else if(e.key==='End'){show(slides.length-1)}
+    else if(e.key.toLowerCase()==='f'){toggleFS()}
+  });
+  document.getElementById('viewport').addEventListener('click',e=>{
+    if(e.target.closest('a'))return;
+    (e.clientX>window.innerWidth*0.33)?next():prev();
+  });
+  const fsBtn=document.getElementById('fs-btn');
+  fsBtn.addEventListener('click',e=>{e.stopPropagation();toggleFS();});
+  document.addEventListener('fullscreenchange',()=>{fsBtn.classList.toggle('is-fs',!!document.fullscreenElement);});
+}
+function scale(){
+  const s=Math.min(window.innerWidth/1920,window.innerHeight/1080);
+  document.getElementById('stage').style.transform=`scale(${s})`;
+}
+function next(){if(cur<slides.length-1)show(cur+1)}
+function prev(){if(cur>0)show(cur-1)}
+function show(i){
+  slides.forEach(s=>s.classList.remove('active'));
+  cur=i;const sl=slides[i];sl.classList.add('active');
+  history.replaceState(null,'','#'+(i+1));
+  barEl.style.width=((i+1)/slides.length*100)+'%';
+  actEl.textContent=sl.dataset.act||'';
+  noEl.textContent=(i+1)+' / '+slides.length;
+}
+function toggleFS(){
+  if(!document.fullscreenElement)document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+</script>
+</body>
+</html>
