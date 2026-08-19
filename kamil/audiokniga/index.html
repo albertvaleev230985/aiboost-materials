@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Как сделать из электронной книги аудиокнигу · neovida.ai</title>
+<style>
+:root{
+  --bg:#0B1220; --bg2:#131B2E; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.1);
+  --text:#F4F1EC; --muted:#9AA3B2; --coral:#E07461; --coral-soft:rgba(224,116,97,.15); --ice:#3D8FD1;
+  --green:#4caf7d; --amber:#e0a95c; --red:#e05c5c;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(160deg,var(--bg),var(--bg2)) fixed;color:var(--text);font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;padding-bottom:80px}
+.wrap{max-width:800px;margin:0 auto;padding:26px 18px}
+header{padding:32px 0 8px}
+.brand{font-size:15px;font-weight:700;color:var(--muted)}
+.brand b{color:var(--coral)}
+h1{font-size:34px;line-height:1.14;font-weight:800;letter-spacing:-.01em;margin-top:12px}
+.sub{color:var(--muted);font-size:16px;margin-top:12px}
+.sub b{color:var(--text)}
+
+.howto{background:var(--coral-soft);border:1px solid rgba(224,116,97,.35);border-radius:14px;padding:15px 17px;margin-top:20px;font-size:15.5px;color:var(--muted)}
+.howto b{color:var(--text)}
+
+h2{font-size:25px;font-weight:800;line-height:1.2;margin:46px 0 6px;letter-spacing:-.01em}
+.h2-note{color:var(--muted);font-size:15.5px;margin-bottom:14px}
+
+/* математика */
+.math{display:flex;align-items:center;gap:10px;margin:16px 0;flex-wrap:wrap}
+.math-b{flex:1 1 150px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:14px 16px;text-align:center}
+.math-b b{display:block;font-size:22px;font-weight:800;color:var(--coral)}
+.math-b span{display:block;font-size:13.5px;color:var(--muted);margin-top:4px;line-height:1.35}
+.math-ar{flex:0 0 auto;color:var(--coral);font-size:19px;opacity:.7}
+
+/* карточки решений */
+.sol{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;margin:16px 0}
+.sol--top{border-color:rgba(224,116,97,.45);background:rgba(224,116,97,.08);box-shadow:0 10px 40px rgba(224,116,97,.12)}
+.sol-h{display:flex;align-items:flex-start;gap:14px}
+.sol-n{flex:0 0 auto;width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.08);color:var(--muted);font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.sol--top .sol-n{background:var(--coral);color:#fff}
+.sol-t{min-width:0;flex:1}
+.sol-t h3{font-size:21px;font-weight:800;line-height:1.25}
+.sol-t h3 a{color:var(--text);text-decoration:none;border-bottom:2px solid rgba(224,116,97,.5)}
+.sol-t h3 a:hover{border-bottom-color:var(--coral)}
+.sol-t .who{font-size:14.5px;color:var(--muted);margin-top:5px;line-height:1.4}
+.tag{display:inline-block;font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 11px;border-radius:999px;margin-top:8px;margin-right:6px}
+.t-best{background:rgba(224,116,97,.2);border:1px solid rgba(224,116,97,.5);color:#F2A08E}
+.t-rub{background:rgba(76,175,125,.15);border:1px solid rgba(76,175,125,.42);color:var(--green)}
+.t-free{background:rgba(61,143,209,.15);border:1px solid rgba(61,143,209,.42);color:var(--ice)}
+.t-dev{background:rgba(224,169,92,.14);border:1px solid rgba(224,169,92,.4);color:var(--amber)}
+.t-no{background:rgba(224,92,92,.13);border:1px solid rgba(224,92,92,.4);color:var(--red)}
+
+.sol dl{margin:16px 0 0;font-size:15.5px}
+.sol dt{font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--coral);margin-top:14px}
+.sol dt:first-child{margin-top:0}
+.sol dd{margin-top:5px;color:var(--muted);line-height:1.55}
+.sol dd b{color:var(--text)}
+.sol ul{margin:6px 0 0 18px;color:var(--muted)}
+.sol li{margin:5px 0;line-height:1.5}
+.sol li b{color:var(--text)}
+
+.price{display:inline-block;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:9px;padding:3px 10px;font-weight:750;color:var(--text);font-size:15px}
+.price--good{background:rgba(76,175,125,.14);border-color:rgba(76,175,125,.4);color:#7fd3a8}
+.price--bad{background:rgba(224,92,92,.13);border-color:rgba(224,92,92,.4);color:#f09a9a}
+
+.minus{background:rgba(224,92,92,.08);border:1px solid rgba(224,92,92,.28);border-radius:12px;padding:12px 15px;margin-top:14px;font-size:15px;color:var(--muted);line-height:1.5}
+.minus b{color:#f09a9a;font-weight:750}
+
+.go{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(135deg,#F2A08E,var(--coral));color:#fff;font-size:14.5px;font-weight:800;padding:11px 22px;border-radius:999px;text-decoration:none;margin-top:16px;box-shadow:0 8px 26px rgba(224,116,97,.32)}
+.go:hover{filter:brightness(1.08)}
+.go--soft{background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--text);box-shadow:none}
+.go--soft:hover{background:rgba(255,255,255,.13)}
+
+/* таблица */
+.tbl-wrap{overflow-x:auto;margin:16px 0;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:14.5px;min-width:520px}
+th{text-align:left;padding:11px 12px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--coral);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid rgba(255,255,255,.06);color:var(--muted);vertical-align:top;line-height:1.45}
+td b{color:var(--text)}
+tr:last-child td{border-bottom:none}
+td a{color:var(--ice);text-decoration:none;border-bottom:1px solid rgba(61,143,209,.4)}
+
+/* нумерованный список проблем */
+.probs{counter-reset:p;margin:16px 0}
+.prob{counter-increment:p;position:relative;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:14px 16px 14px 56px;margin:9px 0;font-size:15.5px;color:var(--muted);line-height:1.5}
+.prob::before{content:counter(p);position:absolute;left:14px;top:13px;width:29px;height:29px;border-radius:9px;background:rgba(224,116,97,.16);color:var(--coral);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.prob b{color:var(--text)}
+
+.note{font-size:15.5px;color:var(--muted);background:rgba(61,143,209,.08);border:1px solid rgba(61,143,209,.25);border-radius:13px;padding:14px 16px;margin:14px 0;line-height:1.55}
+.note b{color:var(--text)}
+.warn{background:rgba(224,169,92,.08);border-color:rgba(224,169,92,.3)}
+
+/* план */
+.chain{margin:16px 0}
+.ch{display:flex;align-items:flex-start;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:14px 16px;margin:8px 0}
+.ch-n{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:rgba(224,116,97,.18);color:var(--coral);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ch-t{font-size:15px;color:var(--muted);line-height:1.5;min-width:0}
+.ch-t b{display:block;color:var(--text);font-size:16px;font-weight:750;margin-bottom:3px}
+.ch--fin{border-color:rgba(76,175,125,.45);background:rgba(76,175,125,.08)}
+.ch--fin .ch-n{background:rgba(76,175,125,.2);color:var(--green)}
+
+footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);color:var(--muted);font-size:14.5px;line-height:1.6}
+footer b{color:var(--text)}
+a{color:var(--ice)}
+@media(max-width:560px){
+  h1{font-size:28px}
+  h2{font-size:22px}
+  .sol{padding:17px}
+  .sol-t h3{font-size:19px}
+  .math{flex-direction:column;align-items:stretch}
+  .math-ar{text-align:center;transform:rotate(90deg)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">neovida<b>.</b>ai</div>
+  <h1>Из электронной книги<br>в аудиокнигу</h1>
+  <div class="sub">Справка по сервисам · русский язык · август 2026 · <b>Альберт Валеев</b></div>
+
+  <div class="howto">
+    <b>Как читать.</b> Решения идут сверху вниз: первое самое простое и качественное, дальше дешевле, но требует больше возни. Если нужен результат сегодня и без нервов, берите первое или второе, остальное можно не читать.
+  </div>
+</header>
+
+<h2>Сначала цифры, иначе цены ничего не значат</h2>
+<div class="h2-note">Все суммы ниже пересчитаны на одну и ту же книгу, чтобы сравнение было честным.</div>
+
+<div class="math">
+  <div class="math-b"><b>300</b><span>страниц книги</span></div>
+  <div class="math-ar">→</div>
+  <div class="math-b"><b>500 000</b><span>знаков текста</span></div>
+  <div class="math-ar">→</div>
+  <div class="math-b"><b>9-10 часов</b><span>готового звука</span></div>
+</div>
+
+<div class="note">
+  <b>Проверьте свою книгу за минуту.</b> Откройте файл в Word и посмотрите «Статистика» внизу слева, там есть число знаков с пробелами. Разделите на 55 000 и получите примерную длину аудиокниги в часах.
+</div>
+
+
+<h2>Решение 1. ElevenLabs Studio</h2>
+<div class="h2-note">Если бы выбирал один вариант и забыл про остальные, взял бы этот.</div>
+
+<div class="sol sol--top">
+  <div class="sol-h">
+    <div class="sol-n">1</div>
+    <div class="sol-t">
+      <h3><a href="https://elevenlabs.io/audiobooks" target="_blank" rel="noopener">ElevenLabs Studio</a></h3>
+      <div class="who">Единственный сервис, который сделан под книгу целиком, а не под «озвучь абзац». Мировой стандарт для аудиокниг.</div>
+      <span class="tag t-best">лучшее качество</span><span class="tag t-dev">оплата через посредника</span>
+    </div>
+  </div>
+
+  <dl>
+    <dt>Как это выглядит на практике</dt>
+    <dd>Загружаете файл книги, сервис сам находит главы и разбивает текст. Выбираете голос, слушаете кусок, нажимаете «сгенерировать». Получаете готовые файлы по главам. Похоже на обычный текстовый редактор, программировать ничего не надо.</dd>
+
+    <dt>Что принимает на вход</dt>
+    <dd>EPUB, PDF, DOCX, TXT, HTML и просто ссылку на страницу.</dd>
+
+    <dt>Русский язык</dt>
+    <dd>Есть, и хорошо звучит. Можно выбрать даже между московским и петербургским выговором, а также пол и возраст диктора.</dd>
+
+    <dt>Чего нет у остальных</dt>
+    <dd>
+      <ul>
+        <li><b>Разные голоса персонажам.</b> Диалог героев читают разные актёры, прямо внутри одного абзаца</li>
+        <li><b>Словарь ударений.</b> Один раз вбиваете, как читать фамилии и термины, дальше он не ошибётся ни в одной главе</li>
+        <li><b>Перегенерация куска.</b> Не понравилось одно предложение, переделываете его, а не всю книгу</li>
+        <li><b>Держит до 500 глав</b> в одном проекте</li>
+        <li><b>Качество файла</b> на старших тарифах: WAV 16 бит 44,1 кГц, это студийный уровень, принимают любые площадки</li>
+      </ul>
+    </dd>
+
+    <dt>Сколько стоит наша книга</dt>
+    <dd>Тариф <b>Pro, $99 в месяц</b>, в него входит ровно 500 000 знаков. То есть одна книга укладывается в один месяц подписки, потом её можно отменить. Тариф за $22 книгу не потянет, там всего 100 000 знаков.</dd>
+  </dl>
+
+  <div class="minus">
+    <b>Минус.</b> Официально сервис не работает с российскими картами. Платят через посредников с оплатой рублями, комиссия обычно 10-15%. Это рабочая схема, ей пользуются тысячи людей, но лишний шаг.
+  </div>
+
+  <a class="go" href="https://elevenlabs.io/audiobooks" target="_blank" rel="noopener">Открыть ElevenLabs →</a>
+</div>
+
+
+<h2>Решение 2. Звукограм</h2>
+<div class="h2-note">Самый короткий путь, если не хочется возиться с зарубежной оплатой.</div>
+
+<div class="sol">
+  <div class="sol-h">
+    <div class="sol-n">2</div>
+    <div class="sol-t">
+      <h3><a href="https://zvukogram.com/" target="_blank" rel="noopener">Звукограм</a></h3>
+      <div class="who">Российский сервис: русский интерфейс, оплата картой, без VPN и посредников.</div>
+      <span class="tag t-rub">рубли, без VPN</span><span class="tag t-best">просто</span>
+    </div>
+  </div>
+
+  <dl>
+    <dt>Чем хорош</dt>
+    <dd>
+      <ul>
+        <li><b>Более 140 русских голосов</b>: мужские, женские, детские, пожилые, разные тембры и манеры</li>
+        <li><b>До 2 миллионов знаков за один раз.</b> Вся книга загружается целиком, не надо резать на куски и потом склеивать</li>
+        <li><b>Коммерческая лицензия входит в тариф.</b> Можно продавать и публиковать без отдельной доплаты</li>
+        <li>Понятная оплата: <b>1 токен = 1 рубль</b>, списывается по факту</li>
+      </ul>
+    </dd>
+
+    <dt>Кому подойдёт</dt>
+    <dd>Тем, кому нужен нормальный дикторский голос и готовый файл, без танцев с зарубежными платежами.</dd>
+  </dl>
+
+  <div class="minus">
+    <b>Минус.</b> Эмоций и актёрской игры меньше, чем у ElevenLabs. Для нон-фикшена и деловой книги разницы почти не слышно, для художественной прозы с диалогами она заметна.
+  </div>
+
+  <a class="go" href="https://zvukogram.com/" target="_blank" rel="noopener">Открыть Звукограм →</a>
+</div>
+
+
+<h2>Решение 3. ERA2 Voice</h2>
+<div class="h2-note">Единственный русский сервис, заточенный именно под книги.</div>
+
+<div class="sol">
+  <div class="sol-h">
+    <div class="sol-n">3</div>
+    <div class="sol-t">
+      <h3><a href="https://voice.era2.ai/audiobook-narration" target="_blank" rel="noopener">ERA2 Voice</a></h3>
+      <div class="who">Российская надстройка над ElevenLabs со своим слоем под русский язык.</div>
+      <span class="tag t-rub">рубли, без VPN</span><span class="tag t-no">дорого на объёме</span>
+    </div>
+  </div>
+
+  <dl>
+    <dt>Чем интересен</dt>
+    <dd>
+      <ul>
+        <li>Свой слой под <b>русские ударения и омографы</b>: понимает разницу между «зАмок» и «замОк»</li>
+        <li><b>Клонирование голоса автора за 299 ₽</b> разово. Книга выйдет с пометкой «читает автор», это сильно поднимает ценность</li>
+        <li>Более 200 готовых голосов, файл сразу в формате под Литрес, Storytel и Букмейт</li>
+        <li>Загрузка файлов TXT, DOCX и PDF начиная с тарифа Pro</li>
+      </ul>
+    </dd>
+
+    <dt>Сколько стоит наша книга</dt>
+    <dd>Пакеты идут от 390 ₽ за 5 000 знаков до 3 000 ₽ за 50 000 знаков. На книге в 500 000 знаков выходит примерно <span class="price price--bad">30 000 ₽</span>.</dd>
+  </dl>
+
+  <div class="minus">
+    <b>Честно про цену.</b> Под капотом там тот же ElevenLabs, который сам стоит $99 за такой объём. Вы доплачиваете за рубли, русский интерфейс и готовую заточку под ударения. Иногда это оправданно, иногда проще заплатить напрямую.
+  </div>
+
+  <a class="go" href="https://voice.era2.ai/audiobook-narration" target="_blank" rel="noopener">Открыть ERA2 Voice →</a>
+</div>
+
+
+<h2>Решение 4. SaluteSpeech от Сбера</h2>
+<div class="h2-note">Самый дешёвый способ получить приличный русский голос.</div>
+
+<div class="sol">
+  <div class="sol-h">
+    <div class="sol-n">4</div>
+    <div class="sol-t">
+      <h3><a href="https://developers.sber.ru/portal/products/smartspeech" target="_blank" rel="noopener">SaluteSpeech</a></h3>
+      <div class="who">Речевые технологии Сбера. Есть обычная программа для компьютера, программировать не нужно.</div>
+      <span class="tag t-rub">рубли, без VPN</span><span class="tag t-free">почти даром</span>
+    </div>
+  </div>
+
+  <dl>
+    <dt>Цена</dt>
+    <dd><b>186 ₽ за миллион знаков.</b> Наша книга обойдётся примерно в <span class="price price--good">93 ₽</span>. Плюс физлицам дают <b>200 000 знаков в месяц бесплатно</b>, этого хватит примерно на 3,5 часа звука.</dd>
+
+    <dt>Как пользоваться без программиста</dt>
+    <dd>Скачиваете <a href="https://developers.sber.ru/docs/ru/salutespeech/quick-start/desktop-app" target="_blank" rel="noopener">приложение SaluteSpeech App</a> для Windows или Mac, вкладка «Синтез», вставляете текст, выбираете голос, скачиваете аудиофайл.</dd>
+  </dl>
+
+  <div class="minus">
+    <b>Минус.</b> В приложении семь голосов, и это ровное дикторское чтение без актёрской подачи. Для учебной или деловой книги отлично, для романа суховато. Плюс текст придётся вставлять частями.
+  </div>
+
+  <a class="go go--soft" href="https://developers.sber.ru/portal/products/smartspeech" target="_blank" rel="noopener">Открыть SaluteSpeech →</a>
+</div>
+
+
+<h2>Решение 5. Yandex SpeechKit</h2>
+
+<div class="sol">
+  <div class="sol-h">
+    <div class="sol-n">5</div>
+    <div class="sol-t">
+      <h3><a href="https://aistudio.yandex.ru/ru/ai-speech" target="_blank" rel="noopener">Yandex SpeechKit</a></h3>
+      <div class="who">Те самые голоса, которыми говорит Алиса. Один из лучших русских синтезов.</div>
+      <span class="tag t-rub">рубли, без VPN</span><span class="tag t-dev">нужен помощник</span>
+    </div>
+  </div>
+
+  <dl>
+    <dt>Цена</dt>
+    <dd>Порядка <b>400 ₽ за миллион знаков</b>, то есть наша книга примерно <span class="price price--good">200 ₽</span>. Голоса: Алёна, Филипп, Захар, Джейн, Марина и другие.</dd>
+
+    <dt>Как обойтись без программиста</dt>
+    <dd>Есть готовая программа <a href="http://rechk.ru/" target="_blank" rel="noopener">«Речка»</a>: ставится на компьютер, умеет делать аудиокниги в MP3 и подключается сразу к 15 движкам, включая Яндекс, Сбер и ElevenLabs. Один инструмент вместо пяти вкладок.</dd>
+  </dl>
+
+  <div class="minus">
+    <b>Минус.</b> Сам SpeechKit это инструмент для разработчиков, в чистом виде без помощника не запустить. «Речка» решает вопрос, но выглядит она как программа из двухтысячных.
+  </div>
+
+  <a class="go go--soft" href="https://aistudio.yandex.ru/ru/ai-speech" target="_blank" rel="noopener">Открыть SpeechKit →</a>
+</div>
+
+
+<h2>Решение 6. Литрес «авточтец»</h2>
+<div class="h2-note">Бесплатно, но подходит только если книга издаётся на Литрес.</div>
+
+<div class="sol">
+  <div class="sol-h">
+    <div class="sol-n">6</div>
+    <div class="sol-t">
+      <h3><a href="https://selfpub.ru/services/audio/" target="_blank" rel="noopener">Литрес Самиздат</a></h3>
+      <div class="who">Площадка сама озвучит вашу книгу синтезом речи и выложит с пометкой «авточтец».</div>
+      <span class="tag t-free">бесплатно</span>
+    </div>
+  </div>
+
+  <dl>
+    <dt>Как это работает</dt>
+    <dd>Публикуете книгу на Литрес, в личном кабинете открываете «Мои книги», вкладку «Аудиокниги», подаёте заявку. Модераторы рассматривают до 14 календарных дней, дальше аудиоверсия появляется в магазине.</dd>
+
+    <dt>Зачем это нужно</dt>
+    <dd>По внутреннему исследованию Литрес книги с аудиоверсией продаются <b>в среднем на 30% лучше</b> аналогичных книг без озвучки. Причём аудиоверсия достаётся покупателю бесплатно вместе с электронной книгой.</dd>
+  </dl>
+
+  <div class="minus">
+    <b>Минус.</b> Аудиокнига живёт внутри Литрес, файл себе на компьютер вы не заберёте. Если нужна аудиоверсия для своего сайта, рассылки или подарка клиентам, этот вариант не подойдёт.
+  </div>
+
+  <a class="go go--soft" href="https://selfpub.ru/services/audio/" target="_blank" rel="noopener">Открыть Литрес Самиздат →</a>
+</div>
+
+
+<h2>Решение 7. VoiceStudio на своём компьютере</h2>
+<div class="h2-note">Бесплатно и навсегда, ничего не уходит в интернет.</div>
+
+<div class="sol">
+  <div class="sol-h">
+    <div class="sol-n">7</div>
+    <div class="sol-t">
+      <h3><a href="https://github.com/debpalash/VoiceStudio" target="_blank" rel="noopener">VoiceStudio</a></h3>
+      <div class="who">Открытая программа, которую ставят вместо ElevenLabs. Более 10 000 отметок на GitHub, живая разработка.</div>
+      <span class="tag t-free">бесплатно</span><span class="tag t-dev">нужен нормальный компьютер</span>
+    </div>
+  </div>
+
+  <dl>
+    <dt>Что умеет для книг</dt>
+    <dd>
+      <ul>
+        <li>Импорт <b>EPUB и PDF</b>, рендер по главам, экспорт в <b>M4B</b> (это правильный формат аудиокниги: с обложкой, главами и запоминанием места)</li>
+        <li><b>Разные голоса на роли</b>, как у ElevenLabs</li>
+        <li><b>Клонирование голоса</b> с образца в 5-15 секунд</li>
+        <li>Сотни готовых голосов, русский поддерживается</li>
+        <li>Работает без подписки, аккаунта и интернета</li>
+      </ul>
+    </dd>
+
+    <dt>Что нужно</dt>
+    <dd>Mac на Apple Silicon (M1 и новее), Windows 10/11 или Linux. Памяти от 8 ГБ, лучше 16 ГБ и больше.</dd>
+  </dl>
+
+  <div class="minus">
+    <b>Минус.</b> Это программа с GitHub, а не сервис с кнопкой «купить». Установка займёт вечер, и лучше делать её с человеком, который дружит с компьютером.
+  </div>
+
+  <a class="go go--soft" href="https://github.com/debpalash/VoiceStudio" target="_blank" rel="noopener">Посмотреть VoiceStudio →</a>
+</div>
+
+
+<h2>Решение 8. ebook2audiobook</h2>
+<div class="h2-note">Тоже бесплатно и локально, но уже совсем для технаря.</div>
+
+<div class="sol">
+  <div class="sol-h">
+    <div class="sol-n">8</div>
+    <div class="sol-t">
+      <h3><a href="https://github.com/DrewThomasson/ebook2audiobook" target="_blank" rel="noopener">ebook2audiobook</a></h3>
+      <div class="who">Почти 20 000 отметок на GitHub. Заточен ровно под одну задачу: взять файл книги и отдать аудиокнигу.</div>
+      <span class="tag t-free">бесплатно</span><span class="tag t-dev">нужен техник</span>
+    </div>
+  </div>
+
+  <dl>
+    <dt>Сильные стороны</dt>
+    <dd>
+      <ul>
+        <li>Ест почти любой формат: EPUB, FB2, MOBI, PDF, DOCX, TXT, RTF и ещё десяток</li>
+        <li>Отдаёт готовый <b>M4B с главами и обложкой</b>, а также MP3, WAV и FLAC</li>
+        <li>Русский язык есть, клонирование голоса с записи 1-5 минут, причём запись он сам чистит от шума</li>
+        <li>Есть окно в браузере, не только командная строка</li>
+      </ul>
+    </dd>
+  </dl>
+
+  <div class="minus">
+    <b>Минус.</b> Без видеокарты работает мучительно медленно: книга может считаться сутки. С видеокартой быстро, но ставить и настраивать должен человек с техническим опытом.
+  </div>
+
+  <a class="go go--soft" href="https://github.com/DrewThomasson/ebook2audiobook" target="_blank" rel="noopener">Посмотреть на GitHub →</a>
+</div>
+
+
+<h2>Решение 9. Движки для разработчика</h2>
+<div class="h2-note">Если в команде есть программист, книга обойдётся в копейки. Ниже места в независимом рейтинге <a href="https://artificialanalysis.ai/text-to-speech/leaderboard/provider-voice" target="_blank" rel="noopener">Artificial Analysis</a>, где живые слушатели вслепую сравнивают 76 моделей.</div>
+
+<div class="tbl-wrap">
+<table>
+  <thead>
+    <tr><th>Движок</th><th>Место</th><th>За 1 млн знаков</th><th>Наша книга</th><th>Русский</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><b><a href="https://cartesia.ai/" target="_blank" rel="noopener">Cartesia Sonic 3.6</a></b></td><td>1 место</td><td>$49</td><td>~$25</td><td>Есть, подтверждён в документации</td></tr>
+    <tr><td><b><a href="https://speechify.com/pricing-api/" target="_blank" rel="noopener">Speechify Simba 3.2</a></b></td><td>3 место</td><td>$10</td><td>~$5</td><td>Есть</td></tr>
+    <tr><td><b><a href="https://aistudio.google.com/" target="_blank" rel="noopener">Gemini 3.1 Flash TTS</a></b></td><td>5 место</td><td>$18,3</td><td>~$9</td><td>Отличный, верно ставит ударения</td></tr>
+    <tr><td><b><a href="https://elevenlabs.io/" target="_blank" rel="noopener">ElevenLabs v3</a></b></td><td>12 место</td><td>$100</td><td>~$50</td><td>Есть, с выбором выговора</td></tr>
+    <tr><td><b><a href="https://www.minimax.io/audio" target="_blank" rel="noopener">MiniMax Speech 2.8 HD</a></b></td><td>13 место</td><td>$100</td><td>~$50</td><td>Есть</td></tr>
+    <tr><td><b><a href="https://fish.audio/" target="_blank" rel="noopener">Fish Audio S1</a></b></td><td>вне топ-15</td><td>$15</td><td>~$30</td><td>Есть, сильное клонирование</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note warn">
+  <b>Важная поправка к рейтингу.</b> Он меряет короткие фразы, а книга это девять часов подряд. Победитель по очкам не обязательно лучший на длинной дистанции: там важнее, чтобы голос не «уплывал» к двадцатой главе и правильно читал имена. Поэтому ElevenLabs на двенадцатом месте по очкам всё равно выигрывает в реальном книжном производстве: у него сделан весь обвес вокруг длинного текста.
+</div>
+
+<div class="note">
+  <b>Как платить из России за эти движки.</b> Через российских посредников с оплатой рублями и картой МИР: <a href="https://gptunnel.ru/" target="_blank" rel="noopener">GPTunnel</a>, <a href="https://polza.ai/" target="_blank" rel="noopener">Polza.ai</a>, ProxyAPI. Наценка обычно 5-15%, VPN не нужен.
+</div>
+
+
+<h2>Решение 10. Автоозвучка прямо в магазинах</h2>
+<div class="h2-note">Самое сильное доказательство, что технология созрела: Google, Apple и Amazon встроили её к себе и продают результат. Но есть одно «но».</div>
+
+<div class="tbl-wrap">
+<table>
+  <thead>
+    <tr><th>Площадка</th><th>Цена</th><th>Язык</th><th>Что важно знать</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><b><a href="https://play.google.com/books/publish/autonarrated/" target="_blank" rel="noopener">Google Play Books</a></b></td><td>бесплатно</td><td>английский, испанский, немецкий, французский, хинди, португальский</td><td><b>Русского нет</b></td></tr>
+    <tr><td><b><a href="https://authors.apple.com/support/4519-digital-narration-audiobooks" target="_blank" rel="noopener">Apple Books</a></b></td><td>бесплатно</td><td>только английский</td><td>Голоса натренированы под жанры: детектив, роман, фантастика</td></tr>
+    <tr><td><b><a href="https://kdp.amazon.com/help?topicId=GMPQGZAZJH6FF456" target="_blank" rel="noopener">Amazon Virtual Voice</a></b></td><td>бесплатно</td><td>только английский</td><td>Только для рынка США, книга должна прожить в Kindle 7 дней</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note warn">
+  <b>Вывод по этому пункту.</b> Для русской книги все три бесплатных пути закрыты: языка просто нет. Держим в голове на случай, если книгу будете переводить на английский.
+</div>
+
+
+<h2>Что на самом деле портит аудиокнигу</h2>
+<div class="h2-note">Это важнее выбора сервиса. Хороший движок на плохо подготовленном тексте звучит отвратительно, а средний на вычищенном звучит достойно.</div>
+
+<div class="probs">
+  <div class="prob"><b>PDF нельзя отдавать напрямую.</b> Номера страниц, колонтитулы и переносы диктор честно зачитает вслух. Нужен EPUB, DOCX или вычищенный текст.</div>
+  <div class="prob"><b>Сноски.</b> Их надо либо убрать, либо перенести в конец главы, иначе речь рвётся посреди фразы.</div>
+  <div class="prob"><b>Ударения и омографы.</b> «Замок» и «замок», «большая» и «Большая», «уже» и «уже». Лечится словарём произношения или расстановкой ударений в тексте.</div>
+  <div class="prob"><b>Имена и фамилии.</b> Особенно иностранные. Пропишите их произношение один раз на всю книгу, иначе в каждой главе будет новый вариант.</div>
+  <div class="prob"><b>Оглавление и выходные данные.</b> Их движок прочитает целиком, все четыре минуты. Удалите заранее.</div>
+  <div class="prob"><b>Цифры и сокращения.</b> «1990-х», «т.д.», «руб.», «др.», «стр. 45» читаются странно. Лучше расписать словами.</div>
+  <div class="prob"><b>Диалоги одним голосом.</b> Сцена превращается в кашу, слушатель теряет, кто говорит. Либо назначайте разные голоса, либо разделяйте паузами.</div>
+  <div class="prob"><b>Таблицы, схемы и подписи к картинкам.</b> В аудио они бессмысленны. Либо перепишите словами, либо выкиньте.</div>
+  <div class="prob"><b>Паузы между главами.</b> Без них книга звучит как один бесконечный поток. Ставьте 2-3 секунды тишины.</div>
+  <div class="prob"><b>Никто не слушает результат.</b> Обязательно прослушайте первые 15 минут ушами до того, как запускать всю книгу. Если старт кривой, дальше будет так же, а переделывать десять часов больно.</div>
+</div>
+
+
+<h2>Права: коротко и по делу</h2>
+
+<div class="note warn">
+  <b>Если книга ваша</b>, делайте что угодно. <b>Если книга чужая</b>, для распространения нужно письменное разрешение правообладателя: у аудиокниги два владельца прав, автор текста и чтец. Для себя в наушники слушайте что хотите, но продавать и выкладывать нельзя.
+  <br><br>
+  Ещё два момента. <b>Клонировать чужой голос без письменного согласия человека нельзя</b>, это прямой запрет. И с <b>2 августа 2026</b> в Европе действует правило об обязательной маркировке синтетического контента, так что если планируете международные площадки, ставьте отметку «озвучено синтезом речи». Площадки к этому относятся спокойно: Spotify принимает ИИ-озвучку официально, там просто есть галочка.
+</div>
+
+
+<h2>Что я предлагаю сделать</h2>
+
+<div class="chain">
+  <div class="ch">
+    <div class="ch-n">1</div>
+    <div class="ch-t"><b>Посчитать книгу</b>Откройте файл, посмотрите число знаков. Это определит и цену, и длину аудиокниги.</div>
+  </div>
+  <div class="ch">
+    <div class="ch-n">2</div>
+    <div class="ch-t"><b>Почистить текст</b>Убрать оглавление, колонтитулы, сноски, подписи к картинкам. Один час работы, который сэкономит день переделок.</div>
+  </div>
+  <div class="ch">
+    <div class="ch-n">3</div>
+    <div class="ch-t"><b>Взять одну главу и прогнать через два сервиса</b>ElevenLabs и Звукограм. Бесплатных лимитов на одну главу хватит. Послушать оба и выбрать голос ушами, а не по описанию.</div>
+  </div>
+  <div class="ch">
+    <div class="ch-n">4</div>
+    <div class="ch-t"><b>Собрать словарь слов</b>Имена, термины, названия, где движок ошибся. Обычно набирается 20-40 слов на книгу.</div>
+  </div>
+  <div class="ch ch--fin">
+    <div class="ch-n">5</div>
+    <div class="ch-t"><b>Запустить книгу целиком</b>С готовым словарём и проверенным голосом. Девять часов звука считаются за вечер.</div>
+  </div>
+</div>
+
+<div class="note">
+  <b>Реалистичный срок.</b> От файла книги до готовой аудиокниги примерно два-три дня спокойной работы: день на чистку текста, полдня на пробы голоса, вечер на генерацию, день на прослушивание и правки.
+</div>
+
+
+<footer>
+  <b>neovida.ai</b> · Альберт Валеев<br>
+  Справка подготовлена 19 августа 2026. Цены и возможности сервисов проверены на эту дату, они меняются быстро.<br><br>
+  Если решите делать, напишите: помогу выбрать сервис под вашу книгу и покажу, как готовить текст, чтобы не переделывать.
+</footer>
+
+</div>
+</body>
+</html>
