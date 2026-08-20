@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность · Занятие 2 · Промпт-инженерия</title>
+<style>
+/* ══════════ ТОКЕНЫ ══════════ */
+:root{
+  --bg0:#0B1220; --bg1:#131B2E;
+  --surface:rgba(21,30,50,.92);
+  --line:rgba(255,255,255,.09);
+  --text:#F4F1EC; --muted:#9AA3B2;
+  --coral:#E07461; --coral-soft:rgba(224,116,97,.16);
+  --emerald:#10b981; --emerald-soft:rgba(16,185,129,.16);
+  --glow:rgba(224,116,97,.42);
+  --steel:#7FA6D0;
+  --sh:0 24px 60px rgba(0,0,0,.45), 0 4px 14px rgba(0,0,0,.35);
+  --r:24px;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#05080F;overflow:hidden}
+body{font-family:-apple-system,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ══════════ СЦЕНА 1920x1080 ══════════ */
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{width:1920px;height:1080px;flex:0 0 auto;position:relative;background:linear-gradient(160deg,var(--bg0),var(--bg1));overflow:hidden;transform-origin:center center}
+
+/* ══════════ СЛАЙД ══════════ */
+.slide{position:absolute;inset:0;display:none;padding:96px;flex-direction:column}
+.slide.active{display:flex}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:.2}
+.bg--strong{opacity:.55}
+.bg--mid{opacity:.34}
+.veil{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(11,18,32,.25) 0%,rgba(11,18,32,.55) 55%,rgba(11,18,32,.92) 100%)}
+.veil--left{background:linear-gradient(90deg,rgba(11,18,32,.94) 0%,rgba(11,18,32,.72) 46%,rgba(11,18,32,.18) 100%)}
+.veil--flat{background:rgba(11,18,32,.74)}
+.wrap{position:relative;z-index:2;display:flex;flex-direction:column;flex:1;min-height:0}
+
+/* ══════════ ВТОРОЙ АКЦЕНТ: ЧАСТЬ 2 (СКИЛЛЫ) ══════════ */
+.slide.em{--coral:#10b981;--coral-soft:rgba(16,185,129,.16);--glow:rgba(16,185,129,.4)}
+.c-coral{color:#E07461}
+.c-em{color:#10b981}
+
+/* ══════════ ТИПОГРАФИКА ══════════ */
+.kicker{font-size:27px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--coral);margin-bottom:28px}
+h1{font-size:118px;line-height:1.04;font-weight:800;letter-spacing:-.015em;max-width:1560px}
+h2{font-size:66px;line-height:1.08;font-weight:750;letter-spacing:-.01em;max-width:1560px}
+.lead{font-size:38px;line-height:1.35;color:var(--muted);max-width:1440px;font-weight:450}
+.lead b,.lead strong{color:var(--text);font-weight:650}
+.src{font-size:25px;color:var(--muted);opacity:.8;margin-top:auto;padding-top:26px}
+.accent{color:var(--coral)}
+
+/* ══════════ АНИМАЦИИ ══════════ */
+@keyframes rise{from{opacity:0;transform:translateY(46px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes bgZoom{from{transform:scale(1.07)}to{transform:scale(1)}}
+@keyframes growW{from{width:0}}
+@keyframes growH{from{height:0}}
+@keyframes popIn{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}
+.slide.active .a{animation:rise .75s var(--ease) both}
+.slide.active .af{animation:fadeIn 1s ease both}
+.slide.active .ap{animation:popIn .6s var(--ease) both}
+.slide.active .bg{animation:bgZoom 9s ease-out both}
+@keyframes emerge{0%{opacity:.08;filter:brightness(.3) blur(9px);transform:scale(1.09)}100%{opacity:.62;filter:brightness(1) blur(0);transform:scale(1)}}
+.slide.active .bg--emerge{animation:emerge 5.5s cubic-bezier(.22,.61,.36,1) both}
+.d1{animation-delay:.09s!important}.d2{animation-delay:.18s!important}.d3{animation-delay:.27s!important}.d4{animation-delay:.36s!important}.d5{animation-delay:.45s!important}.d6{animation-delay:.54s!important}.d7{animation-delay:.63s!important}.d8{animation-delay:.72s!important}.d9{animation-delay:.81s!important}.d10{animation-delay:.9s!important}
+
+/* ══════════ ИКОНКИ / ЛОГО / МОНОГРАММЫ ══════════ */
+.ph-i{display:inline-flex;line-height:0}
+.ph-i svg{width:var(--sz,48px);height:var(--sz,48px)}
+.logo-i{display:inline-flex;line-height:0;color:var(--text)}
+.logo-i svg{height:var(--sz,44px);width:auto;fill:currentColor}
+.mono{display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:50%;background:var(--mc,var(--coral-soft));border:1px solid var(--coral);color:var(--coral);font-weight:800;font-size:30px;flex:0 0 auto}
+.ico-chip{display:inline-flex;align-items:center;justify-content:center;width:96px;height:96px;border-radius:26px;background:var(--coral-soft);color:var(--coral);flex:0 0 auto}
+
+/* ══════════ КАРТОЧКИ ══════════ */
+.cards{display:grid;gap:36px;margin-top:56px}
+.cards.c2{grid-template-columns:1fr 1fr}
+.cards.c3{grid-template-columns:1fr 1fr 1fr}
+.cards.c4{grid-template-columns:repeat(4,1fr);gap:26px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:44px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:22px;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--coral),transparent 70%);opacity:.75}
+.card .num{font-size:70px;font-weight:800;color:var(--coral);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.card h3{font-size:34px;font-weight:700;line-height:1.2}
+.card p{font-size:27px;line-height:1.4;color:var(--muted)}
+.card p b{color:var(--text)}
+.card .head{display:flex;align-items:center;gap:24px;min-height:80px}
+.card--sm{padding:32px 34px;gap:16px}
+.card--sm h3{font-size:31px}
+.card--sm p{font-size:26px}
+.card--sm .head{min-height:72px;gap:20px}
+
+/* ══════════ БИГ-СТАТ ══════════ */
+.stat-center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:8px}
+.stat-num{font-size:210px;font-weight:800;letter-spacing:-.03em;color:var(--coral);line-height:1}
+.stat-cap{font-size:44px;font-weight:650;margin-top:10px}
+.stat-sub{font-size:32px;color:var(--muted);margin-top:14px;max-width:1400px;line-height:1.4}
+
+/* ══════════ СПЛИТ ══════════ */
+.split{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;flex:1;align-items:center;margin-top:20px}
+.split.rev{grid-template-columns:.95fr 1.05fr}
+.split .txt{display:flex;flex-direction:column;gap:24px}
+.split .txt h2{font-size:58px}
+.split .txt .kicker{margin-bottom:0}
+.split .pic{border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);border:1px solid var(--line);height:560px}
+.split .pic img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ══════════ СПИСОК-ПРАВИЛА ══════════ */
+.rules{display:flex;flex-direction:column;gap:26px;margin-top:52px;max-width:1560px}
+.rule{display:flex;align-items:center;gap:32px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px 38px}
+.rule .ico-chip{width:78px;height:78px;border-radius:20px}
+.rule .t{font-size:31px;line-height:1.35}
+.rule .t b{color:var(--coral)}
+.rules--tight{gap:16px!important}
+.rules--tight .rule{padding:20px 34px}
+.rules--tight .ico-chip{width:64px;height:64px;border-radius:18px}
+.rules--tight .t{font-size:29px}
+.rules--7{gap:11px!important}
+.rules--7 .rule{padding:14px 30px}
+.rules--7 .ico-chip{width:56px;height:56px;border-radius:15px}
+.rules--7 .t{font-size:27px;line-height:1.3}
+
+/* ══════════ ПРАКТИКА ══════════ */
+.badge{display:inline-flex;align-items:center;gap:14px;background:var(--coral);color:#fff;font-size:26px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:14px 30px;border-radius:999px;margin-bottom:30px;box-shadow:0 10px 34px var(--glow);align-self:flex-start}
+.steps-p{display:flex;flex-direction:column;gap:22px;margin-top:40px;max-width:1560px}
+.step-p{display:flex;gap:30px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:26px 36px}
+.step-p .n{width:64px;height:64px;border-radius:50%;background:var(--coral);color:#fff;font-size:30px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.step-p .t{font-size:30px;line-height:1.38;padding-top:12px}
+.step-p .t b{color:var(--coral)}
+.steps-p--tight{gap:14px!important}
+.steps-p--tight .step-p{padding:18px 32px}
+.steps-p--tight .step-p .n{width:56px;height:56px;font-size:27px}
+.steps-p--tight .step-p .t{font-size:28px;padding-top:8px}
+
+/* ══════════ ПРОМПТ-БЛОК ══════════ */
+.prompt{font-family:"SF Mono",Menlo,Consolas,monospace;background:rgba(16,24,42,.9);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:16px;padding:26px 32px;font-size:27px;line-height:1.46;white-space:pre-wrap;color:var(--text);font-weight:450}
+.prompt .ph{color:var(--coral);font-weight:650}
+.prompt b{font-weight:750;color:#fff}
+.prompt--sm{font-size:26px;padding:24px 28px;line-height:1.42}
+.prompt--lg{font-size:31px;padding:32px 38px}
+.p-lbl{font-size:25px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--steel);margin-bottom:12px}
+.slide.em .p-lbl{color:#6EE7B7}
+.pgrid{display:grid;gap:30px;margin-top:32px}
+.pgrid.p2{grid-template-columns:1fr 1fr}
+.pcol{display:flex;flex-direction:column}
+
+/* ══════════ ТАБЛИЦА ══════════ */
+.tbl{display:grid;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface);margin-top:34px;box-shadow:var(--sh)}
+.tbl > div{padding:24px 30px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-size:27px;line-height:1.34;display:flex;align-items:center;color:var(--muted)}
+.tbl .th{font-size:25px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:rgba(255,255,255,.06);color:var(--text)}
+.tbl .q{font-weight:700;color:var(--text)}
+.tbl .hi{color:var(--text)}
+.tbl.t3{grid-template-columns:1.06fr 1fr 1.06fr}
+.tbl.t3 > div:nth-child(3n){border-right:none}
+.tbl.t3 > div:nth-last-child(-n+3){border-bottom:none}
+.tbl--tall > div{padding:38px 30px}
+.pgrid--mid{flex:1;align-content:center}
+
+/* ══════════ ГЛАВНЫЙ СЛАЙД: ПРОМПТ ПРОТИВ СКИЛЛА ══════════ */
+.big2{display:grid;grid-template-columns:1fr 2px 1fr;gap:64px;align-items:center;margin-top:34px}
+.big2-i{text-align:center}
+.big2-l{font-size:142px;font-weight:800;letter-spacing:-.025em;line-height:1}
+.big2-t{font-size:52px;line-height:1.22;margin-top:24px;color:var(--muted);font-weight:450}
+.big2-t b{color:var(--text);font-weight:750}
+.big2-div{width:3px;height:400px;border-radius:2px;background:linear-gradient(180deg,transparent,rgba(244,241,236,.38) 22%,rgba(244,241,236,.38) 78%,transparent)}
+
+/* ══════════ ФОРМУЛА РКЗФО ══════════ */
+.fx{display:grid;grid-template-columns:repeat(5,1fr);gap:26px;margin-top:46px}
+.fx-i{background:#141d31;border:1px solid var(--line);border-radius:22px;padding:34px 24px;text-align:center;box-shadow:var(--sh)}
+.fx-l{font-size:104px;font-weight:800;color:var(--coral);line-height:1;letter-spacing:-.02em}
+.fx-w{font-size:34px;font-weight:750;margin-top:16px}
+.fx-s{font-size:25px;color:var(--muted);margin-top:10px;line-height:1.3}
+
+/* ══════════ ЧИПЫ-ПРИЁМЫ ══════════ */
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:44px}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:30px 28px;display:flex;flex-direction:column;gap:16px;position:relative;overflow:hidden}
+.chip::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--coral),transparent 75%);opacity:.8}
+.chip .n{font-size:25px;font-weight:800;color:var(--coral);letter-spacing:.1em}
+.chip .hd{display:flex;align-items:center;gap:16px;color:var(--coral)}
+.chip h4{font-size:31px;font-weight:750;line-height:1.18}
+.chip p{font-size:25px;color:var(--muted);line-height:1.32}
+
+/* ══════════ ФРАЗЫ ══════════ */
+.phrases{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:40px}
+.phr{display:flex;gap:20px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 26px}
+.phr .i{font-size:26px;font-weight:800;color:var(--coral);flex:0 0 auto;min-width:38px;font-variant-numeric:tabular-nums}
+.phr .t{font-size:28px;line-height:1.32}
+
+/* ══════════ ЛЕСТНИЦА ══════════ */
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;align-items:end;flex:1;margin-top:36px;max-height:700px}
+.lad{background:#141d31;border:1px solid var(--line);border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;gap:12px;justify-content:flex-end;box-shadow:var(--sh);overflow:hidden}
+.slide.active .lad{animation:growH .9s var(--ease) both}
+.lad .lad-i{display:inline-flex;color:var(--muted);margin-bottom:auto}
+.lad.here .lad-i{color:var(--emerald)}
+.lad .n{font-size:25px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lad h4{font-size:34px;font-weight:750;line-height:1.14}
+.lad p{font-size:25px;color:var(--muted);line-height:1.3}
+.lad.here{border-color:var(--emerald);background:#122a22}
+.lad.here .n{color:var(--emerald)}
+.tag-here{display:inline-block;font-size:24px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--emerald)}
+
+/* ══════════ ХРОМ ══════════ */
+#chrome{position:absolute;left:0;right:0;bottom:0;z-index:50;padding:0 44px 20px;display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}
+#act-label{font-size:24px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:650}
+#slide-no{font-size:24px;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:650}
+#bar{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.07);z-index:51}
+#bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#E07461,#F0A08E);transition:width .45s var(--ease),background .45s ease}
+.slide.active.em ~ #bar i{background:linear-gradient(90deg,#10b981,#4ade80)}
+.brand-corner{position:absolute;top:44px;left:64px;z-index:40;font-size:25px;font-weight:700;color:var(--muted)}
+.brand-corner b{color:#E07461}
+#fs-btn{position:fixed;top:20px;right:20px;z-index:120;width:46px;height:46px;padding:0;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(11,18,32,.5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#9AA3B2;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.4;transition:opacity .2s,color .2s,border-color .2s,background .2s}
+#fs-btn:hover{opacity:1;color:#F4F1EC;border-color:#E07461;background:rgba(224,116,97,.16)}
+#fs-btn svg{width:23px;height:23px}
+#fs-btn .i-close{display:none}
+#fs-btn.is-fs .i-open{display:none}
+#fs-btn.is-fs .i-close{display:block}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+<!-- ═════════════ БЛОК 0 · МОСТИК ═════════════ -->
+
+<!-- 1 · Титул -->
+<section class="slide" data-act="Старт">
+  <img class="bg bg--strong" src="a2/bg-title.jpg" alt=""><div class="veil"></div>
+  <div class="wrap" style="justify-content:flex-end">
+    <div class="kicker a">Занятие 2 · пятница, 21 августа 2026</div>
+    <h1 class="a d1" style="font-size:126px">Промпт-инженерия:<br>как <span class="accent">думать вместе</span> с ИИ</h1>
+    <div class="lead a d2" style="margin-top:32px;font-size:41px">Занятие 2 из 8.<br><b>Сегодня он начнёт понимать вас с первого раза.</b></div>
+  </div>
+</section>
+
+<!-- 2 · Закольцовка с занятия 1 -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <div class="split" style="margin-top:0">
+      <div class="txt">
+        <div class="kicker a">На прошлом занятии мы остановились здесь</div>
+        <h2 class="a d1">Вы открыли чёрный ящик.<br>Осталось <span class="accent">научиться говорить</span></h2>
+        <div class="lead a d2" style="font-size:33px">Мы разобрали, что внутри: как он учился, откуда берёт слова, почему иногда уверенно врёт. Теперь вопрос другой.</div>
+        <div class="lead a d3" style="font-size:33px"><b>Как получать из него ровно то, что нужно вам, а не то, что он сам решил вам выдать.</b></div>
+        <div class="lead a d4" style="font-size:33px">Язык для этого один. Он называется промпт. И это не «написать запрос»: любой запрос промптом не является.</div>
+      </div>
+      <div class="pic a d2"><img src="a2/img-tz-vs-hz.jpg" alt=""></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · Разбор домашек -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <div class="kicker a">Три дня домашки</div>
+    <h2 class="a d1">Что вы успели за неполную неделю</h2>
+    <div class="cards c4 a d2" style="margin-top:44px">
+      <div class="card card--sm ap d3"><div class="num">18</div><h3>Досье в памяти</h3><p>Он больше не спрашивает, кто вы. Объяснять заново не нужно ни в одном чате.</p></div>
+      <div class="card card--sm ap d4"><div class="num">10</div><h3>Сценариев в карте</h3><p>Каждый получил свою карту применения, отсортированную по экономии времени.</p></div>
+      <div class="card card--sm ap d5"><div class="num">6&ndash;12</div><h3>Часов в неделю</h3><p>Столько он пообещал вернуть. Цифры в отчётах группы совпали почти у всех.</p></div>
+      <div class="card card--sm ap d6"><div class="num">1</div><h3>Задача в работе</h3><p>Не в теории, а на живом клиенте, живой таблице и живом протоколе.</p></div>
+    </div>
+    <div class="lead a d7" style="margin-top:40px;font-size:31px">В отчётах я видел разбор переписки с клиентом, отработку возражения по цене, протокол собрания с задачами, отчёт за день голосом, досье на компанию перед встречей, заполнение таблицы по готовым данным и правила обработки заявок. <b>Это уже не эксперименты, это работа.</b></div>
+  </div>
+</section>
+
+<!-- 4 · План на два часа -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <div class="kicker a">План на два часа</div>
+    <h2 class="a d1">Что унесёте сегодня</h2>
+    <div class="rules rules--tight a d2" style="margin-top:44px">
+      <div class="rule ap d3"><span class="ico-chip"><i class="ph-i" data-ph="key" style="--sz:34px"></i></span><div class="t"><b>Формулу,</b> по которой собирается любой рабочий запрос. Пять букв, и вода из ответов уходит</div></div>
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="stack" style="--sz:34px"></i></span><div class="t"><b>Двенадцать приёмов</b> поверх формулы. Каждый закрывается готовыми промптами, которые можно взять и работать сегодня</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="users-three" style="--sz:34px"></i></span><div class="t"><b>Главный приём курса:</b> совет экспертов в три хода. Планёрка, которая собирается за сорок секунд</div></div>
+      <div class="rule ap d6"><span class="ico-chip"><i class="ph-i" data-ph="microphone" style="--sz:34px"></i></span><div class="t"><b>Супертехнику голосом.</b> Тем, кто занимается с телефона, она подойдёт лучше всех</div></div>
+      <div class="rule ap d7"><span class="ico-chip"><i class="ph-i" data-ph="hand-tap" style="--sz:34px"></i></span><div class="t"><b>Шпаргалку с промптами,</b> которые копируются одним касанием. Ссылка придёт в чат сразу после занятия</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════ БЛОК 1 · ПРОМПТ ЭТО ТЕХЗАДАНИЕ ═════════════ -->
+
+<!-- 5 · Титул блока -->
+<section class="slide" data-act="Техзадание">
+  <img class="bg bg--strong" src="a2/bg-tz.jpg" alt=""><div class="veil"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Блок 1 · Промпт это техзадание</div>
+    <h1 class="a d1" style="font-size:138px">Без ТЗ<br>результат <span class="accent">ХЗ</span></h1>
+    <div class="lead a d2" style="margin-top:34px;font-size:38px">Правило, которое вы знаете по своей работе.<br><b>С ИИ оно действует буквально.</b></div>
+  </div>
+</section>
+
+<!-- 6 · Один вопрос, две подачи -->
+<section class="slide" data-act="Техзадание">
+  <div class="wrap">
+    <div class="kicker a">Один и тот же вопрос, две подачи</div>
+    <h2 class="a d1" style="font-size:58px">Разница видна с первой строки</h2>
+    <div class="pgrid p2 pgrid--mid a d2" style="margin-top:28px">
+      <div class="pcol">
+        <div class="p-lbl">Как обычно</div>
+        <div class="prompt prompt--sm">Напиши ответ клиенту, который
+говорит, что дорого.</div>
+        <div class="lead" style="margin-top:22px;font-size:27px">На выходе: пять абзацев вежливой воды, «мы ценим ваш выбор», «наше качество говорит само за себя». Отправить нельзя, переписывать дольше, чем написать самому.</div>
+      </div>
+      <div class="pcol">
+        <div class="p-lbl">По формуле</div>
+        <div class="prompt prompt--sm">Ты опытный переговорщик в продажах.
+Клиент сравнил нас с конкурентом
+и говорит «у вас дороже». Мы работаем
+с ним второй месяц, сделка на стадии
+согласования, торг уже был один раз.
+Напиши ответ в переписку: 3 варианта,
+каждый до 60 слов, разговорным языком.
+Скидку не предлагать. Без вступлений
+и без «мы ценим ваш выбор».</div>
+      </div>
+    </div>
+    <div class="src a d5">Разница не в модели и не в тарифе. Разница только в том, что вы ему дали</div>
+  </div>
+</section>
+
+<!-- 7 · Почему так -->
+<section class="slide" data-act="Техзадание">
+  <img class="bg bg--mid" src="a2/img-tz-vs-hz.jpg" alt=""><div class="veil veil--left"></div>
+  <div class="wrap">
+    <div class="stat-center">
+      <div class="kicker a">Почему так выходит</div>
+      <h2 class="a d1" style="font-size:72px;max-width:1560px">ИИ не читает мысли.<br>Он читает <span class="accent">то, что вы дали</span></h2>
+      <div class="lead a d2" style="margin-top:36px;font-size:35px">Он достраивает самое вероятное продолжение вашего текста. Дали три слова, он достроит среднее по интернету. Дали ситуацию, роль и рамки, он достроит ваш случай.<br><b>Вода в ответе это не его характер. Это отражение того, сколько вы ему сказали.</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · Пять рычагов -->
+<section class="slide" data-act="Техзадание">
+  <div class="wrap">
+    <div class="kicker a">На что вы реально влияете</div>
+    <h2 class="a d1">Шесть рычагов</h2>
+    <div class="cards c3 a d2" style="margin-top:46px;gap:26px">
+      <div class="card card--sm ap d3"><div class="head"><span class="ico-chip" style="width:66px;height:66px;border-radius:18px"><i class="ph-i" data-ph="identification-card" style="--sz:36px"></i></span><h3>Контекст</h3></div><p>Кто вы, что за ситуация, кому уйдёт результат, что уже пробовали. Самое недооценённое из всех пяти.</p></div>
+      <div class="card card--sm ap d4"><div class="head"><span class="ico-chip" style="width:66px;height:66px;border-radius:18px"><i class="ph-i" data-ph="list-checks" style="--sz:36px"></i></span><h3>Формат</h3></div><p>Таблица, письмо, пять пунктов, до 100 слов. Пока вы не сказали, он выбирает форму сам.</p></div>
+      <div class="card card--sm ap d5"><div class="head"><span class="ico-chip" style="width:66px;height:66px;border-radius:18px"><i class="ph-i" data-ph="target" style="--sz:36px"></i></span><h3>Эталон</h3></div><p>Один готовый пример «как надо» работает сильнее, чем три абзаца описаний.</p></div>
+      <div class="card card--sm ap d6"><div class="head"><span class="ico-chip" style="width:66px;height:66px;border-radius:18px"><i class="ph-i" data-ph="x-circle" style="--sz:36px"></i></span><h3>Ограничения</h3></div><p>Чего не делать. Без канцелярита, не длиннее страницы, ничего не додумывать.</p></div>
+      <div class="card card--sm ap d7"><div class="head"><span class="ico-chip" style="width:66px;height:66px;border-radius:18px"><i class="ph-i" data-ph="check-circle" style="--sz:36px"></i></span><h3>Проверка</h3></div><p>Как вы поймёте, что результат годный. Скажите это заранее, и он проверит себя сам.</p></div>
+      <div class="card card--sm ap d7"><div class="head"><span class="ico-chip" style="width:66px;height:66px;border-radius:18px"><i class="ph-i" data-ph="arrow-right" style="--sz:36px"></i></span><h3>Докрутка</h3></div><p>Первый ответ это черновик, а не приговор. Дальше его правят словами, и это нормальная работа.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · Фраза из анкеты -->
+<section class="slide" data-act="Техзадание">
+  <img class="bg bg--strong" src="a2/img-oshibki.jpg" alt="" style="opacity:.6"><div class="veil veil--flat"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Строчка из вашей анкеты</div>
+    <h2 class="a d1" style="font-size:76px;max-width:1560px">«Иногда приходится<br>по <span class="accent">пять раз переписывать</span>»</h2>
+    <div class="lead a d2" style="margin-top:38px;font-size:36px">Это написал кто-то из вас, когда заполнял анкету перед курсом. Пять кругов правок это не потому, что модель слабая, и не потому, что вы что-то делаете не так.<br><b>Это потому, что первый запрос был на три строки, а всё остальное он додумывал сам.</b></div>
+    <div class="lead a d3" style="margin-top:30px;font-size:33px">Следующие два часа ровно про то, как убрать четыре круга из пяти.</div>
+  </div>
+</section>
+<!-- ═════════════ БЛОК 2 · ФОРМУЛА РКЗФО ═════════════ -->
+
+<!-- 10 · Титул блока -->
+<section class="slide" data-act="Формула">
+  <img class="bg bg--strong" src="a2/bg-formula.jpg" alt=""><div class="veil"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Блок 2 · Базовая формула</div>
+    <h1 class="a d1" style="font-size:110px">Пять элементов, из которых<br>собирается <span class="accent">любой рабочий запрос</span></h1>
+    <div class="lead a d2" style="margin-top:34px;font-size:37px">Запоминать её не нужно. Через неделю она соберётся у вас в голове сама, как таблица умножения.</div>
+  </div>
+</section>
+
+<!-- 11 · Формула целиком -->
+<section class="slide" data-act="Формула">
+  <div class="wrap">
+    <div class="kicker a">Что даёт каждая буква</div>
+    <h2 class="a d1">Разбираем по одной</h2>
+    <div class="fx a d2">
+      <div class="fx-i ap d3"><div class="fx-l">Р</div><div class="fx-w">Роль</div><div class="fx-s">С чьей стороны смотреть на задачу</div></div>
+      <div class="fx-i ap d4"><div class="fx-l">К</div><div class="fx-w">Контекст</div><div class="fx-s">Ситуация, кому уйдёт, что уже было</div></div>
+      <div class="fx-i ap d5"><div class="fx-l">З</div><div class="fx-w">Задача</div><div class="fx-s">Какой результат нужен на выходе</div></div>
+      <div class="fx-i ap d6"><div class="fx-l">Ф</div><div class="fx-w">Формат</div><div class="fx-s">В каком виде отдать: таблица, письмо, пункты</div></div>
+      <div class="fx-i ap d7"><div class="fx-l">О</div><div class="fx-w">Ограничения</div><div class="fx-s">Чего не делать и где рамки</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:44px;font-size:31px">Чаще всего забывают <b>контекст</b> и <b>ограничения</b>. А именно они превращают заготовку в готовый документ, который можно отправить не переписывая.</div>
+  </div>
+</section>
+
+<!-- 12 · Минимум -->
+<section class="slide" data-act="Формула">
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Не всегда нужна полная</div>
+    <h2 class="a d1" style="font-size:74px">Минимум, который уже работает:<br><span class="accent">Роль + Задача + Формат</span></h2>
+    <div class="lead a d2" style="margin-top:36px;font-size:35px">Три буквы вместо пяти закрывают большинство коротких задач: быстрое письмо, сводка, список вопросов к встрече, короткий разбор.</div>
+    <div class="pgrid p2 a d3" style="margin-top:34px">
+      <div class="pcol">
+        <div class="p-lbl">Короткая задача, хватит трёх</div>
+        <div class="prompt prompt--sm">Ты руководитель отдела продаж.
+Составь 10 вопросов, которые надо задать
+клиенту на первой встрече.
+Списком, каждый в одну строку.</div>
+      </div>
+      <div class="pcol">
+        <div class="p-lbl">Дорогая задача, нужны все пять</div>
+        <div class="prompt prompt--sm">Когда на кону деньги, репутация
+или подпись живого человека,
+добавляйте контекст и ограничения.
+Пять минут на формулировку
+дешевле, чем разговор
+с недовольным клиентом.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 · Полная формула на живой задаче -->
+<section class="slide" data-act="Формула">
+  <div class="wrap">
+    <div class="kicker a">Полная формула на живой задаче</div>
+    <h2 class="a d1" style="font-size:54px">Так выглядит промпт, после которого <span class="accent">не переделывают</span></h2>
+    <div class="prompt a d2" style="margin-top:26px;flex:1;align-content:center;font-size:28px">Ты <b>руководитель отдела продаж</b> с опытом работы с корпоративными клиентами.
+
+<b>Контекст:</b> клиент ведёт с нами переписку второй месяц, сделка на стадии согласования.
+Сравнил нас с конкурентом и написал, что у нас дороже. Один торг уже был, скидку давать нельзя.
+Клиент общается коротко и не любит длинных писем.
+
+<b>Задача:</b> подготовь три варианта ответа в переписку, чтобы сделка не встала.
+
+<b>Формат:</b> три варианта подряд, каждый до 60 слов, подписан одним словом:
+мягкий, прямой, твёрдый. После них одной строкой скажи, какой ты бы выбрал и почему.
+
+<b>Ограничения:</b> разговорным языком, без канцелярита и без «мы ценим ваш выбор».
+Скидку не предлагать. Ничего не выдумывать про конкурента, я про него ничего не говорил.</div>
+    <div class="src a d5">Выглядит длинно, набирается за сорок секунд голосом. Про голос будет отдельный приём</div>
+  </div>
+</section>
+
+<!-- 14 · Шаблон -->
+<section class="slide" data-act="Формула">
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Копируем и подставляем своё</div>
+    <h2 class="a d1" style="font-size:58px">Шаблон, который лежит в шпаргалке</h2>
+    <div class="prompt prompt--lg a d2" style="margin-top:34px;max-width:1560px">Ты <span class="ph">[кто: роль, с чьей стороны смотреть]</span>.
+
+Контекст: <span class="ph">[кто вы, что за ситуация, кому уйдёт результат, что уже пробовали]</span>.
+
+Задача: <span class="ph">[какой результат нужен на выходе]</span>.
+
+Формат: <span class="ph">[таблица / письмо / N пунктов / до N слов]</span>.
+
+Ограничения: <span class="ph">[чего не делать, рамки, чего не выдумывать]</span>.</div>
+    <div class="lead a d4" style="margin-top:32px;font-size:31px">Пять строк. Заполняются за минуту, экономят те самые четыре круга правок.</div>
+  </div>
+</section>
+
+<!-- 15 · Кейсбук 1 -->
+<section class="slide" data-act="Формула">
+  <div class="wrap">
+    <div class="kicker a">Кейсбук 1 · готовые промпты по формуле</div>
+    <h2 class="a d1" style="font-size:56px">Берём и пользуемся сегодня</h2>
+    <div class="pgrid p2 pgrid--mid a d2" style="margin-top:26px">
+      <div class="pcol">
+        <div class="p-lbl">Продажи и работа с клиентами</div>
+        <div class="prompt prompt--sm">Ты опытный переговорщик в продажах.
+Вот переписка с клиентом, имена убраны.
+Разбери её и дай: на какой стадии сделка,
+что клиента реально держит, где я потерял
+инициативу, и три варианта следующего
+сообщения с разной степенью давления.
+Каждый до 60 слов, живым языком.
+Ничего не додумывай про клиента:
+если чего-то нет в переписке, так и скажи.</div>
+      </div>
+      <div class="pcol">
+        <div class="p-lbl">Отчёты и таблицы</div>
+        <div class="prompt prompt--sm">Ты аналитик, который готовит отчёты
+для руководителя.
+Вот выгрузка за период, файл приложен.
+Собери сводку: пять главных цифр,
+что выросло, что просело, три причины,
+которые видно из данных.
+Формат: короткая таблица плюс вывод
+на пять строк.
+Ничего не додумывай: где данных
+не хватает, пиши «нет данных».</div>
+      </div>
+    </div>
+    <div class="src a d5">Оба промпта лежат в шпаргалке и копируются одним касанием</div>
+  </div>
+</section>
+
+<!-- 16 · Кейсбук 1, продолжение -->
+<section class="slide" data-act="Формула">
+  <div class="wrap">
+    <div class="kicker a">Кейсбук 1 · продолжение</div>
+    <h2 class="a d1" style="font-size:56px">Те же пять букв, другая работа</h2>
+    <div class="pgrid p2 pgrid--mid a d2" style="margin-top:26px">
+      <div class="pcol">
+        <div class="p-lbl">Встречи и планёрки</div>
+        <div class="prompt prompt--sm">Ты ассистент руководителя.
+Вот запись планёрки, файл приложен.
+Сделай: протокол на пять пунктов,
+таблицу задач (кто, что, к какому сроку),
+список того, что осталось непонятным,
+и три вопроса, которые стоит задать
+на следующей встрече.
+По-человечески, без канцелярита.
+Чего не было сказано, не дописывай.</div>
+      </div>
+      <div class="pcol">
+        <div class="p-lbl">Подбор и команда</div>
+        <div class="prompt prompt--sm">Ты опытный рекрутёр.
+Вот текст вакансии и пять резюме,
+персональные данные убраны.
+Сравни кандидатов по критериям:
+опыт под задачу, сильные стороны,
+чего не хватает, риски.
+Формат: таблица, потом короткий вывод
+кого зову на интервью и почему.
+Не оценивай по возрасту, полу и городу.
+Где в резюме пробел, отметь его прямо.</div>
+      </div>
+    </div>
+    <div class="src a d5">Один каркас на все задачи. Меняется только то, что внутри скобок</div>
+  </div>
+</section>
+<!-- ═════════════ БЛОК 3 · ПРИЁМЫ ═════════════ -->
+
+<!-- 17 · Карта приёмов -->
+<section class="slide" data-act="Приёмы">
+  <img class="bg bg--mid" src="a2/bg-priemy.jpg" alt=""><div class="veil veil--flat"></div>
+  <div class="wrap">
+    <div class="kicker a">Блок 3 · Приёмы поверх формулы</div>
+    <h2 class="a d1" style="font-size:58px">Двенадцать инструментов в четырёх группах</h2>
+    <div class="chips a d2" style="margin-top:34px;grid-template-columns:repeat(4,1fr)">
+      <div class="chip ap d3"><div class="hd"><i class="ph-i" data-ph="key" style="--sz:32px"></i><span class="n">Группа 1</span></div><h4>Собрать запрос</h4><p>Формула · эталон · формат вывода · разбиение на этапы</p></div>
+      <div class="chip ap d4"><div class="hd"><i class="ph-i" data-ph="microphone" style="--sz:32px"></i><span class="n">Группа 2</span></div><h4>Достать контекст</h4><p>Задай мне вопросы · наговори голосом · обратный промптинг</p></div>
+      <div class="chip ap d5"><div class="hd"><i class="ph-i" data-ph="users-three" style="--sz:32px"></i><span class="n">Группа 3</span></div><h4>Поднять качество</h4><p>Совет экспертов · конвейер качества · думай по шагам</p></div>
+      <div class="chip ap d6"><div class="hd"><i class="ph-i" data-ph="arrow-right" style="--sz:32px"></i><span class="n">Группа 4</span></div><h4>Докрутить</h4><p>Итерации и запреты · попроси правду вместо поддакивания</p></div>
+    </div>
+    <div class="lead a d7" style="margin-top:40px;font-size:31px">Учить наизусть не надо. Каждый приём закрывается готовым промптом, все они лежат в шпаргалке. <b>Задача сегодня одна: понять, какой приём когда включать.</b></div>
+  </div>
+</section>
+
+<!-- 18 · Приём 2 · Эталон -->
+<section class="slide" data-act="Приёмы">
+  <img class="bg bg--strong" src="a2/img-etalon.jpg" alt="" style="opacity:.72"><div class="veil veil--flat"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Группа 1 · Приём 2 · Эталон</div>
+    <h2 class="a d1" style="font-size:64px">Один пример «как надо» сильнее,<br>чем <span class="accent">три страницы объяснений</span></h2>
+    <div class="lead a d2" style="margin-top:34px;font-size:35px">Вы можете полчаса описывать словами, каким должен быть отчёт. А можете приложить один свой отчёт, который приняли без правок, и сказать «делай так же».<br><b>Второе работает лучше и занимает десять секунд.</b></div>
+    <div class="prompt prompt--lg a d3" style="margin-top:32px;max-width:1560px">Вот образец, который у нас принимают: <span class="ph">[вставьте свой текст или приложите файл]</span>.
+Разбери его структуру, длину, тон и уровень деталей.
+Теперь сделай такой же, но по теме: <span class="ph">[ваша новая тема]</span>.
+Структуру и стиль сохрани, содержание возьми из моих данных ниже.</div>
+  </div>
+</section>
+
+<!-- 19 · Эталон · пять правил -->
+<section class="slide" data-act="Приёмы">
+  <div class="wrap">
+    <div class="kicker a">Приём 2 · Чтобы эталон сработал</div>
+    <h2 class="a d1">Пять правил</h2>
+    <div class="rules rules--tight a d2" style="margin-top:40px">
+      <div class="rule ap d3"><span class="ico-chip"><i class="ph-i" data-ph="medal" style="--sz:34px"></i></span><div class="t"><b>Один сильный пример лучше трёх средних.</b> Берите то, что реально приняли без правок, а не то, что первым попалось</div></div>
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="x-circle" style="--sz:34px"></i></span><div class="t"><b>Дайте и анти-эталон.</b> «Вот так надо, а вот так не надо, и вот почему». Разница объясняет больше, чем сам образец</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="scales" style="--sz:34px"></i></span><div class="t"><b>Скажите, что копировать.</b> Структуру или голос. Иначе он скопирует и ваши цифры из старого документа</div></div>
+      <div class="rule ap d6"><span class="ico-chip"><i class="ph-i" data-ph="shield-check" style="--sz:34px"></i></span><div class="t"><b>Обезличивайте.</b> В образце имена, суммы и контакты меняем на «Клиент 1» и «крупный контрагент». Правило жёлтой корзины с прошлого занятия</div></div>
+      <div class="rule ap d7"><span class="ico-chip"><i class="ph-i" data-ph="stack" style="--sz:34px"></i></span><div class="t"><b>Три эталона ловят правило.</b> Если дать три похожих примера, он поймёт не форму, а закономерность, и начнёт её применять сам</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 20 · Приём 3 · Формат вывода -->
+<section class="slide" data-act="Приёмы">
+  <div class="wrap">
+    <div class="kicker a">Группа 1 · Приём 3 · Формат вывода</div>
+    <h2 class="a d1" style="font-size:60px">Пока вы не сказали, в каком виде,<br>он <span class="accent">выбирает сам</span></h2>
+    <div class="lead a d2" style="margin-top:26px;font-size:33px">И выбирает почти всегда одинаково: длинный текст с вступлением. Одна строчка про формат убирает половину правок.</div>
+    <div class="phrases a d3" style="margin-top:36px">
+      <div class="phr ap d3"><span class="i">01</span><span class="t">«Таблицей. Колонки: что, кто, к какому сроку, статус»</span></div>
+      <div class="phr ap d3"><span class="i">02</span><span class="t">«Ровно пять пунктов, каждый не длиннее строки»</span></div>
+      <div class="phr ap d4"><span class="i">03</span><span class="t">«До 100 слов. Ни одним больше»</span></div>
+      <div class="phr ap d4"><span class="i">04</span><span class="t">«Сначала вывод, потом обоснование»</span></div>
+      <div class="phr ap d5"><span class="i">05</span><span class="t">«Готовое сообщение в мессенджер, без пояснений, что ты сделал»</span></div>
+      <div class="phr ap d5"><span class="i">06</span><span class="t">«Три варианта подряд, каждый подпиши одним словом»</span></div>
+      <div class="phr ap d6"><span class="i">07</span><span class="t">«Списком в столбик, чтобы я скопировал в таблицу»</span></div>
+      <div class="phr ap d6"><span class="i">08</span><span class="t">«Два абзаца, как если бы ты объяснял это в лифте»</span></div>
+      <div class="phr ap d7"><span class="i">09</span><span class="t">«Чек-лист с квадратиками, который я распечатаю»</span></div>
+      <div class="phr ap d7"><span class="i">10</span><span class="t">«Ответ одной строкой, дальше только если попрошу»</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 21 · Приём 4 · Разбиение на этапы -->
+<section class="slide" data-act="Приёмы">
+  <div class="wrap">
+    <div class="kicker a">Группа 1 · Приём 4 · Разбиение на этапы</div>
+    <h2 class="a d1" style="font-size:60px">Большая задача разваливается,<br>если <span class="accent">просить её целиком</span></h2>
+    <div class="lead a d2" style="margin-top:26px;font-size:33px">«Собери мне отчёт, проанализируй и сделай презентацию» на выходе даёт три посредственные вещи вместо одной хорошей. Разбираем по одному шагу и держим руку на руле.</div>
+    <div class="pgrid p2 a d3" style="margin-top:32px">
+      <div class="pcol">
+        <div class="p-lbl">Промпт</div>
+        <div class="prompt prompt--sm">Разбей эту задачу на этапы
+и покажи мне список.
+Сейчас сделай только первый этап,
+остальные не трогай.
+Когда я скажу «дальше»,
+переходи к следующему.</div>
+      </div>
+      <div class="pcol">
+        <div class="p-lbl">Зачем это вам</div>
+        <div class="prompt prompt--sm">Вы видите план раньше результата
+и правите его, пока это дёшево.
+Ошибка на первом шаге
+не тянет за собой всю работу.
+И каждый кусок можно проверить,
+пока он ещё небольшой.</div>
+      </div>
+    </div>
+    <div class="src a d5">Особенно на длинных задачах: разбор большой выгрузки, подготовка к встрече, сбор регламента</div>
+  </div>
+</section>
+
+<!-- 22 · Приём 5 · Задай мне вопросы первым -->
+<section class="slide" data-act="Приёмы">
+  <img class="bg bg--strong" src="a2/img-voprosy.jpg" alt="" style="opacity:.85"><div class="veil veil--flat"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Группа 2 · Приём 5 · Задай мне вопросы первым</div>
+    <h2 class="a d1">Пусть он спросит раньше,<br>чем <span class="accent">начнёт писать</span></h2>
+    <div class="lead a d2" style="margin-top:24px;font-size:34px">Самый быстрый способ поднять качество без единой строчки формулы. <b>Вы не угадываете, что ему нужно. Он сам вытаскивает это из вас.</b></div>
+    <div class="prompt prompt--lg a d3" style="margin-top:32px;max-width:1560px">Я хочу <span class="ph">[задача своими словами]</span>.
+Прежде чем начинать, задай мне 7 уточняющих вопросов, по одному,
+дожидаясь моего ответа. Потом собери промпт и выполни его.</div>
+    <div class="lead a d4" style="margin-top:30px;font-size:30px">Он спросит про сроки, про адресата и про ограничения, о которых вы бы вспомнили только на третьем круге правок.</div>
+  </div>
+</section>
+
+<!-- 23 · Приём 5 · Готовые формулировки -->
+<section class="slide" data-act="Приёмы">
+  <div class="wrap">
+    <div class="kicker a">Приём 5 · Под разные ситуации</div>
+    <h2 class="a d1" style="font-size:56px">Десять готовых строчек</h2>
+    <div class="phrases a d2" style="margin-top:34px">
+      <div class="phr ap d3"><span class="i">01</span><span class="t">«Не отвечай сразу. Сначала задай вопросы, которые помогут решить точнее»</span></div>
+      <div class="phr ap d3"><span class="i">02</span><span class="t">«Времени мало: не больше пяти вопросов, все сразу одним списком»</span></div>
+      <div class="phr ap d4"><span class="i">03</span><span class="t">«Задавай по одному вопросу и жди моего ответа»</span></div>
+      <div class="phr ap d4"><span class="i">04</span><span class="t">«Задай вопросы, а на что не отвечу, подставь разумное предположение и пометь его»</span></div>
+      <div class="phr ap d5"><span class="i">05</span><span class="t">«Я приложил файл. Спроси то, чего в нём нет, но что тебе нужно»</span></div>
+      <div class="phr ap d5"><span class="i">06</span><span class="t">«Здесь на кону деньги. Спроси всё, в чём не уверен, прежде чем считать»</span></div>
+      <div class="phr ap d6"><span class="i">07</span><span class="t">«Это уйдёт живому человеку. Уточни тон и отношения, потом пиши»</span></div>
+      <div class="phr ap d6"><span class="i">08</span><span class="t">«Я сам не до конца понимаю, чего хочу. Помоги вопросами это нащупать»</span></div>
+      <div class="phr ap d7"><span class="i">09</span><span class="t">«Если данных не хватает, не выдумывай. Скажи, чего именно не хватает»</span></div>
+      <div class="phr ap d7"><span class="i">10</span><span class="t">«Прежде чем перейти к следующему разделу, спроси, всё ли я дал»</span></div>
+    </div>
+    <div class="src a d7">Работают в конце любого запроса. Достаточно приписать одну строку</div>
+  </div>
+</section>
+
+<!-- 24 · Приём 6 · Голос, супертехника -->
+<section class="slide" data-act="Приёмы">
+  <img class="bg bg--strong" src="a2/img-golos.jpg" alt="" style="opacity:.8"><div class="veil veil--flat"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Группа 2 · Приём 6 · Супертехника</div>
+    <h1 class="a d1" style="font-size:104px">Не пишите промпт.<br><span class="accent">Расскажите задачу голосом</span></h1>
+    <div class="lead a d2" style="margin-top:32px;font-size:36px">Печатаете вы в лучшем случае 200 знаков в минуту, говорите около 700. Но дело даже не в скорости.<br><b>Руками вы напишете три строчки и остановитесь. Голосом за минуту наговорите весь контекст, а именно он и делает ответ рабочим.</b></div>
+  </div>
+</section>
+
+<!-- 25 · Голос · та самая фраза -->
+<section class="slide" data-act="Приёмы">
+  <div class="wrap">
+    <div class="kicker a">Приём 6 · Та самая фраза</div>
+    <h2 class="a d1" style="font-size:56px">Говорите как получится. Упакует он</h2>
+    <div class="prompt prompt--lg a d2" style="margin-top:28px;max-width:1560px">Упакуй мою мысль в промпт по формуле: роль, контекст, задача, формат, ограничения.
+Примени все правила промпт-инженерии.
+Покажи получившийся промпт и сразу выполни его.</div>
+    <div class="rules rules--7 a d3" style="margin-top:32px">
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="microphone" style="--sz:30px"></i></span><div class="t"><b>На телефоне:</b> значок микрофона в поле ввода. Это не голосовой режим, это диктовка, текст появляется прямо в строке</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="cpu" style="--sz:30px"></i></span><div class="t"><b>На Mac:</b> двойное нажатие клавиши управления. <b>На Windows:</b> клавиша Windows и латинская H</div></div>
+      <div class="rule ap d6"><span class="ico-chip"><i class="ph-i" data-ph="chats-circle" style="--sz:30px"></i></span><div class="t"><b>Как говорить:</b> представьте толкового помощника, который только вышел из отпуска и не знает контекста. Объясните ему по-человечески, без формулировок</div></div>
+      <div class="rule ap d7"><span class="ico-chip"><i class="ph-i" data-ph="clock" style="--sz:30px"></i></span><div class="t"><b>Тридцать секунд голосом</b> дают запрос сильнее, чем десять минут набора. Кто печатает, тот всегда экономит на самом ценном</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 26 · Приём 7 · Обратный промптинг -->
+<section class="slide" data-act="Приёмы">
+  <div class="wrap">
+    <div class="split" style="margin-top:0;flex:0 0 auto;gap:58px">
+      <div class="txt">
+        <div class="kicker a">Группа 2 · Приём 7 · Обратный промптинг</div>
+        <h2 class="a d1" style="font-size:54px">Есть образец? Не описывайте его словами.<br>Разберите его <span class="accent">на формулу</span></h2>
+        <div class="lead a d2" style="font-size:31px">Эталон смотрит вперёд: вот пример, сделай так же. Обратный промптинг смотрит назад: вот готовая вещь, вытащи из неё рецепт, чтобы я делал такие всегда.</div>
+        <div class="lead a d3" style="font-size:31px"><b>На выходе не результат, а многоразовый шаблон.</b></div>
+      </div>
+      <div class="pic a d2"><img src="a2/img-obratnyy.jpg" alt=""></div>
+    </div>
+  </div>
+</section>
+
+<!-- 27 · Обратный промптинг · десять сценариев -->
+<section class="slide" data-act="Приёмы">
+  <div class="wrap">
+    <div class="kicker a">Приём 7 · Где применить уже сегодня</div>
+    <h2 class="a d1" style="font-size:56px">Десять сценариев</h2>
+    <div class="phrases a d2" style="margin-top:34px">
+      <div class="phr ap d3"><span class="i">01</span><span class="t">Письмо, после которого клиент согласился</span></div>
+      <div class="phr ap d3"><span class="i">02</span><span class="t">Отчёт, который руководитель принял без правок</span></div>
+      <div class="phr ap d4"><span class="i">03</span><span class="t">Сообщение, снявшее возражение по цене</span></div>
+      <div class="phr ap d4"><span class="i">04</span><span class="t">Регламент, по которому люди реально работают</span></div>
+      <div class="phr ap d5"><span class="i">05</span><span class="t">Описание вакансии, на которое пришли сильные отклики</span></div>
+      <div class="phr ap d5"><span class="i">06</span><span class="t">Протокол встречи, который потом никто не переспрашивал</span></div>
+      <div class="phr ap d6"><span class="i">07</span><span class="t">Таблица, в которой всё было видно с первого взгляда</span></div>
+      <div class="phr ap d6"><span class="i">08</span><span class="t">Текст коллеги, который пишет лучше вас</span></div>
+      <div class="phr ap d7"><span class="i">09</span><span class="t">Картинка, которую хочется повторить в своём стиле</span></div>
+      <div class="phr ap d7"><span class="i">10</span><span class="t">Ваш собственный стиль переписки, чтобы он писал вашим голосом</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 28 · Обратный промптинг · промпты -->
+<section class="slide" data-act="Приёмы">
+  <div class="wrap">
+    <div class="kicker a">Приём 7 · Готовые промпты</div>
+    <h2 class="a d1" style="font-size:56px">Копируем, вставляем свой образец</h2>
+    <div class="pgrid p2 pgrid--mid a d2" style="margin-top:26px">
+      <div class="pcol">
+        <div class="p-lbl">Из удачного текста в шаблон</div>
+        <div class="prompt prompt--sm">Вот текст, который сработал.
+Разбери его: структура, логика,
+тон, приёмы убеждения, длина.
+Сделай из этого многоразовый шаблон
+с квадратными скобками там,
+где меняются детали.
+Отдельно напиши, что именно
+делает этот текст рабочим.</div>
+      </div>
+      <div class="pcol">
+        <div class="p-lbl">Из своих сообщений в свой голос</div>
+        <div class="prompt prompt--sm">Вот пять моих рабочих сообщений,
+имена убраны.
+Опиши мой стиль: длина фраз, тон,
+что я делаю всегда, чего не делаю
+никогда.
+Собери из этого инструкцию,
+чтобы дальше ты писал моим голосом.
+Покажи инструкцию, а потом напиши
+по ней сообщение на тему ниже.</div>
+      </div>
+    </div>
+    <div class="src a d5">Второй промпт стоит сделать один раз и держать инструкцию под рукой: он превращает ИИ в вас, а не в среднего автора из интернета</div>
+  </div>
+</section>
+<!-- 29 · Титул: главный приём -->
+<section class="slide" data-act="Совет экспертов">
+  <img class="bg bg--strong" src="a2/img-experty.jpg" alt="" style="opacity:.78"><div class="veil"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Группа 3 · Приём 8 · Главный приём курса</div>
+    <h1 class="a d1" style="font-size:112px">Совет экспертов<br>в <span class="accent">три хода</span></h1>
+    <div class="lead a d2" style="margin-top:34px;font-size:37px">Планёрка, которая собирается за сорок секунд.<br><b>И на которой никто не молчит из вежливости к начальнику.</b></div>
+  </div>
+</section>
+
+<!-- 30 · Почему работает -->
+<section class="slide" data-act="Совет экспертов">
+  <div class="wrap">
+    <div class="kicker a">Почему это работает</div>
+    <h2 class="a d1" style="font-size:60px">На вопрос «оцени решение» он отвечает <span class="accent">усреднённо</span></h2>
+    <div class="lead a d2" style="margin-top:26px;font-size:33px">Как только вы говорите «посмотри глазами юриста», он перестаёт усреднять и достаёт другой пласт: другие слова, другие риски, другую логику.</div>
+    <div class="cards c4 a d3" style="margin-top:38px">
+      <div class="card card--sm ap d4"><div class="head"><span class="ico-chip" style="width:62px;height:62px;border-radius:17px"><i class="ph-i" data-ph="scales" style="--sz:34px"></i></span><h3>Юрист</h3></div><p>Видит процедуру и то, чем это кончится на бумаге.</p></div>
+      <div class="card card--sm ap d5"><div class="head"><span class="ico-chip" style="width:62px;height:62px;border-radius:17px"><i class="ph-i" data-ph="currency-circle-dollar" style="--sz:34px"></i></span><h3>Финансист</h3></div><p>Видит следующий квартал и цену этого решения в деньгах.</p></div>
+      <div class="card card--sm ap d6"><div class="head"><span class="ico-chip" style="width:62px;height:62px;border-radius:17px"><i class="ph-i" data-ph="lock-key" style="--sz:34px"></i></span><h3>Безопасник</h3></div><p>Видит, где утечёт и где вы окажетесь виноваты.</p></div>
+      <div class="card card--sm ap d7"><div class="head"><span class="ico-chip" style="width:62px;height:62px;border-radius:17px"><i class="ph-i" data-ph="eye" style="--sz:34px"></i></span><h3>Скептик</h3></div><p>Видит, где вы себя обманываете. Обычно самый полезный из четырёх.</p></div>
+    </div>
+    <div class="lead a d7" style="margin-top:36px;font-size:30px">Углы зрения не пересекаются, поэтому вместе они закрывают дыры, которые одно мнение не видит в принципе.</div>
+  </div>
+</section>
+
+<!-- 31 · Ход 1 -->
+<section class="slide" data-act="Совет экспертов">
+  <div class="wrap">
+    <div class="kicker a">Ход 1 · Совет собирается и спорит</div>
+    <h2 class="a d1" style="font-size:52px">Первое сообщение</h2>
+    <div class="prompt a d2" style="margin-top:24px;flex:1;align-content:center;font-size:27px">Стань моим личным советом экспертов. В совете четверо, у каждого свой взгляд:
+<b>Прагматик:</b> его волнует только то, что реально сделать на этой неделе
+<b>Стратег:</b> мыслит годами, а не днями
+<b>Прямолинейный скептик:</b> его единственная задача найти дыры в моих рассуждениях
+<b>Профильный специалист по теме:</b> <span class="ph">[юрист / финансист / кадровик / безопасник]</span>
+
+Вот ситуация, с которой я разбираюсь: <span class="ph">[опишите решение или проблему]</span>
+Контекст: <span class="ph">[3-5 фактов: кого касается, сроки, деньги, что уже пробовали]</span>
+
+Пусть каждый выскажется по очереди, своим голосом, начиная реплику со своей роли.
+Им разрешено спорить друг с другом и возражать по именам ролей.
+Согласие из вежливости запрещено.
+Когда выскажутся все, дай короткое резюме: в чём сходятся, в чём расходятся,
+и один вопрос, на который мне нужно ответить прежде, чем решать.</div>
+    <div class="src a d4">Уже на этом ходу видно то, чего вы не видели. Но самое интересное дальше</div>
+  </div>
+</section>
+
+<!-- 32 · Ход 2 -->
+<section class="slide" data-act="Совет экспертов">
+  <img class="bg bg--mid" src="a2/img-experty.jpg" alt=""><div class="veil veil--flat"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Ход 2 · Роль, которой не хватало</div>
+    <h2 class="a d1" style="font-size:62px">Одна строка, которая <span class="accent">переворачивает разбор</span></h2>
+    <div class="prompt prompt--lg a d2" style="margin-top:32px;max-width:1560px">А какой роли в этом совете не хватало? Добавь её, дай ей высказаться,
+и посмотри, как её позиция меняет выводы остальных.</div>
+    <div class="lead a d3" style="margin-top:34px;font-size:33px">Он сам называет пропущенный угол зрения, о котором вы не подумали: клиент, которому это придёт, сотрудник, которому это делать руками, тот, кто придёт на вашу должность через год, проверяющий, партнёр.<br><b>И часто именно эта роль ломает всю прежнюю логику.</b></div>
+    <div class="lead a d4" style="margin-top:26px;font-size:31px">Это и есть момент, ради которого приём стоит запомнить: машина не просто отвечает, она достраивает саму постановку задачи.</div>
+  </div>
+</section>
+
+<!-- 33 · Ход 3 -->
+<section class="slide" data-act="Совет экспертов">
+  <div class="wrap">
+    <div class="kicker a">Ход 3 · Адвокат дьявола закрывает</div>
+    <h2 class="a d1" style="font-size:52px">Третье сообщение</h2>
+    <div class="prompt a d2" style="margin-top:26px;flex:1;align-content:center;font-size:28px">Теперь добавь адвоката дьявола. Его задача разгромить решение, к которому
+пришёл совет. Пусть найдёт сценарий, при котором мы теряем деньги, время
+и репутацию одновременно.
+После его выступления совет отвечает ему по пунктам.
+
+Финал: одно решение, а не пересказ мнений. Формат: принимаем, дорабатываем
+или отклоняем, три причины, что сделать в ближайшие три дня,
+и что нужно проверить в реальности до того, как это станет решением.</div>
+    <div class="lead a d4" style="margin-top:30px;font-size:32px">На выходе не «мнение нейросети», а <b>протокол сомнений</b>: список того, что стоит проверить до подписи. Именно так этот приём и стоит воспринимать.</div>
+  </div>
+</section>
+
+<!-- 34 · Вариации и ошибки -->
+<section class="slide" data-act="Совет экспертов">
+  <div class="wrap">
+    <div class="kicker a">Приём 8 · Тонкая настройка</div>
+    <h2 class="a d1" style="font-size:56px">Три вариации и пять ошибок</h2>
+    <div class="pgrid p2 a d2" style="margin-top:26px;flex:1;align-content:center">
+      <div class="pcol">
+        <div class="p-lbl">Вариации</div>
+        <div class="prompt prompt--sm"><b>Арбитр.</b> «Назначь председателя. Он не
+высказывает своего мнения, он взвешивает
+чужие, отмечает, кто аргументировал
+фактами, а кто эмоциями, и выносит итог».
+
+<b>Веса.</b> «Мнение юриста считай решающим,
+остальные совещательными».
+
+<b>Второй круг.</b> «Устрой второй круг: пусть
+каждый возразит тому, с кем не согласен».</div>
+      </div>
+      <div class="pcol">
+        <div class="p-lbl">Ошибки</div>
+        <div class="prompt prompt--sm">Роли выбраны наугад. Берите тех, кто
+в жизни действительно завернёт вашу бумагу.
+
+Нет контекста. Пять экспертов без фактов
+дадут пять банальностей.
+
+Больше семи ролей. Начинается каша,
+оптимум четыре или пять.
+
+Все эксперты «за». Значит вы не заказали
+скептика.
+
+Совет вызвали после того, как решение
+принято. Ценность приёма только «до».</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 35 · Приём 9 · Конвейер качества -->
+<section class="slide" data-act="Приёмы">
+  <img class="bg bg--mid" src="a2/img-konveyer.jpg" alt=""><div class="veil veil--left"></div>
+  <div class="wrap">
+    <div class="kicker a">Группа 3 · Приём 9 · Конвейер качества</div>
+    <h2 class="a d1" style="font-size:64px">Как согласование документа<br>в компании. Только за <span class="accent">пять минут</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="flex:1;justify-content:center;margin-top:30px">
+      <div class="step-p ap d3"><span class="n">0</span><div class="t"><b>Черновик.</b> Обычный промпт по формуле. Всё, что вы уже умеете. Дальше не отправляем, а запускаем по станциям</div></div>
+      <div class="step-p ap d4"><span class="n">1</span><div class="t"><b>Совет экспертов.</b> Тот приём, который мы только что разобрали. Три хода, и слабые места вылезают сами</div></div>
+      <div class="step-p ap d5"><span class="n">2</span><div class="t"><b>Факт-контроль.</b> Отдельно проверяем цифры, даты, сроки и всё, что похоже на правду, но требует источника</div></div>
+      <div class="step-p ap d6"><span class="n">3</span><div class="t"><b>Подпись.</b> Чистовая сборка со всеми правками плюс чек-лист, по которому вы проверите её перед отправкой</div></div>
+    </div>
+    <div class="src a d7">Роли играет он, решение остаётся за вами. Подписываете вы, значит проверяете тоже вы</div>
+  </div>
+</section>
+
+<!-- 36 · Конвейер · промпты -->
+<section class="slide" data-act="Приёмы">
+  <img class="bg bg--mid" src="a2/img-konveyer.jpg" alt=""><div class="veil veil--flat"></div>
+  <div class="wrap">
+    <div class="kicker a">Приём 9 · Станции 2 и 3</div>
+    <h2 class="a d1" style="font-size:56px">Отправляем прямо следующим сообщением</h2>
+    <div class="pgrid p2 pgrid--mid a d2" style="margin-top:26px">
+      <div class="pcol">
+        <div class="p-lbl">Станция 2 · Факт-контроль</div>
+        <div class="prompt prompt--sm">Проверь факты в этом тексте.
+Выпиши тремя отдельными списками:
+что подтверждается, что похоже на правду,
+но нужен источник, что выглядит выдуманным.
+Цифры, даты и сроки проверяй строго.
+Где не уверен, пиши «уточнить»,
+а не догадку.</div>
+      </div>
+      <div class="pcol">
+        <div class="p-lbl">Станция 3 · Подпись</div>
+        <div class="prompt prompt--sm">Финальная сборка. Учти все правки выше.
+Дай чистовой вариант без комментариев,
+готовый к отправке.
+Отдельно дай чек-лист из 5 пунктов,
+по которому я проверю его перед отправкой,
+и одной строкой скажи, что осталось
+на мне.</div>
+      </div>
+    </div>
+    <div class="src a d5">Работает с чем угодно: письмо клиенту, отчёт руководителю, регламент, описание вакансии, ответ на претензию</div>
+  </div>
+</section>
+
+<!-- 37 · Приём 10 · Думай по шагам -->
+<section class="slide" data-act="Приёмы">
+  <div class="wrap">
+    <div class="kicker a">Группа 3 · Приём 10 · Думай по шагам</div>
+    <h2 class="a d1" style="font-size:60px">Там, где есть расчёт,<br>заставьте его <span class="accent">показать ход мысли</span></h2>
+    <div class="lead a d2" style="margin-top:26px;font-size:33px">Когда он отвечает сразу, вы видите только вывод и вынуждены верить на слово. Когда он рассуждает вслух, вы видите, на каком шаге логика поехала, и правите именно этот шаг.</div>
+    <div class="pgrid p2 a d3" style="margin-top:30px">
+      <div class="pcol">
+        <div class="p-lbl">Промпт</div>
+        <div class="prompt prompt--sm">Думай по шагам и показывай рассуждение.
+Сначала разложи задачу на этапы,
+посчитай каждый отдельно,
+и только в конце дай вывод.
+Если на каком-то шаге данных не хватает,
+остановись и скажи, каких.</div>
+      </div>
+      <div class="pcol">
+        <div class="p-lbl">Когда включать</div>
+        <div class="prompt prompt--sm">Расчёт цены и скидки.
+Выбор между поставщиками.
+Сравнение двух вариантов сделки.
+Сведение цифр из разных источников.
+Любой вопрос, где ответ это число,
+а не текст.</div>
+      </div>
+    </div>
+    <div class="src a d5">Отдельная польза: ход мысли можно показать руководителю, и разговор идёт про логику, а не про доверие к нейросети</div>
+  </div>
+</section>
+
+<!-- 38 · Приём 11 · Итерации -->
+<section class="slide" data-act="Приёмы">
+  <img class="bg bg--strong" src="a2/img-iteracii.jpg" alt="" style="opacity:.68"><div class="veil"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Группа 4 · Приём 11 · Итерации и запреты</div>
+    <h1 class="a d1" style="font-size:106px">Первый ответ это<br><span class="accent">всегда черновик</span></h1>
+    <div class="lead a d2" style="margin-top:32px;font-size:36px">Не начинайте новый чат и не переписывайте промпт заново. Скажите словами, что не так, прямо в том же чате.<br><b>Докрутка это нормальная работа, а не признак того, что не получилось.</b></div>
+  </div>
+</section>
+
+<!-- 39 · Двенадцать фраз -->
+<section class="slide" data-act="Приёмы">
+  <div class="wrap">
+    <div class="kicker a">Приём 11 · Двенадцать фраз, которые чинят почти всё</div>
+    <h2 class="a d1" style="font-size:54px">Один экран, который стоит сфотографировать</h2>
+    <div class="phrases a d2" style="margin-top:30px">
+      <div class="phr ap d3"><span class="i">01</span><span class="t">«Короче. В два раза, смысл не теряй»</span></div>
+      <div class="phr ap d3"><span class="i">02</span><span class="t">«Конкретнее. Убери общие слова, добавь детали из моих данных»</span></div>
+      <div class="phr ap d4"><span class="i">03</span><span class="t">«Живым языком, как человек человеку»</span></div>
+      <div class="phr ap d4"><span class="i">04</span><span class="t">«Убери канцелярит и вступления. Начни сразу с сути»</span></div>
+      <div class="phr ap d5"><span class="i">05</span><span class="t">«Не используй длинное тире. И слово "уникальный" тоже»</span></div>
+      <div class="phr ap d5"><span class="i">06</span><span class="t">«Это не то. Я имел в виду вот что: ...»</span></div>
+      <div class="phr ap d6"><span class="i">07</span><span class="t">«Дай три варианта с разным тоном, я выберу»</span></div>
+      <div class="phr ap d6"><span class="i">08</span><span class="t">«Оставь всё как есть, поправь только второй абзац»</span></div>
+      <div class="phr ap d7"><span class="i">09</span><span class="t">«Предложи только то, что я реально могу сделать сам на этой неделе»</span></div>
+      <div class="phr ap d7"><span class="i">10</span><span class="t">«Держи один уровень: не прыгай от общих слов к мелким деталям»</span></div>
+      <div class="phr ap d7"><span class="i">11</span><span class="t">«Ты повторяешь одно и то же разными словами. Убери повторы»</span></div>
+      <div class="phr ap d7"><span class="i">12</span><span class="t">«Верни предыдущую версию, она была лучше»</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 40 · Приём 12 · Попроси правду -->
+<section class="slide" data-act="Приёмы">
+  <div class="wrap">
+    <div class="kicker a">Группа 4 · Приём 12 · Попроси правду</div>
+    <h2 class="a d1" style="font-size:58px">По умолчанию он вам <span class="accent">поддакивает</span></h2>
+    <div class="lead a d2" style="margin-top:24px;font-size:32px">Его учили быть полезным и приятным, поэтому на вопрос «как тебе моя идея» вы почти всегда услышите, что идея хорошая. Правду нужно заказывать отдельно.</div>
+    <div class="pgrid p2 a d3" style="margin-top:28px;flex:1;align-content:center">
+      <div class="pcol">
+        <div class="p-lbl">Волшебный вопрос после любого ответа</div>
+        <div class="prompt prompt--sm">Что ты упустил?
+Что здесь может оказаться неверным?
+Какой вопрос я не задал, но должен был?</div>
+        <div class="lead" style="margin-top:20px;font-size:26px">Три строчки, которые стоит приписывать к любой серьёзной работе. Часто самое ценное приходит именно в этом ответе.</div>
+      </div>
+      <div class="pcol">
+        <div class="p-lbl">Жёстко честный советник</div>
+        <div class="prompt prompt--sm">Перестань со мной соглашаться.
+Стань предельно честным советником
+и зеркалом. Не поддакивай, не смягчай,
+не льсти. Оспаривай мой ход мыслей,
+вскрывай слепые зоны. Если логика слабая,
+разбери её и покажи почему.
+Затем дай план: что поменять,
+в порядке важности.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 41 · Память и контекст -->
+<section class="slide" data-act="Приёмы">
+  <img class="bg bg--mid" src="a2/img-kontekst.jpg" alt=""><div class="veil veil--flat"></div>
+  <div class="wrap">
+    <div class="kicker a">Что держать в голове, работая в чате</div>
+    <h2 class="a d1" style="font-size:58px">Он помнит не всё и не вечно</h2>
+    <div class="rules rules--tight a d2" style="margin-top:36px">
+      <div class="rule ap d3"><span class="ico-chip"><i class="ph-i" data-ph="chats-circle" style="--sz:34px"></i></span><div class="t"><b>Одна задача, один чат.</b> Сменили тему, открывайте новый. В длинном чате он начинает путать ваши задачи между собой</div></div>
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="list-checks" style="--sz:34px"></i></span><div class="t"><b>Ключевое в начало и в конец.</b> Середину длинного запроса он держит хуже всего. Важное ограничение продублируйте последней строкой</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="book-open-text" style="--sz:34px"></i></span><div class="t"><b>Подводите итог.</b> «Давай зафиксируем: мы договорились о том-то, остановились на таком-то варианте. Теперь дальше»</div></div>
+      <div class="rule ap d6"><span class="ico-chip"><i class="ph-i" data-ph="warning" style="--sz:34px"></i></span><div class="t"><b>Новый чат не всегда прав.</b> Не открывайте его, если правите один и тот же текст или он в середине пошаговой задачи: потеряете весь контекст</div></div>
+      <div class="rule ap d7"><span class="ico-chip"><i class="ph-i" data-ph="shield-check" style="--sz:34px"></i></span><div class="t"><b>Против выдумок:</b> «опирайся только на то, в чём уверен, где не знаешь, пиши "не знаю", и отдельно отметь, что нужно перепроверить»</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 42 · Что добавилось за год -->
+<section class="slide" data-act="Приёмы">
+  <div class="wrap">
+    <div class="kicker a">Что добавилось за последний год</div>
+    <h2 class="a d1" style="font-size:58px">Модели подросли. Сверху легли <span class="accent">три вещи</span></h2>
+    <div class="lead a d2" style="margin-top:22px;font-size:31px">Всё, что мы разобрали выше, работает как работало. Это не «вместо», это «вдобавок».</div>
+    <div class="cards c3 a d3" style="margin-top:34px">
+      <div class="card card--sm ap d4"><div class="head"><span class="ico-chip" style="width:64px;height:64px;border-radius:17px"><i class="ph-i" data-ph="flag-checkered" style="--sz:34px"></i></span><h3>Описывайте результат</h3></div><p>Раньше расписывали шаги. Теперь достаточно сказать, каким должен быть готовый результат и по какому признаку понятно, что он готов. Маршрут он выберет сам.</p></div>
+      <div class="card card--sm ap d5"><div class="head"><span class="ico-chip" style="width:64px;height:64px;border-radius:17px"><i class="ph-i" data-ph="check-circle" style="--sz:34px"></i></span><h3>Самопроверка</h3></div><p>«Прежде чем показать ответ, проверь его сам по своим же критериям и переделай, если не дотягивает». Та самая инструкция, которую вы вставили на первом занятии.</p></div>
+      <div class="card card--sm ap d6"><div class="head"><span class="ico-chip" style="width:64px;height:64px;border-radius:17px"><i class="ph-i" data-ph="x-circle" style="--sz:34px"></i></span><h3>Одно указание один раз</h3></div><p>Раньше инструкцию повторяли трижды для надёжности. Теперь повтор мешает: он начинает выполнять её буквально и теряет остальное.</p></div>
+    </div>
+    <div class="lead a d7" style="margin-top:32px;font-size:30px">И ещё одно наблюдение: <b>длинный контекст не значит хороший.</b> Двадцать страниц «на всякий случай» размывают задачу сильнее, чем помогают.</div>
+  </div>
+</section>
+
+<!-- 43 · Пять ошибок -->
+<section class="slide" data-act="Приёмы">
+  <img class="bg bg--mid" src="a2/img-oshibki.jpg" alt=""><div class="veil veil--flat"></div>
+  <div class="wrap">
+    <div class="kicker a">Разбор полётов</div>
+    <h2 class="a d1" style="font-size:56px">Пять ошибок, которые видно чаще всего</h2>
+    <div class="tbl t3 tbl--tall a d2" style="margin-top:28px">
+      <div class="th">Ошибка</div><div class="th">Как обычно</div><div class="th">Как надо</div>
+      <div class="q">Размытый запрос</div><div>«Напиши письмо клиенту»</div><div class="hi">Кто клиент, что было до, чего хотим добиться, сколько слов</div>
+      <div class="q">Всё в одном</div><div>«Разбери выгрузку, посчитай и сделай презентацию»</div><div class="hi">Три отдельных запроса, каждый проверяем по дороге</div>
+      <div class="q">Нет контекста</div><div>«Какую цену поставить?»</div><div class="hi">Себестоимость, цены рядом, история торга по этому клиенту</div>
+      <div class="q">Первый ответ финальный</div><div>Скопировал и отправил</div><div class="hi">Прочитал, докрутил одной фразой, проверил цифры</div>
+      <div class="q">Не проверяет факты</div><div>«ИИ написал, значит правда»</div><div class="hi">Цифры, даты и сроки проверяем всегда. Подпись ваша</div>
+    </div>
+  </div>
+</section>
+
+<!-- 44 · Правило одного круга -->
+<section class="slide" data-act="Приёмы">
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Как чинить почти всё сразу</div>
+    <h2 class="a d1" style="font-size:70px">Правило <span class="accent">одного круга</span></h2>
+    <div class="lead a d2" style="margin-top:34px;font-size:36px">Между «ИИ написал» и «я отправил» всегда есть один круг. Ровно один, не пять.</div>
+    <div class="steps-p steps-p--tight a d3" style="margin-top:36px">
+      <div class="step-p ap d4"><span class="n">1</span><div class="t"><b>Прочитал глазами.</b> Не по диагонали. Половина проблем видна на этом шаге</div></div>
+      <div class="step-p ap d5"><span class="n">2</span><div class="t"><b>Докрутил одной фразой.</b> Из тех двенадцати, что были на прошлом экране</div></div>
+      <div class="step-p ap d6"><span class="n">3</span><div class="t"><b>Проверил цифры и имена.</b> Всё, что можно перепутать, он рано или поздно перепутает</div></div>
+      <div class="step-p ap d7"><span class="n">4</span><div class="t"><b>Отправил от себя.</b> Ответственность за текст всегда ваша, и это нормально</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 45 · Кейсбук 2 -->
+<section class="slide" data-act="Приёмы">
+  <div class="wrap">
+    <div class="kicker a">Кейсбук 2 · библиотека по задачам</div>
+    <h2 class="a d1" style="font-size:56px">Что забрать в работу прямо сегодня</h2>
+    <div class="pgrid p2 pgrid--mid a d2" style="margin-top:26px">
+      <div class="pcol">
+        <div class="p-lbl">Длинная переписка в решение</div>
+        <div class="prompt prompt--sm">Вот переписка, имена заменены.
+Дай четыре блока: суть, договорённости
+(кто кому и к какому сроку), что зависло
+без ответа, открытые вопросы.
+Потом отдельно черновик моего ответа,
+коротко и по делу.
+Ничего не додумывай: чего нет
+в переписке, того не пиши.</div>
+      </div>
+      <div class="pcol">
+        <div class="p-lbl">Фото таблицы в порядок</div>
+        <div class="prompt prompt--sm">Вот фото таблицы, файл приложен.
+Перебей её в аккуратную таблицу
+и посчитай итоги.
+Отдельно напиши, где данных не хватает,
+где похоже на опечатку и какие итоги
+получились.
+Где не видно, пиши «не разобрать».
+Не додумывай ни одной цифры.</div>
+      </div>
+    </div>
+    <div class="src a d5">Обе задачи из ваших отчётов на этой неделе. Полная библиотека промптов будет в шпаргалке</div>
+  </div>
+</section>
+<!-- ═════════════ ПРАКТИКА ═════════════ -->
+
+<!-- 46 · Титул практики -->
+<section class="slide" data-act="Практика">
+  <img class="bg bg--strong" src="a2/bg-praktika.jpg" alt=""><div class="veil"></div>
+  <div class="wrap" style="justify-content:center">
+    <div class="kicker a">Вторая половина занятия</div>
+    <h1 class="a d1" style="font-size:126px">Теперь <span class="accent">руками</span></h1>
+    <div class="lead a d2" style="margin-top:32px;font-size:38px">Четыре захода на своих настоящих задачах.<br><b>Ничего придумывать не надо: берите то, что реально лежит у вас сегодня.</b></div>
+  </div>
+</section>
+
+<!-- 47 · Практика 1 -->
+<section class="slide" data-act="Практика">
+  <div class="wrap">
+    <div class="badge a">Практика 1 · 10 минут</div>
+    <h2 class="a d1">Собираем промпт по формуле</h2>
+    <div class="steps-p a d2" style="margin-top:34px">
+      <div class="step-p ap d3"><span class="n">1</span><div class="t"><b>Возьмите задачу, которая ждёт вас после занятия.</b> Письмо, отчёт, разбор переписки, таблица, вакансия, ответ клиенту. Живую, а не выдуманную</div></div>
+      <div class="step-p ap d4"><span class="n">2</span><div class="t"><b>Откройте шпаргалку, шаг 1,</b> и заполните шаблон: роль, контекст, задача, формат, ограничения. Пять строк</div></div>
+      <div class="step-p ap d5"><span class="n">3</span><div class="t"><b>Отправьте и прочитайте ответ глазами.</b> Не по диагонали</div></div>
+      <div class="step-p ap d6"><span class="n">4</span><div class="t"><b>Докрутите одной фразой</b> из тех двенадцати. Одной, а не пятью</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:34px;font-size:30px">Застряли на формулировке? Не мучайтесь: нажмите микрофон и наговорите задачу как получится, а следом отправьте фразу-упаковщик из шага 4 шпаргалки.</div>
+  </div>
+</section>
+
+<!-- 48 · Практика 2 -->
+<section class="slide" data-act="Практика">
+  <div class="wrap">
+    <div class="badge a">Практика 2 · 5 минут</div>
+    <h2 class="a d1" style="font-size:60px">Пусть он улучшит ваш же промпт</h2>
+    <div class="lead a d2" style="margin-top:26px;font-size:33px">Он знает про промпты больше, чем мы успеем разобрать за два часа. Странно этим не пользоваться.</div>
+    <div class="prompt prompt--lg a d3" style="margin-top:30px;max-width:1560px">Вот промпт, который я написал: <span class="ph">[вставьте свой промпт из практики 1]</span>
+
+Разбери его как промпт-инженер: что в нём слабо, чего не хватает, что лишнее.
+Потом перепиши его сильнее и объясни в трёх строках, что именно ты изменил.
+Дальше выполни улучшенную версию.</div>
+    <div class="lead a d5" style="margin-top:32px;font-size:31px">Сравните два ответа, свой и улучшенный. Разница и есть ваш личный урок промпт-инженерии на сегодня.</div>
+  </div>
+</section>
+
+<!-- 49 · Практика 3 -->
+<section class="slide" data-act="Практика">
+  <div class="wrap">
+    <div class="badge a">Практика 3 · 12 минут</div>
+    <h2 class="a d1" style="font-size:60px">Совет экспертов на вашем решении</h2>
+    <div class="lead a d2" style="margin-top:24px;font-size:32px">Главный приём сегодняшнего занятия, и его надо потрогать руками, а не посмотреть на слайде.</div>
+    <div class="steps-p steps-p--tight a d3" style="margin-top:30px">
+      <div class="step-p ap d4"><span class="n">1</span><div class="t"><b>Возьмите решение, которое реально висит.</b> Давать ли скидку, менять ли поставщика, брать ли этого кандидата, идти ли в новый формат работы, как ответить на претензию</div></div>
+      <div class="step-p ap d5"><span class="n">2</span><div class="t"><b>Ход 1:</b> собираем совет и даём контекст, три-пять фактов. Ждём, пока все четверо выскажутся</div></div>
+      <div class="step-p ap d6"><span class="n">3</span><div class="t"><b>Ход 2:</b> «а какой роли не хватало?». Вот тут остановитесь и прочитайте внимательно</div></div>
+      <div class="step-p ap d7"><span class="n">4</span><div class="t"><b>Ход 3:</b> адвокат дьявола и финальное решение с тремя шагами на ближайшие дни</div></div>
+    </div>
+    <div class="src a d7">Двое или трое потом прочитают вслух, какую роль он добавил во втором ходу. Это самое интересное место занятия</div>
+  </div>
+</section>
+
+<!-- 50 · Практика 4 -->
+<section class="slide" data-act="Практика">
+  <div class="wrap">
+    <div class="badge a">Практика 4 · 10 минут</div>
+    <h2 class="a d1" style="font-size:60px">Разбираем то, что <span class="accent">не получилось</span></h2>
+    <div class="lead a d2" style="margin-top:28px;font-size:34px">Я просил принести одну свою задачу, на которой вы попробовали и результат не устроил. Сейчас самое время.</div>
+    <div class="rules rules--tight a d3" style="margin-top:34px">
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="hand-waving" style="--sz:34px"></i></span><div class="t"><b>Пишите в чат Zoom</b> свой запрос и то, что он выдал. Разберём вживую, по очереди</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="detective" style="--sz:34px"></i></span><div class="t"><b>Смотрим по одной схеме:</b> какой буквы формулы не хватило и какой приём это чинит</div></div>
+      <div class="rule ap d6"><span class="ico-chip"><i class="ph-i" data-ph="shield-check" style="--sz:34px"></i></span><div class="t"><b>Имена, суммы и контакты закрывайте.</b> Правило жёлтой корзины: суть оставляем, опознавалку убираем</div></div>
+      <div class="rule ap d7"><span class="ico-chip"><i class="ph-i" data-ph="lightning" style="--sz:34px"></i></span><div class="t"><b>Неудачные примеры полезнее удачных.</b> На них видно, как формула работает, лучше, чем на любом готовом промпте</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════ ФИНАЛ ═════════════ -->
+
+<!-- 51 · Что унесли -->
+<section class="slide" data-act="Финал">
+  <div class="wrap">
+    <div class="kicker a">Занятие 2 из 8 · пройдено</div>
+    <h2 class="a d1">Что унесли сегодня</h2>
+    <div class="rules rules--tight a d2" style="margin-top:40px">
+      <div class="rule ap d3"><span class="ico-chip"><i class="ph-i" data-ph="key" style="--sz:34px"></i></span><div class="t"><b>Формулу</b> и двенадцать приёмов поверх неё, разложенных по четырём группам</div></div>
+      <div class="rule ap d4"><span class="ico-chip"><i class="ph-i" data-ph="users-three" style="--sz:34px"></i></span><div class="t"><b>Совет экспертов в три хода.</b> Если из двух часов останется одно, пусть останется он</div></div>
+      <div class="rule ap d5"><span class="ico-chip"><i class="ph-i" data-ph="microphone" style="--sz:34px"></i></span><div class="t"><b>Голос вместо клавиатуры</b> и фразу, которая упакует любую мысль в готовый промпт</div></div>
+      <div class="rule ap d6"><span class="ico-chip"><i class="ph-i" data-ph="hand-tap" style="--sz:34px"></i></span><div class="t"><b>Шпаргалку с готовыми промптами,</b> которые копируются одним касанием и работают с телефона</div></div>
+      <div class="rule ap d7"><span class="ico-chip"><i class="ph-i" data-ph="arrow-right" style="--sz:34px"></i></span><div class="t"><b>Правило одного круга.</b> Между «он написал» и «я отправил» всегда есть вы</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 52 · Домашка -->
+<section class="slide" data-act="Финал">
+  <div class="wrap">
+    <div class="kicker a">Домашка · до вторника, 25 августа</div>
+    <h2 class="a d1" style="font-size:58px">Три захода по двадцать минут</h2>
+    <div class="cards c3 a d2" style="margin-top:40px">
+      <div class="card ap d3"><div class="num">1</div><h3>Сегодня, пятница</h3><p>Формула на трёх своих задачах. Одну из них прогоняем через <b>совет экспертов в три хода</b>.</p></div>
+      <div class="card ap d4"><div class="num">2</div><h3>Выходные</h3><p>Голос и обратный промптинг: наговариваете задачу, а из своего удачного документа делаете <b>многоразовый шаблон</b>.</p></div>
+      <div class="card ap d5"><div class="num">3</div><h3>Понедельник</h3><p>Конвейер качества на живом документе и два промпта из библиотеки на ваш выбор.</p></div>
+    </div>
+    <div class="lead a d6" style="margin-top:38px;font-size:31px">Задание приходит в чат каждое утро в 10:00, отчёт в тот же день. <b>Копить не надо:</b> двадцать минут в день дадут больше, чем два часа в понедельник ночью.</div>
+  </div>
+</section>
+
+<!-- 53 · Занятие 3 -->
+<section class="slide" data-act="Финал">
+  <img class="bg bg--strong" src="a2/bg-final.jpg" alt=""><div class="veil"></div>
+  <div class="wrap" style="justify-content:flex-end">
+    <div class="kicker a">Занятие 3 · вторник, 25 августа, 08:00 по Москве</div>
+    <h1 class="a d1" style="font-size:104px">Ассистенты.<br>Из чата: <span class="accent">своя ИИ-команда</span></h1>
+    <div class="lead a d2" style="margin-top:32px;font-size:37px">Сегодня вы научились ставить задачу так, чтобы он делал её вашим способом.<br><b>Дальше соберём из этого постоянных помощников, каждого под свой участок работы.</b></div>
+    <div class="a d3" style="display:flex;align-items:center;gap:40px;margin-top:52px">
+      <div style="font-size:29px;font-weight:700">Ссылка на Zoom та же, придёт в чат за час<br><span style="color:var(--muted);font-weight:450;font-size:26px">Принесите задачу, которую делаете каждую неделю руками</span></div>
+      <div style="flex:1"></div>
+      <div style="display:flex;align-items:center;gap:20px"><img src="a2/qr-shpargalka.png" alt="QR шпаргалка" style="width:158px;height:158px;border-radius:18px;background:#fff;padding:10px"><div style="font-size:25px;color:var(--muted)">Шпаргалка<br><b style="color:var(--text)">занятия 2</b></div></div>
+    </div>
+  </div>
+</section>
+<div class="brand-corner">neovida<b>.</b>ai</div>
+<div id="bar"><i></i></div>
+</div></div>
+<button id="fs-btn" title="На весь экран (F)" aria-label="На весь экран">
+<svg class="i-open" viewBox="0 0 256 256" fill="currentColor"><path d="M216 48v48a8 8 0 0 1-16 0V56h-40a8 8 0 0 1 0-16h48a8 8 0 0 1 8 8ZM96 200H56v-40a8 8 0 0 0-16 0v48a8 8 0 0 0 8 8h48a8 8 0 0 0 0-16Zm112-48a8 8 0 0 0-8 8v40h-40a8 8 0 0 0 0 16h48a8 8 0 0 0 8-8v-48a8 8 0 0 0-8-8ZM96 40H48a8 8 0 0 0-8 8v48a8 8 0 0 0 16 0V56h40a8 8 0 0 0 0-16Z"/></svg>
+<svg class="i-close" viewBox="0 0 256 256" fill="currentColor"><path d="M144 96V48a8 8 0 0 1 16 0v40h40a8 8 0 0 1 0 16h-48a8 8 0 0 1-8-8Zm-40 56H56a8 8 0 0 0 0 16h40v40a8 8 0 0 0 16 0v-48a8 8 0 0 0-8-8Zm104 0h-48a8 8 0 0 0-8 8v48a8 8 0 0 0 16 0v-40h40a8 8 0 0 0 0-16ZM96 40a8 8 0 0 0-8 8v40H48a8 8 0 0 0 0 16h48a8 8 0 0 0 8-8V48a8 8 0 0 0-8-8Z"/></svg>
+</button>
+<script src="a2/assets.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.ph-i').forEach(el=>{
+    const n=el.dataset.ph; if(window.PH&&PH[n]) el.innerHTML=PH[n].replace('<svg ','<svg fill="currentColor" ');
+  });
+  document.querySelectorAll('.logo-i').forEach(el=>{
+    const n=el.dataset.logo; if(window.LOGO&&LOGO[n]) el.innerHTML=LOGO[n];
+  });
+  document.querySelectorAll('.bg').forEach(el=>{el.addEventListener('error',()=>el.remove())});
+  initDeck();
+});
+
+let cur=0,slides=[],barEl,actEl,noEl;
+function initDeck(){
+  slides=[...document.querySelectorAll('.slide')];
+  barEl=document.querySelector('#bar i');
+  const chrome=document.createElement('div');chrome.id='chrome';
+  chrome.innerHTML='<div id="act-label"></div><div id="slide-no"></div>';
+  document.getElementById('stage').appendChild(chrome);
+  actEl=document.getElementById('act-label');noEl=document.getElementById('slide-no');
+  const h=parseInt(location.hash.slice(1),10);
+  cur=(h>=1&&h<=slides.length)?h-1:0;
+  scale();window.addEventListener('resize',scale);
+  show(cur);
+  window.addEventListener('keydown',e=>{
+    if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='Home'){show(0)}
+    else if(e.key==='End'){show(slides.length-1)}
+    else if(e.key.toLowerCase()==='f'){toggleFS()}
+  });
+  document.getElementById('viewport').addEventListener('click',e=>{
+    (e.clientX>window.innerWidth*0.33)?next():prev();
+  });
+  const fsBtn=document.getElementById('fs-btn');
+  fsBtn.addEventListener('click',e=>{e.stopPropagation();toggleFS();});
+  document.addEventListener('fullscreenchange',()=>{fsBtn.classList.toggle('is-fs',!!document.fullscreenElement);});
+}
+function scale(){
+  const s=Math.min(window.innerWidth/1920,window.innerHeight/1080);
+  document.getElementById('stage').style.transform=`scale(${s})`;
+}
+function next(){if(cur<slides.length-1)show(cur+1)}
+function prev(){if(cur>0)show(cur-1)}
+function show(i){
+  slides.forEach(s=>s.classList.remove('active'));
+  cur=i;const sl=slides[i];sl.classList.add('active');
+  history.replaceState(null,'','#'+(i+1));
+  barEl.style.width=((i+1)/slides.length*100)+'%';
+  actEl.textContent=sl.dataset.act||'';
+  noEl.textContent=(i+1)+' / '+slides.length;
+}
+function toggleFS(){
+  if(!document.fullscreenElement)document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+</script>
+</body>
+</html>
