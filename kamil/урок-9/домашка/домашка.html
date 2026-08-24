@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<!-- Камиль Амирханов · персональная программа · занятие 9 · домашка · 2026-08-21 -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Домашка. Занятие 9: своя команда ИИ-помощников | Камиль Амирханов</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0d0d13; --bg2:#12121a; --card:#1a1a24; --card2:#15151e;
+  --line:rgba(255,255,255,.12); --line2:rgba(255,255,255,.07);
+  --white:#fff; --w80:rgba(255,255,255,.82); --w60:rgba(255,255,255,.58); --w40:rgba(255,255,255,.40);
+  --coral:#E07461; --gold:#E6A15C; --blue:#6EA8FE; --green:#5EC47A; --violet:#A78BFA; --red:#e0616b;
+}
+html{scroll-behavior:smooth;}
+body{
+  background:
+    radial-gradient(900px 520px at 82% -6%, rgba(224,116,97,.16), transparent 62%),
+    radial-gradient(700px 460px at -12% 6%, rgba(230,161,92,.10), transparent 60%),
+    var(--bg);
+  color:var(--white);
+  font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased; line-height:1.5; min-height:100vh;
+}
+.wrap{max-width:860px;margin:0 auto;padding:26px 18px 90px;}
+
+/* ---------- Шапка ---------- */
+.brandbar{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;
+  letter-spacing:.14em;color:var(--w40);text-transform:uppercase;}
+.brandbar .dot{width:7px;height:7px;border-radius:50%;background:var(--coral);}
+h1{font-size:clamp(27px,6.6vw,42px);font-weight:800;line-height:1.1;margin:16px 0 10px;letter-spacing:-.015em;}
+h1 .g{color:var(--coral);}
+.lead{font-size:clamp(15.5px,4vw,18px);color:var(--w80);max-width:680px;}
+.lead b{color:var(--white);}
+
+.usebox{margin-top:20px;padding:16px 18px;border-radius:14px;background:rgba(255,255,255,.05);
+  border:1px solid var(--line);font-size:15px;color:var(--w80);}
+.usebox b{color:var(--white);}
+.usebox .tap{color:var(--coral);font-weight:600;}
+
+.nextlesson{margin-top:12px;padding:13px 16px;border-radius:12px;
+  background:rgba(224,116,97,.10);border:1px solid rgba(224,116,97,.32);font-size:15px;color:var(--w80);}
+.nextlesson b{color:var(--coral);}
+
+/* ---------- Общее правило ---------- */
+.rules{margin-top:26px;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:20px 20px 18px;border-top:3px solid var(--white);}
+.rules h3{font-size:19px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px;}
+.rules p{font-size:15px;color:var(--w80);margin-bottom:12px;}
+.rules ol{list-style:none;counter-reset:r;display:grid;gap:10px;}
+.rules ol li{counter-increment:r;position:relative;padding-left:34px;font-size:15px;color:var(--w80);}
+.rules ol li::before{content:counter(r);position:absolute;left:0;top:0;width:24px;height:24px;
+  border-radius:7px;background:rgba(255,255,255,.09);border:1px solid var(--line);
+  display:grid;place-items:center;font-size:12.5px;font-weight:800;color:var(--white);}
+.rules ol li b{color:var(--white);}
+
+/* ---------- Таблица ---------- */
+.tw{overflow-x:auto;margin:14px 0 0;-webkit-overflow-scrolling:touch;}
+table{border-collapse:collapse;width:100%;min-width:440px;font-size:14.5px;}
+th,td{text-align:left;padding:10px 13px;border-bottom:1px solid var(--line2);color:var(--w80);vertical-align:top;}
+th{color:var(--w40);font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+td b{color:var(--white);}
+td .sign{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:15px;color:var(--coral);font-weight:700;}
+
+/* ---------- Навигация ---------- */
+.nav{display:flex;flex-wrap:wrap;gap:10px;margin:26px 0 6px;}
+.nav a{flex:1 1 155px;text-decoration:none;color:var(--white);padding:14px 15px;border-radius:14px;
+  background:var(--card);border:1px solid var(--line);display:flex;align-items:center;gap:12px;
+  transition:transform .15s,border-color .15s;}
+.nav a:hover{transform:translateY(-2px);}
+.nav .num{width:34px;height:34px;flex:0 0 34px;border-radius:10px;display:grid;place-items:center;
+  font-weight:800;font-size:16px;color:#0d0d13;}
+.nav .n1 .num{background:var(--coral);} .nav .n2 .num{background:var(--gold);}
+.nav .n3 .num{background:var(--blue);} .nav .n4 .num{background:var(--green);}
+.nav .n5 .num{background:var(--violet);}
+.nav .nt{font-weight:700;font-size:14.5px;} .nav .ns{font-size:12.5px;color:var(--w60);}
+
+/* ---------- Блок ---------- */
+.day{margin-top:46px;scroll-margin-top:16px;}
+.day-head{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+.day-badge{width:46px;height:46px;flex:0 0 46px;border-radius:13px;display:grid;place-items:center;
+  font-weight:800;font-size:22px;color:#0d0d13;}
+.d1 .day-badge{background:var(--coral);} .d2 .day-badge{background:var(--gold);}
+.d3 .day-badge{background:var(--blue);}  .d4 .day-badge{background:var(--green);}
+.d5 .day-badge{background:var(--violet);}
+.day-head h2{font-size:clamp(21px,5vw,29px);font-weight:800;line-height:1.14;letter-spacing:-.01em;}
+.day-head .tool{font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
+.d1 .tool{color:var(--coral);} .d2 .tool{color:var(--gold);}
+.d3 .tool{color:var(--blue);}  .d4 .tool{color:var(--green);} .d5 .tool{color:var(--violet);}
+.day > .sub{font-size:16px;color:var(--w80);margin:10px 0 20px;}
+
+.why{padding:16px 18px;border-radius:14px;margin:4px 0 22px;font-size:15.5px;color:var(--w80);
+  background:linear-gradient(180deg,rgba(224,116,97,.10),rgba(224,116,97,.03));border-left:3px solid var(--coral);}
+.d2 .why{background:linear-gradient(180deg,rgba(230,161,92,.11),rgba(230,161,92,.03));border-left-color:var(--gold);}
+.d3 .why{background:linear-gradient(180deg,rgba(110,168,254,.11),rgba(110,168,254,.03));border-left-color:var(--blue);}
+.d4 .why{background:linear-gradient(180deg,rgba(94,196,122,.11),rgba(94,196,122,.03));border-left-color:var(--green);}
+.d5 .why{background:linear-gradient(180deg,rgba(167,139,250,.11),rgba(167,139,250,.03));border-left-color:var(--violet);}
+.why b{color:var(--white);}
+.why .k{display:block;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--w60);
+  margin-bottom:6px;font-weight:700;}
+
+.blocklbl{font-size:15px;color:var(--w80);font-weight:600;margin:28px 0 10px;}
+.blocklbl .no{color:var(--coral);font-weight:800;}
+.d2 .blocklbl .no{color:var(--gold);} .d3 .blocklbl .no{color:var(--blue);}
+.d4 .blocklbl .no{color:var(--green);} .d5 .blocklbl .no{color:var(--violet);}
+.blockhint{font-size:14.5px;color:var(--w60);margin:-4px 0 10px;}
+.blockhint b{color:var(--w80);}
+
+/* ---------- Шаги ---------- */
+.steps{list-style:none;counter-reset:s;margin:8px 0 4px;}
+.steps > li{position:relative;padding:2px 0 18px 42px;counter-increment:s;
+  border-left:2px solid var(--line2);margin-left:15px;}
+.steps > li:last-child{border-left:2px solid transparent;padding-bottom:2px;}
+.steps > li::before{content:counter(s);position:absolute;left:-15px;top:-2px;width:30px;height:30px;
+  border-radius:50%;background:var(--card2);border:2px solid var(--coral);color:var(--white);
+  display:grid;place-items:center;font-size:14px;font-weight:700;}
+.d2 .steps > li::before{border-color:var(--gold);}
+.d3 .steps > li::before{border-color:var(--blue);}
+.d4 .steps > li::before{border-color:var(--green);}
+.d5 .steps > li::before{border-color:var(--violet);}
+.steps .st{display:block;font-weight:650;color:var(--white);font-size:16px;}
+.steps .sd{display:block;font-size:14.5px;color:var(--w60);margin-top:4px;}
+.steps .sd code,.mono{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px;
+  background:rgba(255,255,255,.07);padding:2px 7px;border-radius:6px;color:var(--white);
+  white-space:nowrap;}
+
+/* ---------- Промпт: тап = копирование ---------- */
+.prompt{position:relative;cursor:pointer;user-select:none;background:#08080e;border:1px solid var(--line);
+  border-radius:12px;padding:34px 15px 15px;font-family:ui-monospace,'SF Mono',Menlo,monospace;
+  font-size:13.5px;line-height:1.62;color:#e6e6f0;white-space:pre-wrap;margin:10px 0 0;
+  overflow-wrap:anywhere;transition:border-color .15s,background .15s;}
+.prompt:hover{border-color:var(--coral);background:#0b0b13;}
+.prompt::after{content:'нажми, чтобы скопировать';position:absolute;top:9px;right:13px;
+  font-family:-apple-system,system-ui,sans-serif;font-size:11px;color:var(--w40);}
+.prompt.copied{border-color:var(--green);}
+.prompt.copied::after{content:'скопировано ✓';color:var(--green);}
+.prompt .where{position:absolute;top:9px;left:15px;font-family:-apple-system,system-ui,sans-serif;
+  font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--coral);}
+.d2 .prompt .where{color:var(--gold);} .d3 .prompt .where{color:var(--blue);}
+.d4 .prompt .where{color:var(--green);} .d5 .prompt .where{color:var(--violet);}
+.prompt .fill{color:var(--gold);font-weight:600;}
+
+/* ---------- Плашки ---------- */
+.note{margin:16px 0 0;padding:13px 16px;border-radius:12px;font-size:14.5px;color:var(--w80);
+  background:rgba(230,161,92,.09);border:1px solid rgba(230,161,92,.34);}
+.note b{color:var(--gold);}
+.stop{margin:14px 0 0;padding:13px 16px;border-radius:12px;font-size:14.5px;color:var(--w80);
+  background:rgba(224,97,107,.09);border:1px solid rgba(224,97,107,.32);}
+.stop b{color:var(--red);}
+.tip{margin:14px 0 0;padding:13px 16px;border-radius:12px;font-size:14.5px;color:var(--w80);
+  background:rgba(94,196,122,.08);border:1px solid rgba(94,196,122,.30);}
+.tip b{color:var(--green);}
+
+/* ---------- Варианты подхода ---------- */
+.vari{margin:26px 0 0;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:18px 19px 20px;border-top:3px solid var(--gold);}
+.vari .vh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+.vari .vl{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  color:#0d0d13;background:var(--gold);padding:3px 9px;border-radius:7px;}
+.vari .vn{font-size:19px;font-weight:800;letter-spacing:-.01em;}
+.vari .vd{font-size:14.5px;color:var(--w60);line-height:1.55;}
+.vari .vd b{color:var(--w80);}
+
+/* ---------- Карточки ролей ---------- */
+.role{margin:18px 0 0;background:var(--card);border:1px solid var(--line);border-radius:15px;
+  padding:16px 17px 18px;border-top:2px solid rgba(94,196,122,.5);}
+.role .rh{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:6px;}
+.role .rn{font-size:17.5px;font-weight:800;letter-spacing:-.01em;}
+.role .rf{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:var(--green);
+  background:rgba(94,196,122,.12);padding:2px 8px;border-radius:6px;}
+.role .rp{font-size:14.5px;color:var(--w80);line-height:1.55;}
+.role .rcall{margin-top:10px;font-size:14px;color:var(--w60);}
+.role .rcall b{color:var(--white);}
+
+/* ---------- Развилка ---------- */
+.fork{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 0;}
+.fork .fc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 16px;}
+.fork .fc.a{border-top:3px solid var(--green);}
+.fork .fc.b{border-top:3px solid var(--gold);}
+.fork .fh{font-weight:800;font-size:16px;margin-bottom:6px;}
+.fork .fd{font-size:14px;color:var(--w60);line-height:1.5;}
+
+/* ---------- Чеклист ---------- */
+.check{margin:22px 0 4px;display:grid;gap:9px;}
+.check .ci{display:flex;gap:11px;align-items:flex-start;font-size:15px;color:var(--w80);}
+.check .box{flex:0 0 20px;width:20px;height:20px;border-radius:6px;border:2px solid var(--coral);margin-top:1px;}
+.d2 .check .box{border-color:var(--gold);} .d3 .check .box{border-color:var(--blue);}
+.d4 .check .box{border-color:var(--green);} .d5 .check .box{border-color:var(--violet);}
+
+/* ---------- Подвал ---------- */
+.foot{margin-top:54px;padding:24px 22px;border-radius:16px;text-align:center;
+  background:linear-gradient(180deg,rgba(224,116,97,.16),rgba(224,116,97,.03));border:1px solid var(--line);}
+.foot .big{font-size:clamp(19px,4.6vw,23px);font-weight:800;margin-bottom:10px;}
+.foot p{font-size:15px;color:var(--w80);max-width:600px;margin:0 auto 8px;}
+.foot .sign{margin-top:16px;font-size:12.5px;color:var(--w40);}
+
+@media(max-width:700px){
+  .prompt{padding-top:52px;}
+  .prompt .where{top:11px;line-height:1.3;}
+  .prompt::after{top:30px;left:15px;right:auto;}
+}
+@media(max-width:600px){
+  .fork{grid-template-columns:1fr;}
+  .nav a{flex:1 1 100%;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ ШАПКА ============ -->
+  <div class="brandbar"><span class="dot"></span>neovida · персональная программа · занятие 9</div>
+  <h1>Домашка: <span class="g">своя команда ИИ-помощников</span></h1>
+  <p class="lead">На встрече мы разобрали главное: у тебя больше не один агент на всё. Есть бригадир, который раздаёт работу, и специалисты, каждый со своим узким взглядом. Эта неделя ровно про это. Ты прогоняешь <b>три разных способа собирать команду</b> на своих живых задачах, а не на выдуманных примерах. Терминал не открываешь ни разу: всё делает Кодекс, ты копируешь просьбу и читаешь ответ.</p>
+
+  <div class="usebox">
+    Как работать: копируй промпт, меняй текст <span class="tap">в квадратных скобках</span> на свой. <b>Все промпты копируются одним касанием</b> <span class="tap">(нажми на чёрный блок)</span>. Пять блоков, каждый на 30-40 минут. Дни подписаны как ориентир, но <b>важнее порядок, а не даты</b>: сдвинулся, просто иди дальше по списку.
+  </div>
+
+  <div class="nextlesson">
+    <b>Занятие 10, понедельник 31 августа, 12:00–14:00.</b> Приходишь с прогнанными тремя подходами, своей папкой ролей и одним реальным куском проекта, который сдвинулся с места. Отдельно разберём, где команда сработала, а где выдала воду.
+  </div>
+
+  <!-- ============ ОБЩЕЕ ПРАВИЛО ============ -->
+  <div class="rules">
+    <h3>Пять правил, которые работают в каждом блоке</h3>
+    <p>Дальше будет много промптов, но под ними лежит одна и та же логика. Один раз её понял и дальше собираешь любую команду сам, без шпаргалки.</p>
+    <ol>
+      <li><b>Помощник это обычный текстовый файл с инструкцией.</b> Никакого программирования, слова по-русски, как коллеге. Файл кладёт агент по твоей просьбе, руками ты его не создаёшь.</li>
+      <li><b>Правит один, проверяет другой.</b> Тот, кто написал, считает написанное хорошим: он же его и делал. Проверяющий приходит на готовое, не видел вашей переписки и поэтому не помнит, почему «так было надо».</li>
+      <li><b>Роль, которую ни разу не позвали, не считается сделанной.</b> Создал файл и не проверил в бою, значит просто потратил вечер.</li>
+      <li><b>Каждый помощник тратит квоту отдельно.</b> Один вызов субагента это порядка шестидесяти тысяч токенов, замерено. Зовём под задачу, а не на всякий случай.</li>
+      <li><b>Роль это рамка, а не закон.</b> Попросишь отвечать тремя пунктами, а она даст пять и добавит вердикт от себя. Инструкция направляет, но не связывает намертво. Живи с этим.</li>
+    </ol>
+
+    <div class="tw"><table>
+      <tr><th>Слово</th><th>Что это на самом деле</th><th>Где живёт</th></tr>
+      <tr><td><b>Скилл</b></td><td>Алгоритм, инструкция «как делать». Это не человек, а рецепт. Зовётся значком <span class="sign">$</span>: <span class="mono">$deep-research</span></td><td><span class="mono">~/.codex/skills/</span></td></tr>
+      <tr><td><b>Роль</b></td><td>Специальность помощника: кто он, что смотрит, что для тебя «плохо». Один файл <span class="mono">.toml</span>. Зовётся обычной фразой, без значков</td><td><span class="mono">~/.codex/agents/</span></td></tr>
+      <tr><td><b>Субагент</b></td><td>Тот, кто прямо сейчас работает по этой роли под твоим главным агентом. «Суб» значит «под». Как бригада на объекте: бригадир раздал, все принесли</td><td>раздел Subagents в приложении</td></tr>
+    </table></div>
+
+    <div class="note">
+      <b>Значки в Кодексе не для ролей.</b> Помощника зовут словами: «позови проверяющего по дизайну», «пусть разведчик посмотрит». Кодекс сам понимает, кого ты имеешь в виду, по описанию роли. Собачка и слэш тут ни при чём, это из браузерного ChatGPT.
+    </div>
+  </div>
+
+  <!-- ============ НАВИГАЦИЯ ============ -->
+  <nav class="nav">
+    <a href="#day1" class="n1"><span class="num">1</span><span><span class="nt">Пн, 24 августа</span><br><span class="ns">заводим площадку</span></span></a>
+    <a href="#day2" class="n2"><span class="num">2</span><span><span class="nt">Вт, 25 августа</span><br><span class="ns">банда под задачу</span></span></a>
+    <a href="#day3" class="n3"><span class="num">3</span><span><span class="nt">Ср, 26 августа</span><br><span class="ns">делает один, проверяет другой</span></span></a>
+    <a href="#day4" class="n4"><span class="num">4</span><span><span class="nt">Чт, 27 августа</span><br><span class="ns">свои роли файлами</span></span></a>
+    <a href="#day5" class="n5"><span class="num">5</span><span><span class="nt">Пт, 28 августа</span><br><span class="ns">бригада на живом проекте</span></span></a>
+  </nav>
+
+  <!-- ============================ БЛОК 1 ============================ -->
+  <section class="day d1" id="day1">
+    <div class="day-head">
+      <div class="day-badge">1</div>
+      <div>
+        <div class="tool">Понедельник, 24 августа · Codex</div>
+        <h2>Заводим площадку</h2>
+      </div>
+    </div>
+    <p class="sub">Полчаса скучной подготовки. Без неё половина промптов на этой неделе просто не сработает, и ты решишь, что всё сломано.</p>
+
+    <div class="why">
+      <span class="k">Зачем этот день вообще нужен</span>
+      Помощники живут в конкретной папке, и если её нет, Кодекс молча делает вид, что ролей у тебя тоже нет. Плюс есть параметр, который решает, сколько помощников бегут одновременно: <b>по умолчанию их шесть, и это шесть отдельных списаний твоей квоты за один вопрос</b>. Ставим три. И третье: пока помощники работают, чат молчит. Не зная, где на них смотреть, легко решить, что всё зависло, и всё оборвать на середине.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 1.</span> Ревизия: что у тебя вообще есть</div>
+    <p class="blockhint">Первым делом смотрим правде в глаза. Кодекс отчитается коротко, без воды.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Проверь моё окружение и отчитайся одной строкой по каждому пункту, без объяснений:
+1. Кодекс установлен, версия какая.
+2. Папка ~/.codex/agents/ существует или нет, файлов в ней сколько.
+3. В ~/.codex/config.toml есть секция [agents] и параметр max_concurrent_threads_per_session или его старое имя max_threads. Если нет, скажи что нет, но пока ничего не меняй.
+4. Какие скиллы у меня стоят в ~/.codex/skills/, просто списком имён.
+5. Какие внешние сервисы подключены и отвечают ли они на самом деле.
+Ничего не устанавливай и не переподключай без моего слова.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 2.</span> Создаём папку для ролей</div>
+    <p class="blockhint">Пустая папка нужна заранее. В четверг мы будем складывать в неё файлы, и она должна уже быть на месте.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Создай у меня папку ~/.codex/agents/, если её ещё нет. Потом покажи, что в ней лежит сейчас, и подтверди одной строкой, что папка на месте и Кодекс её видит.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 3.</span> Ставим потолок на трёх помощников</div>
+    <p class="blockhint">Шесть помощников на простой задаче это шесть раз потраченная квота за одну проверку. Разница в пользе небольшая, разница в расходе в два раза. Ставим три и живём спокойно.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Открой ~/.codex/config.toml и найди секцию [agents]. Покажи мне, чему сейчас равен max_concurrent_threads_per_session или его старое имя max_threads.
+Если ни того ни другого нет, добавь max_concurrent_threads_per_session = 3. Если параметр есть и он больше трёх, поставь 3.
+Выше поднимать не надо: за это платит моя месячная квота. Покажи мне строку «было» и строку «стало», сам файл больше ничем не трогай.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 4.</span> Найди, где смотреть на помощников</div>
+    <p class="blockhint">Это делается руками и занимает минуту. В приложении Кодекса есть раздел <b>Subagents</b>, в нём два списка: <b>Active</b> работают прямо сейчас, <b>Done</b> закончили. Нажимаешь на завершённого в Done и видишь его ответ целиком, а не подрезанный в общей сводке. Открой этот раздел заранее и запомни, где он лежит.</p>
+
+    <div class="tip">
+      <b>Общая сводка врёт не специально.</b> Когда трое помощников отвечают, Кодекс сводит их в один ответ и по дороге сглаживает формулировки. Самое неприятное замечание чаще всего теряется именно там. Привыкай заглядывать в Done и читать первоисточник.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 5.</span> Первый прогон вхолостую</div>
+    <p class="blockhint">Задача нарочно лёгкая и безопасная: никто ничего не меняет, все только читают. Цель одна: увидеть своими глазами, как трое уходят в работу и как приходит один общий ответ.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Хочу посмотреть, как работают помощники. Задача учебная и лёгкая, ничего не меняй.
+Возьми папку <span class="fill">[путь к любой твоей рабочей папке, например с мастер-классом «Счастье как проект»]</span> и раздай работу троим помощникам разом, а не по очереди:
+1. первый пусть расскажет, что вообще лежит в этой папке и как это устроено;
+2. второй пусть прочитает все тексты и скажет, где формулировки слабые;
+3. третий пусть найдёт, есть ли внутри повторы и дубли.
+Дождись всех троих и собери один общий ответ. Ничего не правь.
+В конце отдельной строкой скажи: сколько помощников ты позвал и во сколько примерно это обошлось.</div>
+
+    <div class="check">
+      <div class="ci"><span class="box"></span> Кодекс отчитался по всем пяти пунктам ревизии</div>
+      <div class="ci"><span class="box"></span> Папка <span class="mono">~/.codex/agents/</span> есть, Кодекс её видит</div>
+      <div class="ci"><span class="box"></span> Лимит стоит на трёх, видел строки «было» и «стало»</div>
+      <div class="ci"><span class="box"></span> Нашёл раздел Subagents и заглянул в Done</div>
+      <div class="ci"><span class="box"></span> Прогнал первую тройку и прочитал общий ответ</div>
+    </div>
+  </section>
+
+  <!-- ============================ БЛОК 2 ============================ -->
+  <section class="day d2" id="day2">
+    <div class="day-head">
+      <div class="day-badge">2</div>
+      <div>
+        <div class="tool">Вторник, 25 августа · подход 1</div>
+        <h2>Банда под задачу</h2>
+      </div>
+    </div>
+    <p class="sub">Самый быстрый способ получить команду: не собирать её самому, а заставить агента собрать её под задачу и объяснить состав.</p>
+
+    <div class="why">
+      <span class="k">В чём фокус</span>
+      Ты не выбираешь помощников и не придумываешь им специальности. Ты говоришь, <b>что должно получиться на выходе</b>, а агент сам называет, кого позвать и зачем. Дальше он раздаёт работу, дожидается всех и приносит один общий ответ. Он бригадир, все приходят к нему. Тут есть один приём, который меняет качество на порядок: <b>сначала пусть расскажет состав и объяснит выбор, и только после твоего «давай» запускает</b>. Половину лишних помощников ты отсечёшь на этом шаге, а заодно увидишь, правильно ли он понял задачу.
+    </div>
+
+    <div class="vari">
+      <div class="vh"><span class="vl">Вариант А</span><span class="vn">Презентация: сначала состав, потом работа</span></div>
+      <p class="vd">Твоя основная задача этой недели. Берёшь любой живой материал: мастер-класс «Счастье как проект», презентацию «Цельности», разбор для клуба. <b>Агент сначала называет команду и защищает свой выбор, ты соглашаешься или вычёркиваешь лишних, и только потом всё запускается.</b></p>
+      <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>У меня задача: <span class="fill">[собрать презентацию на N слайдов по теме «...» для аудитории «...», результат нужен в виде «...»]</span>.
+Материалы лежат тут: <span class="fill">[путь к папке или файлу]</span>.
+
+Сначала не делай ничего. Ответь мне тремя блоками:
+1. Каких помощников ты позовёшь, чтобы решить это надёжно и чтобы они друг друга страховали. По каждому: как его зовут, что именно он смотрит и почему без него результат просядет.
+2. Кто куда пойдёт и что принесёт. Кто с кем пересекается.
+3. Сколько их всего и во сколько примерно это обойдётся по расходу.
+Если задачу можно закрыть двумя помощниками вместо четырёх, скажи это прямо и объясни, почему остальные не нужны.
+
+Дождись моего «давай». После него создай этих помощников и запусти их разом, а не по очереди.
+Ты оркестратор: все результаты приходят к тебе, ты собираешь один общий ответ и показываешь мне. Сам пока ничего не правь.</div>
+    </div>
+
+    <div class="vari">
+      <div class="vh"><span class="vl">Вариант Б</span><span class="vn">Разобраться в вопросе, где ты сам не знаешь ответа</span></div>
+      <p class="vd">Тут команда особенно хороша: у каждого свой угол зрения, и вместе они закрывают то, что один агент пропустит. Хороший кандидат из твоих больных мест: <b>вводный продукт между бесплатным и «Цельностью»</b> или пересборка клуба. Разные головы спорят между собой, а ты смотришь на расхождения.</p>
+      <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>У меня вопрос, на который у меня самого нет ответа: <span class="fill">[опиши задачу словами: что решаем, для кого, какой результат считаю хорошим, какие ограничения]</span>.
+Что уже есть по теме: <span class="fill">[путь к папке с материалами, или напиши «ничего нет, собирай с нуля»]</span>.
+
+Собери под это команду сам и объясни состав до того, как начнёшь.
+Мне нужны разные углы зрения, а не три одинаковых мнения. Как минимум: тот, кто ищет и приносит факты, тот, кто отвечает за методику и логику, и тот, кто спорит и ищет дыры в готовом.
+
+Правила для всех:
+1. помощники исследуют, проверяют и рекомендуют, но итог не переписывают, собираешь его ты;
+2. каждый отвечает только за свой кусок и в чужой не лезет;
+3. задачу никто не расширяет.
+
+Дождись моего «давай», потом запускай. В конце покажи:
+1. общий вывод, не больше десяти строк;
+2. три первых шага, которые я делаю руками;
+3. отдельно и обязательно: где помощники сказали разное. Расхождения не сглаживай и не выбирай за меня.</div>
+    </div>
+
+    <div class="vari">
+      <div class="vh"><span class="vl">Вариант В</span><span class="vn">Четыре оси на готовом материале</span></div>
+      <p class="vd">Приём инженера с тридцатилетним стажем: план обязан пройти четырёх проверяющих, и каждый смотрит строго своё. Работает на чём угодно: на лендинге, на письме, на программе курса, на структуре продукта. <b>Возражения агент обязан закрыть, а не проигнорировать.</b></p>
+      <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Прогони <span class="fill">[что проверяем: файл, папка или текст ниже]</span> через четырёх проверяющих разом, и пусть каждый смотрит только своё:
+1. Не переусложнено ли. Что можно выкинуть без потери смысла.
+2. Похоже ли это на остальное моё. Стиль, тон, подача.
+3. Работает ли всё на самом деле. Проверь, а не предположи.
+4. Это вообще то, что я просил? Сверь с моей исходной задачей дословно.
+
+Возражение каждого проверяющего закрой: или почини, или объясни мне, почему чинить не надо. Молча пропускать возражения нельзя.
+В конце: не больше пяти пунктов «чинить первым делом», остальное списком, и отдельно то, в чём проверяющие не сошлись.</div>
+    </div>
+
+    <div class="blocklbl"><span class="no">Добивка.</span> Прочитай первоисточник, а не пересказ</div>
+    <p class="blockhint">После любого из трёх вариантов сделай вот это. Одна минута, а видно то, что общая сводка сгладила.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex, после ответа команды</span>Покажи мне ответ помощника <span class="fill">[имя или «того, кто смотрел тексты»]</span> по последней задаче целиком, слово в слово, без сокращений и без твоих комментариев.
+Отдельно скажи одной строкой: с чем из его замечаний ты не согласен и почему.</div>
+
+    <div class="note">
+      <b>Не зови банду на мелочь.</b> Три помощника это три отдельных расхода за один вопрос. Мелкий вопрос закроет обычный чат. Заведи привычку: прежде чем запускать команду, спроси, скольких он собирается позвать. Иногда ответ будет «одного хватит», и это лучший исход.
+    </div>
+
+    <div class="check">
+      <div class="ci"><span class="box"></span> Прогнал вариант А на своём реальном материале</div>
+      <div class="ci"><span class="box"></span> Прогнал вариант Б на вопросе, где сам не знал ответа</div>
+      <div class="ci"><span class="box"></span> Прогнал вариант В на чём-то уже готовом</div>
+      <div class="ci"><span class="box"></span> Хотя бы раз вычеркнул лишнего помощника из предложенного состава</div>
+      <div class="ci"><span class="box"></span> Прочитал ответ одного помощника целиком в разделе Done</div>
+    </div>
+  </section>
+
+  <!-- ============================ БЛОК 3 ============================ -->
+  <section class="day d3" id="day3">
+    <div class="day-head">
+      <div class="day-badge">3</div>
+      <div>
+        <div class="tool">Среда, 26 августа · подход 2</div>
+        <h2>Делает один, проверяет другой</h2>
+      </div>
+    </div>
+    <p class="sub">Второй подход. Не команда под задачу, а пара: исполнитель и контролёр, который смотрит на результат до того, как ты его увидишь.</p>
+
+    <div class="why">
+      <span class="k">Почему это работает</span>
+      Одна голова не проверяет сама себя. Агент, который написал страницу, считает её хорошей: он же её и делал, он помнит, почему каждое решение было «нужным». Проверяющий приходит на готовое с чистой головой, <b>не видел вашей переписки и поэтому непредвзят</b>. Практик, который несколько недель гонял эту связку в ежедневной работе, описал итог просто: проверяющий регулярно ловил серьёзные ошибки, которые иначе проскочили бы. И вторая половина приёма: <b>проверяющий не правит</b>. Он только читает и пишет список. Правит один, иначе ты не поймёшь, кто что сломал.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 1.</span> Проверка после факта</div>
+    <p class="blockhint">Самый простой вход. Что-то уже сделано, зовём на него свежий взгляд.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Позови проверяющего на то, что мы сейчас сделали: <span class="fill">[файл, папка или «на всё, что мы правили в этой сессии»]</span>.
+Он приходит с чистой головой и по умолчанию отклоняет: пока не нашёл ни одного замечания, ищет дальше, а не хвалит.
+Файлы он не трогает, только читает и пишет список.
+Дождись его ответа и покажи мне его целиком, ничего не сокращая и не смягчая. Свои правки пока не вноси, сначала я посмотрю список.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 2.</span> Встроить проверку прямо в задачу</div>
+    <p class="blockhint">А вот это уже привычка, ради которой весь день. Проверка не отдельным заходом, а <b>частью самой работы</b>: агент физически не отдаёт тебе результат, пока его не посмотрел второй.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Задача: <span class="fill">[что нужно сделать]</span>.
+Работай сам, помощников на саму работу не зови.
+
+Но прежде чем показать мне результат, обязательно сделай вот что:
+1. позови отдельного свежего проверяющего, который не видел нашей переписки;
+2. пусть он смотрит только на готовое и по умолчанию отклоняет: пока не нашёл замечаний, ищет дальше;
+3. файлы он не меняет, только читает и пишет список;
+4. по каждому его замечанию: согласен, чини сразу; не согласен, объясни мне, почему.
+
+Мне покажи три вещи: готовый результат, что нашёл проверяющий и что ты с этим сделал.
+Без этого шага результат мне не отдавай.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 3.</span> Цикл: спорить до согласия</div>
+    <p class="blockhint">Схема того же практика. Не один заход проверки, а круги, пока не останутся мелочи, которые вы оба считаете мелочами. Работает и на текстах, и на структуре продукта, не только на коде.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Позови проверяющего на то, что мы сейчас сделали, и дождись его замечаний полностью, не перебивая.
+Дальше по каждому замечанию: согласен, чини. Не согласен, не выполняй молча и не отбрасывай: возрази проверяющему и сойдитесь на одном решении.
+Потом позови его ещё раз на исправленное. Повторяй этот круг, пока не останутся только мелочи, которые вы оба считаете мелочами.
+В конце покажи мне коротко: что он нашёл, что починили, о чём спорили и что осталось.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 4.</span> Второй заход только по изменённому</div>
+    <p class="blockhint">Классическая утечка квоты: после каждой правки гонять проверку по всему заново. Не надо.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Я поправил то, что нашёл проверяющий. Позови его ещё раз, но только на изменённые куски: <span class="fill">[список файлов или «на то, что мы правили в этой сессии»]</span>.
+Всё остальное заново не смотри. В ответе покажи два списка: что закрылось и что осталось.</div>
+
+    <div class="stop">
+      <b>Проверяющему нельзя давать право править.</b> Не потому что он что-то испортит, а потому что тогда пропадает смысл: ты перестаёшь понимать, кто и что менял. В четверг мы поставим ему это ограничение прямо в файл одной строкой, и он физически не сможет тронуть ни один файл. Пока просто требуй этого словами в каждом промпте.
+    </div>
+
+    <div class="check">
+      <div class="ci"><span class="box"></span> Позвал проверяющего на что-то уже готовое и прочитал список</div>
+      <div class="ci"><span class="box"></span> Прогнал задачу, где проверка встроена в саму работу</div>
+      <div class="ci"><span class="box"></span> Прошёл хотя бы два круга спора до согласия</div>
+      <div class="ci"><span class="box"></span> Второй заход сделал только по изменённому, а не по всему</div>
+    </div>
+  </section>
+
+  <!-- ============================ БЛОК 4 ============================ -->
+  <section class="day d4" id="day4">
+    <div class="day-head">
+      <div class="day-badge">4</div>
+      <div>
+        <div class="tool">Четверг, 27 августа · подход 3</div>
+        <h2>Свои роли, файлами</h2>
+      </div>
+    </div>
+    <p class="sub">Третий подход и самый ценный вдолгую. Банда живёт одну задачу и растворяется. Роль лежит файлом у тебя на компьютере и работает месяцами.</p>
+
+    <div class="why">
+      <span class="k">Что меняется</span>
+      Первые два подхода это разовая мобилизация: позвал, получил, разошлись. Роль это твой постоянный сотрудник. Ты один раз объясняешь ему, кто он и что для тебя «плохо», и дальше зовёшь одной фразой в любом проекте. <b>А главное, роль развивается.</b> Промахнулась, ты не переписываешь её заново, а дописываешь одну строку про этот самый случай. Через месяц в ней будут твои больные места, а не общие слова из интернета. Это и есть та штука, ради которой стоит возиться.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 1.</span> Главный промпт: роль из твоих слов</div>
+    <p class="blockhint">Ты не пишешь файл и не разбираешься в формате. Ты обычными словами говоришь, чего хочешь от помощника, а Кодекс задаёт до пяти уточняющих вопросов и сам собирает файл. <b>Пиши как коллеге, а не как программе.</b> И требуй проверяемых формулировок: «следи за качеством» это пустая строка, «больше четырёх размеров шрифта на странице это замечание» рабочая.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Сделай мне помощника для Кодекса, отдельную роль файлом .toml.
+
+Вот чего я хочу от него, своими словами:
+<span class="fill">[опиши обычными словами: кто это, что он проверяет или делает, на что смотрит в первую очередь, что для тебя «плохо», в каком виде хочешь получать ответ]</span>
+
+Собери роль по этим правилам:
+1. Сначала задай мне не больше пяти вопросов, только то, без чего роль выйдет размытой. Дальше не спрашивай, а делай.
+2. Формат .toml. Поля: name (латиницей, через дефис), description (одно предложение о том, когда эту роль звать), sandbox_mode, developer_instructions.
+3. developer_instructions пиши по-русски, обращайся к роли на «ты». Внутри: одна строка «кто ты», дальше нумерованный список, что смотреть и в каком порядке, дальше в каком виде отвечать.
+4. Каждый пункт должен быть проверяемым. Не «следи за качеством», а конкретное условие, при котором роль обязана поставить замечание. Пустые строки выкидывай.
+5. Если роль только смотрит и ничего не меняет, поставь sandbox_mode = "read-only" и напиши в инструкции прямым текстом, что файлы она не трогает.
+6. Не бери имя default, worker или explorer, это встроенные роли Кодекса.
+7. Положи файл в ~/.codex/agents/ и скажи мне одной строкой: как роль называется и какой фразой её теперь звать.
+
+Потом сразу проверь её: позови эту роль на <span class="fill">[файл или папку, на которых удобно проверить]</span> и покажи, что она ответила. Если ответ вышел общий и бесполезный, скажи, какую строку в роли надо поправить.</div>
+
+    <div class="note">
+      <b>Роль, которую не позвали, не сделана.</b> Промпт заканчивается проверкой не для красоты. Половина ролей, написанных «на будущее», оказываются бесполезными на первом же живом файле, и лучше узнать об этом сразу, а не через месяц.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 2.</span> Три готовые роли, которые стоит поставить сегодня</div>
+    <p class="blockhint">Это проверенные заготовки, чтобы у тебя сразу была бригада, а не одна роль. Ставятся одинаково: <b>отдаёшь агенту текст просьбой сохранить, руками файлы не создаёшь</b>. Дальше правишь под себя: свои размеры, свои цвета, свои больные места.</p>
+
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex, перед каждой ролью</span>Сохрани текст, который я пришлю следующим сообщением, как файл ~/.codex/agents/<span class="fill">[имя-роли]</span>.toml. Ничего в нём не переписывай, только проверь, что формат .toml не сломан и все обязательные поля на месте.
+Потом позови эту роль на <span class="fill">[файл или папку]</span> и покажи, что она ответила.</div>
+
+    <div class="role">
+      <div class="rh"><span class="rn">Проверяющий по дизайну</span><span class="rf">design-checker.toml</span></div>
+      <p class="rp">Смотрит вёрстку и внешний вид: сетку, отступы, шрифты, контраст, поведение на телефоне. Твой первый читатель для презентаций, лендингов и любых страниц. Ничего не правит.</p>
+      <div class="rcall">Зовёшь фразой: <b>«позови проверяющего по дизайну на этот файл»</b></div>
+      <div class="prompt" onclick="cp(this)"><span class="where">текст роли, вторым сообщением</span>name = "design-checker"
+description = "Проверяет вёрстку и внешний вид: сетку, отступы, шрифты, контраст, поведение на телефоне. Ничего не правит, только пишет список замечаний."
+sandbox_mode = "read-only"
+developer_instructions = """
+Ты придирчивый проверяющий по дизайну. Твоя работа найти, что выглядит плохо, и сказать об этом прямо.
+
+Отклоняй по умолчанию. Пока не нашёл ни одного замечания, ищи дальше, а не хвали.
+
+Смотришь в этом порядке:
+1. Телефон, ширина 375 пикселей. Не вылезает ли текст за экран, не ломается ли кнопка, не наезжают ли блоки друг на друга.
+2. Отступы. Между одинаковыми блоками должны быть одинаковые расстояния. Разнобой это замечание.
+3. Шрифты. Больше четырёх размеров или больше двух начертаний на странице это замечание.
+4. Контраст. Серый текст на светлом фоне, светлая надпись поверх картинки, ссылка, неотличимая от обычного текста: замечание.
+5. Кнопки. Видно ли, что это кнопка. Понятно ли из надписи, что произойдёт после нажатия. Надписи «Отправить» и «Подробнее» без объяснения это замечание.
+6. Крайние случаи. Как выглядит блок, если данных нет совсем, и если текст очень длинный.
+
+Как отвечаешь:
+Первая строка: годится или не годится.
+Дальше список замечаний. По каждому: файл и строка, что не так, что поставить вместо этого.
+Сначала то, что бьёт по делу, потом мелочи.
+Не пиши, что тебе понравилось. Хвалить не твоя работа.
+Не нашёл ничего серьёзного, так и скажи одной строкой, не растягивай.
+
+Файлы ты не меняешь. Только читаешь и пишешь список.
+Задачу не расширяй: делай ровно то, что попросили.
+Своих помощников не заводи.
+"""</div>
+    </div>
+
+    <div class="role">
+      <div class="rh"><span class="rn">Редактор текста</span><span class="rf">text-reviewer.toml</span></div>
+      <p class="rp">Читает готовый текст перед отправкой: пост, письмо клиенту, описание продукта, страницу «Цельности». Показывает места, где ты обещаешь воздух. Под твой бизнес допиши в него слова, которые ты сам устал видеть у конкурентов.</p>
+      <div class="rcall">Зовёшь фразой: <b>«пусть редактор посмотрит этот текст перед отправкой»</b></div>
+      <div class="prompt" onclick="cp(this)"><span class="where">текст роли, вторым сообщением</span>name = "text-reviewer"
+description = "Читает готовый текст перед отправкой: лендинг, письмо клиенту, пост, описание услуги. Показывает пустые фразы, канцелярит и обещания без цифр. Сам текст не переписывает."
+sandbox_mode = "read-only"
+developer_instructions = """
+Ты редактор. Читаешь текст так, как его прочитает занятой человек, которому некогда.
+
+Ищешь ровно это:
+1. Фразы, которые можно убрать целиком, и смысл не пострадает. Выписывай их первыми.
+2. Обещания без цифры и срока: «быстро», «качественно», «под ключ», «индивидуальный подход», «широкий выбор». Каждое это замечание.
+3. Канцелярит и слова, по которым видно нейросеть: «является», «позволяет», «данный», «осуществляет», «в кратчайшие сроки», «в рамках».
+4. Первый экран или первый абзац. Понятно ли за пять секунд, что тут продают и кому. Непонятно, это главное замечание, ставь его первым.
+5. Что человек должен сделать после текста. Действий несколько или ни одного: замечание.
+6. Английские слова там, где есть обычное русское.
+
+Как отвечаешь:
+Тремя столбцами: цитата, что не так, чем заменить.
+Замена это готовая строка, которую можно вставить. Не «сделайте живее», а конкретный текст.
+Текст целиком не переписывай. Твоя работа показать места.
+Последняя строка: отправлять можно или нельзя.
+
+Файлы ты не меняешь.
+Задачу не расширяй: делай ровно то, что попросили.
+Своих помощников не заводи.
+"""</div>
+    </div>
+
+    <div class="role">
+      <div class="rh"><span class="rn">Разведчик</span><span class="rf">scout.toml</span></div>
+      <p class="rp">Самая дешёвая по времени роль и самая полезная перед любой правкой. Зовёшь, когда надо понять, как устроен свой же проект, забытый два месяца назад, или чужой, который тебе достался. Ходит по файлам и объясняет обычными словами.</p>
+      <div class="rcall">Зовёшь фразой: <b>«позови разведчика, пусть найдёт, где тут ...»</b></div>
+      <div class="prompt" onclick="cp(this)"><span class="where">текст роли, вторым сообщением</span>name = "scout"
+description = "Разведчик по проекту. Отвечает на вопрос «где это лежит и как оно работает»: находит нужные файлы, читает их и объясняет обычными словами. Ничего не меняет."
+sandbox_mode = "read-only"
+developer_instructions = """
+Ты разведчик. Тебя зовут, когда надо понять проект, а не менять его.
+
+Порядок работы:
+1. Найди точку входа, с какого файла всё начинается.
+2. Пройди от неё по цепочке до того места, про которое спросили.
+3. Открывай и читай сами файлы. Не догадывайся по названиям папок.
+4. Проверь, нет ли второго такого же куска в другом месте. Если есть, скажи, какой из них рабочий, а какой брошенный.
+
+Как отвечаешь:
+Сначала пять строк простыми словами: как это устроено в целом.
+Потом список файлов: путь, строки, зачем этот файл нужен.
+Потом маршрут стрелками: откуда куда идёт дело.
+В конце то, чего ты НЕ нашёл, и где стоит смотреть дальше.
+
+Не предлагай переписать, не чини, файлы не трогай. Не уверен, так и напиши, а не придумывай.
+Задачу не расширяй: делай ровно то, что попросили.
+Своих помощников не заводи.
+"""</div>
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 3.</span> Роль только под один проект</div>
+    <p class="blockhint">Бывает, что помощник нужен строго в одном месте и в остальных только мешает. Тогда файл кладётся не в общую папку, а рядом с самим проектом.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Сделай ту же роль, но не общую, а только для этого проекта: положи файл не в ~/.codex/agents/, а в папку .codex/agents/ рядом с проектом <span class="fill">[название или путь к папке проекта]</span>. Создай папку, если её нет.
+Потом скажи, чем эта роль отличается от общей и когда сработает какая.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 4.</span> Ревизия: кого ты вообще завёл</div>
+    <p class="blockhint">В конце дня посмотри на свою бригаду целиком. Заодно Кодекс скажет, если где-то криво.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex</span>Перечисли все роли-помощники, которые у меня есть: файлы в ~/.codex/agents/ и в .codex/agents/ этого проекта.
+По каждой: имя, одна строка чем занимается, стоит ли read-only.
+Если у какой-то роли не хватает обязательного поля или имя совпало со встроенной (default, worker, explorer), скажи прямо.</div>
+
+    <div class="note">
+      <b>Зовёт не та роль? Виновато описание.</b> Поле description должно объяснять, КОГДА эту роль звать, а не какая она хорошая. «Опытный редактор с отличным чувством языка» это плохо. «Читает готовый текст перед отправкой клиенту» это хорошо.
+    </div>
+
+    <div class="check">
+      <div class="ci"><span class="box"></span> Собрал хотя бы одну свою роль через промпт-интервью и позвал её на живом файле</div>
+      <div class="ci"><span class="box"></span> Поставил <span class="mono">design-checker</span> и проверил на своей презентации</div>
+      <div class="ci"><span class="box"></span> Поставил <span class="mono">text-reviewer</span> и прогнал на своём тексте</div>
+      <div class="ci"><span class="box"></span> Поставил <span class="mono">scout</span> и попросил разобрать свою старую папку</div>
+      <div class="ci"><span class="box"></span> Сделал ревизию: видишь список всех своих ролей</div>
+    </div>
+  </section>
+
+  <!-- ============================ БЛОК 5 ============================ -->
+  <section class="day d5" id="day5">
+    <div class="day-head">
+      <div class="day-badge">5</div>
+      <div>
+        <div class="tool">Пятница, 28 августа · сборка</div>
+        <h2>Бригада на живом проекте</h2>
+      </div>
+    </div>
+    <p class="sub">Итог недели. Берёшь один реальный кусок своего и проходишь весь путь: бриф, план, работа команды, проверка, результат.</p>
+
+    <div class="why">
+      <span class="k">Главное, что определяет исход</span>
+      Не количество помощников и не хитрость промпта, а <b>бриф</b>. Без него команда сделает качественно, но не то, и ты потратишь квоту, чтобы получить красивый мимо. Четыре строки перед стартом экономят полдня. И вторая развилка: <b>если цель ясна, но не ясен путь, ставишь цель и просишь план. Если цель ещё плывёт, сначала режим планирования</b>, а работу не начинаешь вообще.
+    </div>
+
+    <div class="blocklbl"><span class="no">Шаг 1.</span> Бриф в четыре строки</div>
+    <p class="blockhint">Заполняй честно, а не красиво. Строка «чего делать нельзя» экономит больше всего: именно туда уходят агенты, если им не сказать.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex, перед любой серьёзной задачей</span>Бриф на задачу, работать по нему.
+1. Цель: <span class="fill">[что должно получиться на выходе, одним предложением]</span>
+2. Для кого: <span class="fill">[кто это будет читать или использовать, что он про это уже знает]</span>
+3. Результат в виде: <span class="fill">[файл, страница, таблица, текст на N знаков, презентация на N слайдов]</span>
+4. Ограничения: <span class="fill">[чего делать нельзя, что не трогать, к какому сроку, что уже решено и не обсуждается]</span>
+
+Прежде чем начать, перескажи мне бриф своими словами и скажи, что в нём непонятно или противоречиво. Если всё ясно, скажи «понял» и предложи, как будешь делать.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 2.</span> Развилка: ясна цель или нет</div>
+    <div class="fork">
+      <div class="fc a">
+        <div class="fh">Цель ясна, путь нет</div>
+        <div class="fd">Ставишь цель и просишь построить план реализации. Дальше идёшь по плану, а не импровизируешь. Это первый промпт ниже.</div>
+      </div>
+      <div class="fc b">
+        <div class="fh">Цель ещё плывёт</div>
+        <div class="fd">Работу не начинаешь вообще. Сначала режим планирования: агент задаёт вопросы и помогает сформулировать, что ты на самом деле хочешь. Это второй промпт ниже.</div>
+      </div>
+    </div>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex, когда цель ясна</span>Цель: <span class="fill">[что должно получиться]</span>. Как к ней прийти, я не знаю.
+Не начинай делать. Сначала построй план реализации: шаги по порядку, что на каждом получается, где тебе понадобится моё решение, а где ты справишься сам.
+Отдельно скажи, на каких шагах имеет смысл звать помощников и каких именно, а где ты обойдёшься сам.
+Покажи план мне и дождись «поехали».</div>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex, когда цель ещё плывёт</span>У меня есть ощущение задачи, но нет чёткой цели: <span class="fill">[опиши как есть, своими словами, со всеми сомнениями]</span>.
+Ничего не делай и ничего не создавай. Работаем в режиме планирования.
+Задай мне вопросы по одному, а не списком, и после каждого моего ответа сужай картину.
+Когда цель станет чёткой, сформулируй её одним предложением, покажи мне и спроси, согласен ли я. Только после моего согласия предлагай план.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 3.</span> Полный прогон на своём куске</div>
+    <p class="blockhint">Здесь собирается вся неделя. Возьми <b>один</b> конкретный фрагмент, а не весь продукт: одну страницу, один блок программы, одно письмо в воронке. Узкий вход это и качество, и экономия.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex, финальный прогон недели</span>Работаем по брифу, который я дал выше. Кусок узкий и конкретный: <span class="fill">[что именно двигаем из точки А]</span>.
+
+Порядок такой:
+1. Сначала скажи, скольких помощников зовёшь, кого именно и на что каждый пойдёт. Дождись моего «давай».
+2. Дальше ты оркестратор: раздаёшь работу, дожидаешься всех, собираешь один общий ответ.
+3. Помощники исследуют, проверяют и рекомендуют. Итог не переписывают, собираешь его ты.
+4. Прежде чем показать мне результат, позови отдельного свежего проверяющего на готовое. Его замечания или почини, или объясни мне, почему чинить не надо.
+
+Покажи в конце:
+1. сам результат;
+2. что нашёл проверяющий и что с этим сделали;
+3. где помощники сказали разное;
+4. что осталось сделать мне руками.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 4.</span> Достраиваем бригаду под твою рутину</div>
+    <p class="blockhint">До сих пор роли были общие. Теперь под твои настоящие повторяющиеся функции. Промпт-интервью из четверга, но описание берёшь из своей жизни. Вот кандидаты, которые у тебя реально повторяются каждую неделю.</p>
+    <ul class="steps">
+      <li><span class="st">Методолог</span><span class="sd">Смотрит на программу, модуль или встречу и спрашивает: где здесь переход участника из состояния А в состояние Б, а где просто набор красивых блоков. Твоя главная компетенция, и именно её полезно иметь как второй взгляд.</span></li>
+      <li><span class="st">Критик оффера</span><span class="sd">Читает описание продукта глазами предпринимателя с доходом 300+ и говорит, за что тут платят деньги и в какой момент он закроет страницу. Отдельно ловит обещания без цифры и срока.</span></li>
+      <li><span class="st">Разведчик по своим материалам</span><span class="sd">Уже стоит с четверга. Зовёшь, когда надо вспомнить, что у тебя вообще есть по теме и где оно лежит.</span></li>
+      <li><span class="st">Ассистент по задачам</span><span class="sd">Разбирает твой список дел и разносит: это делаю только я, это отдаётся команде, это вообще не делаем. Тот самый разбор, который ты обычно откладываешь.</span></li>
+    </ul>
+
+    <div class="blocklbl"><span class="no">Шаг 5.</span> Промахнулась, допиши строку</div>
+    <p class="blockhint">Вот это стоит унести с недели дословно. Помощник ошибся, роль <b>не переписывают заново</b>. К ней дописывают одну строку про этот самый случай. Через месяц там будут твои больные места, а не общие слова.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex, сразу после промаха</span>Помощник <span class="fill">[имя роли]</span> сегодня промахнулся: <span class="fill">[что он пропустил или сделал не так]</span>.
+
+Роль заново не переписывай. Открой ~/.codex/agents/<span class="fill">[имя]</span>.toml и допиши в developer_instructions один короткий пункт, который закрывает именно этот случай. Формулируй проверяемо: не «будь внимательнее», а конкретное условие, при котором роль обязана поставить замечание.
+
+Покажи мне строку «было» и строку «стало». Остальные пункты не трогай. Потом позови роль ещё раз на тот же файл и покажи, изменился ли ответ.</div>
+
+    <div class="blocklbl"><span class="no">Шаг 6.</span> Чтобы квота не кончилась к среде</div>
+    <p class="blockhint">Приём практика с самым разобранным набором ролей в сообществе: <b>оркестратор работает на дорогой модели, а все его помощники принудительно переведены на дешёвую</b>. Думает дорогой, бегает дешёвый. Разница в пользе почти незаметна, разница в расходе большая.</p>
+    <div class="prompt" onclick="cp(this)"><span class="where">в Codex, один раз в конце недели</span>Открой все мои роли в ~/.codex/agents/ и переведи помощников на дешёвую быструю модель: добавь в каждый файл строку model с её названием, сам выбери, какая из доступных сейчас дешёвая, и скажи мне, какую поставил.
+Сам продолжай работать на обычной модели: думает пусть дорогая, бегает дешёвая.
+Заодно допиши в конец каждой роли две строки, если их там нет: «Задачу не расширяй, делай ровно то, что попросили» и «Своих помощников не заводи».
+Покажи «было» и «стало» по каждому файлу одной строкой.</div>
+
+    <div class="tip">
+      <b>Пять привычек, на которых держится расход.</b> Зови помощника под задачу, а не по привычке. Давай узкий кусок: конкретный файл, а не весь проект. Два помощника вместо шести. Всем проверяющим ставь read-only, тогда не будет второго дорогого захода на переделку. И одну и ту же вещь второй раз целиком не проверяй, только изменённое.
+    </div>
+
+    <div class="check">
+      <div class="ci"><span class="box"></span> Написал бриф в четыре строки и агент пересказал его своими словами</div>
+      <div class="ci"><span class="box"></span> Прошёл развилку: где-то попросил план, где-то поработал в режиме планирования</div>
+      <div class="ci"><span class="box"></span> Сделал полный прогон на одном узком куске своего проекта</div>
+      <div class="ci"><span class="box"></span> Собрал ещё минимум две роли под свою рутину</div>
+      <div class="ci"><span class="box"></span> Хотя бы раз дописал строку в роль после промаха</div>
+      <div class="ci"><span class="box"></span> Перевёл помощников на дешёвую модель</div>
+    </div>
+  </section>
+
+  <!-- ============ ФИНАЛ ============ -->
+  <div class="foot">
+    <div class="big">Что несёшь на занятие 10</div>
+    <p>Три прогнанных подхода: банду, которую агент собрал сам, пару «делает один, проверяет другой» и свою папку ролей. Один реальный кусок проекта, который за неделю сдвинулся из точки А. И бригаду минимум из четырёх ролей, которые ты уже звал в бою, а не просто создал.</p>
+    <p>И отдельно возьми то, что <b>не получилось или сработало не так</b>. Где команда выдала красивую воду, где помощники сказали одно и то же тремя способами, где ты решил, что быстрее сделать руками. Разбирать удачное скучно, а застрявшие места как раз и двигают.</p>
+    <div class="sign">neovida.ai · персональная AI-система Камиля Амирханова · занятие 9 → занятие 10, понедельник 31 августа, 12:00–14:00</div>
+  </div>
+
+</div>
+
+<script>
+function fb(t){try{var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';
+  document.body.appendChild(a);a.focus();a.select();document.execCommand('copy');document.body.removeChild(a);}catch(e){}}
+function cp(el){
+  var c=el.cloneNode(true);
+  var w=c.querySelector('.where'); if(w) w.remove();
+  var t=c.innerText.trim();
+  var done=function(){el.classList.add('copied');setTimeout(function(){el.classList.remove('copied');},1900);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done).catch(function(){fb(t);done();});
+  }else{fb(t);done();}
+}
+</script>
+</body>
+</html>
