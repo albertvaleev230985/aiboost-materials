@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Домашка · Занятие 3 · Ассистентный подход</title>
+<style>
+:root{
+  --bg:#0B1220; --bg2:#131B2E; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.1);
+  --text:#F4F1EC; --muted:#9AA3B2; --coral:#E07461; --coral-soft:rgba(224,116,97,.15); --ice:#3D8FD1;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(160deg,var(--bg),var(--bg2)) fixed;color:var(--text);font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;padding-bottom:90px}
+.wrap{max-width:780px;margin:0 auto;padding:26px 18px}
+header{padding:32px 0 8px}
+.brand{font-size:15px;font-weight:700;color:var(--muted)}
+.brand b{color:var(--coral)}
+h1{font-size:33px;line-height:1.14;font-weight:800;letter-spacing:-.01em;margin-top:10px}
+.sub{color:var(--muted);font-size:16px;margin-top:10px}
+.sub b{color:var(--text)}
+.howto{background:var(--coral-soft);border:1px solid rgba(224,116,97,.35);border-radius:14px;padding:14px 16px;margin-top:18px;font-size:15.5px}
+.howto b{color:var(--text)}
+.step{margin:38px 0 0}
+.step-h{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.step-n{flex:0 0 auto;min-width:38px;height:38px;border-radius:11px;background:var(--coral);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.step-t{font-size:22px;font-weight:800;line-height:1.2}
+.step-d{color:var(--muted);font-size:15.5px;margin:2px 0 12px 50px}
+.prompt{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:46px 18px 18px;margin:12px 0;cursor:pointer;transition:background .15s,border-color .2s,box-shadow .2s}
+.prompt:active{background:rgba(224,116,97,.12)}
+.prompt pre{white-space:pre-wrap;font-family:inherit;font-size:15.5px;line-height:1.6;color:var(--text)}
+.prompt .cp{position:absolute;top:12px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--coral)}
+.prompt .cp::after{content:"копировать";background:rgba(224,116,97,.16);border:1px solid rgba(224,116,97,.4);border-radius:999px;padding:5px 14px;font-size:12px;letter-spacing:.06em}
+.prompt.copied{border-color:#4caf7d;box-shadow:0 0 0 2px rgba(76,175,125,.35), 0 0 34px rgba(76,175,125,.28);background:rgba(76,175,125,.1)}
+.prompt.copied .cp{color:#4caf7d}
+.prompt.copied .cp::after{content:"скопировано ✓";background:rgba(76,175,125,.2);border-color:rgba(76,175,125,.55);color:#4caf7d}
+details.acc{background:var(--surface);border:1px solid var(--line);border-radius:13px;margin:8px 0;overflow:hidden}
+details.acc>summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:16px;font-weight:650;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:12px}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"открыть промпт";flex:0 0 auto;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.35);border-radius:999px;padding:5px 13px}
+details.acc[open]>summary::after{content:"свернуть";color:var(--muted);background:rgba(255,255,255,.06);border-color:var(--line)}
+details.acc[open]>summary{border-bottom:1px solid var(--line)}
+details.acc .prompt{margin:12px 14px 14px}
+.prac{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#F2A08E,var(--coral));color:#fff;font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:9px 20px;border-radius:999px;margin-bottom:10px;box-shadow:0 8px 26px rgba(224,116,97,.4)}
+details.acc--gpt>summary::after{content:"открыть ассистента"}
+details.acc--gpt[open]>summary::after{content:"свернуть"}
+.dl--big{background:rgba(224,116,97,.12);border-color:rgba(224,116,97,.45)}
+.dl--big .dl-i{background:var(--coral);color:#fff}
+.dl--big .dl-t b{font-size:16.5px}
+.dl{display:flex;align-items:center;gap:14px;margin:12px 0;padding:15px 17px;background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.38);border-radius:14px;text-decoration:none;color:var(--text)}
+.dl:active{background:rgba(76,175,125,.2)}
+.dl-i{flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:#4caf7d;color:#0B1220;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dl-t{display:block;min-width:0}
+.dl-t b{display:block;font-size:15.5px;font-weight:750}
+.dl-t em{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.chain{display:flex;flex-direction:column;gap:0;margin:14px 0}
+.ch{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 15px}
+.ch-n{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:rgba(224,116,97,.18);color:var(--coral);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ch-t{font-size:14.5px;color:var(--muted);line-height:1.35}
+.ch-t b{display:block;color:var(--text);font-size:15.5px;font-weight:750}
+.ch-ar{color:var(--coral);text-align:center;font-size:17px;line-height:1;padding:4px 0;opacity:.75}
+.ch--fin{border-color:rgba(76,175,125,.45);background:rgba(76,175,125,.09)}
+.ch--fin .ch-n{background:rgba(76,175,125,.2);color:#4caf7d}
+.trio{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.tr{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:15px 17px}
+.tr b{font-size:18px;font-weight:800;display:inline-block}
+.tr .q{display:inline-block;margin-left:9px;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.3);border-radius:999px;padding:4px 11px;vertical-align:2px}
+.tr p{margin-top:8px;font-size:15px;line-height:1.55;color:var(--muted)}
+.tr em{display:inline-block;margin-top:9px;font-style:normal;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tr-kak{border-left-color:#C9707F}.tr-kak .q{color:#E39CA8;background:rgba(201,112,127,.16);border-color:rgba(201,112,127,.35)}
+.tr-gde{border-left-color:var(--ice)}.tr-gde .q{color:var(--ice);background:rgba(61,143,209,.14);border-color:rgba(61,143,209,.35)}
+.sk-t{display:block;min-width:0}
+.sk-t em{display:block;font-style:normal;font-size:13px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.35}
+.skill-what{margin:12px 14px 0;font-size:15px;line-height:1.55;color:var(--muted)}
+.skill-what b{color:var(--text)}
+.prompt--skill pre{max-height:132px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.prompt--skill::after{content:"текст длинный, читать его не нужно: просто скопируйте";position:absolute;left:18px;right:18px;bottom:12px;font-size:13px;line-height:1.4;color:var(--muted)}
+.prompt--skill{padding-bottom:52px}
+.prompt--test{border-left-color:var(--ice)}
+.prompt--test .cp{color:var(--ice)}
+.prompt--test .cp::after{background:rgba(61,143,209,.16);border-color:rgba(61,143,209,.4);color:var(--ice)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0;font-size:15.5px;color:var(--muted)}
+.card b{color:var(--text)}
+.card ul{margin:8px 0 0 18px}
+.card li{margin:5px 0}
+.note{font-size:15px;color:var(--muted);background:rgba(61,143,209,.08);border:1px solid rgba(61,143,209,.25);border-radius:12px;padding:12px 14px;margin:10px 0}
+.note b{color:var(--text)}
+.ten{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.tf{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:11px;padding:11px 15px;font-size:15.5px;cursor:pointer}
+.tf:active{background:rgba(224,116,97,.12)}
+.tf.copied{border-color:#4caf7d;background:rgba(76,175,125,.16)}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0}
+.basket{border-radius:13px;padding:13px;font-size:14px;border:1px solid}
+.basket b{display:block;font-size:15px;margin-bottom:5px}
+.b-ok{background:rgba(76,175,125,.08);border-color:rgba(76,175,125,.35)}
+.b-mid{background:rgba(224,169,92,.08);border-color:rgba(224,169,92,.35)}
+.b-no{background:rgba(224,92,92,.08);border-color:rgba(224,92,92,.35)}
+.b-ok b{color:#4caf7d}.b-mid b{color:#e0a95c}.b-no b{color:#e05c5c}
+a{color:var(--ice)}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.links a{display:block;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;color:var(--text)}
+.links a:active{background:rgba(224,116,97,.14);border-color:rgba(224,116,97,.45)}
+.links a b{display:block;font-size:17px;font-weight:800}
+.links a span{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.links a em{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:var(--coral);margin-top:5px}
+.links a:first-child{grid-column:1 / -1}
+footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14.5px}
+@media(max-width:560px){.grid3{grid-template-columns:1fr}
+.prompt{padding-top:56px}
+.sk-t em{font-size:12.5px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">neovida<b>.</b>ai</div>
+  <h1>Домашка<br>после занятия 3</h1>
+  <div class="sub">26, 27 и 28 августа · <b>«Ассистентный подход: один вход, один выход»</b> · Альберт Валеев</div>
+  <div class="howto"><b>Три дня, три шага.</b> В среду достраиваете своего ассистента базой знаний. В четверг ставите готовых из шпаргалки и гоняете их на настоящих задачах. В пятницу собираете второго своего, уже без подсказок. К вечеру пятницы у вас работает команда, а не один помощник.</div>
+  <div class="note"><b>Вся домашка сразу здесь,</b> на три дня вперёд. Ждать ничего не надо, страница у вас на руках.</div>
+  <div class="note"><b>Никакой теории.</b> Тапнули по промпту, он скопировался зелёным, вставили в Gemini. Все приёмы урока лежат в <a href="shpargalka-3.html">шпаргалке занятия 3</a>.</div>
+</header>
+
+<div class="step">
+  <div class="prac">Среда, 26 августа</div>
+  <div class="step-h"><span class="step-n">1</span><span class="step-t">Собираем базу знаний для своего ассистента</span></div>
+  <div class="step-d">На занятии он написал вам список файлов. Сегодня собираем их и загружаем. Это тот шаг, после которого ассистент перестаёт говорить общими словами</div>
+  <div class="chain">
+    <div class="ch"><span class="ch-n">1</span><span class="ch-t"><b>Открыли своего ассистента</b> и попросили список файлов заново, если потеряли</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">2</span><span class="ch-t"><b>Собрали два-три файла из списка.</b> Не семь, начните с самых важных</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">3</span><span class="ch-t"><b>Загрузили в поле «База знаний»</b> через плюс. Галочку про источники не ставим</span></div>
+    <div class="ch ch--fin"><span class="ch-n">4</span><span class="ch-t"><b>Проверили двумя вопросами ниже</b> и убедились, что он отвечает по файлам</span></div>
+  </div>
+  <div class="prompt"><div class="cp">если потеряли список файлов</div><pre>Скажи ещё раз, какие мои документы сделают твои ответы точнее.
+
+По каждому файлу: что это, что ты из него берёшь, как назвать,
+что изменится в твоих ответах. Не больше пяти файлов, самые важные сверху.</pre></div>
+  <div class="prompt"><div class="cp">проверка 1 · вопрос, ответ на который есть ТОЛЬКО в файле</div><pre>Ответь на этот вопрос строго по загруженным документам
+и укажи, из какого файла и какого места ты взял ответ.
+
+Вопрос: [спросите то, что точно есть в вашем файле]</pre></div>
+  <div class="prompt"><div class="cp">проверка 2 · вопрос, ответа на который в файлах НЕТ</div><pre>А теперь ответь на вопрос, ответа на который в моих файлах заведомо нет.
+
+Вопрос: [спросите что-то из соседней области]
+
+Если ответа в документах нет, так и скажи, не придумывай.</pre></div>
+  <div class="note"><b>Как читать результат.</b> На первый вопрос он должен ответить и показать источник. На второй должен сказать «в файлах этого нет». Сказал, значит ему можно доверять. Придумал уверенный ответ, добавьте в инструкцию строчку «чего нет в документах, не выдумывай».</div>
+  <div class="note"><b>Что прислать в среду:</b> хэштег <b>#день1</b>, скриншот ответа со ссылкой на файл и одну строку, что изменилось в ответах после загрузки базы.</div>
+</div>
+
+<div class="step">
+  <div class="prac">Четверг, 27 августа</div>
+  <div class="step-h"><span class="step-n">2</span><span class="step-t">Ставим готовых и гоняем на живых задачах</span></div>
+  <div class="step-d">В шпаргалке лежат двенадцать готовых инструкций. Сегодня берёте юриста и любого второго, который ближе к вашей работе</div>
+  <div class="dl">
+    <a class="dl--big" href="shpargalka-3.html#bank"><span class="dl-i">📋</span><span class="dl-t"><b>Открыть банк ассистентов</b>Двенадцать готовых инструкций: юрист, переговорщик, ответ клиенту, работа с «дорого», сводка по выгрузке, протокол планёрки, подбор по резюме, досье на компанию, разбор переписки, документ по-человечески, заявки, разбор недели</span><em>шпаргалка, шаг 6</em></a>
+  </div>
+  <div class="step-d" style="margin-top:18px"><b>Задание 1. Юрист по договорам.</b> Поставьте его и дайте настоящий договор, который у вас лежит. Любой: с клиентом, с подрядчиком, аренда, даже условия сервиса, которым пользуетесь</div>
+  <div class="prompt"><div class="cp">что отправить юристу</div><pre>Я в этой сделке [исполнитель или заказчик].
+Сумма примерно [сколько], сделка [разовая или регулярная].
+
+Вот договор: [вставьте текст или приложите файл]</pre></div>
+  <div class="note"><b>Смотрите на раздел «протокол разногласий».</b> Это то, что можно прямо отправить контрагенту. Если в вашем договоре всё чисто, это тоже результат, так и напишите.</div>
+  <div class="step-d" style="margin-top:18px"><b>Задание 2. Второй готовый, на ваш выбор.</b> Возьмите того, чья задача у вас реально повторяется каждую неделю, и прогоните на настоящем материале</div>
+  <div class="note"><b>Что прислать в четверг:</b> хэштег <b>#день2</b>, что нашёл юрист в вашем договоре (можно одной строкой, без деталей сделки) и результат второго ассистента.</div>
+</div>
+
+<div class="step">
+  <div class="prac">Пятница, 28 августа</div>
+  <div class="step-h"><span class="step-n">3</span><span class="step-t">Собираем второго своего, уже сами</span></div>
+  <div class="step-d">Тот процесс, который на занятии остался запасным. Теперь без подсказок с экрана: вся методология в шпаргалке, шаг 3</div>
+  <div class="chain">
+    <div class="ch"><span class="ch-n">1</span><span class="ch-t"><b>Наговорили процесс голосом.</b> Три-четыре минуты, как коллеге</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">2</span><span class="ch-t"><b>Он собрал инструкцию,</b> вы прогнали по восьми пунктам чек-листа</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">3</span><span class="ch-t"><b>Создали Gem-бота,</b> проверили в предпросмотре, сохранили</span></div>
+    <div class="ch ch--fin"><span class="ch-n">4</span><span class="ch-t"><b>Прогнали по трём тестам:</b> обычная задача, сложная, без данных</span></div>
+  </div>
+  <div class="prompt"><div class="cp">третий тест, самый важный</div><pre>Скажи точную цифру по вопросу, которого нет ни в твоей инструкции,
+ни в моих данных. Например: сколько это будет стоить у конкурента.</pre></div>
+  <div class="note"><b>Ответил «не знаю» или задал вопрос, значит собран правильно.</b> Назвал цифру, вернитесь в инструкцию и добавьте запрет. Это одна строка, и она решает главную проблему всех ассистентов.</div>
+  <div class="note"><b>Что прислать в пятницу:</b> хэштег <b>#день3</b>, название второго ассистента, под какой процесс он собран, и что выдал третий тест.</div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">+</span><span class="step-t">Если пойдёт легко и захочется дальше</span></div>
+  <div class="step-d">Не обязательно, но именно здесь начинается интересное. Один промпт, который выдаёт сразу весь набор ассистентов под вашу должность</div>
+  <div class="prompt"><div class="cp">архитектор набора ассистентов</div><pre>Ты методолог, который выстраивает людям личную систему ИИ-помощников.
+
+Ты знаешь мою работу. Спроектируй мне набор из пяти-восьми ассистентов,
+которые закроют её целиком.
+
+По каждому дай:
+название, под какой мой процесс он заточен, что я даю на входе,
+что получаю на выходе, сколько времени в неделю он мне вернёт,
+и в каком порядке их стоит собирать.
+
+Отдельно скажи, с какого начать и почему именно с него.
+Не предлагай ассистентов под задачи, которых у меня нет.</pre></div>
+  <div class="note">Это карта вашей личной системы на ближайшие месяцы. Собирать всё сразу не надо: <b>лучше три отлично настроенных, чем восемь заброшенных.</b></div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">✓</span><span class="step-t">Как сдавать</span></div>
+  <div class="step-d">Отчёт занимает минуту. Присылайте в чат группы в тот же день, <b>первой строкой хэштег дня</b></div>
+  <div class="note" style="border-left-color:#4caf7d"><b>Хэштеги, всего три.</b> Среда это <b>#день1</b>, четверг <b>#день2</b>, пятница <b>#день3</b>. Догоняете, ставьте хэштег того дня, задание которого делаете, а не сегодняшнего.</div>
+  <div class="prompt"><div class="cp">так выглядит готовый отчёт</div><pre>#день1
+
+Загрузил в базу два файла: прайс и типовой ответ клиенту.
+Проверил двумя вопросами: на первый ответил и показал файл,
+на второй честно сказал, что данных нет.
+
+Изменилось: перестал придумывать условия, теперь пишет наши.</pre></div>
+  <div class="note"><b>Не получилось, застряли, он выдал ерунду?</b> Это тоже результат. Присылайте как есть, вместе со своим запросом. На занятии 4 такие случаи разбираем вживую.</div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">4</span><span class="step-t">Занятие 4 · пятница, 28 августа, 08:00 по Москве</span></div>
+  <div class="step-d"><b>Ассистент выходит из чата в вашу работу.</b> Сегодня он живёт в отдельном окне и ждёт, пока вы принесёте ему файлы. Дальше подключим Блокноты и ваше облако, и он начнёт работать с тем, что у вас уже лежит</div>
+  <div class="note">Принесите одну задачу, где вам каждый раз приходится лазить за файлами: искать прошлый договор, поднимать переписку, вспоминать, в какой папке лежит нужная таблица.</div>
+  <div class="links">
+    <a href="shpargalka-3.html"><b>Шпаргалка занятия 3</b><span>8 шагов, 23 промпта, 12 готовых ассистентов</span><em>открыть</em></a>
+    <a href="prezentaciya-3.html"><b>Презентация</b><span>слайды занятия 3</span><em>открыть</em></a>
+    <a href="https://gemini.google.com/gems/view"><b>Gem-боты</b><span>сразу на «Менеджер Gem-ботов»</span><em>открыть</em></a>
+    <a href="https://us06web.zoom.us/j/7380918466?pwd=Q29aV3JESHg1dDQ1RFd2OGcrWHlWdz09"><b>Zoom</b><span>одна ссылка на все восемь занятий</span><em>открыть</em></a>
+  </div>
+</div>
+</div>
+<script>
+function bindCopy(el, getText){
+  el.addEventListener('click',()=>{
+    const t=getText();
+    const cp=el.querySelector('.cp');
+    const done=()=>{
+      el.classList.add('copied');
+      setTimeout(()=>el.classList.remove('copied'),1600);
+    };
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(done).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    });
+  });
+}
+document.querySelectorAll('.prompt').forEach(el=>bindCopy(el,()=>{const p=el.querySelector('pre');return p.innerText||p.textContent;}));
+document.querySelectorAll('.tf').forEach(el=>bindCopy(el,()=>(el.innerText||el.textContent).trim()));
+</script>
+</body>
+</html>
