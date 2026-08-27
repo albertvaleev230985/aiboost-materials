@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Библиотека навыков · Занятие 4</title>
+<style>
+:root{
+  --bg:#0B1220; --bg2:#131B2E; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.1);
+  --text:#F4F1EC; --muted:#9AA3B2; --coral:#E07461; --coral-soft:rgba(224,116,97,.15); --ice:#3D8FD1;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(160deg,var(--bg),var(--bg2)) fixed;color:var(--text);font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;padding-bottom:90px}
+.wrap{max-width:780px;margin:0 auto;padding:26px 18px}
+header{padding:32px 0 8px}
+.brand{font-size:15px;font-weight:700;color:var(--muted)}
+.brand b{color:var(--coral)}
+h1{font-size:33px;line-height:1.14;font-weight:800;letter-spacing:-.01em;margin-top:10px}
+.sub{color:var(--muted);font-size:16px;margin-top:10px}
+.sub b{color:var(--text)}
+.howto{background:var(--coral-soft);border:1px solid rgba(224,116,97,.35);border-radius:14px;padding:14px 16px;margin-top:18px;font-size:15.5px}
+.howto b{color:var(--text)}
+.step{margin:38px 0 0}
+.step-h{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.step-n{flex:0 0 auto;min-width:38px;height:38px;border-radius:11px;background:var(--coral);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.step-t{font-size:22px;font-weight:800;line-height:1.2}
+.step-d{color:var(--muted);font-size:15.5px;margin:2px 0 12px 50px}
+.prompt{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:46px 18px 18px;margin:12px 0;cursor:pointer;transition:background .15s,border-color .2s,box-shadow .2s}
+.prompt:active{background:rgba(224,116,97,.12)}
+.prompt pre{white-space:pre-wrap;font-family:inherit;font-size:15.5px;line-height:1.6;color:var(--text)}
+.prompt .cp{position:absolute;top:12px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--coral)}
+.prompt .cp::after{content:"копировать";background:rgba(224,116,97,.16);border:1px solid rgba(224,116,97,.4);border-radius:999px;padding:5px 14px;font-size:12px;letter-spacing:.06em}
+.prompt.copied{border-color:#4caf7d;box-shadow:0 0 0 2px rgba(76,175,125,.35), 0 0 34px rgba(76,175,125,.28);background:rgba(76,175,125,.1)}
+.prompt.copied .cp{color:#4caf7d}
+.prompt.copied .cp::after{content:"скопировано ✓";background:rgba(76,175,125,.2);border-color:rgba(76,175,125,.55);color:#4caf7d}
+details.acc{background:var(--surface);border:1px solid var(--line);border-radius:13px;margin:8px 0;overflow:hidden}
+details.acc>summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:16px;font-weight:650;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:12px}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"открыть промпт";flex:0 0 auto;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.35);border-radius:999px;padding:5px 13px}
+details.acc[open]>summary::after{content:"свернуть";color:var(--muted);background:rgba(255,255,255,.06);border-color:var(--line)}
+details.acc[open]>summary{border-bottom:1px solid var(--line)}
+details.acc .prompt{margin:12px 14px 14px}
+.prac{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#F2A08E,var(--coral));color:#fff;font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:9px 20px;border-radius:999px;margin-bottom:10px;box-shadow:0 8px 26px rgba(224,116,97,.4)}
+details.acc--gpt>summary::after{content:"открыть ассистента"}
+details.acc--gpt[open]>summary::after{content:"свернуть"}
+.dl--big{background:rgba(224,116,97,.12);border-color:rgba(224,116,97,.45)}
+.dl--big .dl-i{background:var(--coral);color:#fff}
+.dl--big .dl-t b{font-size:16.5px}
+.dl{display:flex;align-items:center;gap:14px;margin:12px 0;padding:15px 17px;background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.38);border-radius:14px;text-decoration:none;color:var(--text)}
+.dl:active{background:rgba(76,175,125,.2)}
+.dl-i{flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:#4caf7d;color:#0B1220;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dl-t{display:block;min-width:0}
+.dl-t b{display:block;font-size:15.5px;font-weight:750}
+.dl-t em{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.chain{display:flex;flex-direction:column;gap:0;margin:14px 0}
+.ch{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 15px}
+.ch-n{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:rgba(224,116,97,.18);color:var(--coral);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ch-t{font-size:14.5px;color:var(--muted);line-height:1.35}
+.ch-t b{display:block;color:var(--text);font-size:15.5px;font-weight:750}
+.ch-ar{color:var(--coral);text-align:center;font-size:17px;line-height:1;padding:4px 0;opacity:.75}
+.ch--fin{border-color:rgba(76,175,125,.45);background:rgba(76,175,125,.09)}
+.ch--fin .ch-n{background:rgba(76,175,125,.2);color:#4caf7d}
+.trio{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.tr{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:15px 17px}
+.tr b{font-size:18px;font-weight:800;display:inline-block}
+.tr .q{display:inline-block;margin-left:9px;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.3);border-radius:999px;padding:4px 11px;vertical-align:2px}
+.tr p{margin-top:8px;font-size:15px;line-height:1.55;color:var(--muted)}
+.tr em{display:inline-block;margin-top:9px;font-style:normal;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tr-kak{border-left-color:#C9707F}.tr-kak .q{color:#E39CA8;background:rgba(201,112,127,.16);border-color:rgba(201,112,127,.35)}
+.tr-gde{border-left-color:var(--ice)}.tr-gde .q{color:var(--ice);background:rgba(61,143,209,.14);border-color:rgba(61,143,209,.35)}
+.sk-t{display:block;min-width:0}
+.sk-t em{display:block;font-style:normal;font-size:13px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.35}
+.skill-what{margin:12px 14px 0;font-size:15px;line-height:1.55;color:var(--muted)}
+.skill-what b{color:var(--text)}
+.prompt--skill pre{max-height:132px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.prompt--skill::after{content:"текст длинный, читать его не нужно: просто скопируйте";position:absolute;left:18px;right:18px;bottom:12px;font-size:13px;line-height:1.4;color:var(--muted)}
+.prompt--skill{padding-bottom:52px}
+.prompt--test{border-left-color:var(--ice)}
+.prompt--test .cp{color:var(--ice)}
+.prompt--test .cp::after{background:rgba(61,143,209,.16);border-color:rgba(61,143,209,.4);color:var(--ice)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0;font-size:15.5px;color:var(--muted)}
+.card b{color:var(--text)}
+.card ul{margin:8px 0 0 18px}
+.card li{margin:5px 0}
+.note{font-size:15px;color:var(--muted);background:rgba(61,143,209,.08);border:1px solid rgba(61,143,209,.25);border-radius:12px;padding:12px 14px;margin:10px 0}
+.note b{color:var(--text)}
+.ten{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.tf{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:11px;padding:11px 15px;font-size:15.5px;cursor:pointer}
+.tf:active{background:rgba(224,116,97,.12)}
+.tf.copied{border-color:#4caf7d;background:rgba(76,175,125,.16)}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0}
+.basket{border-radius:13px;padding:13px;font-size:14px;border:1px solid}
+.basket b{display:block;font-size:15px;margin-bottom:5px}
+.b-ok{background:rgba(76,175,125,.08);border-color:rgba(76,175,125,.35)}
+.b-mid{background:rgba(224,169,92,.08);border-color:rgba(224,169,92,.35)}
+.b-no{background:rgba(224,92,92,.08);border-color:rgba(224,92,92,.35)}
+.b-ok b{color:#4caf7d}.b-mid b{color:#e0a95c}.b-no b{color:#e05c5c}
+a{color:var(--ice)}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.links a{display:block;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;color:var(--text)}
+.links a:active{background:rgba(224,116,97,.14);border-color:rgba(224,116,97,.45)}
+.links a b{display:block;font-size:17px;font-weight:800}
+.links a span{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.links a em{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:var(--coral);margin-top:5px}
+.links a:first-child{grid-column:1 / -1}
+footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14.5px}
+@media(max-width:560px){.grid3{grid-template-columns:1fr}
+.prompt{padding-top:56px}
+.sk-t em{font-size:12.5px}}
+
+/* ── подсказки под шагом ── */
+.tips{display:flex;flex-direction:column;gap:10px;margin:18px 0 4px}
+.tip{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--coral);border-radius:13px;padding:15px 18px;font-size:16px;line-height:1.55;color:var(--muted)}
+.tip b{color:var(--text);font-weight:700}
+.tip a{color:var(--coral)}
+/* ── сравнение двух ответов ── */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.cmp > div{border-radius:14px;padding:16px 18px;font-size:16px;line-height:1.55;color:var(--muted);border:1px solid}
+.cmp .ok{background:rgba(76,175,125,.09);border-color:rgba(76,175,125,.36)}
+.cmp .no{background:rgba(224,92,92,.09);border-color:rgba(224,92,92,.36)}
+.cmp .lbl{display:block;font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:9px}
+.cmp .ok .lbl{color:#4caf7d}
+.cmp .no .lbl{color:#e05c5c}
+.cmp b{color:var(--text);font-weight:700}
+@media(max-width:760px){.cmp{grid-template-columns:1fr}}
+
+/* ── карточка навыка ── */
+.sk{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 24px;margin:16px 0}
+.sk-h{display:flex;align-items:flex-start;gap:15px;margin-bottom:12px}
+.sk-n{flex:none;width:38px;height:38px;border-radius:11px;background:rgba(224,116,97,.15);border:1px solid rgba(224,116,97,.4);color:var(--coral);font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center}
+.sk-t{font-size:21px;font-weight:800;line-height:1.25;margin:0}
+.sk-t em{display:block;font-style:normal;font-size:14px;font-weight:700;color:var(--coral);letter-spacing:.05em;text-transform:uppercase;margin-top:4px}
+.sk-d{font-size:16.5px;line-height:1.6;color:var(--muted);margin:0 0 14px}
+.sk-d b{color:var(--text)}
+.sk-io{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.sk-io > div{background:rgba(8,13,26,.55);border:1px solid var(--line);border-radius:12px;padding:12px 15px;font-size:15px;line-height:1.5;color:var(--muted)}
+.sk-io span{display:block;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:6px}
+.sk-io .i span{color:var(--ice)} .sk-io .o span{color:#4caf7d}
+.sk-io b{color:var(--text)}
+@media(max-width:760px){.sk-io{grid-template-columns:1fr}}
+.sk-dl{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.sk-dl a{display:inline-flex;align-items:center;gap:9px;text-decoration:none;font-size:15px;font-weight:700;padding:11px 18px;border-radius:12px;border:1px solid rgba(224,116,97,.45);background:rgba(224,116,97,.13);color:var(--text)}
+.sk-dl a.sec{border-color:var(--line);background:rgba(255,255,255,.04);color:var(--muted);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">neovida<b>.</b>ai</div>
+  <h1>Библиотека навыков<br>двенадцать готовых</h1>
+  <div class="sub">Занятие 4 · <b>«Строим офис для ассистента»</b> · Альберт Валеев</div>
+  <div class="howto"><b>Навык это не роль, а умение.</b> Ассистент отвечает на вопрос «кто он». Навык отвечает на вопрос «что он умеет делать хорошо». Умение выдаётся любой роли: подключили навык, и ChatGPT в этой задаче работает как узкий специалист, которого вы наняли на пять секунд.</div>
+  <div class="note"><b>Как поставить себе любой из них, тридцать секунд.</b> Нажали «Скачать навык», получили zip. Открыли <a href="https://chatgpt.com/skills">chatgpt.com/skills</a>, нажали «+», выбрали «Загрузить с компьютера», указали этот zip. Всё, он в списке.</div>
+  <div class="note"><b>Как его позвать.</b> В чате поставили <b>@</b> и начали писать имя навыка, либо просто описали задачу словами: если навык подходит, ChatGPT берёт его сам. Проверить просто: спросите «какой навык ты сейчас применил».</div>
+  <div class="note" style="border-left-color:#4caf7d"><b>Ставьте не все двенадцать, а два-три.</b> Те, чьи задачи у вас повторяются каждую неделю. Остальные лежат здесь и ждут, пока понадобятся. Навык, который вы поставили и ни разу не позвали, только мешает выбирать.</div>
+</header>
+
+<div class="step">
+  <div class="prac">Управление и команда</div>
+  <div class="step-h"><span class="step-n">1</span><span class="step-t">Четыре навыка про людей</span></div>
+  <div class="step-d">Самая дорогая часть работы руководителя: разговоры, совещания, делегирование и разбор того, что произошло за неделю</div>
+
+  <div class="sk">
+    <div class="sk-h"><div class="sk-n">1</div><h3 class="sk-t">Разбор недели<em>weekly-review</em></h3></div>
+    <p class="sk-d">Проводит с вами жёсткую ретроспективу недели, как это делают в сильных командах, а не «как всё прошло». Заставляет отделить факты от ощущений: что реально сдвинулось, что застряло и почему, куда утекло время, какое решение вы откладываете вторую неделю подряд. Не жалеет вас и не хвалит: задаёт неудобные вопросы там, где вы сами себя оправдываете. На выходе даёт список из трёх приоритетов на следующую неделю и одного решения, которое надо принять до понедельника.</p>
+    <div class="sk-io">
+      <div class="i"><span>Вы приносите</span>Ваши заметки за неделю, календарь, список задач. Или просто наговариваете голосом, как прошла неделя</div>
+      <div class="o"><span>Получаете</span>Разбор по фактам, честный список застрявшего, три приоритета и одно отложенное решение</div>
+    </div>
+    <div class="sk-dl"><a href="skills/weekly-review.zip">Скачать навык</a><a class="sec" href="skills/weekly-review.md">Посмотреть инструкцию</a></div>
+  </div>
+
+  <div class="sk">
+    <div class="sk-h"><div class="sk-n">2</div><h3 class="sk-t">Командный центр совещания<em>meeting-command-center</em></h3></div>
+    <p class="sk-d">Закрывает обе половины совещания. До встречи собирает цель, повестку с таймингом и список решений, которые надо принять, чтобы разговор не расплылся. После встречи берёт ваши заметки или стенограмму и превращает их в рабочий контур: кто что делает, к какому сроку, что осталось нерешённым и кого надо дожать. Отдельно вытаскивает то, о чём договорились вслух, но никто не записал: именно эти договорённости и теряются.</p>
+    <div class="sk-io">
+      <div class="i"><span>Вы приносите</span>Тему встречи и состав до неё. После неё свои заметки, стенограмму или запись</div>
+      <div class="o"><span>Получаете</span>Повестку с таймингом до встречи. Протокол с задачами, сроками и ответственными после</div>
+    </div>
+    <div class="sk-dl"><a href="skills/meeting-command-center.zip">Скачать навык</a><a class="sec" href="skills/meeting-command-center.md">Посмотреть инструкцию</a></div>
+  </div>
+
+  <div class="sk">
+    <div class="sk-h"><div class="sk-n">3</div><h3 class="sk-t">Трудный разговор<em>hard-conversation</em></h3></div>
+    <p class="sk-d">Готовит вас к разговору, который вы откладываете: увольнение, отказ в повышении, разбор провала, конфликт между людьми, тяжёлые новости клиенту. Сначала вытаскивает из вас, чего вы на самом деле хотите добиться и чего боитесь, потом строит сценарий: с чего начать, какие слова не произносить, что делать, если собеседник заплачет, взорвётся или замолчит. Даёт запасные ветки на каждую реакцию. Отдельно проговаривает, что зафиксировать письменно после.</p>
+    <div class="sk-io">
+      <div class="i"><span>Вы приносите</span>Ситуацию своими словами: с кем разговор, что произошло, чего вы хотите добиться</div>
+      <div class="o"><span>Получаете</span>Сценарий разговора с ветками под реакции собеседника и точные формулировки</div>
+    </div>
+    <div class="sk-dl"><a href="skills/hard-conversation.zip">Скачать навык</a><a class="sec" href="skills/hard-conversation.md">Посмотреть инструкцию</a></div>
+  </div>
+
+  <div class="sk">
+    <div class="sk-h"><div class="sk-n">4</div><h3 class="sk-t">Матрица делегирования<em>delegation-matrix</em></h3></div>
+    <p class="sk-d">Разбирает ваш список задач и говорит, что из него вы обязаны делать сами, что можно отдать прямо сегодня, что отдать после подготовки и что надо просто перестать делать. Считает, сколько часов в неделю вы освободите по каждой задаче, и это обычно и есть главный аргумент. По каждой задаче, которую отдаёте, пишет инструкцию для того, кто её примет: что именно делать, где взять данные, по чему проверять и когда бежать к вам.</p>
+    <div class="sk-io">
+      <div class="i"><span>Вы приносите</span>Список того, что делаете за неделю, и состав команды. Можно наговорить голосом</div>
+      <div class="o"><span>Получаете</span>Матрицу «сам, отдать, подготовить, выбросить» с часами и инструкцию на каждую передачу</div>
+    </div>
+    <div class="sk-dl"><a href="skills/delegation-matrix.zip">Скачать навык</a><a class="sec" href="skills/delegation-matrix.md">Посмотреть инструкцию</a></div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Решения и риск</div>
+  <div class="step-h"><span class="step-n">2</span><span class="step-t">Три навыка про то, чтобы не влететь</span></div>
+  <div class="step-d">Эти читают документ или план до того, как вы под ним подпишетесь</div>
+
+  <div class="sk">
+    <div class="sk-h"><div class="sk-n">5</div><h3 class="sk-t">Пре-мортем<em>pre-mortem</em></h3></div>
+    <p class="sk-d">Приём, который меняет угол зрения на любой план. Он не спрашивает «что может пойти не так», на этот вопрос все отвечают одинаково скучно. Он говорит: представьте, что прошло полгода, проект провалился с треском, а теперь объясните почему. Мозг в такой рамке выдаёт совсем другие ответы, гораздо более честные. Дальше ранжирует причины по вероятности и по цене, и по трём самым опасным просит поставить сигнальные флажки: что именно вы увидите первым, если начнётся.</p>
+    <div class="sk-io">
+      <div class="i"><span>Вы приносите</span>План, проект или крупное решение: запуск, наём, стройку, переезд, новое направление</div>
+      <div class="o"><span>Получаете</span>Список причин провала с оценкой, три главных риска и ранние признаки каждого</div>
+    </div>
+    <div class="sk-dl"><a href="skills/pre-mortem.zip">Скачать навык</a><a class="sec" href="skills/pre-mortem.md">Посмотреть инструкцию</a></div>
+  </div>
+
+  <div class="sk">
+    <div class="sk-h"><div class="sk-n">6</div><h3 class="sk-t">Аудит договора<em>dogovor-audit-ru</em></h3></div>
+    <p class="sk-d">Самый тяжёлый навык в библиотеке и самый окупаемый. Читает договор по двенадцати опорным узлам: предмет, цена и порядок расчётов, сроки, приёмка, ответственность и штрафы, односторонний отказ, конфиденциальность, персональные данные, интеллектуальные права, форс-мажор, подсудность, порядок изменений. По каждому ставит светофор и объясняет простыми словами, чем именно вам грозит эта формулировка. В конце выдаёт готовые редлайны: что вычеркнуть, что дописать и какой фразой это заменить.</p>
+    <div class="sk-io">
+      <div class="i"><span>Вы приносите</span>Файл договора или его текст. Плюс одна строка: вы заказчик или исполнитель</div>
+      <div class="o"><span>Получаете</span>Светофор по двенадцати узлам, объяснение рисков и готовые формулировки правок</div>
+    </div>
+    <div class="sk-dl"><a href="skills/dogovor-audit-ru.zip">Скачать навык</a><a class="sec" href="skills/dogovor-audit-ru.md">Посмотреть инструкцию</a></div>
+  </div>
+
+  <div class="sk">
+    <div class="sk-h"><div class="sk-n">7</div><h3 class="sk-t">Юнит-экономика<em>unit-economics</em></h3></div>
+    <p class="sk-d">Ставит экономику не «в целом по фирме», а на одну продажу и один рубль рекламы. Считает маржу на единицу, стоимость привлечения клиента, сколько он приносит за всю жизнь, за сколько окупается привлечение, отдачу от рекламы и точку безубыточности. Сравнивает с ориентирами и выносит вердикт: сходится, не сходится или на грани. Главная мысль, ради которой он существует: если экономика не сходится на единице, масштабирование только ускоряет убыток.</p>
+    <div class="sk-io">
+      <div class="i"><span>Вы приносите</span>Ничего заранее. Он сам спросит цену, себестоимость и расходы, по одному вопросу за раз</div>
+      <div class="o"><span>Получаете</span>Таблицу метрик, вердикт по каждой и три конкретных рычага, что менять первым</div>
+    </div>
+    <div class="sk-dl"><a href="skills/unit-economics.zip">Скачать навык</a><a class="sec" href="skills/unit-economics.md">Посмотреть инструкцию</a></div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Продажи и клиенты</div>
+  <div class="step-h"><span class="step-n">3</span><span class="step-t">Два навыка про деньги на входе</span></div>
+  <div class="step-d">Один смотрит на разговор с клиентом, второй на весь путь до сделки</div>
+
+  <div class="sk">
+    <div class="sk-h"><div class="sk-n">8</div><h3 class="sk-t">Отработка возражений<em>objection-handling</em></h3></div>
+    <p class="sk-d">Берёт возражение клиента и сначала объясняет, что за ним стоит на самом деле: «дорого» почти никогда не про цену, а про непонятную ценность, про страх ошибиться или про сравнение не с тем. Потом даёт три варианта ответа разной жёсткости и говорит, в какой ситуации какой брать. Отдельно предупреждает, чего в этом ответе делать нельзя: где вы начнёте оправдываться, где сами уроните цену и где потеряете клиента на ровном месте.</p>
+    <div class="sk-io">
+      <div class="i"><span>Вы приносите</span>Возражение дословно, как клиент его сказал, и пару строк контекста сделки</div>
+      <div class="o"><span>Получаете</span>Что стоит за возражением, три варианта ответа и список того, чего не говорить</div>
+    </div>
+    <div class="sk-dl"><a href="skills/objection-handling.zip">Скачать навык</a><a class="sec" href="skills/objection-handling.md">Посмотреть инструкцию</a></div>
+  </div>
+
+  <div class="sk">
+    <div class="sk-h"><div class="sk-n">9</div><h3 class="sk-t">Аудит воронки<em>funnel-audit</em></h3></div>
+    <p class="sk-d">Разбирает путь клиента по шагам и ищет, где именно люди отваливаются, а не где вам кажется. Считает конверсию каждого перехода, сравнивает с ориентирами и находит узкое место: чаще всего оно оказывается не там, куда все смотрят. Дальше говорит, какой один шаг чинить первым, и объясняет, почему именно его: обычно потому, что он дешевле остальных и даёт больше всего денег на единицу усилий.</p>
+    <div class="sk-io">
+      <div class="i"><span>Вы приносите</span>Цифры по шагам: сколько пришло, сколько дошло до заявки, до разговора, до оплаты</div>
+      <div class="o"><span>Получаете</span>Конверсии по шагам, найденное узкое место и один шаг, который чинить первым</div>
+    </div>
+    <div class="sk-dl"><a href="skills/funnel-audit.zip">Скачать навык</a><a class="sec" href="skills/funnel-audit.md">Посмотреть инструкцию</a></div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Знание и мышление</div>
+  <div class="step-h"><span class="step-n">4</span><span class="step-t">Три навыка про то, чтобы узнать и упаковать</span></div>
+  <div class="step-d">Последний в этой тройке особенный: он делает другие навыки</div>
+
+  <div class="sk">
+    <div class="sk-h"><div class="sk-n">10</div><h3 class="sk-t">Дипресёрч<em>deep-research</em></h3></div>
+    <p class="sk-d">Превращает расплывчатый вопрос в настоящее исследование. Сначала переспрашивает, чтобы понять, зачем вам это и какое решение вы будете принимать по итогу: без этого исследование получается красивым и бесполезным. Потом строит план поиска, ищет по разным типам источников, а не по первой странице выдачи, и обязательно помечает, где данные противоречат друг другу. В конце отдельно пишет, чего он найти не смог: это честнее, чем заполнять дыры красивыми словами.</p>
+    <div class="sk-io">
+      <div class="i"><span>Вы приносите</span>Вопрос и решение, которое собираетесь принять по итогу исследования</div>
+      <div class="o"><span>Получаете</span>Отчёт со ссылками, помеченными противоречиями и честным списком белых пятен</div>
+    </div>
+    <div class="sk-dl"><a href="skills/deep-research.zip">Скачать навык</a><a class="sec" href="skills/deep-research.md">Посмотреть инструкцию</a></div>
+  </div>
+
+  <div class="sk">
+    <div class="sk-h"><div class="sk-n">11</div><h3 class="sk-t">Распаковка эксперта<em>expert-unpack</em></h3></div>
+    <p class="sk-d">Вытаскивает из головы то, что вы знаете, но никогда не проговаривали. Задаёт вопросы, как это делает хороший интервьюер: не «расскажите о себе», а «вспомните последний случай, когда вы за минуту поняли то, на что у другого ушла бы неделя». Копает в детали, ловит места, где вы отвечаете общими словами, и возвращается туда. На выходе даёт готовый материал: чем вы отличаетесь, каким методом работаете, какие у вас правила и на чём построена ваша репутация.</p>
+    <div class="sk-io">
+      <div class="i"><span>Вы приносите</span>Только себя и минут пятнадцать. Он ведёт разговор сам, по одному вопросу</div>
+      <div class="o"><span>Получаете</span>Ваш метод и ваши правила, записанные словами. Дальше это идёт в ассистента или в тексты</div>
+    </div>
+    <div class="sk-dl"><a href="skills/expert-unpack.zip">Скачать навык</a><a class="sec" href="skills/expert-unpack.md">Посмотреть инструкцию</a></div>
+  </div>
+
+  <div class="sk">
+    <div class="sk-h"><div class="sk-n">12</div><h3 class="sk-t">Конструктор навыка<em>konstruktor-skilla</em></h3></div>
+    <p class="sk-d">Навык, который делает навыки, и поэтому он последний и самый важный. Вы описываете задачу, которая у вас повторяется, а он превращает её в готовую инструкцию нужного формата: имя, описание, когда включаться, что спрашивать, как действовать по шагам, в каком виде отдавать результат, чего не делать никогда. Сам задаёт недостающие вопросы и сам себя критикует перед сдачей. Отдаёт файл, который остаётся только загрузить обратно в ChatGPT.</p>
+    <div class="sk-io">
+      <div class="i"><span>Вы приносите</span>Задачу, которая повторяется. Лучше сразу после того, как разобрали её в чате руками</div>
+      <div class="o"><span>Получаете</span>Готовый файл навыка. Загрузили его в ChatGPT и пользуетесь как одним из этих двенадцати</div>
+    </div>
+    <div class="sk-dl"><a href="skills/konstruktor-skilla.zip">Скачать навык</a><a class="sec" href="skills/konstruktor-skilla.md">Посмотреть инструкцию</a></div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">✓</span><span class="step-t">Свой навык из своей работы</span></div>
+  <div class="step-d">Двенадцать готовых это разгон. Настоящая сила начинается, когда вы делаете тринадцатый под себя, и делается он не с чистого листа</div>
+  <div class="tips">
+    <div class="tip"><b>Правило одно: сначала работа, потом навык.</b> Не садитесь придумывать навык в пустом чате. Сделайте задачу руками, как обычно, добейтесь результата, которым довольны, и только тогда скажите: «а теперь опиши, как ты это сделал, и собери из этого навык».</div>
+    <div class="tip"><b>Почему так.</b> Когда вы описываете задачу заранее, вы описываете, как вам кажется, вы работаете. Когда вы разбираете уже сделанное, на столе лежат настоящие шаги, включая те, о которых вы не подумали бы. Второй навык всегда сильнее первого.</div>
+    <div class="tip"><b>Признак, что задача годится в навык:</b> вы делали её больше трёх раз, и каждый раз объясняли одно и то же с нуля. Разовая задача навыком быть не должна, ей хватит обычного промпта.</div>
+  </div>
+  <div class="prompt"><div class="cp">шаг 1 · сначала просто сделайте работу</div><pre>[Работаете как обычно: разбираете документ, пишете ответ, считаете смету,
+готовите отчёт. Доводите до результата, который вас устраивает.]</pre></div>
+  <div class="prompt"><div class="cp">шаг 2 · вытаскиваете метод из сделанного</div><pre>Мы только что разобрали эту задачу и получили хороший результат.
+
+Опиши, как именно ты это сделал: по шагам, в том порядке, в каком шёл.
+Отдельно скажи, что ты у меня спрашивал и без каких данных не смог бы работать.
+И отдельно то, чего ты сознательно НЕ делал, чтобы не испортить результат.
+
+Не обобщай. Пиши как есть, на этом конкретном примере.</pre></div>
+  <div class="prompt"><div class="cp">шаг 3 · превращаете в навык</div><pre>Теперь собери из этого навык, чтобы я мог вызывать его на такой же задаче
+в любом новом чате.
+
+Формат: имя латиницей, описание в одну строку с фразами, по которым его
+надо включать, когда применять, роль, методология по шагам, что спрашивать
+у меня, в каком виде отдавать результат, чего не делать никогда.
+
+Отдай одним файлом, готовым к загрузке.</pre></div>
+  <div class="prompt"><div class="cp">шаг 4 · проверка перед загрузкой · не пропускать</div><pre>Проверь этот навык по пяти пунктам, по каждому скажи «нормально»
+или «слабо, потому что»:
+
+1. Понятно ли из описания, когда его включать, а когда не надо
+2. Спрашивает ли он у меня данные, если их не хватает
+3. Есть ли запрет выдумывать факты, цифры и сроки
+4. Точно ли описан формат результата
+5. Сработает ли он на СОСЕДНЕЙ задаче того же типа, а не только на этой
+
+Что слабо, перепиши. Отдай финальную версию файлом.</pre></div>
+  <div class="note" style="border-left-color:#4caf7d"><b>Дальше кладёте его к себе:</b> <a href="https://chatgpt.com/skills">chatgpt.com/skills</a> → «+» → «Загрузить с компьютера». И проверяете в новом чате, где про эту задачу ещё ничего не говорили. Работает там, значит навык настоящий.</div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">→</span><span class="step-t">Куда вернуться</span></div>
+  <div class="links">
+    <a href="shpargalka-4.html"><b>Шпаргалка занятия 4</b><span>вся методология урока и промпты по порядку</span><em>открыть</em></a>
+    <a href="scenarii-4.html"><b>Двадцать сценариев расписания</b><span>задачи, которые работают, пока вы спите</span><em>открыть</em></a>
+    <a href="proekty-4.html"><b>Инструкции проектов</b><span>готовые правила для рабочих пространств</span><em>открыть</em></a>
+    <a href="https://chatgpt.com/skills"><b>Ваши навыки в ChatGPT</b><span>сюда загружать и здесь смотреть список</span><em>открыть</em></a>
+  </div>
+</div>
+</div>
+<script>
+function bindCopy(el, getText){
+  el.addEventListener('click',()=>{
+    const t=getText();
+    const cp=el.querySelector('.cp');
+    const done=()=>{
+      el.classList.add('copied');
+      setTimeout(()=>el.classList.remove('copied'),1600);
+    };
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(done).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    });
+  });
+}
+document.querySelectorAll('.prompt').forEach(el=>bindCopy(el,()=>{const p=el.querySelector('pre');return p.innerText||p.textContent;}));
+document.querySelectorAll('.tf').forEach(el=>bindCopy(el,()=>(el.innerText||el.textContent).trim()));
+</script>
+</body>
+</html>

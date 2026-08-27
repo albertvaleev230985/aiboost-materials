@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Двадцать сценариев расписания · Занятие 4</title>
+<style>
+:root{
+  --bg:#0B1220; --bg2:#131B2E; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.1);
+  --text:#F4F1EC; --muted:#9AA3B2; --coral:#E07461; --coral-soft:rgba(224,116,97,.15); --ice:#3D8FD1;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(160deg,var(--bg),var(--bg2)) fixed;color:var(--text);font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;padding-bottom:90px}
+.wrap{max-width:780px;margin:0 auto;padding:26px 18px}
+header{padding:32px 0 8px}
+.brand{font-size:15px;font-weight:700;color:var(--muted)}
+.brand b{color:var(--coral)}
+h1{font-size:33px;line-height:1.14;font-weight:800;letter-spacing:-.01em;margin-top:10px}
+.sub{color:var(--muted);font-size:16px;margin-top:10px}
+.sub b{color:var(--text)}
+.howto{background:var(--coral-soft);border:1px solid rgba(224,116,97,.35);border-radius:14px;padding:14px 16px;margin-top:18px;font-size:15.5px}
+.howto b{color:var(--text)}
+.step{margin:38px 0 0}
+.step-h{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.step-n{flex:0 0 auto;min-width:38px;height:38px;border-radius:11px;background:var(--coral);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.step-t{font-size:22px;font-weight:800;line-height:1.2}
+.step-d{color:var(--muted);font-size:15.5px;margin:2px 0 12px 50px}
+.prompt{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:46px 18px 18px;margin:12px 0;cursor:pointer;transition:background .15s,border-color .2s,box-shadow .2s}
+.prompt:active{background:rgba(224,116,97,.12)}
+.prompt pre{white-space:pre-wrap;font-family:inherit;font-size:15.5px;line-height:1.6;color:var(--text)}
+.prompt .cp{position:absolute;top:12px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--coral)}
+.prompt .cp::after{content:"копировать";background:rgba(224,116,97,.16);border:1px solid rgba(224,116,97,.4);border-radius:999px;padding:5px 14px;font-size:12px;letter-spacing:.06em}
+.prompt.copied{border-color:#4caf7d;box-shadow:0 0 0 2px rgba(76,175,125,.35), 0 0 34px rgba(76,175,125,.28);background:rgba(76,175,125,.1)}
+.prompt.copied .cp{color:#4caf7d}
+.prompt.copied .cp::after{content:"скопировано ✓";background:rgba(76,175,125,.2);border-color:rgba(76,175,125,.55);color:#4caf7d}
+details.acc{background:var(--surface);border:1px solid var(--line);border-radius:13px;margin:8px 0;overflow:hidden}
+details.acc>summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:16px;font-weight:650;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:12px}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"открыть промпт";flex:0 0 auto;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.35);border-radius:999px;padding:5px 13px}
+details.acc[open]>summary::after{content:"свернуть";color:var(--muted);background:rgba(255,255,255,.06);border-color:var(--line)}
+details.acc[open]>summary{border-bottom:1px solid var(--line)}
+details.acc .prompt{margin:12px 14px 14px}
+.prac{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#F2A08E,var(--coral));color:#fff;font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:9px 20px;border-radius:999px;margin-bottom:10px;box-shadow:0 8px 26px rgba(224,116,97,.4)}
+details.acc--gpt>summary::after{content:"открыть ассистента"}
+details.acc--gpt[open]>summary::after{content:"свернуть"}
+.dl--big{background:rgba(224,116,97,.12);border-color:rgba(224,116,97,.45)}
+.dl--big .dl-i{background:var(--coral);color:#fff}
+.dl--big .dl-t b{font-size:16.5px}
+.dl{display:flex;align-items:center;gap:14px;margin:12px 0;padding:15px 17px;background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.38);border-radius:14px;text-decoration:none;color:var(--text)}
+.dl:active{background:rgba(76,175,125,.2)}
+.dl-i{flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:#4caf7d;color:#0B1220;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dl-t{display:block;min-width:0}
+.dl-t b{display:block;font-size:15.5px;font-weight:750}
+.dl-t em{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.chain{display:flex;flex-direction:column;gap:0;margin:14px 0}
+.ch{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 15px}
+.ch-n{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:rgba(224,116,97,.18);color:var(--coral);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ch-t{font-size:14.5px;color:var(--muted);line-height:1.35}
+.ch-t b{display:block;color:var(--text);font-size:15.5px;font-weight:750}
+.ch-ar{color:var(--coral);text-align:center;font-size:17px;line-height:1;padding:4px 0;opacity:.75}
+.ch--fin{border-color:rgba(76,175,125,.45);background:rgba(76,175,125,.09)}
+.ch--fin .ch-n{background:rgba(76,175,125,.2);color:#4caf7d}
+.trio{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.tr{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:15px 17px}
+.tr b{font-size:18px;font-weight:800;display:inline-block}
+.tr .q{display:inline-block;margin-left:9px;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.3);border-radius:999px;padding:4px 11px;vertical-align:2px}
+.tr p{margin-top:8px;font-size:15px;line-height:1.55;color:var(--muted)}
+.tr em{display:inline-block;margin-top:9px;font-style:normal;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tr-kak{border-left-color:#C9707F}.tr-kak .q{color:#E39CA8;background:rgba(201,112,127,.16);border-color:rgba(201,112,127,.35)}
+.tr-gde{border-left-color:var(--ice)}.tr-gde .q{color:var(--ice);background:rgba(61,143,209,.14);border-color:rgba(61,143,209,.35)}
+.sk-t{display:block;min-width:0}
+.sk-t em{display:block;font-style:normal;font-size:13px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.35}
+.skill-what{margin:12px 14px 0;font-size:15px;line-height:1.55;color:var(--muted)}
+.skill-what b{color:var(--text)}
+.prompt--skill pre{max-height:132px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.prompt--skill::after{content:"текст длинный, читать его не нужно: просто скопируйте";position:absolute;left:18px;right:18px;bottom:12px;font-size:13px;line-height:1.4;color:var(--muted)}
+.prompt--skill{padding-bottom:52px}
+.prompt--test{border-left-color:var(--ice)}
+.prompt--test .cp{color:var(--ice)}
+.prompt--test .cp::after{background:rgba(61,143,209,.16);border-color:rgba(61,143,209,.4);color:var(--ice)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0;font-size:15.5px;color:var(--muted)}
+.card b{color:var(--text)}
+.card ul{margin:8px 0 0 18px}
+.card li{margin:5px 0}
+.note{font-size:15px;color:var(--muted);background:rgba(61,143,209,.08);border:1px solid rgba(61,143,209,.25);border-radius:12px;padding:12px 14px;margin:10px 0}
+.note b{color:var(--text)}
+.ten{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.tf{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:11px;padding:11px 15px;font-size:15.5px;cursor:pointer}
+.tf:active{background:rgba(224,116,97,.12)}
+.tf.copied{border-color:#4caf7d;background:rgba(76,175,125,.16)}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0}
+.basket{border-radius:13px;padding:13px;font-size:14px;border:1px solid}
+.basket b{display:block;font-size:15px;margin-bottom:5px}
+.b-ok{background:rgba(76,175,125,.08);border-color:rgba(76,175,125,.35)}
+.b-mid{background:rgba(224,169,92,.08);border-color:rgba(224,169,92,.35)}
+.b-no{background:rgba(224,92,92,.08);border-color:rgba(224,92,92,.35)}
+.b-ok b{color:#4caf7d}.b-mid b{color:#e0a95c}.b-no b{color:#e05c5c}
+a{color:var(--ice)}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.links a{display:block;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;color:var(--text)}
+.links a:active{background:rgba(224,116,97,.14);border-color:rgba(224,116,97,.45)}
+.links a b{display:block;font-size:17px;font-weight:800}
+.links a span{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.links a em{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:var(--coral);margin-top:5px}
+.links a:first-child{grid-column:1 / -1}
+footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14.5px}
+@media(max-width:560px){.grid3{grid-template-columns:1fr}
+.prompt{padding-top:56px}
+.sk-t em{font-size:12.5px}}
+
+/* ── подсказки под шагом ── */
+.tips{display:flex;flex-direction:column;gap:10px;margin:18px 0 4px}
+.tip{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--coral);border-radius:13px;padding:15px 18px;font-size:16px;line-height:1.55;color:var(--muted)}
+.tip b{color:var(--text);font-weight:700}
+.tip a{color:var(--coral)}
+/* ── сравнение двух ответов ── */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.cmp > div{border-radius:14px;padding:16px 18px;font-size:16px;line-height:1.55;color:var(--muted);border:1px solid}
+.cmp .ok{background:rgba(76,175,125,.09);border-color:rgba(76,175,125,.36)}
+.cmp .no{background:rgba(224,92,92,.09);border-color:rgba(224,92,92,.36)}
+.cmp .lbl{display:block;font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:9px}
+.cmp .ok .lbl{color:#4caf7d}
+.cmp .no .lbl{color:#e05c5c}
+.cmp b{color:var(--text);font-weight:700}
+@media(max-width:760px){.cmp{grid-template-columns:1fr}}
+
+/* ── карточка навыка ── */
+.sk{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 24px;margin:16px 0}
+.sk-h{display:flex;align-items:flex-start;gap:15px;margin-bottom:12px}
+.sk-n{flex:none;width:38px;height:38px;border-radius:11px;background:rgba(224,116,97,.15);border:1px solid rgba(224,116,97,.4);color:var(--coral);font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center}
+.sk-t{font-size:21px;font-weight:800;line-height:1.25;margin:0}
+.sk-t em{display:block;font-style:normal;font-size:14px;font-weight:700;color:var(--coral);letter-spacing:.05em;text-transform:uppercase;margin-top:4px}
+.sk-d{font-size:16.5px;line-height:1.6;color:var(--muted);margin:0 0 14px}
+.sk-d b{color:var(--text)}
+.sk-io{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.sk-io > div{background:rgba(8,13,26,.55);border:1px solid var(--line);border-radius:12px;padding:12px 15px;font-size:15px;line-height:1.5;color:var(--muted)}
+.sk-io span{display:block;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:6px}
+.sk-io .i span{color:var(--ice)} .sk-io .o span{color:#4caf7d}
+.sk-io b{color:var(--text)}
+@media(max-width:760px){.sk-io{grid-template-columns:1fr}}
+.sk-dl{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.sk-dl a{display:inline-flex;align-items:center;gap:9px;text-decoration:none;font-size:15px;font-weight:700;padding:11px 18px;border-radius:12px;border:1px solid rgba(224,116,97,.45);background:rgba(224,116,97,.13);color:var(--text)}
+.sk-dl a.sec{border-color:var(--line);background:rgba(255,255,255,.04);color:var(--muted);font-weight:600}
+
+.sc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:14px 0}
+.sc-h{display:flex;align-items:center;gap:13px;margin-bottom:10px;flex-wrap:wrap}
+.sc-n{flex:none;width:34px;height:34px;border-radius:10px;background:rgba(224,116,97,.15);border:1px solid rgba(224,116,97,.4);color:var(--coral);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center}
+.sc-t{font-size:20px;font-weight:800;margin:0;flex:1;min-width:200px}
+.sc-w{font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:5px 11px;border-radius:8px;background:rgba(61,143,209,.14);border:1px solid rgba(61,143,209,.35);color:var(--ice)}
+.sc-d{font-size:16px;line-height:1.6;color:var(--muted);margin:0 0 12px}
+.sc-d b{color:var(--text)}
+.sc-p{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.sc-p span{font-size:13.5px;font-weight:700;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted)}
+.sc-p span.free{background:rgba(76,175,125,.1);border-color:rgba(76,175,125,.35);color:#4caf7d}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">neovida<b>.</b>ai</div>
+  <h1>Двадцать сценариев<br>для расписания</h1>
+  <div class="sub">Занятие 4 · <b>«Строим офис для ассистента»</b> · Альберт Валеев</div>
+  <div class="howto"><b>Запланированная задача это ассистент, который работает, пока вы спите.</b> Вы один раз объясняете, что делать и когда, и дальше результат приходит сам: в ChatGPT уведомлением, а если попросите, то и на почту. Ни одну из этих задач не надо запускать руками.</div>
+  <div class="note"><b>Как поставить любую, минута.</b> Открыли <a href="https://chatgpt.com/scheduled">chatgpt.com/scheduled</a>, вставили промпт в поле «Запланируйте задачу», отправили. ChatGPT переспросит время и подтвердит. Всё, она в списке и работает.</div>
+  <div class="note"><b>В квадратных скобках подставляете своё.</b> Не надо переписывать промпт целиком: замените то, что в скобках, и удалите сами скобки. Остальное трогать не нужно.</div>
+  <div class="note"><b>Плашка сверху каждого сценария говорит, что нужно подключить.</b> Зелёная значит работает сразу, ничего подключать не надо. Синяя значит нужен плагин, и он подключается за тридцать секунд в <a href="https://chatgpt.com/plugins">chatgpt.com/plugins</a>.</div>
+  <div class="note" style="border-left-color:#4caf7d"><b>Начните с одной.</b> Поставили двадцать сразу, и через неделю всё это превратится в шум, который вы перестанете читать. Поставьте одну, поживите с ней неделю, добавьте вторую.</div>
+</header>
+
+<div class="step">
+  <div class="prac">Утро и день</div>
+  <div class="step-h"><span class="step-n">1</span><span class="step-t">Пять сценариев, чтобы начинать день готовым</span></div>
+  <div class="step-d">Самые быстрые в отдаче: результат виден на следующее же утро</div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">1</div><h3 class="sc-t">Сводка по моим темам</h3><span class="sc-w">ничего подключать</span></div>
+    <p class="sc-d">Каждое утро приходит короткая выжимка: что произошло за сутки по темам, за которыми вы следите. Не общие новости, а <b>только ваша отрасль и ваши вопросы</b>. Экономит те двадцать минут, которые вы тратите на пролистывание лент.</p>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждый будний день в 7:30 присылай мне короткую сводку за сутки
+по темам: [ваша отрасль], [ваш рынок или регион], [ваш ключевой вопрос].
+
+Формат: не больше пяти пунктов, каждый в две строки.
+Сначала то, что напрямую касается моей работы, потом остальное.
+Если за сутки ничего важного не произошло, так и напиши одной строкой,
+не придумывай новости ради объёма.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">2</div><h3 class="sc-t">Разбор почты: что горит</h3><span class="sc-w">нужен Gmail</span></div>
+    <p class="sc-d">Проходит по вашему ящику и говорит, <b>что требует ответа именно сегодня</b>, а что подождёт. Отдельно вытаскивает письма, где вам задали вопрос и вы не ответили: это то, что чаще всего теряется.</p>
+    <div class="sc-p"><span>Gmail</span></div>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждое утро в 8:00 проверяй мою почту за последние сутки и присылай разбор.
+
+Раздели на три части:
+1. Требует моего ответа сегодня, с одной строкой почему
+2. Можно ответить на неделе
+3. Мне задали вопрос, и я до сих пор не ответил
+
+По каждому письму: от кого, о чём в одной строке, и что от меня нужно.
+Не пересказывай письма целиком, мне нужно понять за минуту.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">3</div><h3 class="sc-t">План дня из календаря</h3><span class="sc-w">нужен Календарь</span></div>
+    <p class="sc-d">Смотрит в ваш календарь на сегодня и говорит, <b>к чему надо подготовиться и когда</b>. Находит встречи, идущие подряд без зазора, и предупреждает, что обеда у вас сегодня нет.</p>
+    <div class="sc-p"><span>Google Calendar</span></div>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждое утро в 7:45 смотри мой календарь на сегодня и присылай план дня.
+
+Скажи: сколько встреч и сколько часов они съедают, к каким надо
+подготовиться заранее и что именно подготовить, где встречи идут подряд
+без перерыва, и остались ли в дне свободные окна длиннее часа.
+
+Последней строкой: одно дело, которое стоит сделать в первое свободное окно.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">4</div><h3 class="sc-t">Подготовка к завтрашним встречам</h3><span class="sc-w">нужен Календарь</span></div>
+    <p class="sc-d">Вечером готовит вас к завтрашнему дню, пока ещё есть время что-то доделать. По каждой встрече: <b>кто будет, о чём договаривались в прошлый раз, какой вопрос вы должны закрыть.</b></p>
+    <div class="sc-p"><span>Google Calendar</span><span>Gmail</span></div>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждый будний день в 18:00 готовь меня к завтрашним встречам.
+
+По каждой встрече из календаря на завтра:
+кто участвует, о чём встреча, что мы обсуждали с этими людьми
+в прошлой переписке, какой вопрос надо закрыть завтра,
+и что я должен принести с собой или подготовить сегодня вечером.
+
+Если по встрече вообще нет контекста, честно скажи, что не нашёл.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">5</div><h3 class="sc-t">Вечерние три вопроса</h3><span class="sc-w">ничего подключать</span></div>
+    <p class="sc-d">Самый простой сценарий и один из самых сильных. Вечером приходят <b>три коротких вопроса про прошедший день.</b> Отвечать не обязательно письменно, достаточно подумать. Через месяц ответы складываются в картину, которую вы сами бы не заметили.</p>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждый будний день в 20:30 задавай мне три коротких вопроса про день.
+
+Первый про результат: что сегодня реально сдвинулось.
+Второй про потерю: на что ушло время, о котором я жалею.
+Третий про завтра: какое одно дело сделает завтрашний день удачным.
+
+Вопросы каждый день формулируй по-разному, не копируй один и тот же текст.
+Когда я отвечаю, не хвали меня, просто задай один уточняющий вопрос.</pre></div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Клиенты и деньги</div>
+  <div class="step-h"><span class="step-n">2</span><span class="step-t">Пять сценариев, которые ловят упущенное</span></div>
+  <div class="step-d">Здесь речь про деньги, которые уже почти были ваши и утекли по забывчивости</div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">6</div><h3 class="sc-t">Кому я писал и мне не ответили</h3><span class="sc-w">нужен Gmail</span></div>
+    <p class="sc-d">Раз в неделю находит письма, <b>на которые вам не ответили дольше нескольких дней</b>, и сразу готовит короткие напоминания. Именно здесь чаще всего теряются сделки: не потому что отказали, а потому что забыли обе стороны.</p>
+    <div class="sc-p"><span>Gmail</span></div>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждый вторник в 10:00 найди в моей почте письма, которые я отправил
+больше [5] дней назад и на которые мне не ответили.
+
+По каждому: кому, о чём, сколько дней тишины.
+Отсортируй по важности для меня, а не по дате.
+
+К трём самым важным сразу напиши текст напоминания:
+короткий, вежливый, без упрёка, с понятным вопросом в конце.
+Не отправляй ничего сам, только покажи мне.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">7</div><h3 class="sc-t">Что я обещал и не сделал</h3><span class="sc-w">нужен Gmail</span></div>
+    <p class="sc-d">Проходит по вашей переписке и вытаскивает <b>обещания, которые вы дали словами</b>: «пришлю до пятницы», «уточню и вернусь», «посчитаем на неделе». Те самые, которые нигде не записаны и которые рушат репутацию тише всего.</p>
+    <div class="sc-p"><span>Gmail</span></div>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждую пятницу в 16:00 просмотри мою переписку за неделю
+и найди всё, что я обещал сделать.
+
+Ищи фразы вроде «пришлю», «подготовлю», «уточню и вернусь»,
+«посчитаем», «на следующей неделе», «до конца недели».
+
+По каждому: кому обещал, что именно, к какому сроку, и сделано ли это
+судя по дальнейшей переписке. Что не сделано, вынеси наверх отдельным списком.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">8</div><h3 class="sc-t">Что нового у ключевого клиента</h3><span class="sc-w">ничего подключать</span></div>
+    <p class="sc-d">Следит за компаниями, которые для вас важны: <b>новости, назначения, тендеры, открытия, проблемы.</b> Приходить на встречу, зная, что у них вчера сменился директор, это другой разговор.</p>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждый понедельник в 9:00 проверяй, что нового у компаний:
+[компания 1], [компания 2], [компания 3].
+
+Смотри: новости, кадровые назначения, новые проекты и объекты,
+тендеры, судебные дела, упоминания в отраслевой прессе.
+
+По каждой компании не больше трёх пунктов, только то, что появилось
+за неделю. Если ничего нет, так и напиши. И одной строкой скажи,
+даёт ли что-то из этого повод написать им.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">9</div><h3 class="sc-t">Дни рождения и поводы</h3><span class="sc-w">нужен Календарь</span></div>
+    <p class="sc-d">Предупреждает <b>за три дня, а не в тот же день</b>, когда уже поздно что-то придумывать. И сразу предлагает, что написать, чтобы это не было дежурной открыткой.</p>
+    <div class="sc-p"><span>Google Calendar</span></div>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждое утро в 9:00 смотри, есть ли в ближайшие три дня дни рождения
+или важные даты у людей из моего календаря и контактов.
+
+Предупреди за три дня. По каждому человеку напомни,
+кто это и когда мы последний раз общались.
+
+И предложи два варианта поздравления: одно короткое деловое,
+второе тёплое личное. Без шаблонных фраз про счастья и здоровья.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">10</div><h3 class="sc-t">Просроченные задачи</h3><span class="sc-w">нужен TickTick или Todoist</span></div>
+    <p class="sc-d">Смотрит в ваш планировщик и приносит <b>не весь список, а только просроченное и то, что горит сегодня.</b> Плюс честно называет задачу, которую вы переносите третью неделю подряд.</p>
+    <div class="sc-p"><span>TickTick</span><span>Todoist</span></div>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждое утро в 8:30 смотри мои задачи и присылай короткий разбор.
+
+Раздели: просрочено, горит сегодня, можно двигать.
+Не показывай весь список, только эти три группы.
+
+Отдельно найди задачи, которые я переношу больше [3] раз,
+и спроси прямо: их надо сделать сегодня, отдать кому-то или удалить.
+Не смягчай формулировку.</pre></div>
+  </div>
+</div>
+<div class="step">
+  <div class="prac">Рынок и решения</div>
+  <div class="step-h"><span class="step-n">3</span><span class="step-t">Пять сценариев, чтобы не узнавать последним</span></div>
+  <div class="step-d">Здесь ИИ работает разведкой: смотрит наружу, пока вы смотрите внутрь</div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">11</div><h3 class="sc-t">Конкуренты за неделю</h3><span class="sc-w">ничего подключать</span></div>
+    <p class="sc-d">Раз в неделю проверяет, <b>что сделали ваши конкуренты</b>: цены, новые продукты, вакансии, реклама, отзывы. Вакансии, кстати, самый честный источник: по ним видно, куда компания реально растёт.</p>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждую среду в 10:00 проверяй, что за неделю сделали мои конкуренты:
+[конкурент 1], [конкурент 2], [конкурент 3].
+
+Смотри: изменения цен и условий, новые продукты и услуги,
+открытые вакансии, что пишут о них клиенты в отзывах,
+активность в рекламе и соцсетях.
+
+По каждому не больше трёх пунктов. В конце одна строка:
+что из этого требует моей реакции, а что просто шум.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">12</div><h3 class="sc-t">Что пишут про нас</h3><span class="sc-w">ничего подключать</span></div>
+    <p class="sc-d">Следит за упоминаниями <b>вашей компании и вас лично.</b> Плохой отзыв, который вы увидели в тот же день, ещё можно отработать. Тот же отзыв через месяц уже часть репутации.</p>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждый день в 11:00 проверяй упоминания [название компании]
+и [ваше имя] за последние сутки.
+
+Смотри отзывы на картах и площадках, соцсети, форумы, отраслевые
+издания, тематические каналы.
+
+По каждому упоминанию: где, что сказали, тон.
+Негатив выноси наверх и сразу предлагай, что и как ответить.
+Если упоминаний нет, напиши одной строкой.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">13</div><h3 class="sc-t">Изменения в правилах игры</h3><span class="sc-w">ничего подключать</span></div>
+    <p class="sc-d">Следит за <b>законами, нормами и требованиями</b> вашей отрасли. Штрафы за то, что вы не знали об изменении, никого не волнуют. Плюс объясняет по-человечески, что именно поменялось для вас.</p>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждый понедельник в 9:30 проверяй изменения в законах и требованиях,
+которые касаются [ваша отрасль или направление].
+
+Что смотреть: новые нормы и поправки, изменения в отчётности,
+разъяснения ведомств, свежая судебная практика по типовым спорам.
+
+По каждому изменению: что поменялось, с какой даты, что конкретно
+надо сделать нам. Без цитат из закона, объясняй человеческими словами.
+Если за неделю ничего не менялось, так и скажи.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">14</div><h3 class="sc-t">Цены и курс</h3><span class="sc-w">ничего подключать</span></div>
+    <p class="sc-d">Следит за <b>тем, что определяет вашу себестоимость</b>: курс, сырьё, материалы, топливо, ставки. И главное, переводит движение цифр в ответ на вопрос «покупать сейчас или подождать».</p>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждый будний день в 9:00 присылай короткую сводку по тому,
+что влияет на мою себестоимость: [курс валюты], [материал или сырьё],
+[ставка или тариф].
+
+Формат: значение сегодня, изменение за неделю в процентах, тренд.
+
+И главное, одной строкой на человеческом языке: что это значит
+для моих закупок на ближайший месяц. Прогнозов не давай,
+скажи только то, что видно по цифрам.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">15</div><h3 class="sc-t">Тендеры и заявки по теме</h3><span class="sc-w">ничего подключать</span></div>
+    <p class="sc-d">Ищет <b>новые закупки и запросы</b> по вашему профилю и сразу отсеивает те, куда вам идти бессмысленно. Не список из ста строк, а три штуки, которые действительно ваши.</p>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждый день в 10:30 ищи новые тендеры и закупки по теме
+[ваш профиль] в [ваш регион или по всей стране].
+
+Фильтруй сразу: сумма от [сумма], срок подачи не раньше чем через [5] дней.
+
+По каждому: заказчик, предмет, сумма, дедлайн подачи, ссылка.
+И одной строкой честно: стоит ли нам туда идти и почему.
+Заведомо чужие не показывай вообще.</pre></div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Команда, отчёты и вы сами</div>
+  <div class="step-h"><span class="step-n">4</span><span class="step-t">Пять сценариев на неделю целиком</span></div>
+  <div class="step-d">Два последних не про работу, и это не случайно: расписание одинаково хорошо держит и жизнь</div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">16</div><h3 class="sc-t">Пятничный разбор недели</h3><span class="sc-w">лучше с навыком</span></div>
+    <p class="sc-d">Задаёт вам вопросы про неделю и <b>сводит ответы в честную картину.</b> Если поставили навык «Разбор недели» из библиотеки, разбор будет заметно жёстче: он не даст отделаться общими словами.</p>
+    <div class="sc-p"><span>навык weekly-review</span></div>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждую пятницу в 17:00 проводи со мной разбор недели.
+Если у меня установлен навык weekly-review, используй его.
+
+Начни с трёх вопросов, по одному, жди ответа:
+что реально сдвинулось, что застряло и почему, куда утекло время.
+
+Потом сведи ответы и выдай три приоритета на следующую неделю
+и одно решение, которое я откладываю. Не хвали меня.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">17</div><h3 class="sc-t">Отчёт руководителю</h3><span class="sc-w">нужен Диск</span></div>
+    <p class="sc-d">Собирает <b>черновик недельного отчёта</b> из вашей почты, календаря и файлов. Вам остаётся проверить цифры и отправить. Час работы превращается в десять минут.</p>
+    <div class="sc-p"><span>Google Drive</span><span>Gmail</span><span>Календарь</span></div>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждую пятницу в 15:00 собирай черновик моего недельного отчёта.
+
+Возьми данные из моей почты, календаря и файла [название файла на Диске].
+
+Структура: что сделано за неделю, какие цифры, что в работе,
+что застряло и по какой причине, что нужно от руководителя.
+
+Пиши коротко и по фактам, без вводных фраз.
+Там, где цифру не нашёл, оставь пропуск и напиши, что надо подставить.
+Не выдумывай цифры ни при каких условиях.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">18</div><h3 class="sc-t">Пульс команды</h3><span class="sc-w">нужен Календарь</span></div>
+    <p class="sc-d">Раз в неделю показывает, <b>с кем из команды вы давно не разговаривали.</b> Люди уходят не тогда, когда им плохо, а тогда, когда этого долго никто не замечает.</p>
+    <div class="sc-p"><span>Google Calendar</span><span>Gmail</span></div>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждый четверг в 16:00 проверяй, с кем из моей команды
+я давно не общался один на один.
+
+Вот люди: [имя 1], [имя 2], [имя 3], [имя 4].
+
+Посмотри по календарю и переписке, когда был последний
+личный контакт с каждым. Кого не было дольше [3] недель,
+вынеси наверх и предложи, о чём с ним поговорить,
+исходя из того, чем он сейчас занят.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">19</div><h3 class="sc-t">Неделя тренировок и еды</h3><span class="sc-w">ничего подключать</span></div>
+    <p class="sc-d">Личный сценарий, который держится дольше остальных, потому что вам не надо ничего решать в воскресенье вечером. <b>План на неделю приходит сам</b>, с закупкой продуктов одним списком.</p>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждое воскресенье в 18:00 присылай мне план на неделю.
+
+Мои вводные: [ваша цель], тренируюсь [сколько] раз в неделю
+по [сколько] минут, дома или в зале: [где], ограничения по еде: [какие].
+
+Дай: тренировки по дням с упражнениями, меню на неделю
+без изысков и долгой готовки, и список покупок одним блоком,
+сгруппированный по отделам магазина.
+
+Каждую неделю меняй меню, не присылай одно и то же.</pre></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-h"><div class="sc-n">20</div><h3 class="sc-t">Что посмотреть и почитать</h3><span class="sc-w">ничего подключать</span></div>
+    <p class="sc-d">В четверг приходит <b>подборка на выходные под ваши интересы.</b> Мелочь, но именно она приучает к тому, что ассистент помнит про вас, а не только про работу.</p>
+    <div class="prompt"><div class="cp">вставить в поле «Запланируйте задачу»</div><pre>Каждый четверг в 19:00 присылай подборку на выходные
+под мои интересы: [интерес 1], [интерес 2], [интерес 3].
+
+Дай: один фильм или сериал, одну статью или книгу, одно место
+или занятие в [ваш город], и одну идею, чем заняться с семьёй.
+
+По каждому пункту две строки: что это и почему подойдёт мне.
+Не повторяй то, что уже советовал раньше.</pre></div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">✓</span><span class="step-t">Как это ведёт себя в жизни</span></div>
+  <div class="step-d">Четыре вещи, которые понимаешь только после первой недели</div>
+  <div class="tips">
+    <div class="tip"><b>Задача не приходит секунда в секунду.</b> Может прийти на десять-пятнадцать минут позже. Ставьте время с запасом: не 8:00, если в 8:00 у вас начинается совещание.</div>
+    <div class="tip"><b>Всё живёт в одном месте.</b> <a href="https://chatgpt.com/scheduled">chatgpt.com/scheduled</a>: там список, там же пауза, правка и удаление. Задачу можно временно выключить, а не убивать.</div>
+    <div class="tip"><b>Сначала проверьте вручную.</b> Прежде чем ставить на расписание, отправьте тот же текст обычным сообщением в чат. Результат понравился, тогда ставьте. Иначе будете неделю получать не то, что хотели.</div>
+    <div class="tip"><b>Правьте словами, а не заново.</b> «Слишком длинно, давай короче», «убери третий пункт», «переставь на 9 утра». Задача меняется на ходу, пересоздавать не нужно.</div>
+  </div>
+  <div class="note" style="border-left-color:#4caf7d"><b>Хотите на почту, а не в ChatGPT?</b> Допишите в конце промпта: <b>«Готовый результат отправляй письмом на [ваш адрес]».</b> Для этого должен быть подключён Gmail. Так задачи попадают туда, куда вы и так смотрите каждое утро.</div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">→</span><span class="step-t">Куда вернуться</span></div>
+  <div class="links">
+    <a href="shpargalka-4.html"><b>Шпаргалка занятия 4</b><span>вся методология урока и промпты по порядку</span><em>открыть</em></a>
+    <a href="navyki-4.html"><b>Библиотека навыков</b><span>двенадцать готовых, скачиваются кнопкой</span><em>открыть</em></a>
+    <a href="proekty-4.html"><b>Инструкции проектов</b><span>готовые правила для рабочих пространств</span><em>открыть</em></a>
+    <a href="https://chatgpt.com/scheduled"><b>Ваше расписание</b><span>сюда ставить и здесь смотреть список</span><em>открыть</em></a>
+  </div>
+</div>
+</div>
+<script>
+function bindCopy(el, getText){
+  el.addEventListener('click',()=>{
+    const t=getText();
+    const cp=el.querySelector('.cp');
+    const done=()=>{
+      el.classList.add('copied');
+      setTimeout(()=>el.classList.remove('copied'),1600);
+    };
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(done).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    });
+  });
+}
+document.querySelectorAll('.prompt').forEach(el=>bindCopy(el,()=>{const p=el.querySelector('pre');return p.innerText||p.textContent;}));
+document.querySelectorAll('.tf').forEach(el=>bindCopy(el,()=>(el.innerText||el.textContent).trim()));
+</script>
+</body>
+</html>
