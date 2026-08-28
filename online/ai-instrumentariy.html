@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ИИ-инструментарий: обзоры · neovida</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --bg-card: rgba(255,255,255,0.06);
+    --bg-card-hover: rgba(255,255,255,0.1);
+    --section-color: #38bdf8;
+    --accent: #E07461;
+    --white: #ffffff;
+    --white-90: rgba(255,255,255,0.9);
+    --white-70: rgba(255,255,255,0.7);
+    --white-50: rgba(255,255,255,0.5);
+    --white-30: rgba(255,255,255,0.3);
+    --white-15: rgba(255,255,255,0.15);
+    --white-08: rgba(255,255,255,0.08);
+    --green: #5ec47a;
+    --yellow: #f0c040;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--white-90);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  .brand { font-size: 13px; color: var(--white-50); letter-spacing: 0.06em; margin-bottom: 18px; }
+  .brand b { color: var(--accent); font-weight: 700; }
+
+  h1 { font-size: 26px; line-height: 1.25; color: var(--white); margin-bottom: 8px; }
+  .subtitle { font-size: 14px; color: var(--white-70); margin-bottom: 6px; }
+  .hint {
+    font-size: 13px; color: var(--white-70);
+    background: var(--white-08); border: 1px solid var(--white-15);
+    border-radius: 10px; padding: 10px 14px; margin: 16px 0 30px;
+  }
+  .hint b { color: var(--accent); }
+
+  .section { margin-bottom: 40px; }
+  .section-title {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 19px; font-weight: 700; color: var(--white);
+    margin-bottom: 6px;
+  }
+  .section-title .num {
+    flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--section-color); color: #0b1020;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 800;
+  }
+  .section-lead { font-size: 14px; color: var(--white-70); margin-bottom: 16px; }
+
+  .card {
+    background: var(--bg-card); border: 1px solid var(--white-15);
+    border-radius: 14px; padding: 16px; margin-bottom: 14px;
+  }
+  .card-title { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .card-desc { font-size: 13px; color: var(--white-70); margin-bottom: 10px; }
+
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px; margin-left: 6px; vertical-align: middle;
+  }
+  .badge.any { background: rgba(94,196,122,0.15); color: var(--green); }
+  .badge.gpt { background: rgba(240,192,64,0.15); color: var(--yellow); }
+
+  .prompt-box {
+    border: 1px solid var(--white-15); border-radius: 10px;
+    overflow: hidden; cursor: pointer; transition: border-color 0.15s;
+    -webkit-tap-highlight-color: rgba(224,116,97,0.15);
+  }
+  .prompt-box:active { border-color: var(--accent); }
+  .prompt-text {
+    background: rgba(0,0,0,0.35); padding: 13px 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px; line-height: 1.5; color: var(--white-90);
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .prompt-copybar {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: rgba(0,0,0,0.55); border-top: 1px solid var(--white-08);
+    padding: 7px; font-size: 11.5px; font-weight: 600; color: var(--white-50);
+    letter-spacing: 0.03em;
+  }
+  .prompt-box.copied { border-color: var(--green); }
+  .prompt-box.copied .prompt-copybar { color: var(--green); }
+  details.translate { margin-top: 8px; }
+  details.translate summary {
+    font-size: 13px; color: var(--section-color); cursor: pointer;
+    list-style: none; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0;
+  }
+  details.translate summary::-webkit-details-marker { display: none; }
+  details.translate summary::before { content: "▸"; transition: transform 0.15s; }
+  details.translate[open] summary::before { transform: rotate(90deg); }
+  .translate-body {
+    margin-top: 8px; padding: 12px 14px; background: var(--white-08);
+    border-radius: 10px; font-size: 13px; color: var(--white-70); white-space: pre-wrap;
+  }
+  .paysteps { list-style: none; }
+  .paysteps li { display: flex; gap: 10px; margin-bottom: 10px; font-size: 14px; color: var(--white-90); }
+  .paysteps .step-num {
+    flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; margin-top: 1px;
+  }
+
+  .steps { list-style: none; }
+  .steps li {
+    display: flex; gap: 10px; margin-bottom: 10px;
+    font-size: 14px; color: var(--white-90);
+  }
+  .steps .step-num {
+    flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; margin-top: 1px;
+  }
+
+  .tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tool {
+    display: block; text-decoration: none;
+    background: var(--bg-card); border: 1px solid var(--white-15);
+    border-radius: 12px; padding: 12px 14px;
+    transition: background 0.15s;
+  }
+  .tool:active { background: var(--bg-card-hover); }
+  .tool .t-name { font-size: 14.5px; font-weight: 700; color: var(--white); }
+  .tool .t-note { font-size: 12px; color: var(--white-70); margin-top: 2px; }
+  .tool .t-url { font-size: 12px; color: var(--section-color); margin-top: 4px; }
+
+  .compare { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 560px) { .compare { grid-template-columns: 1fr 1fr; } }
+  .compare .c-bad, .compare .c-good {
+    border-radius: 10px; padding: 12px 14px; font-size: 13px;
+  }
+  .compare .c-bad { background: rgba(224,85,85,0.1); border: 1px solid rgba(224,85,85,0.35); }
+  .compare .c-good { background: rgba(94,196,122,0.1); border: 1px solid rgba(94,196,122,0.35); }
+  .compare .c-label { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .compare .c-bad .c-label { color: #e05555; }
+  .compare .c-good .c-label { color: var(--green); }
+
+  .machine { list-style: none; }
+  .machine li {
+    display: flex; gap: 12px; align-items: baseline;
+    padding: 10px 0; border-bottom: 1px solid var(--white-08);
+    font-size: 14px;
+  }
+  .machine li:last-child { border-bottom: none; }
+  .machine .m-name { flex: 0 0 128px; font-weight: 700; color: var(--section-color); font-size: 13.5px; }
+  .machine .m-desc { color: var(--white-90); }
+
+  .rule {
+    background: linear-gradient(135deg, rgba(224,116,97,0.15), rgba(56,189,248,0.1));
+    border: 1px solid var(--white-15); border-radius: 14px;
+    padding: 18px; text-align: center; font-size: 16px; font-weight: 700;
+    color: var(--white); margin: 24px 0;
+  }
+
+  footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--white-15);
+    font-size: 13px; color: var(--white-50); text-align: center;
+  }
+  footer b { color: var(--white-90); }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(80px);
+    background: var(--green); color: #0b1020; font-size: 14px; font-weight: 700;
+    padding: 10px 22px; border-radius: 30px; opacity: 0;
+    transition: all 0.25s ease; pointer-events: none; z-index: 50;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .qr-line {
+    display: flex; gap: 14px; align-items: center;
+    background: var(--bg-card); border: 1px solid var(--white-15);
+    border-radius: 14px; padding: 14px; margin-bottom: 12px;
+  }
+  .qr-line img {
+    width: 96px; height: 96px; flex: 0 0 auto;
+    background: #fff; padding: 6px; border-radius: 10px;
+  }
+  .qr-line .q-name { font-size: 15.5px; font-weight: 800; color: var(--white); }
+  .qr-line .q-desc { font-size: 13px; color: var(--white-70); margin-top: 3px; line-height: 1.45; }
+  .qr-line .q-link { font-size: 13.5px; font-weight: 700; margin-top: 6px; }
+  .qr-line .q-link a { color: var(--section-color); text-decoration: none; }
+  .qr-line.ig .q-name { background: linear-gradient(45deg,#F58529,#DD2A7B,#8134AF); -webkit-background-clip: text; background-clip: text; color: transparent; display: inline-block; }
+  .qr-line.tg .q-name { color: #229ED9; }
+  .btn-install {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: rgba(224,116,97,0.14); border: 1.5px solid var(--accent);
+    border-radius: 12px; padding: 14px; text-decoration: none;
+    font-size: 15px; font-weight: 800; color: var(--white);
+  }
+  .btn-install:active { background: rgba(224,116,97,0.28); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand"><b>neovida</b> · Нейропросвещение</div>
+  <h1>ИИ-инструментарий: дополнительные обзоры</h1>
+  <div class="subtitle">Бонус участникам курса «ИИ. Новая реальность» · от Альберта Валеева · neovida.ai</div>
+  <div class="hint">Подборки нейросетей и сервисов под разные задачи. Всё проверено руками, у каждого сервиса короткая пометка, зачем он нужен.</div>
+
+  <div class="section">
+    <div class="section-title"><span class="num">1</span>Универсальные ассистенты</div>
+    <div class="section-lead">База, которая закрывает 80% задач. Первая тройка открывается только с VPN, нижняя четвёрка работает из России напрямую.</div>
+    <div class="card">
+      <div class="card-title">Мировая тройка: нужен VPN</div>
+      <div class="tools">
+        <a class="tool" href="https://chatgpt.com" target="_blank">
+          <span class="t-name">ChatGPT</span>
+          <div class="t-note">главный универсал: тексты, файлы, картинки, голос</div>
+          <div class="t-url">chatgpt.com</div>
+        </a>
+        <a class="tool" href="https://claude.ai" target="_blank">
+          <span class="t-name">Claude</span>
+          <div class="t-note">самые живые тексты и сильный код</div>
+          <div class="t-url">claude.ai</div>
+        </a>
+        <a class="tool" href="https://gemini.google.com" target="_blank">
+          <span class="t-name">Gemini</span>
+          <div class="t-note">вся экосистема Google в придачу</div>
+          <div class="t-url">gemini.google.com</div>
+        </a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Работают из России без VPN</div>
+      <div class="tools">
+        <a class="tool" href="https://chat.deepseek.com" target="_blank">
+          <span class="t-name">DeepSeek</span>
+          <div class="t-note">сильная бесплатная модель</div>
+          <div class="t-url">chat.deepseek.com</div>
+        </a>
+        <a class="tool" href="https://chat.qwen.ai" target="_blank">
+          <span class="t-name">Qwen</span>
+          <div class="t-note">универсал, наш запасной аэродром</div>
+          <div class="t-url">chat.qwen.ai</div>
+        </a>
+        <a class="tool" href="https://giga.chat" target="_blank">
+          <span class="t-name">GigaChat</span>
+          <div class="t-note">от Сбера, вход по Сбер ID</div>
+          <div class="t-url">giga.chat</div>
+        </a>
+        <a class="tool" href="https://alice.yandex.ru" target="_blank">
+          <span class="t-name">Алиса AI</span>
+          <div class="t-note">от Яндекса, для простых задач</div>
+          <div class="t-url">alice.yandex.ru</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+  <div class="section">
+    <div class="section-title"><span class="num">2</span>Поиск и глубокий ресёрч</div>
+    <div class="section-lead">Когда нужен не ответ из головы модели, а проверяемые источники.</div>
+    <div class="card">
+      <div class="card-title">Вместо гугления</div>
+      <div class="tools">
+        <a class="tool" href="https://www.perplexity.ai" target="_blank">
+          <span class="t-name">Perplexity</span>
+          <div class="t-note">поиск с источниками по каждой фразе</div>
+          <div class="t-url">perplexity.ai</div>
+        </a>
+        <a class="tool" href="https://chatgpt.com" target="_blank">
+          <span class="t-name">Deep Research</span>
+          <div class="t-note">режим в ChatGPT и Gemini: доклад с источниками за 15 минут</div>
+          <div class="t-url">chatgpt.com</div>
+        </a>
+        <a class="tool" href="https://notebooklm.google.com" target="_blank">
+          <span class="t-name">NotebookLM</span>
+          <div class="t-note">загружаете свои документы: конспекты, аудио-обзоры, ответы по базе</div>
+          <div class="t-url">notebooklm.google.com</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+  <div class="section">
+    <div class="section-title"><span class="num">3</span>Картинки</div>
+    <div class="section-lead">От быстрой иллюстрации до плаката с правильной типографикой.</div>
+    <div class="card">
+      <div class="card-title">Генерация и редактура</div>
+      <div class="tools">
+        <a class="tool" href="https://chatgpt.com" target="_blank">
+          <span class="t-name">Картинки в ChatGPT</span>
+          <div class="t-note">самый простой старт, любые стили</div>
+          <div class="t-url">chatgpt.com</div>
+        </a>
+        <a class="tool" href="https://gemini.google.com" target="_blank">
+          <span class="t-name">Nano Banana в Gemini</span>
+          <div class="t-note">редактура фото и надписи на русском</div>
+          <div class="t-url">gemini.google.com</div>
+        </a>
+        <a class="tool" href="https://www.midjourney.com" target="_blank">
+          <span class="t-name">Midjourney</span>
+          <div class="t-note">художественный уровень, когда важна красота</div>
+          <div class="t-url">midjourney.com</div>
+        </a>
+        <a class="tool" href="https://recraft.ai" target="_blank">
+          <span class="t-name">Recraft</span>
+          <div class="t-note">логотипы, иконки, вектор</div>
+          <div class="t-url">recraft.ai</div>
+        </a>
+        <a class="tool" href="https://ideogram.ai" target="_blank">
+          <span class="t-name">Ideogram</span>
+          <div class="t-note">постеры и аккуратный текст на картинке</div>
+          <div class="t-url">ideogram.ai</div>
+        </a>
+        <a class="tool" href="https://www.krea.ai" target="_blank">
+          <span class="t-name">Krea</span>
+          <div class="t-note">апскейл и генерация в реальном времени</div>
+          <div class="t-url">krea.ai</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+  <div class="section">
+    <div class="section-title"><span class="num">4</span>Видео</div>
+    <div class="section-lead">Ролики по описанию и цифровые ведущие.</div>
+    <div class="card">
+      <div class="card-title">Генерация видео</div>
+      <div class="tools">
+        <a class="tool" href="https://labs.google/flow" target="_blank">
+          <span class="t-name">Flow + Veo</span>
+          <div class="t-note">клипы со звуком и репликами от Google</div>
+          <div class="t-url">labs.google/flow</div>
+        </a>
+        <a class="tool" href="https://sora.com" target="_blank">
+          <span class="t-name">Sora</span>
+          <div class="t-note">видео от OpenAI</div>
+          <div class="t-url">sora.com</div>
+        </a>
+        <a class="tool" href="https://klingai.com" target="_blank">
+          <span class="t-name">Kling</span>
+          <div class="t-note">реалистичное движение и физика</div>
+          <div class="t-url">klingai.com</div>
+        </a>
+        <a class="tool" href="https://runwayml.com" target="_blank">
+          <span class="t-name">Runway</span>
+          <div class="t-note">монтаж, спецэффекты, замена фона</div>
+          <div class="t-url">runwayml.com</div>
+        </a>
+        <a class="tool" href="https://www.heygen.com" target="_blank">
+          <span class="t-name">HeyGen</span>
+          <div class="t-note">аватар читает ваш текст, перевод видео с губами</div>
+          <div class="t-url">heygen.com</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+  <div class="section">
+    <div class="section-title"><span class="num">5</span>Звук и голос</div>
+    <div class="section-lead">Музыка, озвучка и студийное качество записи.</div>
+    <div class="card">
+      <div class="card-title">Аудио</div>
+      <div class="tools">
+        <a class="tool" href="https://suno.com" target="_blank">
+          <span class="t-name">Suno</span>
+          <div class="t-note">песни и треки по текстовому описанию</div>
+          <div class="t-url">suno.com</div>
+        </a>
+        <a class="tool" href="https://elevenlabs.io" target="_blank">
+          <span class="t-name">ElevenLabs</span>
+          <div class="t-note">озвучка текста, клон вашего голоса</div>
+          <div class="t-url">elevenlabs.io</div>
+        </a>
+        <a class="tool" href="https://podcast.adobe.com" target="_blank">
+          <span class="t-name">Adobe Podcast</span>
+          <div class="t-note">чистит любую запись до студийной</div>
+          <div class="t-url">podcast.adobe.com</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+  <div class="section">
+    <div class="section-title"><span class="num">6</span>Документы, презентации, переводы</div>
+    <div class="section-lead">Из черновика в готовый материал за минуты.</div>
+    <div class="card">
+      <div class="card-title">Оформление</div>
+      <div class="tools">
+        <a class="tool" href="https://gamma.app" target="_blank">
+          <span class="t-name">Gamma</span>
+          <div class="t-note">презентация из текста за 5 минут</div>
+          <div class="t-url">gamma.app</div>
+        </a>
+        <a class="tool" href="https://www.napkin.ai" target="_blank">
+          <span class="t-name">Napkin</span>
+          <div class="t-note">схемы и инфографика прямо из текста</div>
+          <div class="t-url">napkin.ai</div>
+        </a>
+        <a class="tool" href="https://www.deepl.com" target="_blank">
+          <span class="t-name">DeepL</span>
+          <div class="t-note">перевод с сохранением тона</div>
+          <div class="t-url">deepl.com</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+  <div class="section">
+    <div class="section-title"><span class="num">7</span>Автоматизация без кода</div>
+    <div class="section-lead">Связать сервисы между собой, чтобы рутина ехала сама.</div>
+    <div class="card">
+      <div class="card-title">Конструкторы сценариев</div>
+      <div class="tools">
+        <a class="tool" href="https://n8n.io" target="_blank">
+          <span class="t-name">n8n</span>
+          <div class="t-note">мощный конструктор, можно поставить у себя</div>
+          <div class="t-url">n8n.io</div>
+        </a>
+        <a class="tool" href="https://www.make.com" target="_blank">
+          <span class="t-name">Make</span>
+          <div class="t-note">визуальные сценарии из кубиков</div>
+          <div class="t-url">make.com</div>
+        </a>
+        <a class="tool" href="https://zapier.com" target="_blank">
+          <span class="t-name">Zapier</span>
+          <div class="t-note">быстрые связки популярных сервисов</div>
+          <div class="t-url">zapier.com</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+  <div class="section">
+    <div class="section-title"><span class="num">8</span>Сайты и приложения словами</div>
+    <div class="section-lead">Вайб-кодинг: описываете задачу, получаете работающий продукт.</div>
+    <div class="card">
+      <div class="card-title">Из описания в продукт</div>
+      <div class="tools">
+        <a class="tool" href="https://lovable.dev" target="_blank">
+          <span class="t-name">Lovable</span>
+          <div class="t-note">приложение из текстового описания</div>
+          <div class="t-url">lovable.dev</div>
+        </a>
+        <a class="tool" href="https://bolt.new" target="_blank">
+          <span class="t-name">Bolt</span>
+          <div class="t-note">прототип за вечер</div>
+          <div class="t-url">bolt.new</div>
+        </a>
+        <a class="tool" href="https://v0.dev" target="_blank">
+          <span class="t-name">v0</span>
+          <div class="t-note">интерфейсы по описанию</div>
+          <div class="t-url">v0.dev</div>
+        </a>
+        <a class="tool" href="https://replit.com" target="_blank">
+          <span class="t-name">Replit</span>
+          <div class="t-note">пишет код и сразу публикует в интернет</div>
+          <div class="t-url">replit.com</div>
+        </a>
+        <a class="tool" href="https://cursor.com" target="_blank">
+          <span class="t-name">Cursor</span>
+          <div class="t-note">редактор для тех, кто уже программирует</div>
+          <div class="t-url">cursor.com</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+  <div class="section">
+    <div class="section-title"><span class="num">9</span>Заметки и база знаний</div>
+    <div class="section-lead">Чтобы найденное и придуманное не терялось.</div>
+    <div class="card">
+      <div class="card-title">Хранение знаний</div>
+      <div class="tools">
+        <a class="tool" href="https://www.notion.so" target="_blank">
+          <span class="t-name">Notion AI</span>
+          <div class="t-note">база знаний с ИИ внутри</div>
+          <div class="t-url">notion.so</div>
+        </a>
+        <a class="tool" href="https://obsidian.md" target="_blank">
+          <span class="t-name">Obsidian</span>
+          <div class="t-note">личные заметки, файлы хранятся у вас</div>
+          <div class="t-url">obsidian.md</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+  <div class="section">
+    <div class="section-title"><span class="num">10</span>Как этим пользоваться и не утонуть</div>
+    <div class="section-lead"></div>
+    <div class="card">
+      <div class="card-title">Правило одного инструмента</div>
+      <div class="card-desc">Не пытайтесь освоить всё из этого списка. Рабочая схема простая: один универсальный ассистент как база плюс один сервис под вашу самую частую задачу. Когда упрётесь в потолок, вернётесь сюда за следующим. Сервисы приходят и уходят, навык ставить задачу остаётся с вами.</div>
+    </div>
+
+  </div>
+
+
+  <footer>
+    <b>Альберт Валеев</b> · обучение ИИ для команд и предпринимателей<br>
+    neovida.ai · Telegram: <a href="https://t.me/neovidaAi" target="_blank">@neovidaAi</a>
+  </footer>
+
+</div>
+
+<div id="toast">Скопировано ✓</div>
+
+<script>
+  function copyText(text, el) {
+    function done() {
+      el.classList.add('copied');
+      var bar = el.querySelector('.prompt-copybar');
+      if (bar) bar.textContent = 'скопировано ✓';
+      var t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(function(){ t.classList.remove('show'); }, 1600);
+      setTimeout(function(){
+        el.classList.remove('copied');
+        if (bar) bar.textContent = 'нажмите на блок · скопируется целиком';
+      }, 2600);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallback(); });
+    } else { fallback(); }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); } catch(e) {}
+      document.body.removeChild(ta);
+    }
+  }
+  document.querySelectorAll('.prompt-box').forEach(function(box) {
+    box.addEventListener('click', function() {
+      var text = box.querySelector('.prompt-text').innerText;
+      copyText(text, box);
+    });
+  });
+</script>
+</body>
+</html>

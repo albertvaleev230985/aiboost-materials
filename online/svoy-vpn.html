@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Свой VPN на своём хостинге · neovida</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --bg-card: rgba(255,255,255,0.06);
+    --bg-card-hover: rgba(255,255,255,0.1);
+    --section-color: #38bdf8;
+    --accent: #E07461;
+    --white: #ffffff;
+    --white-90: rgba(255,255,255,0.9);
+    --white-70: rgba(255,255,255,0.7);
+    --white-50: rgba(255,255,255,0.5);
+    --white-30: rgba(255,255,255,0.3);
+    --white-15: rgba(255,255,255,0.15);
+    --white-08: rgba(255,255,255,0.08);
+    --green: #5ec47a;
+    --yellow: #f0c040;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--white-90);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  .brand { font-size: 13px; color: var(--white-50); letter-spacing: 0.06em; margin-bottom: 18px; }
+  .brand b { color: var(--accent); font-weight: 700; }
+
+  h1 { font-size: 26px; line-height: 1.25; color: var(--white); margin-bottom: 8px; }
+  .subtitle { font-size: 14px; color: var(--white-70); margin-bottom: 6px; }
+  .hint {
+    font-size: 13px; color: var(--white-70);
+    background: var(--white-08); border: 1px solid var(--white-15);
+    border-radius: 10px; padding: 10px 14px; margin: 16px 0 30px;
+  }
+  .hint b { color: var(--accent); }
+
+  .section { margin-bottom: 40px; }
+  .section-title {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 19px; font-weight: 700; color: var(--white);
+    margin-bottom: 6px;
+  }
+  .section-title .num {
+    flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--section-color); color: #0b1020;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 800;
+  }
+  .section-lead { font-size: 14px; color: var(--white-70); margin-bottom: 16px; }
+
+  .card {
+    background: var(--bg-card); border: 1px solid var(--white-15);
+    border-radius: 14px; padding: 16px; margin-bottom: 14px;
+  }
+  .card-title { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .card-desc { font-size: 13px; color: var(--white-70); margin-bottom: 10px; }
+
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px; margin-left: 6px; vertical-align: middle;
+  }
+  .badge.any { background: rgba(94,196,122,0.15); color: var(--green); }
+  .badge.gpt { background: rgba(240,192,64,0.15); color: var(--yellow); }
+
+  .prompt-box {
+    border: 1px solid var(--white-15); border-radius: 10px;
+    overflow: hidden; cursor: pointer; transition: border-color 0.15s;
+    -webkit-tap-highlight-color: rgba(224,116,97,0.15);
+  }
+  .prompt-box:active { border-color: var(--accent); }
+  .prompt-text {
+    background: rgba(0,0,0,0.35); padding: 13px 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px; line-height: 1.5; color: var(--white-90);
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .prompt-copybar {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: rgba(0,0,0,0.55); border-top: 1px solid var(--white-08);
+    padding: 7px; font-size: 11.5px; font-weight: 600; color: var(--white-50);
+    letter-spacing: 0.03em;
+  }
+  .prompt-box.copied { border-color: var(--green); }
+  .prompt-box.copied .prompt-copybar { color: var(--green); }
+  details.translate { margin-top: 8px; }
+  details.translate summary {
+    font-size: 13px; color: var(--section-color); cursor: pointer;
+    list-style: none; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0;
+  }
+  details.translate summary::-webkit-details-marker { display: none; }
+  details.translate summary::before { content: "▸"; transition: transform 0.15s; }
+  details.translate[open] summary::before { transform: rotate(90deg); }
+  .translate-body {
+    margin-top: 8px; padding: 12px 14px; background: var(--white-08);
+    border-radius: 10px; font-size: 13px; color: var(--white-70); white-space: pre-wrap;
+  }
+  .paysteps { list-style: none; }
+  .paysteps li { display: flex; gap: 10px; margin-bottom: 10px; font-size: 14px; color: var(--white-90); }
+  .paysteps .step-num {
+    flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; margin-top: 1px;
+  }
+
+  .steps { list-style: none; }
+  .steps li {
+    display: flex; gap: 10px; margin-bottom: 10px;
+    font-size: 14px; color: var(--white-90);
+  }
+  .steps .step-num {
+    flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; margin-top: 1px;
+  }
+
+  .tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tool {
+    display: block; text-decoration: none;
+    background: var(--bg-card); border: 1px solid var(--white-15);
+    border-radius: 12px; padding: 12px 14px;
+    transition: background 0.15s;
+  }
+  .tool:active { background: var(--bg-card-hover); }
+  .tool .t-name { font-size: 14.5px; font-weight: 700; color: var(--white); }
+  .tool .t-note { font-size: 12px; color: var(--white-70); margin-top: 2px; }
+  .tool .t-url { font-size: 12px; color: var(--section-color); margin-top: 4px; }
+
+  .compare { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 560px) { .compare { grid-template-columns: 1fr 1fr; } }
+  .compare .c-bad, .compare .c-good {
+    border-radius: 10px; padding: 12px 14px; font-size: 13px;
+  }
+  .compare .c-bad { background: rgba(224,85,85,0.1); border: 1px solid rgba(224,85,85,0.35); }
+  .compare .c-good { background: rgba(94,196,122,0.1); border: 1px solid rgba(94,196,122,0.35); }
+  .compare .c-label { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .compare .c-bad .c-label { color: #e05555; }
+  .compare .c-good .c-label { color: var(--green); }
+
+  .machine { list-style: none; }
+  .machine li {
+    display: flex; gap: 12px; align-items: baseline;
+    padding: 10px 0; border-bottom: 1px solid var(--white-08);
+    font-size: 14px;
+  }
+  .machine li:last-child { border-bottom: none; }
+  .machine .m-name { flex: 0 0 128px; font-weight: 700; color: var(--section-color); font-size: 13.5px; }
+  .machine .m-desc { color: var(--white-90); }
+
+  .rule {
+    background: linear-gradient(135deg, rgba(224,116,97,0.15), rgba(56,189,248,0.1));
+    border: 1px solid var(--white-15); border-radius: 14px;
+    padding: 18px; text-align: center; font-size: 16px; font-weight: 700;
+    color: var(--white); margin: 24px 0;
+  }
+
+  footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--white-15);
+    font-size: 13px; color: var(--white-50); text-align: center;
+  }
+  footer b { color: var(--white-90); }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(80px);
+    background: var(--green); color: #0b1020; font-size: 14px; font-weight: 700;
+    padding: 10px 22px; border-radius: 30px; opacity: 0;
+    transition: all 0.25s ease; pointer-events: none; z-index: 50;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .qr-line {
+    display: flex; gap: 14px; align-items: center;
+    background: var(--bg-card); border: 1px solid var(--white-15);
+    border-radius: 14px; padding: 14px; margin-bottom: 12px;
+  }
+  .qr-line img {
+    width: 96px; height: 96px; flex: 0 0 auto;
+    background: #fff; padding: 6px; border-radius: 10px;
+  }
+  .qr-line .q-name { font-size: 15.5px; font-weight: 800; color: var(--white); }
+  .qr-line .q-desc { font-size: 13px; color: var(--white-70); margin-top: 3px; line-height: 1.45; }
+  .qr-line .q-link { font-size: 13.5px; font-weight: 700; margin-top: 6px; }
+  .qr-line .q-link a { color: var(--section-color); text-decoration: none; }
+  .qr-line.ig .q-name { background: linear-gradient(45deg,#F58529,#DD2A7B,#8134AF); -webkit-background-clip: text; background-clip: text; color: transparent; display: inline-block; }
+  .qr-line.tg .q-name { color: #229ED9; }
+  .btn-install {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: rgba(224,116,97,0.14); border: 1.5px solid var(--accent);
+    border-radius: 12px; padding: 14px; text-decoration: none;
+    font-size: 15px; font-weight: 800; color: var(--white);
+  }
+  .btn-install:active { background: rgba(224,116,97,0.28); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand"><b>neovida</b> · Нейропросвещение</div>
+  <h1>Свой VPN на своём хостинге</h1>
+  <div class="subtitle">Бонус участникам курса «ИИ. Новая реальность» · от Альберта Валеева · neovida.ai</div>
+  <div class="hint">Инструкция для самостоятельной настройки по открытым официальным гайдам. Один вечер, и у вас личный сервер, который не зависит ни от каких чужих сервисов.</div>
+
+  <div class="section">
+    <div class="section-title"><span class="num">1</span>Зачем свой сервер</div>
+    <div class="section-lead">Личный сервер для защищённого доступа к рабочим AI-сервисам. Он ваш целиком, поэтому ни от чьих чужих серверов и тарифов вы не зависите.</div>
+    <div class="card">
+      <div class="card-title">Что это даёт</div>
+      <div class="tools">
+        <div class="tool"><span class="t-name">Стабильность</span><div class="t-note">на сервере только вы, а не тысячи чужих пользователей</div></div>
+        <div class="tool"><span class="t-name">Скорость</span><div class="t-note">весь канал сервера принадлежит вам</div></div>
+        <div class="tool"><span class="t-name">Все устройства</span><div class="t-note">телефон, ноутбук, планшет, вся семья</div></div>
+        <div class="tool"><span class="t-name">Цена вопроса</span><div class="t-note">аренда сервера от 150 до 400 рублей в месяц</div></div>
+      </div>
+    </div>
+
+  </div>
+  <div class="section">
+    <div class="section-title"><span class="num">2</span>Самый простой путь: Amnezia</div>
+    <div class="section-lead">Открытый бесплатный проект с приложением на русском. Всё ставится само, в консоль сервера заходить не нужно.</div>
+    <div class="card">
+      <div class="card-title">Пять шагов</div>
+      <ul class="steps">
+        <li><span class="step-num">1</span><span>Арендуйте виртуальный сервер (VPS) у любого зарубежного хостинга. Хватит минимального тарифа: 1 ГБ памяти, локация поближе к России: Нидерланды, Германия, Финляндия. После оплаты хостинг пришлёт IP-адрес, логин root и пароль.</span></li>
+        <li><span class="step-num">2</span><span>Скачайте приложение Amnezia с официального сайта amnezia.org. Есть версии для Windows, macOS, iPhone и Android.</span></li>
+        <li><span class="step-num">3</span><span>В приложении выберите настройку собственного сервера и введите те самые IP-адрес, логин и пароль.</span></li>
+        <li><span class="step-num">4</span><span>Выберите протокол AmneziaWG и нажмите «Установить». Приложение само настроит сервер за пару минут.</span></li>
+        <li><span class="step-num">5</span><span>Подключите остальные устройства: в приложении есть «Поделиться подключением», близким достаточно отсканировать QR-код.</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Официальные материалы</div>
+      <div class="tools">
+        <a class="tool" href="https://amnezia.org" target="_blank">
+          <span class="t-name">Amnezia</span>
+          <div class="t-note">сайт проекта, приложение и описание на русском</div>
+          <div class="t-url">amnezia.org</div>
+        </a>
+        <a class="tool" href="https://docs.amnezia.org" target="_blank">
+          <span class="t-name">Документация</span>
+          <div class="t-note">пошаговые инструкции со скриншотами</div>
+          <div class="t-url">docs.amnezia.org</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+  <div class="section">
+    <div class="section-title"><span class="num">3</span>Запасной вариант: Outline</div>
+    <div class="section-lead">Открытый проект команды Jigsaw. Интерфейс английский, зато автоматики ещё больше.</div>
+    <div class="card">
+      <div class="card-title">Три шага</div>
+      <ul class="steps">
+        <li><span class="step-num">1</span><span>Скачайте Outline Manager на компьютер с getoutline.org.</span></li>
+        <li><span class="step-num">2</span><span>Менеджер сам предложит арендовать сервер, например в DigitalOcean, и настроит его в несколько кликов.</span></li>
+        <li><span class="step-num">3</span><span>Раздайте ключи доступа: каждому устройству свой ключ, открывается в приложении Outline.</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Официальный сайт</div>
+      <div class="tools">
+        <a class="tool" href="https://getoutline.org" target="_blank">
+          <span class="t-name">Outline</span>
+          <div class="t-note">менеджер серверов и приложения для всех платформ</div>
+          <div class="t-url">getoutline.org</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+  <div class="section">
+    <div class="section-title"><span class="num">4</span>Для продвинутых</div>
+    <div class="section-lead"></div>
+    <div class="card">
+      <div class="card-title">Панели 3x-ui и Marzban</div>
+      <div class="card-desc">Если дружите с консолью, посмотрите панели 3x-ui и Marzban с протоколом VLESS. Такой сервер стабильнее всего чувствует себя на капризных мобильных сетях. Свежие пошаговые разборы легко находятся по запросу «3x-ui установка».</div>
+    </div>
+
+  </div>
+  <div class="section">
+    <div class="section-title"><span class="num">5</span>Частые вопросы</div>
+    <div class="section-lead"></div>
+    <div class="card">
+      <div class="card-title">Сколько это стоит?</div>
+      <div class="card-desc">Приложения бесплатные и с открытым кодом. Платите только за аренду сервера: от 150 до 400 рублей в месяц. Минимального тарифа спокойно хватает на всю семью.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Это законно?</div>
+      <div class="card-desc">Сама технология VPN в России не запрещена: компании ежедневно используют её для защищённого доступа к рабочим системам. Относитесь к серверу как к личной рабочей инфраструктуре: он для вас и вашей семьи, а не для раздачи всем подряд.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Сервер перестал открываться, что делать?</div>
+      <div class="card-desc">Бывает с любым адресом. У хостинга за пару минут меняете IP-адрес или пересоздаёте сервер, потом проходите те же пять шагов заново. В этом и плюс своего сервера: вы не ждёте, пока кто-то чужой всё починит.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Кто это настроит за меня?</div>
+      <div class="card-desc">Вы сами, и это реально: в Amnezia вся настройка сводится к трём полям и одной кнопке. Это личная инфраструктура, поэтому живёт она у вас, а не у нас. Инструкция выше, документация по ссылкам, дальше дело пятнадцати минут.</div>
+    </div>
+
+  </div>
+
+
+  <footer>
+    <b>Альберт Валеев</b> · обучение ИИ для команд и предпринимателей<br>
+    neovida.ai · Telegram: <a href="https://t.me/neovidaAi" target="_blank">@neovidaAi</a>
+  </footer>
+
+</div>
+
+<div id="toast">Скопировано ✓</div>
+
+<script>
+  function copyText(text, el) {
+    function done() {
+      el.classList.add('copied');
+      var bar = el.querySelector('.prompt-copybar');
+      if (bar) bar.textContent = 'скопировано ✓';
+      var t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(function(){ t.classList.remove('show'); }, 1600);
+      setTimeout(function(){
+        el.classList.remove('copied');
+        if (bar) bar.textContent = 'нажмите на блок · скопируется целиком';
+      }, 2600);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallback(); });
+    } else { fallback(); }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); } catch(e) {}
+      document.body.removeChild(ta);
+    }
+  }
+  document.querySelectorAll('.prompt-box').forEach(function(box) {
+    box.addEventListener('click', function() {
+      var text = box.querySelector('.prompt-text').innerText;
+      copyText(text, box);
+    });
+  });
+</script>
+</body>
+</html>
