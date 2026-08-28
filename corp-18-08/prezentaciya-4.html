@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность · Занятие 3 · Ассистентный подход</title>
+<style>
+/* ══════════ ТОКЕНЫ ══════════ */
+:root{
+  --bg0:#0B1220; --bg1:#131B2E;
+  --surface:rgba(21,30,50,.92);
+  --line:rgba(255,255,255,.09);
+  --text:#F4F1EC; --muted:#9AA3B2;
+  --coral:#E07461; --coral-soft:rgba(224,116,97,.16);
+  --emerald:#10b981; --emerald-soft:rgba(16,185,129,.16);
+  --glow:rgba(224,116,97,.42);
+  --steel:#7FA6D0;
+  --sh:0 24px 60px rgba(0,0,0,.45), 0 4px 14px rgba(0,0,0,.35);
+  --r:24px;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#05080F;overflow:hidden}
+body{font-family:-apple-system,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ══════════ СЦЕНА 1920x1080 ══════════ */
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{width:1920px;height:1080px;flex:0 0 auto;position:relative;background:linear-gradient(160deg,var(--bg0),var(--bg1));overflow:hidden;transform-origin:center center}
+
+/* ══════════ СЛАЙД ══════════ */
+.slide{position:absolute;inset:0;display:none;padding:96px;flex-direction:column}
+.slide.active{display:flex}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:.2}
+.bg--strong{opacity:.55}
+.bg--mid{opacity:.34}
+.veil{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(11,18,32,.25) 0%,rgba(11,18,32,.55) 55%,rgba(11,18,32,.92) 100%)}
+.veil--left{background:linear-gradient(90deg,rgba(11,18,32,.94) 0%,rgba(11,18,32,.72) 46%,rgba(11,18,32,.18) 100%)}
+.veil--flat{background:rgba(11,18,32,.74)}
+.wrap{position:relative;z-index:2;display:flex;flex-direction:column;flex:1;min-height:0}
+
+/* ══════════ ЗАПАСНОЙ АКЦЕНТ ══════════ */
+.slide.em{--coral:#10b981;--coral-soft:rgba(16,185,129,.16);--glow:rgba(16,185,129,.4)}
+.c-coral{color:#E07461}
+.c-em{color:#10b981}
+
+/* ══════════ ТИПОГРАФИКА ══════════ */
+.kicker{font-size:27px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--coral);margin-bottom:28px}
+h1{font-size:118px;line-height:1.04;font-weight:800;letter-spacing:-.015em;max-width:1560px}
+h2{font-size:66px;line-height:1.08;font-weight:750;letter-spacing:-.01em;max-width:1560px}
+.lead{font-size:38px;line-height:1.35;color:var(--muted);max-width:1440px;font-weight:450}
+.lead b,.lead strong{color:var(--text);font-weight:650}
+.src{font-size:25px;color:var(--muted);opacity:1;margin-top:auto;padding-top:26px}
+.accent{color:var(--coral)}
+
+/* ══════════ АНИМАЦИИ ══════════ */
+@keyframes rise{from{opacity:0;transform:translateY(46px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes bgZoom{from{transform:scale(1.07)}to{transform:scale(1)}}
+@keyframes growW{from{width:0}}
+@keyframes growH{from{height:0}}
+@keyframes popIn{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}
+.slide.active .a{animation:rise .75s var(--ease) both}
+.slide.active .af{animation:fadeIn 1s ease both}
+.slide.active .ap{animation:popIn .6s var(--ease) both}
+.slide.active .bg{animation:bgZoom 9s ease-out both}
+@keyframes emerge{0%{opacity:.08;filter:brightness(.3) blur(9px);transform:scale(1.09)}100%{opacity:.62;filter:brightness(1) blur(0);transform:scale(1)}}
+.slide.active .bg--emerge{animation:emerge 5.5s cubic-bezier(.22,.61,.36,1) both}
+.d1{animation-delay:.09s!important}.d2{animation-delay:.18s!important}.d3{animation-delay:.27s!important}.d4{animation-delay:.36s!important}.d5{animation-delay:.45s!important}.d6{animation-delay:.54s!important}.d7{animation-delay:.63s!important}.d8{animation-delay:.72s!important}.d9{animation-delay:.81s!important}.d10{animation-delay:.9s!important}
+
+/* ══════════ ИКОНКИ / ЛОГО / МОНОГРАММЫ ══════════ */
+.ph-i{display:inline-flex;line-height:0}
+.ph-i svg{width:var(--sz,48px);height:var(--sz,48px)}
+.logo-i{display:inline-flex;line-height:0;color:var(--text)}
+.logo-i svg{height:var(--sz,44px);width:auto;fill:currentColor}
+.mono{display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:50%;background:var(--mc,var(--coral-soft));border:1px solid var(--coral);color:var(--coral);font-weight:800;font-size:30px;flex:0 0 auto}
+.ico-chip{display:inline-flex;align-items:center;justify-content:center;width:96px;height:96px;border-radius:26px;background:var(--coral-soft);color:var(--coral);flex:0 0 auto}
+
+/* ══════════ КАРТОЧКИ ══════════ */
+.cards{display:grid;gap:36px;margin-top:56px}
+.cards.c2{grid-template-columns:1fr 1fr}
+.cards.c3{grid-template-columns:1fr 1fr 1fr}
+.cards.c4{grid-template-columns:repeat(4,1fr);gap:26px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:44px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:22px;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--coral),transparent 70%);opacity:.75}
+.card .num{font-size:70px;font-weight:800;color:var(--coral);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.card h3{font-size:34px;font-weight:700;line-height:1.2}
+.card p{font-size:27px;line-height:1.4;color:var(--muted)}
+.card p b{color:var(--text)}
+.card .head{display:flex;align-items:center;gap:24px;min-height:80px}
+.card--sm{padding:32px 34px;gap:16px}
+.card--sm h3{font-size:31px}
+.card--sm p{font-size:26px}
+.card--sm .head{min-height:72px;gap:20px}
+
+/* ══════════ БИГ-СТАТ ══════════ */
+.stat-center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:8px}
+.stat-num{font-size:210px;font-weight:800;letter-spacing:-.03em;color:var(--coral);line-height:1}
+.stat-cap{font-size:44px;font-weight:650;margin-top:10px}
+.stat-sub{font-size:32px;color:var(--muted);margin-top:14px;max-width:1400px;line-height:1.4}
+
+/* ══════════ СПЛИТ ══════════ */
+.split{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;flex:1;align-items:center;margin-top:20px}
+.split.rev{grid-template-columns:.95fr 1.05fr}
+.split .txt{display:flex;flex-direction:column;gap:24px}
+.split .txt h2{font-size:58px}
+.split .txt .kicker{margin-bottom:0}
+.split .pic{border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);border:1px solid var(--line);height:560px}
+.split .pic img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ══════════ СПИСОК-ПРАВИЛА ══════════ */
+.rules{display:flex;flex-direction:column;gap:26px;margin-top:52px;max-width:1560px}
+.rule{display:flex;align-items:center;gap:32px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px 38px}
+.rule .ico-chip{width:78px;height:78px;border-radius:20px}
+.rule .t{font-size:31px;line-height:1.35}
+.rule .t b{color:var(--coral)}
+.rules--tight{gap:20px!important}
+.rules--tight .rule{padding:20px 34px}
+.rules--tight .ico-chip{width:64px;height:64px;border-radius:18px}
+.rules--tight .t{font-size:29px}
+.rules--7{gap:11px!important}
+.rules--7 .rule{padding:14px 30px}
+.rules--7 .ico-chip{width:56px;height:56px;border-radius:15px}
+.rules--7 .t{font-size:27px;line-height:1.3}
+
+/* ══════════ ПРАКТИКА ══════════ */
+.badge{display:inline-flex;align-items:center;gap:14px;background:var(--coral);color:#fff;font-size:26px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:14px 30px;border-radius:999px;margin-bottom:30px;box-shadow:0 10px 34px var(--glow);align-self:flex-start}
+.steps-p{display:flex;flex-direction:column;gap:22px;margin-top:40px;max-width:1560px}
+.step-p{display:flex;gap:30px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:26px 36px}
+.step-p .n{width:64px;height:64px;border-radius:50%;background:var(--coral);color:#fff;font-size:30px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.step-p .t{font-size:30px;line-height:1.38;padding-top:12px}
+.step-p .t b{color:var(--coral)}
+.steps-p--tight{gap:18px!important}
+.steps-p--tight .step-p{padding:18px 32px}
+.steps-p--tight .step-p .n{width:56px;height:56px;font-size:27px}
+.steps-p--tight .step-p .t{font-size:28px;padding-top:8px}
+
+/* ══════════ ПРОМПТ-БЛОК ══════════ */
+.prompt{font-family:"SF Mono",Menlo,Consolas,monospace;background:linear-gradient(180deg,rgba(224,116,97,.10),rgba(224,116,97,.05)),rgba(8,13,26,.97);border:1px solid rgba(224,116,97,.22);border-left:5px solid var(--coral);border-radius:16px;padding:26px 32px;font-size:27px;line-height:1.46;white-space:pre-wrap;color:var(--text);font-weight:450;box-shadow:0 18px 44px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.05)}
+.prompt .ph{color:var(--coral);font-weight:650}
+.prompt b{font-weight:750;color:#fff}
+.prompt--sm{font-size:26px;padding:24px 28px;line-height:1.42}
+.prompt--lg{font-size:29px;padding:30px 36px;line-height:1.5}
+.p-lbl{font-size:25px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--steel);margin-bottom:12px}
+.slide.em .p-lbl{color:#6EE7B7}
+.pgrid{display:grid;gap:30px;margin-top:32px}
+.pgrid.p2{grid-template-columns:1fr 1fr}
+.pcol{display:flex;flex-direction:column}
+
+/* ══════════ ТАБЛИЦА ══════════ */
+.tbl{display:grid;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface);margin-top:34px;box-shadow:var(--sh)}
+.tbl > div{padding:24px 30px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-size:27px;line-height:1.34;display:flex;align-items:center;color:var(--muted)}
+.tbl .th{font-size:25px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:rgba(255,255,255,.06);color:var(--text)}
+.tbl .q{font-weight:700;color:var(--text)}
+.tbl .hi{color:var(--text)}
+.tbl--compact{margin-top:18px!important}
+.tbl--compact > div{padding:11px 22px!important;font-size:23px!important;line-height:1.24!important}
+.tbl.t3{grid-template-columns:1.06fr 1fr 1.06fr}
+.tbl.t3 > div:nth-child(3n){border-right:none}
+.tbl.t3 > div:nth-last-child(-n+3){border-bottom:none}
+.tbl--tall > div{padding:38px 30px}
+.pgrid--mid{flex:1;align-content:center}
+
+/* ══════════ БОЛЬШОЕ СРАВНЕНИЕ НАДВОЕ ══════════ */
+.big2{display:grid;grid-template-columns:1fr 2px 1fr;gap:64px;align-items:center;margin-top:34px}
+.big2-i{text-align:center}
+.big2-l{font-size:142px;font-weight:800;letter-spacing:-.025em;line-height:1}
+.big2-t{font-size:52px;line-height:1.22;margin-top:24px;color:var(--muted);font-weight:450}
+.big2-t b{color:var(--text);font-weight:750}
+.big2-div{width:3px;height:400px;border-radius:2px;background:linear-gradient(180deg,transparent,rgba(244,241,236,.38) 22%,rgba(244,241,236,.38) 78%,transparent)}
+
+/* ══════════ ФОРМУЛА РКЗФО ══════════ */
+.fx{display:grid;grid-template-columns:repeat(5,1fr);gap:26px;margin-top:46px}
+.fx-i{background:#141d31;border:1px solid var(--line);border-radius:22px;padding:34px 24px;text-align:center;box-shadow:var(--sh)}
+.fx-l{font-size:104px;font-weight:800;color:var(--coral);line-height:1;letter-spacing:-.02em}
+.fx-w{font-size:34px;font-weight:750;margin-top:16px}
+.fx-s{font-size:25px;color:var(--muted);margin-top:10px;line-height:1.3}
+
+/* ══════════ ЧИПЫ-ПРИЁМЫ ══════════ */
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:44px}
+.chips--15{grid-template-columns:repeat(5,1fr)!important;gap:10px!important}
+.chips--15 .chip{padding:22px 20px;border-radius:18px;gap:12px}
+.chips--15 .chip h4{font-size:26px;line-height:1.2}
+.chips--15 .chip p{display:none}
+.chips--15 .chip .n{font-size:24px}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:22px 26px;display:flex;flex-direction:column;gap:16px;position:relative;overflow:hidden}
+.chip::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--coral),transparent 75%);opacity:.8}
+.chip .n{font-size:25px;font-weight:800;color:var(--coral);letter-spacing:.1em}
+.chip .hd{display:flex;align-items:center;gap:16px;color:var(--coral)}
+.chip h4{font-size:31px;font-weight:750;line-height:1.18}
+.chip p{font-size:25px;color:var(--muted);line-height:1.32}
+
+/* ══════════ ФРАЗЫ ══════════ */
+.phrases{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:40px}
+.phr{display:flex;gap:20px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 26px}
+.phr .i{font-size:26px;font-weight:800;color:var(--coral);flex:0 0 auto;min-width:38px;font-variant-numeric:tabular-nums}
+.phr .t{font-size:28px;line-height:1.32}
+
+/* ══════════ ЛЕСТНИЦА ══════════ */
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;align-items:end;flex:1;margin-top:36px;max-height:700px}
+.lad{background:#141d31;border:1px solid var(--line);border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;gap:12px;justify-content:flex-end;box-shadow:var(--sh);overflow:hidden}
+.slide.active .lad{animation:growH .9s var(--ease) both}
+.lad .lad-i{display:inline-flex;color:var(--muted);margin-bottom:auto}
+.lad.here .lad-i{color:var(--emerald)}
+.lad .n{font-size:25px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lad h4{font-size:34px;font-weight:750;line-height:1.14}
+.lad p{font-size:25px;color:var(--muted);line-height:1.3}
+.lad.here{border-color:var(--emerald);background:#122a22}
+.lad.here .n{color:var(--emerald)}
+.tag-here{display:inline-block;font-size:24px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--emerald)}
+
+/* ══════════ ХРОМ ══════════ */
+#chrome{position:absolute;left:0;right:0;bottom:0;z-index:50;padding:0 44px 20px;display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}
+#act-label{font-size:24px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:650}
+#slide-no{font-size:24px;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:650}
+#bar{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.07);z-index:51}
+#bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#E07461,#F0A08E);transition:width .45s var(--ease),background .45s ease}
+.slide.active.em ~ #bar i{background:linear-gradient(90deg,#10b981,#4ade80)}
+.brand-corner{position:absolute;top:44px;left:64px;z-index:40;font-size:25px;font-weight:700;color:var(--muted)}
+.brand-corner b{color:#E07461}
+#fs-btn{position:fixed;top:20px;right:20px;z-index:120;width:46px;height:46px;padding:0;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(11,18,32,.5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#9AA3B2;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.4;transition:opacity .2s,color .2s,border-color .2s,background .2s}
+#fs-btn:hover{opacity:1;color:#F4F1EC;border-color:#E07461;background:rgba(224,116,97,.16)}
+#fs-btn svg{width:23px;height:23px}
+#fs-btn .i-close{display:none}
+#fs-btn.is-fs .i-open{display:none}
+#fs-btn.is-fs .i-close{display:block}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+<!-- 1 · Титул -->
+<section class="slide" data-act="Старт">
+  <div class="bg" style="background-image:url(a4/bg-title.jpg)"></div>
+  <div class="wrap wrap--center">
+    <div class="badge a">Занятие 4 · 28 августа · «ИИ. Новая реальность»</div>
+    <h1 class="a d1">Платформа:<br><span class="accent">всё из одного окна</span></h1>
+    <div class="lead a d3" style="font-size:34px;max-width:1180px">Вчера вы собрали сотрудника. Сегодня строим ему офис: кабинет, диплом, пропуск, график и инструменты</div>
+    <div class="sign a d5">Альберт Валеев · neovida<b>.</b>ai</div>
+  </div>
+</section>
+
+<!-- 2 · Мостик -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <h2 class="a">Где мы <span class="accent">остановились</span></h2>
+    <div class="grid2 a d1" style="margin-top:40px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="robot" style="--sz:44px"></i></div>
+        <h3>У каждого есть ассистент</h3>
+        <p>Собранный руками, по восьми шагам, с инструкцией и тремя тестами. Он знает вашу задачу и отвечает по вашим правилам</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="warning" style="--sz:44px"></i></div>
+        <h3>И он сидит в пустой комнате</h3>
+        <p>Файлы вы носите ему руками. Про вашу почту он не знает. Работает, только когда вы открыли чат. Инструменты у него одни: слова</p>
+      </div>
+    </div>
+    <div class="lead a d5" style="margin-top:44px;font-size:33px">Сегодня достраиваем всё остальное. И начнём с долга: <b>блокноты</b>, до которых мы вчера не дошли</div>
+  </div>
+</section>
+
+<!-- 3 · Карта занятия -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="map-trifold" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Два часа, две части</div>
+    <h2 class="a d1">Что <span class="accent">сегодня</span></h2>
+    <div class="tbl tbl--compact a d2" style="margin-top:34px">
+      <div><b>30 минут</b></div><div><b>Блокноты.</b> Три сценария, как база знаний живёт по-настоящему</div>
+      <div><b>8 минут</b></div><div><b>Платформа.</b> Почему нейросети перестали быть чатами</div>
+      <div><b>8 минут</b></div><div><b>Три режима:</b> Чат, Работа, Codex. Чем отличаются и куда вам</div>
+      <div><b>12 минут</b></div><div><b>Проекты.</b> Кабинет: файлы и правила, которые работают во всех чатах</div>
+      <div><b>12 минут</b></div><div><b>Навыки.</b> Диплом: методология, которая живёт постоянно</div>
+      <div><b>12 минут</b></div><div><b>Плагины.</b> Пропуск: почта, диск, календарь, задачи</div>
+      <div><b>12 минут</b></div><div><b>Расписание.</b> График: работает, пока вы спите</div>
+      <div><b>14 минут</b></div><div><b>Калькуляторы и сайты.</b> Инструменты, которые можно отдать команде</div>
+    </div>
+    <div class="lead a d7" style="margin-top:32px;font-size:31px">Шесть практик. Всё, что соберёте, останется у вас</div>
+  </div>
+</section>
+
+<!-- 4 · Часть 1 титул -->
+<section class="slide" data-act="Блокноты">
+  <div class="bg" style="background-image:url(a4/bg-bloknot.jpg)"></div>
+  <div class="wrap wrap--center">
+    <div class="badge a">Часть 1 · 30 минут</div>
+    <h1 class="a d1" style="font-size:86px">Блокноты</h1>
+    <div class="lead a d3" style="font-size:34px;max-width:1100px">Вчера база знаний была папкой файлов внутри бота. Сегодня посмотрим, где ей место на самом деле</div>
+  </div>
+</section>
+
+<!-- 5 · Что такое блокнот -->
+<section class="slide" data-act="Блокноты">
+  <div class="wrap">
+    <h2 class="a">Чат отвечает из головы.<br><span class="accent">Блокнот отвечает из ваших источников</span></h2>
+    <div class="grid3 a d2" style="margin-top:40px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="book-open-text" style="--sz:40px"></i></div>
+        <h3>Источники</h3>
+        <p>Документы, сайты, видео, статьи. До трёхсот в один блокнот. Он читает только их</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="paperclip" style="--sz:40px"></i></div>
+        <h3>Ссылка в каждом ответе</h3>
+        <p>Нажали на сноску и попали в то самое место документа. Проверяется за секунду</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="shield-check" style="--sz:40px"></i></div>
+        <h3>Не выдумывает</h3>
+        <p>Чего нет в источниках, он честно не знает. Это его главное свойство, а не недостаток</p>
+      </div>
+    </div>
+    <div class="lead a d5" style="margin-top:44px;font-size:32px">Открывается по адресу <b>notebook.google.com</b>, либо из сайдбара Gemini пунктом <b>«Блокноты»</b>. Бесплатно</div>
+  </div>
+</section>
+
+<!-- 6 · Три сценария -->
+<section class="slide" data-act="Блокноты">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="stack" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Карта части 1</div>
+    <h2 class="a d1">Три способа <span class="accent">этим пользоваться</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:36px">
+      <div class="step-p ap d3"><span class="n">1</span><div class="t"><b>Блокнот как справочник.</b> Собрали один раз, дальше зовёте его в любой чат Gemini через плюсик. База лежит в одном месте и доступна отовсюду</div></div>
+      <div class="step-p ap d5"><span class="n">2</span><div class="t"><b>Блокнот внутри ассистента.</b> Прикрепили к Gem-боту навсегда. Он не «может посмотреть», он всегда смотрит именно туда</div></div>
+      <div class="step-p ap d7"><span class="n">3</span><div class="t"><b>Студия.</b> Из тех же источников получаете аудиопересказ, видео, презентацию, ментальную карту, тест, карточки, инфографику и таблицу</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:36px;font-size:31px">Первый сценарий соберёте руками. Второй и третий покажу со сцены</div>
+  </div>
+</section>
+
+<!-- 7 · Практика 1 -->
+<section class="slide" data-act="Блокноты">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 1 · 6 минут · шпаргалка, шаг 1</div>
+    <h2 class="a d1" style="font-size:56px">Соберите <span class="accent">свой первый блокнот</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:28px">
+      <div class="step-p ap d3"><span class="n">1</span><div class="t">Открыли <b>notebook.google.com</b>, нажали «Создать блокнот»</div></div>
+      <div class="step-p ap d4"><span class="n">2</span><div class="t">Загрузили <b>два-три документа</b>, которые у вас с собой. Нет своих, возьмите любую инструкцию или регламент из почты</div></div>
+      <div class="step-p ap d5"><span class="n">3</span><div class="t">Задали вопрос, ответ на который есть <b>только в этих файлах</b>. Проверили сноску: она ведёт в нужное место</div></div>
+      <div class="step-p ap d6"><span class="n">4</span><div class="t">Задали вопрос, ответа на который там <b>заведомо нет</b>. Он должен честно сказать, что не нашёл</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:30px;font-size:32px">Оба ответа сошлись, значит блокноту можно доверять. Дальше зовём его в Gemini через плюсик</div>
+  </div>
+</section>
+
+<!-- 8 · Студия -->
+<section class="slide" data-act="Блокноты">
+  <div class="wrap">
+    <div class="split">
+      <div class="split-l">
+        <h2 class="a" style="font-size:56px">Одни источники,<br><span class="accent">восемь форматов</span></h2>
+        <div class="lead a d2" style="margin-top:26px;font-size:30px">Загрузили документы один раз. Дальше кнопка, и те же данные выходят в любом виде</div>
+        <div class="lead a d5" style="margin-top:24px;font-size:29px">Самое сильное здесь: <b>аудиопересказ</b>. Двое ведущих обсуждают ваши документы двадцать минут. Слушается за рулём</div>
+      </div>
+      <div class="split-r a d3">
+        <img src="a4/img-studiya.jpg" alt="">
+      </div>
+    </div>
+    <div class="chips chips--15 a d5" style="margin-top:30px">
+      <div class="chip"><span class="n">1</span><h4>Аудиопересказ</h4></div>
+      <div class="chip"><span class="n">2</span><h4>Видеопересказ</h4></div>
+      <div class="chip"><span class="n">3</span><h4>Презентация</h4></div>
+      <div class="chip"><span class="n">4</span><h4>Ментальная карта</h4></div>
+      <div class="chip"><span class="n">5</span><h4>Отчёты</h4></div>
+      <div class="chip"><span class="n">6</span><h4>Карточки</h4></div>
+      <div class="chip"><span class="n">7</span><h4>Тест</h4></div>
+      <div class="chip"><span class="n">8</span><h4>Инфографика</h4></div>
+    </div>
+  </div>
+</section>
+<!-- 9 · Часть 2 титул -->
+<section class="slide" data-act="Платформа">
+  <div class="bg" style="background-image:url(a4/bg-platforma.jpg)"></div>
+  <div class="wrap wrap--center">
+    <div class="badge a">Часть 2 · 90 минут</div>
+    <h1 class="a d1" style="font-size:86px">Платформа</h1>
+    <div class="lead a d3" style="font-size:34px;max-width:1150px">Нейросети перестали быть чатами. Разбираем, во что они превратились и что вам с этого</div>
+  </div>
+</section>
+
+<!-- 10 · Мысль урока -->
+<section class="slide" data-act="Платформа">
+  <div class="wrap wrap--center">
+    <div class="quote a">
+      <div class="q-mark">«</div>
+      <h2 class="q-text">Раньше вы держали десять вкладок.<br>Теперь всё живёт <span class="accent">в одном окне</span></h2>
+    </div>
+    <div class="lead a d5" style="margin-top:44px;font-size:32px;max-width:1150px">И это не удобство. Это разница в скорости: пока вы копируете из вкладки во вкладку, тот, у кого всё в одном месте, уже сдал работу</div>
+  </div>
+</section>
+
+<!-- 11 · Все идут в платформы -->
+<section class="slide" data-act="Платформа">
+  <div class="wrap">
+    <div class="split">
+      <div class="split-l">
+        <h2 class="a" style="font-size:54px">Туда идут <span class="accent">все</span></h2>
+        <div class="lead a d2" style="margin-top:26px;font-size:30px">Это не особенность ChatGPT. Это общее направление, и через год так будет у всех</div>
+        <div class="two a d4" style="margin-top:30px">
+          <div class="tf"><b>Claude.</b> Проекты, навыки, коннекторы, работа с кодом, артефакты прямо в окне</div>
+          <div class="tf"><b>ChatGPT.</b> Чат, Работа, проекты, навыки, плагины, расписание, сайты, Codex</div>
+        </div>
+      </div>
+      <div class="split-r a d3">
+        <img src="a4/img-platformy.jpg" alt="">
+      </div>
+    </div>
+    <div class="lead a d6" style="margin-top:32px;font-size:31px">Сегодня разбираем ChatGPT, потому что он у вас у всех оплачен. Но <b>логика везде одна</b>, и завтра вы узнаете её в любом другом инструменте</div>
+  </div>
+</section>
+
+<!-- 12 · Три режима -->
+<section class="slide" data-act="Платформа">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="stack" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Первое, что надо понять</div>
+    <h2 class="a d1">Три режима, <span class="accent">не один</span></h2>
+    <div class="grid3 grid3--hero a d2" style="margin-top:34px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="chats-circle" style="--sz:40px"></i></div>
+        <h3>Чат</h3>
+        <p><b>Спросил, получил ответ.</b> Отвечает из головы, в интернет и файлы лезет по просьбе.</p>
+        <p style="margin-top:10px">Быстрые вопросы, тексты, разбор одного документа.</p>
+        <p style="margin-top:10px;color:var(--ice)">Браузер и телефон</p>
+      </div>
+      <div class="card card--hot">
+        <div class="card-i"><i class="ph-i" data-ph="package" style="--sz:40px"></i></div>
+        <h3>Работа</h3>
+        <p><b>Не отвечает, а доводит дело до конца.</b> Сам открывает браузер, ходит по вашей почте и диску, создаёт документы, делает многошаговые задачи.</p>
+        <p style="margin-top:10px">Здесь же плагины подключаются прямо из плюса.</p>
+        <p style="margin-top:10px;color:var(--ice)">Браузер и телефон · свой недельный лимит</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="cpu" style="--sz:40px"></i></div>
+        <h3>Codex</h3>
+        <p><b>Агент, который работает с файлами на вашем компьютере.</b> Ставит, настраивает, правит, запускает.</p>
+        <p style="margin-top:10px">Нужен, когда задача выходит за пределы браузера.</p>
+        <p style="margin-top:10px;color:#e0a95c">Только десктопная версия</p>
+      </div>
+    </div>
+    <div class="lead a d7" style="margin-top:34px;font-size:32px">Средний вам нужен <b>в девяти случаях из десяти</b>. Чат и Работа уже открыты прямо сейчас, за Codex надо идти отдельно</div>
+  </div>
+</section>
+
+<!-- 13 · Пять вещей -->
+<section class="slide" data-act="Платформа">
+  <div class="wrap">
+    <h2 class="a">Пять вещей, <span class="accent">которые мы достроим</span></h2>
+    <div class="steps-p steps-p--tight a d1" style="margin-top:34px">
+      <div class="step-p ap d2"><span class="n">1</span><div class="t"><b>Проект</b> это кабинет. Файлы и правила, которые работают во всех чатах этой темы</div></div>
+      <div class="step-p ap d3"><span class="n">2</span><div class="t"><b>Навык</b> это диплом. Методология, которая живёт постоянно и зовётся одной фразой</div></div>
+      <div class="step-p ap d4"><span class="n">3</span><div class="t"><b>Плагин</b> это пропуск. Почта, диск, календарь, задачи, звонки</div></div>
+      <div class="step-p ap d5"><span class="n">4</span><div class="t"><b>Расписание</b> это график. Работает, пока вы спите</div></div>
+      <div class="step-p ap d6"><span class="n">5</span><div class="t"><b>Калькуляторы и сайты</b> это инструменты. То, что можно отдать всей команде ссылкой</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:36px;font-size:32px">Дальше идём по одному, и после каждого вы делаете своё</div>
+  </div>
+</section>
+
+<!-- 14 · Проекты титул -->
+<section class="slide" data-act="Проекты">
+  <div class="wrap">
+    <div class="split">
+      <div class="split-l">
+        <div class="badge a">Блок 1 из 5</div>
+        <h2 class="a d1" style="font-size:58px">Проект<br><span class="accent">это кабинет</span></h2>
+        <div class="lead a d3" style="margin-top:26px;font-size:31px">Внутри лежат файлы и правила. Они работают <b>во всех чатах этого проекта сразу</b></div>
+        <div class="lead a d5" style="margin-top:22px;font-size:30px">Вы перестаёте объяснять контекст заново. Открыли новый чат внутри проекта, и он уже знает, о каком клиенте речь</div>
+      </div>
+      <div class="split-r a d2"><img src="a4/img-kabinet.jpg" alt=""></div>
+    </div>
+  </div>
+</section>
+
+<!-- 15 · Ассистент против проекта -->
+<section class="slide" data-act="Проекты">
+  <div class="wrap">
+    <h2 class="a">Чем это <span class="accent">отличается от ассистента</span></h2>
+    <div class="grid2 a d2" style="margin-top:40px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="robot" style="--sz:44px"></i></div>
+        <h3>Ассистент это роль</h3>
+        <p>Кто он и как работает. Одинаково работает где угодно: вы приносите ему данные каждый раз</p>
+      </div>
+      <div class="card card--hot">
+        <div class="card-i"><i class="ph-i" data-ph="package" style="--sz:44px"></i></div>
+        <h3>Проект это место</h3>
+        <p>Где лежат ваши документы и ваши правила. Один и тот же ассистент внутри проекта отвечает точнее, потому что видит папку</p>
+      </div>
+    </div>
+    <div class="lead a d5" style="margin-top:42px;font-size:32px">Признак, что задача просится в проект: вы возвращаетесь к ней <b>больше двух недель</b> и каждый раз объясняете одно и то же</div>
+  </div>
+</section>
+
+<!-- 16 · Пять шагов проекта -->
+<section class="slide" data-act="Проекты">
+  <div class="wrap">
+    <h2 class="a" style="font-size:56px">Пять шагов, <span class="accent">одинаковых для любого</span></h2>
+    <div class="steps-p steps-p--tight a d1" style="margin-top:32px">
+      <div class="step-p ap d2"><span class="n">1</span><div class="t"><b>Назвали по задаче, а не по красоте.</b> «Тендер школа №7» найдётся через месяц, «Проект 2» нет</div></div>
+      <div class="step-p ap d3"><span class="n">2</span><div class="t"><b>Вставили инструкцию проекта.</b> Это правила, как отвечать, а не пересказ файлов</div></div>
+      <div class="step-p ap d4"><span class="n">3</span><div class="t"><b>Загрузили файлы.</b> Два-три главных, а не папку на сорок документов</div></div>
+      <div class="step-p ap d5"><span class="n">4</span><div class="t"><b>Задали проверочный вопрос,</b> ответ на который есть только в загруженном</div></div>
+      <div class="step-p ap d6"><span class="n">5</span><div class="t"><b>Работаете внутри.</b> Каждый новый чат в проекте уже знает контекст</div></div>
+    </div>
+    <div class="note-slide a d7" style="margin-top:32px"><b>Одна фраза, которая должна быть в каждой инструкции:</b> «Чего нет в загруженных файлах, не выдумывай. Скажи честно, что этого нет, и спроси у меня»</div>
+  </div>
+</section>
+
+<!-- 17 · Практика 2 -->
+<section class="slide" data-act="Проекты">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 2 · 8 минут · шпаргалка, шаг 2</div>
+    <h2 class="a d1" style="font-size:56px">Заведите <span class="accent">свой первый проект</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:28px">
+      <div class="step-p ap d3"><span class="n">1</span><div class="t">Открыли <b>библиотеку проектов</b> по ссылке из шпаргалки. Там двенадцать готовых</div></div>
+      <div class="step-p ap d4"><span class="n">2</span><div class="t">Выбрали тот, что ближе к вашей работе. Клиент, тендер, найм, объект, договоры, свои тексты</div></div>
+      <div class="step-p ap d5"><span class="n">3</span><div class="t">Создали проект, <b>скопировали инструкцию</b>, подставили своё в квадратных скобках</div></div>
+      <div class="step-p ap d6"><span class="n">4</span><div class="t">Загрузили два файла и задали <b>проверочный вопрос</b> из библиотеки</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:30px;font-size:32px">Файлов с собой нет, берите любые: письмо, регламент, прайс, договор. Механика важнее содержания</div>
+  </div>
+</section>
+<!-- 18 · Навыки титул -->
+<section class="slide" data-act="Навыки">
+  <div class="wrap">
+    <div class="split">
+      <div class="split-l">
+        <div class="badge a">Блок 2 из 5</div>
+        <h2 class="a d1" style="font-size:58px">Навык<br><span class="accent">это диплом</span></h2>
+        <div class="lead a d3" style="margin-top:26px;font-size:31px">Ассистент это <b>кто</b>. Навык это <b>что он умеет делать хорошо</b></div>
+        <div class="lead a d5" style="margin-top:22px;font-size:30px">Умение выдаётся любой роли. Подключили, и ChatGPT в этой задаче работает как узкий специалист, которого вы наняли на пять секунд</div>
+      </div>
+      <div class="split-r a d2"><img src="a4/img-diplom.jpg" alt=""></div>
+    </div>
+  </div>
+</section>
+
+<!-- 19 · Промпт против навыка -->
+<section class="slide" data-act="Навыки">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="path" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Главная разница</div>
+    <h2 class="a d1">Промпт решает кусок.<br><span class="accent">Навык решает задачу целиком</span></h2>
+    <div class="grid2 a d2" style="margin-top:38px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="quotes" style="--sz:44px"></i></div>
+        <h3>Промпт</h3>
+        <p>Одна просьба. Работает здесь и сейчас. Закрыли чат, и его больше нет. Последовательность держите в голове вы</p>
+      </div>
+      <div class="card card--hot">
+        <div class="card-i"><i class="ph-i" data-ph="medal" style="--sz:44px"></i></div>
+        <h3>Навык</h3>
+        <p>Методология. Внутри несколько шагов подряд <b>плюс правила</b>: когда применять, что спрашивать, в каком виде отдавать, чего не делать никогда. Живёт постоянно</p>
+      </div>
+    </div>
+    <div class="lead a d5" style="margin-top:40px;font-size:33px">Сейчас покажу это на том, что вы уже делали руками <b>на занятии 2</b></div>
+  </div>
+</section>
+
+<!-- 20 · Цепочка стала навыком -->
+<section class="slide" data-act="Навыки">
+  <div class="wrap">
+    <div class="split">
+      <div class="split-l">
+        <h2 class="a" style="font-size:52px">Шесть промптов<br><span class="accent">стали одним навыком</span></h2>
+        <div class="lead a d2" style="margin-top:24px;font-size:29px"><b>Было:</b> шесть сообщений подряд. Совет экспертов, недостающая роль, адвокат дьявола, проверка цифр, чистовик, три адресата. Порядок вы держали в голове</div>
+        <div class="lead a d4" style="margin-top:20px;font-size:29px"><b>Стало:</b> внутри навыка та же цепочка, те же четыре роли, тот же запрет на согласие из вежливости. Плюс методология, когда её применять, а когда она мешает</div>
+        <div class="note-slide a d6" style="margin-top:24px">Одна фраза вместо шести сообщений:<br><b>«прогони это через совет экспертов»</b></div>
+      </div>
+      <div class="split-r a d3"><img src="a4/img-sovet.jpg" alt=""></div>
+    </div>
+  </div>
+</section>
+
+<!-- 21 · Двенадцать навыков -->
+<section class="slide" data-act="Навыки">
+  <div class="wrap">
+    <h2 class="a">Двенадцать готовых, <span class="accent">скачиваются кнопкой</span></h2>
+    <div class="chips chips--15 a d2" style="margin-top:34px">
+      <div class="chip"><span class="n">1</span><h4>Разбор недели</h4></div>
+      <div class="chip"><span class="n">2</span><h4>Совещания</h4></div>
+      <div class="chip"><span class="n">3</span><h4>Трудный разговор</h4></div>
+      <div class="chip"><span class="n">4</span><h4>Делегирование</h4></div>
+      <div class="chip"><span class="n">5</span><h4>Пре-мортем</h4></div>
+      <div class="chip"><span class="n">6</span><h4>Аудит договора</h4></div>
+      <div class="chip"><span class="n">7</span><h4>Юнит-экономика</h4></div>
+      <div class="chip"><span class="n">8</span><h4>Возражения</h4></div>
+      <div class="chip"><span class="n">9</span><h4>Аудит воронки</h4></div>
+      <div class="chip"><span class="n">10</span><h4>Дипресёрч</h4></div>
+      <div class="chip"><span class="n">11</span><h4>Распаковка</h4></div>
+      <div class="chip"><span class="n">12</span><h4>Конструктор</h4></div>
+    </div>
+    <div class="lead a d5" style="margin-top:36px;font-size:31px">Ставится за тридцать секунд: скачали архив, открыли <b>chatgpt.com/skills</b>, плюс, «Загрузить с компьютера»</div>
+    <div class="note-slide a d7" style="margin-top:24px"><b>Ставьте два-три, а не все двенадцать.</b> Навык, который вы ни разу не позвали, только мешает выбирать</div>
+  </div>
+</section>
+
+<!-- 22 · Свой навык -->
+<section class="slide" data-act="Навыки">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="gear-six" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Главное правило</div>
+    <h2 class="a d1" style="font-size:56px">Сначала работа, <span class="accent">потом навык</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:30px">
+      <div class="step-p ap d3"><span class="n">1</span><div class="t"><b>Сделали задачу руками,</b> как обычно, до результата, который вас устраивает</div></div>
+      <div class="step-p ap d4"><span class="n">2</span><div class="t"><b>«Опиши, как ты это сделал»:</b> по шагам, что спрашивал, чего сознательно не делал</div></div>
+      <div class="step-p ap d5"><span class="n">3</span><div class="t"><b>«Собери из этого навык»</b> в нужном формате, одним файлом</div></div>
+      <div class="step-p ap d6"><span class="n">4</span><div class="t"><b>Проверка по пяти пунктам,</b> и главный из них: сработает ли он на соседней задаче того же типа</div></div>
+      <div class="step-p ap d7"><span class="n">5</span><div class="t"><b>Загрузили и проверили в новом чате,</b> где про эту задачу ещё ничего не говорили</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:30px;font-size:31px">Почему так: описанная <b>заранее</b> задача это как вам кажется вы работаете. Разобранная <b>после</b> это как на самом деле</div>
+  </div>
+</section>
+
+<!-- 23 · Практика 3 -->
+<section class="slide" data-act="Навыки">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 3 · 8 минут · шпаргалка, шаг 3</div>
+    <h2 class="a d1" style="font-size:56px">Поставьте навык <span class="accent">и сделайте свой</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:28px">
+      <div class="step-p ap d3"><span class="n">1</span><div class="t"><b>Скачали «Совет экспертов»</b> из библиотеки и загрузили в chatgpt.com/skills. Он первый в списке под звёздочкой</div></div>
+      <div class="step-p ap d4"><span class="n">2</span><div class="t"><b>Позвали его</b> на живой задаче: «прогони это через совет экспертов». Сравнили с тем, как это было шестью сообщениями</div></div>
+      <div class="step-p ap d5"><span class="n">3</span><div class="t"><b>Взяли задачу из своей работы,</b> которую делаете каждую неделю, и разобрали её в чате руками</div></div>
+      <div class="step-p ap d6"><span class="n">4</span><div class="t"><b>Собрали из неё навык</b> по четырём промптам из шпаргалки. Не успели, доделаете дома</div></div>
+    </div>
+  </div>
+</section>
+<!-- 24 · Плагины титул -->
+<section class="slide" data-act="Плагины">
+  <div class="wrap">
+    <div class="split">
+      <div class="split-l">
+        <div class="badge a">Блок 3 из 5</div>
+        <h2 class="a d1" style="font-size:58px">Плагин<br><span class="accent">это пропуск</span></h2>
+        <div class="lead a d3" style="margin-top:26px;font-size:31px">До этого момента ассистент работал только с тем, что вы принесли ему руками</div>
+        <div class="lead a d5" style="margin-top:22px;font-size:30px">Плагин открывает ему дверь <b>в вашу почту, диск, календарь, задачи и звонки</b>. Носить перестаёте</div>
+      </div>
+      <div class="split-r a d2"><img src="a4/img-propusk.jpg" alt=""></div>
+    </div>
+  </div>
+</section>
+
+<!-- 25 · Что подключать -->
+<section class="slide" data-act="Плагины">
+  <div class="wrap">
+    <h2 class="a">Что реально <span class="accent">работает у нас</span></h2>
+    <div class="chips chips--15 a d2" style="margin-top:32px">
+      <div class="chip"><span class="n">1</span><h4>Google Диск</h4></div>
+      <div class="chip"><span class="n">2</span><h4>Календарь</h4></div>
+      <div class="chip"><span class="n">3</span><h4>Gmail</h4></div>
+      <div class="chip"><span class="n">4</span><h4>TickTick</h4></div>
+      <div class="chip"><span class="n">5</span><h4>Todoist</h4></div>
+      <div class="chip"><span class="n">6</span><h4>Notion</h4></div>
+      <div class="chip"><span class="n">7</span><h4>Trello</h4></div>
+      <div class="chip"><span class="n">8</span><h4>Plaud</h4></div>
+      <div class="chip"><span class="n">9</span><h4>Zoom</h4></div>
+      <div class="chip"><span class="n">10</span><h4>Canva</h4></div>
+      <div class="chip"><span class="n">11</span><h4>Habitify</h4></div>
+      <div class="chip"><span class="n">12</span><h4>Малварбайтс</h4></div>
+    </div>
+    <div class="two a d5" style="margin-top:32px">
+      <div class="tf"><b>Витрина обманывает.</b> На главной странице плагинов лежит десяток рекомендованных. Настоящий каталог в сотни раз больше и открывается только <b>через поиск</b>. TickTick и Todoist там же</div>
+      <div class="tf"><b>Notion особенный.</b> У него в списке значок ноутбука вместо плюса: он требует десктопное приложение и в браузере не подключится. Единственный такой из популярных</div>
+    </div>
+  </div>
+</section>
+
+<!-- 26 · Плагин это не просто подключение -->
+<section class="slide" data-act="Плагины">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="plugs-connected" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Важное различие</div>
+    <h2 class="a d1">Плагин это <span class="accent">не просто подключение</span></h2>
+    <div class="grid2 a d2" style="margin-top:34px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="plugs-connected" style="--sz:44px"></i></div>
+        <h3>Приложение</h3>
+        <p>Сам сервис: почта, диск, планировщик. Раньше вы его просто подключали и дальше <b>сами думали, что с ним делать</b></p>
+      </div>
+      <div class="card card--hot">
+        <div class="card-i"><i class="ph-i" data-ph="plugs-connected" style="--sz:44px"></i></div>
+        <h3>Плагин</h3>
+        <p>Приложение <b>плюс навыки к нему</b>. Внутри описано, что ChatGPT умеет с этим сервисом делать и какими фразами его звать. Сценарии приезжают вместе с ним</p>
+      </div>
+    </div>
+    <div class="note-slide a d5" style="margin-top:30px"><b>Проверьте сами прямо сейчас.</b> Откройте карточку Gmail в разделе Плагины. Внизу увидите блок <b>«Приложение: Gmail»</b>, над ним <b>«Возможности: читать, писать, показывать»</b>, а сверху три готовых сценария, каждый через собаку</div>
+  </div>
+</section>
+
+<!-- 27 · Сценарии Gmail -->
+<section class="slide" data-act="Плагины">
+  <div class="wrap">
+    <h2 class="a" style="font-size:54px">Вот что лежит <span class="accent">на карточке Gmail</span></h2>
+    <div class="lead a d1" style="margin-top:22px;font-size:29px">Эти три сценария вы не придумывали. Они приехали вместе с плагином</div>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:28px">
+      <div class="step-p ap d3"><span class="n">@</span><div class="t">Собери решения, открытые вопросы и что мне делать дальше из последних пяти писем по теме</div></div>
+      <div class="step-p ap d4"><span class="n">@</span><div class="t">Напиши вежливый, но твёрдый ответ на последнее письмо аудитора, со списком, что именно мы предоставим</div></div>
+      <div class="step-p ap d5"><span class="n">@</span><div class="t">Преврати переписку по эскалации клиента в трекер задач с ответственными, сроками и ссылкой на письмо по каждому пункту</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:32px;font-size:31px">Зовётся так же, как навык: <b>собака и название</b>. Для вас они устроены одинаково</div>
+  </div>
+</section>
+
+<!-- 28 · Где подключать -->
+<section class="slide" data-act="Плагины">
+  <div class="wrap">
+    <h2 class="a">Где подключать, <span class="accent">два места</span></h2>
+    <div class="grid2 a d2" style="margin-top:38px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="stack" style="--sz:44px"></i></div>
+        <h3>Каталог целиком</h3>
+        <p><b>chatgpt.com/plugins</b>. Здесь витрина, поиск и вкладка «Навыки» рядом. Отсюда ставят надолго</p>
+      </div>
+      <div class="card card--hot">
+        <div class="card-i"><i class="ph-i" data-ph="hand-tap" style="--sz:44px"></i></div>
+        <h3>Прямо в чате</h3>
+        <p>Плюс рядом с полем ввода, и там же кнопка <b>«Подключиться»</b>. Работает и в режиме Работа. Десктопная версия не нужна</p>
+      </div>
+    </div>
+    <div class="note-slide a d5" style="margin-top:34px"><b>А если моего сервиса нет в каталоге?</b> В настройках есть «Режим разработчика»: он позволяет подключить любой сервис, у которого уже есть готовый сервер. Помечен как повышенный риск, и не зря. Это следующий уровень, сегодня туда не идём</div>
+  </div>
+</section>
+
+<!-- 29 · Практика 4 -->
+<section class="slide" data-act="Плагины">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 4 · 8 минут · шпаргалка, шаг 4</div>
+    <h2 class="a d1" style="font-size:56px">Подключите <span class="accent">свой первый плагин</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:28px">
+      <div class="step-p ap d3"><span class="n">1</span><div class="t"><b>Открыли chatgpt.com/plugins</b> и подключили один: Диск, Календарь или Gmail. Это те, что есть у всех</div></div>
+      <div class="step-p ap d4"><span class="n">2</span><div class="t"><b>Открыли его карточку</b> и прочитали, что там написано в блоке «Приложение» и «Возможности»</div></div>
+      <div class="step-p ap d5"><span class="n">3</span><div class="t"><b>Взяли один готовый сценарий с карточки</b> и запустили на своих данных</div></div>
+      <div class="step-p ap d6"><span class="n">4</span><div class="t"><b>Нашли поиском что-то своё:</b> TickTick, Todoist, Habitify, что угодно, чем вы реально пользуетесь</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:30px;font-size:31px">Ничего не подключается или боитесь пускать в почту: подключите Диск, там риска меньше всего</div>
+  </div>
+</section>
+<!-- 30 · Расписание титул -->
+<section class="slide" data-act="Расписание">
+  <div class="wrap">
+    <div class="split">
+      <div class="split-l">
+        <div class="badge a">Блок 4 из 5</div>
+        <h2 class="a d1" style="font-size:58px">Расписание<br><span class="accent">это график</span></h2>
+        <div class="lead a d3" style="margin-top:26px;font-size:31px">Всё, что мы делали до сих пор, начиналось с того, что вы открыли чат</div>
+        <div class="lead a d5" style="margin-top:22px;font-size:30px">Запланированная задача работает <b>без вас</b>. Вы один раз объяснили что и когда, дальше результат приходит сам</div>
+      </div>
+      <div class="split-r a d2"><img src="a4/img-grafik.jpg" alt=""></div>
+    </div>
+  </div>
+</section>
+
+<!-- 31 · Что туда ставят -->
+<section class="slide" data-act="Расписание">
+  <div class="wrap">
+    <h2 class="a">Двадцать сценариев, <span class="accent">четыре группы</span></h2>
+    <div class="grid2 a d2" style="margin-top:34px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="rocket-launch" style="--sz:40px"></i></div>
+        <h3>Утро и день</h3>
+        <p>Сводка по вашим темам, разбор почты «что горит», план дня из календаря, подготовка к завтрашним встречам, три вечерних вопроса</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="currency-circle-dollar" style="--sz:40px"></i></div>
+        <h3>Клиенты и деньги</h3>
+        <p>Кому я писал и не ответили, что я обещал и не сделал, что нового у ключевого клиента, дни рождения, просроченные задачи</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="detective" style="--sz:40px"></i></div>
+        <h3>Рынок и решения</h3>
+        <p>Конкуренты за неделю, что пишут про нас, изменения в законах, курс и себестоимость, новые тендеры по профилю</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="users-three" style="--sz:40px"></i></div>
+        <h3>Команда и вы сами</h3>
+        <p>Пятничный разбор недели, черновик отчёта руководителю, пульс команды, тренировки и меню, что посмотреть на выходных</p>
+      </div>
+    </div>
+    <div class="lead a d7" style="margin-top:32px;font-size:31px">Все двадцать в библиотеке, с подстановками в скобках. <b>Ставьте одну</b>, поживите неделю, добавьте вторую</div>
+  </div>
+</section>
+
+<!-- 32 · Как это устроено -->
+<section class="slide" data-act="Расписание">
+  <div class="wrap">
+    <h2 class="a" style="font-size:56px">Четыре вещи, <span class="accent">которые надо знать сразу</span></h2>
+    <div class="steps-p steps-p--tight a d1" style="margin-top:32px">
+      <div class="step-p ap d2"><span class="n">1</span><div class="t"><b>Сначала проверьте руками.</b> Отправьте тот же текст обычным сообщением. Результат нравится, тогда ставьте на расписание</div></div>
+      <div class="step-p ap d3"><span class="n">2</span><div class="t"><b>Приходит не секунда в секунду,</b> может опоздать на десять минут. Не ставьте на то время, когда у вас начинается совещание</div></div>
+      <div class="step-p ap d4"><span class="n">3</span><div class="t"><b>Правьте словами:</b> «короче», «убери третий пункт», «перенеси на девять». Пересоздавать не надо</div></div>
+      <div class="step-p ap d5"><span class="n">4</span><div class="t"><b>Хотите на почту</b>, допишите в конце: «результат отправляй письмом на такой-то адрес». Нужен подключённый Gmail</div></div>
+    </div>
+    <div class="note-slide a d7" style="margin-top:30px">Всё живёт по адресу <b>chatgpt.com/scheduled</b>: список, пауза, правка, удаление. Задачу можно временно выключить, а не убивать</div>
+  </div>
+</section>
+
+<!-- 33 · Практика 5 -->
+<section class="slide" data-act="Расписание">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 5 · 8 минут · шпаргалка, шаг 5</div>
+    <h2 class="a d1" style="font-size:56px">Поставьте <span class="accent">одну задачу на завтра</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:28px">
+      <div class="step-p ap d3"><span class="n">1</span><div class="t"><b>Открыли библиотеку сценариев</b> и выбрали один. Смотрите на плашку: зелёная работает сразу, синяя требует плагина</div></div>
+      <div class="step-p ap d4"><span class="n">2</span><div class="t"><b>Подставили своё в скобках:</b> темы, компании, имена, суммы. Скобки удалили</div></div>
+      <div class="step-p ap d5"><span class="n">3</span><div class="t"><b>Проверили руками:</b> отправили тот же текст обычным сообщением в чат и посмотрели на ответ</div></div>
+      <div class="step-p ap d6"><span class="n">4</span><div class="t"><b>Поставили на расписание</b> через chatgpt.com/scheduled. Завтра утром оно придёт само</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:30px;font-size:32px">Самая простая для старта: <b>сводка по вашим темам</b>. Ничего подключать не надо, а результат видно завтра же</div>
+  </div>
+</section>
+
+<!-- 34 · Инструменты титул -->
+<section class="slide" data-act="Инструменты">
+  <div class="wrap">
+    <div class="split">
+      <div class="split-l">
+        <div class="badge a">Блок 5 из 5</div>
+        <h2 class="a d1" style="font-size:56px">Калькуляторы<br><span class="accent">и сайты</span></h2>
+        <div class="lead a d3" style="margin-top:26px;font-size:31px">Всё, что мы собрали, работает <b>для вас одного</b></div>
+        <div class="lead a d5" style="margin-top:22px;font-size:30px">Последний блок про то, как отдать результат <b>всей команде</b>. Не инструкцией, а работающим инструментом по ссылке</div>
+      </div>
+      <div class="split-r a d2"><img src="a4/img-kalkulyator.jpg" alt=""></div>
+    </div>
+  </div>
+</section>
+
+<!-- 35 · Десять калькуляторов -->
+<section class="slide" data-act="Инструменты">
+  <div class="wrap">
+    <h2 class="a">Что стоит <span class="accent">собрать себе</span></h2>
+    <div class="chips chips--15 a d2" style="margin-top:32px">
+      <div class="chip"><span class="n">1</span><h4>Скидка и отсрочка</h4></div>
+      <div class="chip"><span class="n">2</span><h4>Стоимость часа</h4></div>
+      <div class="chip"><span class="n">3</span><h4>Окупаемость найма</h4></div>
+      <div class="chip"><span class="n">4</span><h4>Расчёт КП</h4></div>
+      <div class="chip"><span class="n">5</span><h4>План и факт</h4></div>
+      <div class="chip"><span class="n">6</span><h4>Нагрузка команды</h4></div>
+      <div class="chip"><span class="n">7</span><h4>Цена простоя</h4></div>
+      <div class="chip"><span class="n">8</span><h4>Отдача обучения</h4></div>
+      <div class="chip"><span class="n">9</span><h4>Сравнение поставщиков</h4></div>
+      <div class="chip"><span class="n">10</span><h4>Воронка найма</h4></div>
+    </div>
+    <div class="lead a d5" style="margin-top:34px;font-size:31px">Собирается разговором за пять минут. Правится словами: «поменяй цвет», «добавь поле», «сделай светофор»</div>
+    <div class="note-slide a d7" style="margin-top:24px"><b>Два входа.</b> В плюсе есть <b>Visualize</b>, он делает интерактивные инструменты прямо в окне. А раздел <b>Сайты</b> публикует готовое по ссылке, которую можно отдать команде</div>
+  </div>
+</section>
+
+<!-- 36 · Практика 6 -->
+<section class="slide" data-act="Инструменты">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 6 · 10 минут · шпаргалка, шаг 6</div>
+    <h2 class="a d1" style="font-size:56px">Соберите <span class="accent">свой калькулятор</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:28px">
+      <div class="step-p ap d3"><span class="n">1</span><div class="t"><b>Выбрали расчёт, который делаете руками</b> каждую неделю. Из десяти на прошлом слайде или свой</div></div>
+      <div class="step-p ap d4"><span class="n">2</span><div class="t"><b>Описали словами:</b> какие поля вводятся, что считается, где граница «нормально» и «плохо»</div></div>
+      <div class="step-p ap d5"><span class="n">3</span><div class="t"><b>Получили работающий инструмент</b> и подправили его словами два-три раза</div></div>
+      <div class="step-p ap d6"><span class="n">4</span><div class="t"><b>Опубликовали через раздел «Сайты»</b> и отправили ссылку одному человеку из команды</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:30px;font-size:32px">Готовый промпт лежит в шпаргалке. Меняете в нём поля на свои и отправляете</div>
+  </div>
+</section>
+
+<!-- 37 · Итог четырёх понятий -->
+<section class="slide" data-act="Итог">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="stack" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Собираем в одну картину</div>
+    <h2 class="a d1">Промпт, навык, <span class="accent">приложение, плагин</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:32px">
+      <div class="step-p ap d3"><span class="n">1</span><div class="t"><b>Промпт</b> это одна просьба. Решает <b>кусок</b> задачи. Живёт одну сессию: закрыли чат, и его нет</div></div>
+      <div class="step-p ap d4"><span class="n">2</span><div class="t"><b>Навык</b> это методология. Решает <b>задачу целиком</b>: несколько шагов подряд плюс правила. Живёт постоянно, зовётся одной фразой</div></div>
+      <div class="step-p ap d5"><span class="n">3</span><div class="t"><b>Приложение</b> это сам сервис. Просто соединение: подключили и дальше сами думайте, что с ним делать</div></div>
+      <div class="step-p ap d6"><span class="n">4</span><div class="t"><b>Плагин</b> это приложение <b>плюс навыки к нему</b>. Сценарии приезжают вместе с сервисом</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:32px;font-size:32px">Навык вы даёте ассистенту сами, из своей работы. Сценарии плагина приезжают готовыми. <b>И то и другое зовётся через собаку</b></div>
+  </div>
+</section>
+
+<!-- 38 · Куда что класть -->
+<section class="slide" data-act="Итог">
+  <div class="wrap">
+    <h2 class="a" style="font-size:56px">Куда <span class="accent">что класть</span></h2>
+    <div class="tbl tbl--compact a d2" style="margin-top:36px">
+      <div><b>Разовая просьба</b></div><div>Остаётся промптом. Не усложняйте, это нормально</div>
+      <div><b>Повторяется больше трёх раз</b></div><div>Становится навыком. Соберите его из уже сделанной работы</div>
+      <div><b>Нужны ваши живые данные</b></div><div>Подключается плагин: почта, диск, календарь, задачи</div>
+      <div><b>Одна тема надолго</b></div><div>Заводится проект: файлы и правила в одном месте</div>
+      <div><b>Должно приходить само</b></div><div>Ставится в расписание</div>
+      <div><b>Нужно отдать команде</b></div><div>Собирается калькулятор и публикуется ссылкой</div>
+    </div>
+    <div class="lead a d7" style="margin-top:34px;font-size:32px">Это и есть вся платформа. Больше в ней ничего нет</div>
+  </div>
+</section>
+
+<!-- 39 · Codex -->
+<section class="slide" data-act="Итог">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="cpu" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Если осталось время</div>
+    <h2 class="a d1" style="font-size:56px">Codex <span class="accent">и десктопная версия</span></h2>
+    <div class="grid2 a d2" style="margin-top:36px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="presentation-chart" style="--sz:44px"></i></div>
+        <h3>Зачем ставить приложение</h3>
+        <p>Всё то же самое, что в браузере, плюс Codex и плагины, которым нужен компьютер. Notion, например</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="cpu" style="--sz:44px"></i></div>
+        <h3>Что умеет Codex</h3>
+        <p>Работает с файлами на вашем компьютере: разбирает папки, переименовывает, собирает документы, пишет и запускает</p>
+      </div>
+    </div>
+    <div class="lead a d5" style="margin-top:38px;font-size:31px">Это тема отдельного занятия. Сегодня просто ставим приложение, чтобы оно у вас было</div>
+  </div>
+</section>
+
+<!-- 40 · Что унесли -->
+<section class="slide" data-act="Финал">
+  <div class="wrap">
+    <h2 class="a">Что вы <span class="accent">унесли сегодня</span></h2>
+    <div class="steps-p steps-p--tight a d1" style="margin-top:32px">
+      <div class="step-p ap d2"><span class="n">✓</span><div class="t"><b>Блокнот</b> со своими документами и три способа им пользоваться</div></div>
+      <div class="step-p ap d3"><span class="n">✓</span><div class="t"><b>Проект</b> с файлами и правилами, который знает контекст без вас</div></div>
+      <div class="step-p ap d4"><span class="n">✓</span><div class="t"><b>Навык</b> из библиотеки и начатый свой, собранный из своей работы</div></div>
+      <div class="step-p ap d5"><span class="n">✓</span><div class="t"><b>Плагин</b>, через который он видит вашу почту, диск или календарь</div></div>
+      <div class="step-p ap d6"><span class="n">✓</span><div class="t"><b>Задачу в расписании</b>, которая придёт завтра утром сама</div></div>
+      <div class="step-p ap d7"><span class="n">✓</span><div class="t"><b>Калькулятор</b>, опубликованный ссылкой для команды</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:32px;font-size:33px">Три недели назад вы задавали вопросы в поисковой строке. Сегодня у вас <b>работающая система</b></div>
+  </div>
+</section>
+
+<!-- 41 · Домашка -->
+<section class="slide" data-act="Финал">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="house-line" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Домашнее задание</div>
+    <h2 class="a d1">Два дня, <span class="accent">и всё это оживает</span></h2>
+    <div class="grid2 a d2" style="margin-top:36px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="steps" style="--sz:44px"></i></div>
+        <h3>Суббота</h3>
+        <p>Доделываете свой навык из своей работы и заводите второй проект. Проверяете навык в новом чате</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="steps" style="--sz:44px"></i></div>
+        <h3>Воскресенье</h3>
+        <p>Три задачи в расписании и один калькулятор, опубликованный ссылкой. Одна задача обязательно личная</p>
+      </div>
+    </div>
+    <div class="lead a d5" style="margin-top:36px;font-size:32px">Хэштеги <b>#день1</b> и <b>#день2</b>. В отчёте обязательно: что собрали и что оно вам даёт</div>
+  </div>
+</section>
+
+<!-- 42 · Финал -->
+<section class="slide" data-act="Финал">
+  <div class="bg" style="background-image:url(a4/bg-final.jpg)"></div>
+  <div class="wrap wrap--center">
+    <div class="badge a">Занятие 5 · вторник, 1 сентября, 08:00</div>
+    <h1 class="a d1" style="font-size:76px">Дальше <span class="accent">интереснее</span></h1>
+    <div class="lead a d3" style="font-size:34px;max-width:1150px">Сегодня система работала по вашей команде. Дальше она начнёт работать по своей</div>
+    <div class="sign a d5">Спасибо. Альберт Валеев · neovida<b>.</b>ai</div>
+  </div>
+</section>
+<div class="brand-corner">neovida<b>.</b>ai</div>
+<div id="bar"><i></i></div>
+</div></div>
+<button id="fs-btn" title="На весь экран (F)" aria-label="На весь экран">
+<svg class="i-open" viewBox="0 0 256 256" fill="currentColor"><path d="M216 48v48a8 8 0 0 1-16 0V56h-40a8 8 0 0 1 0-16h48a8 8 0 0 1 8 8ZM96 200H56v-40a8 8 0 0 0-16 0v48a8 8 0 0 0 8 8h48a8 8 0 0 0 0-16Zm112-48a8 8 0 0 0-8 8v40h-40a8 8 0 0 0 0 16h48a8 8 0 0 0 8-8v-48a8 8 0 0 0-8-8ZM96 40H48a8 8 0 0 0-8 8v48a8 8 0 0 0 16 0V56h40a8 8 0 0 0 0-16Z"/></svg>
+<svg class="i-close" viewBox="0 0 256 256" fill="currentColor"><path d="M144 96V48a8 8 0 0 1 16 0v40h40a8 8 0 0 1 0 16h-48a8 8 0 0 1-8-8Zm-40 56H56a8 8 0 0 0 0 16h40v40a8 8 0 0 0 16 0v-48a8 8 0 0 0-8-8Zm104 0h-48a8 8 0 0 0-8 8v48a8 8 0 0 0 16 0v-40h40a8 8 0 0 0 0-16ZM96 40a8 8 0 0 0-8 8v40H48a8 8 0 0 0 0 16h48a8 8 0 0 0 8-8V48a8 8 0 0 0-8-8Z"/></svg>
+</button>
+<script src="a4/assets.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.ph-i').forEach(el=>{
+    const n=el.dataset.ph; if(window.PH&&PH[n]) el.innerHTML=PH[n].replace('<svg ','<svg fill="currentColor" ');
+  });
+  document.querySelectorAll('.logo-i').forEach(el=>{
+    const n=el.dataset.logo; if(window.LOGO&&LOGO[n]) el.innerHTML=LOGO[n];
+  });
+  document.querySelectorAll('.bg').forEach(el=>{el.addEventListener('error',()=>el.remove())});
+  initDeck();
+});
+
+let cur=0,slides=[],barEl,actEl,noEl;
+function initDeck(){
+  slides=[...document.querySelectorAll('.slide')];
+  barEl=document.querySelector('#bar i');
+  const chrome=document.createElement('div');chrome.id='chrome';
+  chrome.innerHTML='<div id="act-label"></div><div id="slide-no"></div>';
+  document.getElementById('stage').appendChild(chrome);
+  actEl=document.getElementById('act-label');noEl=document.getElementById('slide-no');
+  const h=parseInt(location.hash.slice(1),10);
+  cur=(h>=1&&h<=slides.length)?h-1:0;
+  scale();window.addEventListener('resize',scale);
+  show(cur);
+  window.addEventListener('keydown',e=>{
+    if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='Home'){show(0)}
+    else if(e.key==='End'){show(slides.length-1)}
+    else if(e.key.toLowerCase()==='f'){toggleFS()}
+  });
+  document.getElementById('viewport').addEventListener('click',e=>{
+    (e.clientX>window.innerWidth*0.33)?next():prev();
+  });
+  const fsBtn=document.getElementById('fs-btn');
+  fsBtn.addEventListener('click',e=>{e.stopPropagation();toggleFS();});
+  document.addEventListener('fullscreenchange',()=>{fsBtn.classList.toggle('is-fs',!!document.fullscreenElement);});
+}
+function scale(){
+  const s=Math.min(window.innerWidth/1920,window.innerHeight/1080);
+  document.getElementById('stage').style.transform=`scale(${s})`;
+}
+function next(){if(cur<slides.length-1)show(cur+1)}
+function prev(){if(cur>0)show(cur-1)}
+function show(i){
+  slides.forEach(s=>s.classList.remove('active'));
+  cur=i;const sl=slides[i];sl.classList.add('active');
+  history.replaceState(null,'','#'+(i+1));
+  barEl.style.width=((i+1)/slides.length*100)+'%';
+  actEl.textContent=sl.dataset.act||'';
+  noEl.textContent=(i+1)+' / '+slides.length;
+}
+function toggleFS(){
+  if(!document.fullscreenElement)document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+</script>
+</body>
+</html>
