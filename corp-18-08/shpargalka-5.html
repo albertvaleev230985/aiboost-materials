@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Шпаргалка · Занятие 5 · Агенты и Codex</title>
+<style>
+:root{
+  --bg:#0B1220; --bg2:#131B2E; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.1);
+  --text:#F4F1EC; --muted:#9AA3B2; --coral:#E07461; --coral-soft:rgba(224,116,97,.15); --ice:#3D8FD1;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(160deg,var(--bg),var(--bg2)) fixed;color:var(--text);font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;padding-bottom:90px}
+.wrap{max-width:780px;margin:0 auto;padding:26px 18px}
+header{padding:32px 0 8px}
+.brand{font-size:15px;font-weight:700;color:var(--muted)}
+.brand b{color:var(--coral)}
+h1{font-size:33px;line-height:1.14;font-weight:800;letter-spacing:-.01em;margin-top:10px}
+.sub{color:var(--muted);font-size:16px;margin-top:10px}
+.sub b{color:var(--text)}
+.howto{background:var(--coral-soft);border:1px solid rgba(224,116,97,.35);border-radius:14px;padding:14px 16px;margin-top:18px;font-size:15.5px}
+.howto b{color:var(--text)}
+.step{margin:38px 0 0}
+.step-h{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.step-n{flex:0 0 auto;min-width:38px;height:38px;border-radius:11px;background:var(--coral);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.step-t{font-size:22px;font-weight:800;line-height:1.2}
+.step-d{color:var(--muted);font-size:15.5px;margin:2px 0 12px 50px}
+.prompt{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:46px 18px 18px;margin:12px 0;cursor:pointer;transition:background .15s,border-color .2s,box-shadow .2s}
+.prompt:active{background:rgba(224,116,97,.12)}
+.prompt pre{white-space:pre-wrap;font-family:inherit;font-size:15.5px;line-height:1.6;color:var(--text)}
+.prompt .cp{position:absolute;top:12px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--coral)}
+.prompt .cp::after{content:"копировать";background:rgba(224,116,97,.16);border:1px solid rgba(224,116,97,.4);border-radius:999px;padding:5px 14px;font-size:12px;letter-spacing:.06em}
+.prompt.copied{border-color:#4caf7d;box-shadow:0 0 0 2px rgba(76,175,125,.35), 0 0 34px rgba(76,175,125,.28);background:rgba(76,175,125,.1)}
+.prompt.copied .cp{color:#4caf7d}
+.prompt.copied .cp::after{content:"скопировано ✓";background:rgba(76,175,125,.2);border-color:rgba(76,175,125,.55);color:#4caf7d}
+details.acc{background:var(--surface);border:1px solid var(--line);border-radius:13px;margin:8px 0;overflow:hidden}
+details.acc>summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:16px;font-weight:650;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:12px}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"открыть промпт";flex:0 0 auto;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.35);border-radius:999px;padding:5px 13px}
+details.acc[open]>summary::after{content:"свернуть";color:var(--muted);background:rgba(255,255,255,.06);border-color:var(--line)}
+details.acc[open]>summary{border-bottom:1px solid var(--line)}
+details.acc .prompt{margin:12px 14px 14px}
+.prac{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#F2A08E,var(--coral));color:#fff;font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:9px 20px;border-radius:999px;margin-bottom:10px;box-shadow:0 8px 26px rgba(224,116,97,.4)}
+details.acc--gpt>summary::after{content:"открыть ассистента"}
+details.acc--gpt[open]>summary::after{content:"свернуть"}
+.dl--big{background:rgba(224,116,97,.12);border-color:rgba(224,116,97,.45)}
+.dl--big .dl-i{background:var(--coral);color:#fff}
+.dl--big .dl-t b{font-size:16.5px}
+.dl{display:flex;align-items:center;gap:14px;margin:12px 0;padding:15px 17px;background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.38);border-radius:14px;text-decoration:none;color:var(--text)}
+.dl:active{background:rgba(76,175,125,.2)}
+.dl-i{flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:#4caf7d;color:#0B1220;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dl-t{display:block;min-width:0}
+.dl-t b{display:block;font-size:15.5px;font-weight:750}
+.dl-t em{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.chain{display:flex;flex-direction:column;gap:0;margin:14px 0}
+.ch{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 15px}
+.ch-n{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:rgba(224,116,97,.18);color:var(--coral);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ch-t{font-size:14.5px;color:var(--muted);line-height:1.35}
+.ch-t b{display:block;color:var(--text);font-size:15.5px;font-weight:750}
+.ch-ar{color:var(--coral);text-align:center;font-size:17px;line-height:1;padding:4px 0;opacity:.75}
+.ch--fin{border-color:rgba(76,175,125,.45);background:rgba(76,175,125,.09)}
+.ch--fin .ch-n{background:rgba(76,175,125,.2);color:#4caf7d}
+.trio{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.tr{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:15px 17px}
+.tr b{font-size:18px;font-weight:800;display:inline-block}
+.tr .q{display:inline-block;margin-left:9px;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.3);border-radius:999px;padding:4px 11px;vertical-align:2px}
+.tr p{margin-top:8px;font-size:15px;line-height:1.55;color:var(--muted)}
+.tr em{display:inline-block;margin-top:9px;font-style:normal;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tr-kak{border-left-color:#C9707F}.tr-kak .q{color:#E39CA8;background:rgba(201,112,127,.16);border-color:rgba(201,112,127,.35)}
+.tr-gde{border-left-color:var(--ice)}.tr-gde .q{color:var(--ice);background:rgba(61,143,209,.14);border-color:rgba(61,143,209,.35)}
+.sk-t{display:block;min-width:0}
+.sk-t em{display:block;font-style:normal;font-size:13px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.35}
+.skill-what{margin:12px 14px 0;font-size:15px;line-height:1.55;color:var(--muted)}
+.skill-what b{color:var(--text)}
+.prompt--skill pre{max-height:132px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.prompt--skill::after{content:"текст длинный, читать его не нужно: просто скопируйте";position:absolute;left:18px;right:18px;bottom:12px;font-size:13px;line-height:1.4;color:var(--muted)}
+.prompt--skill{padding-bottom:52px}
+.prompt--test{border-left-color:var(--ice)}
+.prompt--test .cp{color:var(--ice)}
+.prompt--test .cp::after{background:rgba(61,143,209,.16);border-color:rgba(61,143,209,.4);color:var(--ice)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0;font-size:15.5px;color:var(--muted)}
+.card b{color:var(--text)}
+.card ul{margin:8px 0 0 18px}
+.card li{margin:5px 0}
+.note{font-size:15px;color:var(--muted);background:rgba(61,143,209,.08);border:1px solid rgba(61,143,209,.25);border-radius:12px;padding:12px 14px;margin:10px 0}
+.note b{color:var(--text)}
+.ten{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.tf{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:11px;padding:11px 15px;font-size:15.5px;cursor:pointer}
+.tf:active{background:rgba(224,116,97,.12)}
+.tf.copied{border-color:#4caf7d;background:rgba(76,175,125,.16)}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0}
+.basket{border-radius:13px;padding:13px;font-size:14px;border:1px solid}
+.basket b{display:block;font-size:15px;margin-bottom:5px}
+.b-ok{background:rgba(76,175,125,.08);border-color:rgba(76,175,125,.35)}
+.b-mid{background:rgba(224,169,92,.08);border-color:rgba(224,169,92,.35)}
+.b-no{background:rgba(224,92,92,.08);border-color:rgba(224,92,92,.35)}
+.b-ok b{color:#4caf7d}.b-mid b{color:#e0a95c}.b-no b{color:#e05c5c}
+a{color:var(--ice)}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.links a{display:block;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;color:var(--text)}
+.links a:active{background:rgba(224,116,97,.14);border-color:rgba(224,116,97,.45)}
+.links a b{display:block;font-size:17px;font-weight:800}
+.links a span{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.links a em{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:var(--coral);margin-top:5px}
+.links a:first-child{grid-column:1 / -1}
+footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14.5px}
+@media(max-width:560px){.grid3{grid-template-columns:1fr}
+.prompt{padding-top:56px}
+.sk-t em{font-size:12.5px}}
+
+/* ── подсказки под шагом ── */
+.tips{display:flex;flex-direction:column;gap:10px;margin:18px 0 4px}
+.tip{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--coral);border-radius:13px;padding:15px 18px;font-size:16px;line-height:1.55;color:var(--muted)}
+.tip b{color:var(--text);font-weight:700}
+.tip a{color:var(--coral)}
+/* ── сравнение двух ответов ── */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.cmp > div{border-radius:14px;padding:16px 18px;font-size:16px;line-height:1.55;color:var(--muted);border:1px solid}
+.cmp .ok{background:rgba(76,175,125,.09);border-color:rgba(76,175,125,.36)}
+.cmp .no{background:rgba(224,92,92,.09);border-color:rgba(224,92,92,.36)}
+.cmp .lbl{display:block;font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:9px}
+.cmp .ok .lbl{color:#4caf7d}
+.cmp .no .lbl{color:#e05c5c}
+.cmp b{color:var(--text);font-weight:700}
+@media(max-width:760px){.cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">neovida<b>.</b>ai</div>
+  <h1>Шпаргалка<br>занятие 5</h1>
+  <div class="sub">1 сентября · <b>«Агенты и Codex»</b> · Альберт Валеев</div>
+  <div class="howto"><b>Держите открытой весь урок.</b> Четыре шага, четыре практики. Все тексты копируются касанием: нажали на блок, он в буфере.</div>
+  <div class="note"><b>Главное правило сегодня:</b> работаем в новой пустой папке, где нет ничего, что жалко потерять. Никаких паролей, договоров с персональными данными и рабочих баз.</div>
+  <div class="note"><b>Если отстали, скажите вслух.</b> Сегодня всё делается руками и по шагам, догонять потом будет тяжелее, чем на прошлых занятиях.</div>
+</header>
+
+<div class="step">
+  <div class="prac">Практика 1</div>
+  <div class="step-h"><span class="step-n">1</span><span class="step-t">Ставим Codex <em style="font-style:normal;color:var(--coral);font-size:15px;font-weight:700">12 минут</em></span></div>
+  <div class="step-d">Codex входит в вашу подписку Plus, отдельно платить и регистрироваться не надо</div>
+  <div class="chain">
+    <div class="ch"><span class="ch-n">1</span><span class="ch-t">В ChatGPT в левом меню нашли пункт <b>Codex</b> и открыли его</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">2</span><span class="ch-t">Скачали приложение под свою систему: <b>Mac или Windows</b></span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">3</span><span class="ch-t">Установили и <b>вошли под тем же аккаунтом</b>, где оплачен Plus</span></div>
+    <div class="ch ch--fin"><span class="ch-n">4</span><span class="ch-t">Приложение открылось и ничего не просит доплатить</span></div>
+  </div>
+  <div class="tips">
+    <div class="tip"><b>Не начинаем с командной строки.</b> Есть обычное окно с кнопками, сегодня идём только им. Чёрный экран с текстом это следующий уровень, туда пойдём позже.</div>
+    <div class="tip"><b>Аккаунт должен быть тот же самый.</b> Самая частая ошибка: Plus оплачен на одной почте, а в приложение вошли под другой. Тогда Codex скажет, что доступа нет.</div>
+    <div class="tip"><b>На Windows</b> установщик может спросить разрешение администратора. Это нормально, соглашайтесь.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Практика 2</div>
+  <div class="step-h"><span class="step-n">2</span><span class="step-t">Папка и правила в ней <em style="font-style:normal;color:var(--coral);font-size:15px;font-weight:700">15 минут</em></span></div>
+  <div class="step-d">Агент видит только ту папку, которую вы ему дали. Не весь компьютер, не все документы. Одну папку</div>
+  <div class="chain">
+    <div class="ch"><span class="ch-n">1</span><span class="ch-t">Создали на рабочем столе <b>новую пустую папку</b>, назвали «Мой первый проект»</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">2</span><span class="ch-t">Открыли её в Codex: при первом запуске он попросит выбрать папку</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">3</span><span class="ch-t">Отправили промпт ниже, чтобы он <b>создал файл правил</b></span></div>
+    <div class="ch ch--fin"><span class="ch-n">4</span><span class="ch-t">Открыли файл глазами и проверили, что там написано то, что вы имели в виду</span></div>
+  </div>
+  <div class="prompt"><div class="cp">просим создать файл правил</div><pre>Создай в этой папке файл AGENTS.md с правилами работы.
+
+Запиши в него:
+
+Язык и тон. Отвечай по-русски, простыми словами, без технического
+жаргона. Я не программист.
+
+Порядок работы. Сначала задавай уточняющие вопросы, по одному.
+Потом показывай план. Не меняй и не создавай файлы без моего
+подтверждения.
+
+После действия. Коротко объясняй, что именно изменилось
+и как мне это проверить своими глазами.
+
+Чего не делать никогда. Не храни здесь пароли и ключи.
+Не удаляй файлы. Ничего не отправляй наружу: ни писем,
+ни сообщений, ни публикаций. Не выходи за пределы этой папки.
+
+Больше ничего пока не делай, только создай этот файл.</pre></div>
+  <div class="tips">
+    <div class="tip"><b>Что кладём в папку:</b> рабочие файлы, по которым он будет работать, и этот файл правил.</div>
+    <div class="tip"><b>Чего не кладём никогда:</b> пароли, ключи доступа, договоры с персональными данными, бухгалтерию, всё, что нельзя потерять.</div>
+    <div class="tip"><b>Это то же самое, что инструкция проекта в ChatGPT</b> с прошлого занятия. Разница одна: там файл лежал в облаке, здесь у вас на компьютере.</div>
+    <div class="tip"><b>Правила можно менять словами в любой момент:</b> «добавь в AGENTS.md, что мне нужны короткие ответы». Переписывать файл руками не надо.</div>
+  </div>
+</div>
+<div class="step">
+  <div class="prac">Практика 3</div>
+  <div class="step-h"><span class="step-n">3</span><span class="step-t">Объясняем ему, кто вы <em style="font-style:normal;color:var(--coral);font-size:15px;font-weight:700">12 минут</em></span></div>
+  <div class="step-d">Codex по умолчанию разговаривает как с программистом. Это первое, что надо поменять, иначе половина ответов будет непонятной</div>
+  <div class="note"><b>Куда вставлять.</b> В приложении откройте настройки и найдите поле персонализации, где Codex спрашивает про вас. Вставляете один раз, дальше работает во всех папках.</div>
+  <div class="prompt"><div class="cp">персонализация · вставить целиком</div><pre>Кто я. Я руководитель, а не программист. Технического образования
+у меня нет и не будет. Я решаю рабочие задачи: документы, отчёты,
+таблицы, письма, разбор файлов.
+
+Как со мной говорить. По-русски, короткими предложениями,
+без английских терминов. Если термин необходим, объясни его одной
+строкой в скобках. Не показывай мне код, если я о нём не просил.
+
+Как работать. Всегда в таком порядке:
+1. Уточняющие вопросы, по одному, пока тебе не хватает данных
+2. Короткий план: что сделаешь и каких файлов это коснётся
+3. Ждёшь моего подтверждения
+4. Делаешь
+5. Объясняешь, что изменилось и как мне это проверить
+
+Что для меня важно. Маленькие шаги. Лучше три раза переспросить,
+чем один раз сделать не то. Честно говори, когда не уверен,
+и никогда не выдумывай факты и цифры.
+
+Границы. Ничего не отправляй наружу без моего явного разрешения.
+Не удаляй файлы. Не выходи за пределы папки, в которой работаешь.</pre></div>
+  <div class="tips">
+    <div class="tip"><b>Проверить, что легло:</b> спросите его «как ты будешь со мной работать». Он должен пересказать эти правила своими словами.</div>
+    <div class="tip"><b>Три уровня правил, которые не путаем.</b> Первый: что Codex вообще имеет право делать. Второй: как он говорит именно с вами, это персонализация. Третий: как работать в конкретной папке, это AGENTS.md.</div>
+    <div class="tip"><b>Технический файл настроек сегодня не трогаем</b> и не просим Codex его менять. Всё, что нужно, настраивается словами.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Практика 4</div>
+  <div class="step-h"><span class="step-n">4</span><span class="step-t">Первый запрос и первый файл <em style="font-style:normal;color:var(--coral);font-size:15px;font-weight:700">10 минут</em></span></div>
+  <div class="step-d">Проверяем не силу, а управляемость. Первый запрос ничего не ломает, он показывает, понял ли агент границы</div>
+  <div class="prompt"><div class="cp">шаг 1 · проверка границ · он ничего не делает</div><pre>Расскажи, какие задачи ты можешь брать в этой папке,
+какие действия потребуют моего подтверждения,
+и предложи первый безопасный проект для практики.
+
+Ничего пока не делай и файлы не создавай.</pre></div>
+  <div class="cmp">
+    <div class="ok"><span class="lbl">Хороший ответ</span>Пересказал ваши правила своими словами, честно назвал, где будет останавливаться и спрашивать, предложил задачу без риска. <b>Файлов не создал</b></div>
+    <div class="no"><span class="lbl">Плохой ответ</span>Сразу начал что-то создавать, хотя вы просили пока ничего не делать. Значит правила не легли, вернитесь к шагу 2</div>
+  </div>
+  <div class="prompt"><div class="cp">шаг 2 · первый настоящий файл</div><pre>Помоги разобрать мою рабочую неделю.
+
+Сначала задай мне уточняющие вопросы, по одному:
+что за задачи, какие сроки, что уже сделано, что застряло.
+
+После моих ответов создай один файл «План недели.md»:
+три приоритета на неделю, что делегировать, что отложить.
+
+Другие файлы не меняй. Наружу ничего не отправляй.</pre></div>
+  <div class="tips">
+    <div class="tip"><b>Смотрите на порядок, а не на скорость.</b> Он должен сначала спросить, и только после ваших ответов создать файл. Если файл появился сразу, правила не работают.</div>
+    <div class="tip"><b>Файл откройте и прочитайте глазами.</b> Это не формальность: агент может написать красиво и мимо. Проверка глазами это ваша часть работы, её никто не заберёт.</div>
+    <div class="tip"><b>Не понравилось, говорите словами:</b> «слишком длинно», «убери третий пункт», «добавь сроки». Переписывать самому не надо.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Справка</div>
+  <div class="step-h"><span class="step-n">5</span><span class="step-t">Что агенту нельзя доверять сегодня</span></div>
+  <div class="step-d">Не потому что он не сможет, а потому что сначала надо научиться ставить задачу и проверять результат</div>
+  <div class="ten">
+    <div class="tf"><b>Почта и сообщения.</b> Не отправляем письма и сообщения за вас</div>
+    <div class="tf"><b>Пароли и ключи.</b> Не вводим и не кладём в папку</div>
+    <div class="tf"><b>Деньги.</b> Никаких платежей и переводов</div>
+    <div class="tf"><b>Удаление.</b> Не чистим и не перезаписываем важное</div>
+    <div class="tf"><b>Рабочие базы.</b> Не трогаем живые данные компании</div>
+    <div class="tf"><b>От чужого имени.</b> Не действуем за другого человека</div>
+  </div>
+  <div class="note" style="border-left-color:#4caf7d"><b>Одно правило вместо шести.</b> Работайте в отдельной новой папке, где нет ничего ценного. Тогда даже неудачный запрос ничего вам не стоит.</div>
+</div>
+
+<div class="step">
+  <div class="prac">Справка</div>
+  <div class="step-h"><span class="step-n">6</span><span class="step-t">Если что-то пошло не так</span></div>
+  <div class="tips">
+    <div class="tip"><b>Не видит папку.</b> Закройте и откройте приложение заново, при запуске он снова спросит, с какой папкой работать.</div>
+    <div class="tip"><b>Говорит непонятно, сыплет терминами.</b> Персонализация не легла. Скажите прямо в чат: «я не программист, объясняй простыми словами, код мне не показывай».</div>
+    <div class="tip"><b>Делает без спроса.</b> Напишите: «останавливайся и спрашивай перед каждым изменением файла». Если не помогает, проверьте, что AGENTS.md лежит в той самой папке.</div>
+    <div class="tip"><b>Сделал не то.</b> Не переделывайте руками. Скажите словами, что именно не так, и попросите переделать. Он помнит контекст разговора.</div>
+    <div class="tip"><b>Просит доплатить.</b> Вы вошли не под тем аккаунтом. Выйдите и войдите под той почтой, где оплачен Plus.</div>
+    <div class="tip"><b>Всё зависло.</b> Скажите «стоп» и начните новый разговор. Файлы в папке никуда не денутся, они остаются.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">7</span><span class="step-t">Ссылки</span></div>
+  <div class="links">
+    <a href="domashka-5.html"><b>Домашнее задание</b><span>вторник и среда, хэштеги #день1 и #день2</span><em>открыть</em></a>
+    <a href="prezentaciya-5.html"><b>Презентация</b><span>слайды занятия 5</span><em>открыть</em></a>
+    <a href="https://chatgpt.com/codex"><b>Codex</b><span>chatgpt.com/codex</span><em>открыть</em></a>
+    <a href="shpargalka-4.html"><b>Шпаргалка занятия 4</b><span>проекты, навыки, плагины и расписание</span><em>открыть</em></a>
+    <a href="navyki-4.html"><b>Библиотека навыков</b><span>тринадцать готовых с прошлого занятия</span><em>открыть</em></a>
+  </div>
+</div>
+</div>
+<script>
+function bindCopy(el, getText){
+  el.addEventListener('click',()=>{
+    const t=getText();
+    const cp=el.querySelector('.cp');
+    const done=()=>{
+      el.classList.add('copied');
+      setTimeout(()=>el.classList.remove('copied'),1600);
+    };
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(done).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    });
+  });
+}
+document.querySelectorAll('.prompt').forEach(el=>bindCopy(el,()=>{const p=el.querySelector('pre');return p.innerText||p.textContent;}));
+document.querySelectorAll('.tf').forEach(el=>bindCopy(el,()=>(el.innerText||el.textContent).trim()));
+</script>
+</body>
+</html>

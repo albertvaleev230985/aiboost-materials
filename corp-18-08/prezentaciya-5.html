@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность · Занятие 5 · Агенты и Codex</title>
+<style>
+/* ══════════ ТОКЕНЫ ══════════ */
+:root{
+  --bg0:#0B1220; --bg1:#131B2E;
+  --surface:rgba(21,30,50,.92);
+  --line:rgba(255,255,255,.09);
+  --text:#F4F1EC; --muted:#9AA3B2;
+  --coral:#E07461; --coral-soft:rgba(224,116,97,.16);
+  --emerald:#10b981; --emerald-soft:rgba(16,185,129,.16);
+  --glow:rgba(224,116,97,.42);
+  --steel:#7FA6D0;
+  --sh:0 24px 60px rgba(0,0,0,.45), 0 4px 14px rgba(0,0,0,.35);
+  --r:24px;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#05080F;overflow:hidden}
+body{font-family:-apple-system,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ══════════ СЦЕНА 1920x1080 ══════════ */
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{width:1920px;height:1080px;flex:0 0 auto;position:relative;background:linear-gradient(160deg,var(--bg0),var(--bg1));overflow:hidden;transform-origin:center center}
+
+/* ══════════ СЛАЙД ══════════ */
+.slide{position:absolute;inset:0;display:none;padding:66px 96px;flex-direction:column}
+.slide.active{display:flex}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:.2}
+.bg--strong{opacity:.55}
+.bg--mid{opacity:.34}
+.veil{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(11,18,32,.25) 0%,rgba(11,18,32,.55) 55%,rgba(11,18,32,.92) 100%)}
+.veil--left{background:linear-gradient(90deg,rgba(11,18,32,.94) 0%,rgba(11,18,32,.72) 46%,rgba(11,18,32,.18) 100%)}
+.veil--flat{background:rgba(11,18,32,.74)}
+.wrap{position:relative;z-index:2;display:flex;flex-direction:column;flex:1;min-height:0}
+
+/* ══════════ ЗАПАСНОЙ АКЦЕНТ ══════════ */
+.slide.em{--coral:#10b981;--coral-soft:rgba(16,185,129,.16);--glow:rgba(16,185,129,.4)}
+.c-coral{color:#E07461}
+.c-em{color:#10b981}
+
+/* ══════════ ТИПОГРАФИКА ══════════ */
+.kicker{font-size:27px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--coral);margin-bottom:28px}
+h1{font-size:118px;line-height:1.04;font-weight:800;letter-spacing:-.015em;max-width:1560px}
+h2{font-size:66px;line-height:1.08;font-weight:750;letter-spacing:-.01em;max-width:1560px}
+.lead{font-size:38px;line-height:1.35;color:var(--muted);max-width:1440px;font-weight:450}
+.lead b,.lead strong{color:var(--text);font-weight:650}
+.src{font-size:25px;color:var(--muted);opacity:1;margin-top:auto;padding-top:26px}
+.accent{color:var(--coral)}
+
+/* ══════════ АНИМАЦИИ ══════════ */
+@keyframes rise{from{opacity:0;transform:translateY(46px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes bgZoom{from{transform:scale(1.07)}to{transform:scale(1)}}
+@keyframes growW{from{width:0}}
+@keyframes growH{from{height:0}}
+@keyframes popIn{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}
+.slide.active .a{animation:rise .75s var(--ease) both}
+.slide.active .af{animation:fadeIn 1s ease both}
+.slide.active .ap{animation:popIn .6s var(--ease) both}
+.slide.active .bg{animation:bgZoom 9s ease-out both}
+@keyframes emerge{0%{opacity:.08;filter:brightness(.3) blur(9px);transform:scale(1.09)}100%{opacity:.62;filter:brightness(1) blur(0);transform:scale(1)}}
+.slide.active .bg--emerge{animation:emerge 5.5s cubic-bezier(.22,.61,.36,1) both}
+.d1{animation-delay:.09s!important}.d2{animation-delay:.18s!important}.d3{animation-delay:.27s!important}.d4{animation-delay:.36s!important}.d5{animation-delay:.45s!important}.d6{animation-delay:.54s!important}.d7{animation-delay:.63s!important}.d8{animation-delay:.72s!important}.d9{animation-delay:.81s!important}.d10{animation-delay:.9s!important}
+
+/* ══════════ ИКОНКИ / ЛОГО / МОНОГРАММЫ ══════════ */
+.ph-i{display:inline-flex;line-height:0}
+.ph-i svg{width:var(--sz,48px);height:var(--sz,48px)}
+.logo-i{display:inline-flex;line-height:0;color:var(--text)}
+.logo-i svg{height:var(--sz,44px);width:auto;fill:currentColor}
+.mono{display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:50%;background:var(--mc,var(--coral-soft));border:1px solid var(--coral);color:var(--coral);font-weight:800;font-size:30px;flex:0 0 auto}
+.ico-chip{display:inline-flex;align-items:center;justify-content:center;width:96px;height:96px;border-radius:26px;background:var(--coral-soft);color:var(--coral);flex:0 0 auto}
+
+/* ══════════ КАРТОЧКИ ══════════ */
+.cards{display:grid;gap:36px;margin-top:56px}
+.cards.c2{grid-template-columns:1fr 1fr}
+.cards.c3{grid-template-columns:1fr 1fr 1fr}
+.cards.c4{grid-template-columns:repeat(4,1fr);gap:26px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:44px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:22px;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--coral),transparent 70%);opacity:.75}
+.card .num{font-size:70px;font-weight:800;color:var(--coral);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.card h3{font-size:34px;font-weight:700;line-height:1.2}
+.card p{font-size:27px;line-height:1.4;color:var(--muted)}
+.card p b{color:var(--text)}
+.card .head{display:flex;align-items:center;gap:24px;min-height:80px}
+.card--sm{padding:32px 34px;gap:16px}
+.card--sm h3{font-size:31px}
+.card--sm p{font-size:26px}
+.card--sm .head{min-height:72px;gap:20px}
+
+/* ══════════ БИГ-СТАТ ══════════ */
+.stat-center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:8px}
+.stat-num{font-size:210px;font-weight:800;letter-spacing:-.03em;color:var(--coral);line-height:1}
+.stat-cap{font-size:44px;font-weight:650;margin-top:10px}
+.stat-sub{font-size:32px;color:var(--muted);margin-top:14px;max-width:1400px;line-height:1.4}
+
+/* ══════════ СПЛИТ ══════════ */
+.split{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;flex:1;align-items:center;margin-top:20px}
+.split.rev{grid-template-columns:.95fr 1.05fr}
+.split .txt{display:flex;flex-direction:column;gap:24px}
+.split .txt h2{font-size:58px}
+.split .txt .kicker{margin-bottom:0}
+.split .pic{border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);border:1px solid var(--line);height:560px}
+.split .pic img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ══════════ СПИСОК-ПРАВИЛА ══════════ */
+.rules{display:flex;flex-direction:column;gap:26px;margin-top:52px;max-width:1560px}
+.rule{display:flex;align-items:center;gap:32px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px 38px}
+.rule .ico-chip{width:78px;height:78px;border-radius:20px}
+.rule .t{font-size:31px;line-height:1.35}
+.rule .t b{color:var(--coral)}
+.rules--tight{gap:20px!important}
+.rules--tight .rule{padding:20px 34px}
+.rules--tight .ico-chip{width:64px;height:64px;border-radius:18px}
+.rules--tight .t{font-size:29px}
+.rules--7{gap:11px!important}
+.rules--7 .rule{padding:14px 30px}
+.rules--7 .ico-chip{width:56px;height:56px;border-radius:15px}
+.rules--7 .t{font-size:27px;line-height:1.3}
+
+/* ══════════ ПРАКТИКА ══════════ */
+.badge{display:inline-flex;align-items:center;gap:14px;background:var(--coral);color:#fff;font-size:26px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:14px 30px;border-radius:999px;margin-bottom:30px;box-shadow:0 10px 34px var(--glow);align-self:flex-start}
+.steps-p{display:flex;flex-direction:column;gap:22px;margin-top:40px;max-width:1560px}
+.step-p{display:flex;gap:30px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:26px 36px}
+.step-p .n{width:64px;height:64px;border-radius:50%;background:var(--coral);color:#fff;font-size:30px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.step-p .t{font-size:30px;line-height:1.38;padding-top:12px}
+.step-p .t b{color:var(--coral)}
+.steps-p--tight{gap:18px!important}
+.steps-p--tight .step-p{padding:18px 32px}
+.steps-p--tight .step-p .n{width:56px;height:56px;font-size:27px}
+.steps-p--tight .step-p .t{font-size:28px;padding-top:8px}
+
+/* ══════════ ПРОМПТ-БЛОК ══════════ */
+.prompt{font-family:"SF Mono",Menlo,Consolas,monospace;background:linear-gradient(180deg,rgba(224,116,97,.10),rgba(224,116,97,.05)),rgba(8,13,26,.97);border:1px solid rgba(224,116,97,.22);border-left:5px solid var(--coral);border-radius:16px;padding:26px 32px;font-size:27px;line-height:1.46;white-space:pre-wrap;color:var(--text);font-weight:450;box-shadow:0 18px 44px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.05)}
+.prompt .ph{color:var(--coral);font-weight:650}
+.prompt b{font-weight:750;color:#fff}
+.prompt--sm{font-size:26px;padding:24px 28px;line-height:1.42}
+.prompt--lg{font-size:29px;padding:30px 36px;line-height:1.5}
+.p-lbl{font-size:25px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--steel);margin-bottom:12px}
+.slide.em .p-lbl{color:#6EE7B7}
+.pgrid{display:grid;gap:30px;margin-top:32px}
+.pgrid.p2{grid-template-columns:1fr 1fr}
+.pcol{display:flex;flex-direction:column}
+
+/* ══════════ ТАБЛИЦА ══════════ */
+.tbl{display:grid;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface);margin-top:34px;box-shadow:var(--sh)}
+.tbl > div{padding:24px 30px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-size:27px;line-height:1.34;display:flex;align-items:center;color:var(--muted)}
+.tbl .th{font-size:25px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:rgba(255,255,255,.06);color:var(--text)}
+.tbl .q{font-weight:700;color:var(--text)}
+.tbl .hi{color:var(--text)}
+.tbl--compact{margin-top:18px!important}
+.tbl--compact > div{padding:10px 22px!important;font-size:24.5px!important;line-height:1.24!important}
+.tbl.t3{grid-template-columns:1.06fr 1fr 1.06fr}
+.tbl.t3 > div:nth-child(3n){border-right:none}
+.tbl.t3 > div:nth-last-child(-n+3){border-bottom:none}
+.tbl--tall > div{padding:38px 30px}
+.pgrid--mid{flex:1;align-content:center}
+
+/* ══════════ БОЛЬШОЕ СРАВНЕНИЕ НАДВОЕ ══════════ */
+.big2{display:grid;grid-template-columns:1fr 2px 1fr;gap:64px;align-items:center;margin-top:34px}
+.big2-i{text-align:center}
+.big2-l{font-size:142px;font-weight:800;letter-spacing:-.025em;line-height:1}
+.big2-t{font-size:52px;line-height:1.22;margin-top:24px;color:var(--muted);font-weight:450}
+.big2-t b{color:var(--text);font-weight:750}
+.big2-div{width:3px;height:400px;border-radius:2px;background:linear-gradient(180deg,transparent,rgba(244,241,236,.38) 22%,rgba(244,241,236,.38) 78%,transparent)}
+
+/* ══════════ ФОРМУЛА РКЗФО ══════════ */
+.fx{display:grid;grid-template-columns:repeat(5,1fr);gap:26px;margin-top:46px}
+.fx-i{background:#141d31;border:1px solid var(--line);border-radius:22px;padding:34px 24px;text-align:center;box-shadow:var(--sh)}
+.fx-l{font-size:104px;font-weight:800;color:var(--coral);line-height:1;letter-spacing:-.02em}
+.fx-w{font-size:34px;font-weight:750;margin-top:16px}
+.fx-s{font-size:25px;color:var(--muted);margin-top:10px;line-height:1.3}
+
+/* ══════════ ЧИПЫ-ПРИЁМЫ ══════════ */
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:44px}
+.chips--15{grid-template-columns:repeat(5,1fr)!important;gap:10px!important}
+.chips--15 .chip{padding:22px 20px;border-radius:18px;gap:12px}
+.chips--15 .chip h4{font-size:26px;line-height:1.2}
+.chips--15 .chip p{display:none}
+.chips--15 .chip .n{font-size:24px}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:22px 26px;display:flex;flex-direction:column;gap:16px;position:relative;overflow:hidden}
+.chip::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--coral),transparent 75%);opacity:.8}
+.chip .n{font-size:25px;font-weight:800;color:var(--coral);letter-spacing:.1em}
+.chip .hd{display:flex;align-items:center;gap:16px;color:var(--coral)}
+.chip h4{font-size:31px;font-weight:750;line-height:1.18}
+.chip p{font-size:25px;color:var(--muted);line-height:1.32}
+
+/* ══════════ ФРАЗЫ ══════════ */
+.phrases{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:40px}
+.phr{display:flex;gap:20px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 26px}
+.phr .i{font-size:26px;font-weight:800;color:var(--coral);flex:0 0 auto;min-width:38px;font-variant-numeric:tabular-nums}
+.phr .t{font-size:28px;line-height:1.32}
+
+/* ══════════ ЛЕСТНИЦА ══════════ */
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;align-items:end;flex:1;margin-top:36px;max-height:700px}
+.lad{background:#141d31;border:1px solid var(--line);border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;gap:12px;justify-content:flex-end;box-shadow:var(--sh);overflow:hidden}
+.slide.active .lad{animation:growH .9s var(--ease) both}
+.lad .lad-i{display:inline-flex;color:var(--muted);margin-bottom:auto}
+.lad.here .lad-i{color:var(--emerald)}
+.lad .n{font-size:25px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lad h4{font-size:34px;font-weight:750;line-height:1.14}
+.lad p{font-size:25px;color:var(--muted);line-height:1.3}
+.lad.here{border-color:var(--emerald);background:#122a22}
+.lad.here .n{color:var(--emerald)}
+.tag-here{display:inline-block;font-size:24px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--emerald)}
+
+/* ══════════ ХРОМ ══════════ */
+#chrome{position:absolute;left:0;right:0;bottom:0;z-index:50;padding:0 44px 20px;display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}
+#act-label{font-size:24px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:650}
+#slide-no{font-size:24px;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:650}
+#bar{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.07);z-index:51}
+#bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#E07461,#F0A08E);transition:width .45s var(--ease),background .45s ease}
+.slide.active.em ~ #bar i{background:linear-gradient(90deg,#10b981,#4ade80)}
+.brand-corner{position:absolute;top:44px;left:64px;z-index:40;font-size:25px;font-weight:700;color:var(--muted)}
+.brand-corner b{color:#E07461}
+#fs-btn{position:fixed;top:20px;right:20px;z-index:120;width:46px;height:46px;padding:0;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(11,18,32,.5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#9AA3B2;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.4;transition:opacity .2s,color .2s,border-color .2s,background .2s}
+#fs-btn:hover{opacity:1;color:#F4F1EC;border-color:#E07461;background:rgba(224,116,97,.16)}
+#fs-btn svg{width:23px;height:23px}
+#fs-btn .i-close{display:none}
+#fs-btn.is-fs .i-open{display:none}
+#fs-btn.is-fs .i-close{display:block}
+
+/* ── повестка занятия ── */
+.agenda{display:flex;flex-direction:column;gap:11px;margin-top:26px}
+.ag{display:grid;grid-template-columns:118px 1fr;align-items:center;gap:26px;
+    background:rgba(255,255,255,.035);border:1px solid var(--line);border-left:4px solid rgba(224,116,97,.55);
+    border-radius:15px;padding:13px 24px}
+.ag--hot{background:linear-gradient(90deg,rgba(224,116,97,.15),rgba(224,116,97,.03));border-color:rgba(224,116,97,.42);border-left-color:var(--coral)}
+.ag-t{text-align:center;line-height:1}
+.ag-t b{display:block;font-size:38px;font-weight:800;color:var(--coral);letter-spacing:-.02em}
+.ag-t span{display:block;font-size:16px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.ag-b b{display:block;font-size:28px;font-weight:800;color:var(--text);line-height:1.15}
+.ag-b span{display:block;font-size:24px;color:var(--muted);line-height:1.25;margin-top:3px}
+/* ── два столбца, правило и следствие ── */
+.rule{display:flex;flex-direction:column;gap:11px;margin-top:30px}
+.ru{display:grid;grid-template-columns:0.85fr 1.15fr;align-items:center;gap:28px;
+    background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:15px;padding:15px 26px}
+.ru b{font-size:27px;font-weight:800;color:var(--coral);line-height:1.2}
+.ru span{font-size:25px;color:var(--muted);line-height:1.28}
+
+/* ══ НЕДОСТАЮЩИЕ КОМПОНЕНТЫ ══ */
+.wrap--center{justify-content:center;align-items:flex-start}
+.wrap--center .lead{max-width:1250px}
+
+/* две колонки: текст и картинка */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:66px;align-items:center;flex:1;min-height:0}
+.split--wide{grid-template-columns:1.15fr .85fr}
+.split-l{display:flex;flex-direction:column;justify-content:center;min-width:0}
+.split-r{display:flex;align-items:center;justify-content:center;min-width:0;height:100%}
+.split-r img{width:100%;height:auto;max-height:660px;object-fit:cover;border-radius:26px;
+  border:1px solid rgba(255,255,255,.09);box-shadow:0 30px 80px rgba(0,0,0,.55)}
+
+/* сетки карточек */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:34px;flex:1;min-height:0;align-content:center}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;flex:1;min-height:0;align-content:center}
+.grid2 .card,.grid3 .card{padding:36px 38px;gap:16px;justify-content:flex-start}
+.grid3 .card{padding:32px 30px}
+.card h3{font-size:36px;font-weight:800;line-height:1.15;margin:0}
+.grid3 .card h3{font-size:32px}
+.card p{font-size:26px;line-height:1.36;color:var(--muted);margin:0}
+.grid3 .card p{font-size:24px}
+.card-i{width:78px;height:78px;border-radius:20px;display:flex;align-items:center;justify-content:center;
+  background:rgba(224,116,97,.13);border:1px solid rgba(224,116,97,.34);color:var(--coral);flex:none}
+.card--hot{background:linear-gradient(160deg,rgba(224,116,97,.16),rgba(224,116,97,.04)),var(--surface);
+  border-color:rgba(224,116,97,.45);box-shadow:0 26px 70px rgba(224,116,97,.14)}
+.card--hot .card-i{background:var(--coral);color:#fff;border-color:transparent}
+.grid3--hero{grid-template-columns:1fr 1.22fr 1fr;align-items:stretch}
+.grid3--hero .card--hot{transform:scale(1.03)}
+
+/* цитата */
+.quote{position:relative;padding-left:92px;max-width:1560px}
+.q-mark{position:absolute;left:0;top:-24px;font-size:150px;line-height:1;color:var(--coral);opacity:.5;font-weight:800}
+.q-text{font-size:66px;line-height:1.16;font-weight:800;margin:0;letter-spacing:-.02em}
+
+/* два тезиса в строку */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.tf{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);
+  border-radius:16px;padding:24px 28px;font-size:26px;line-height:1.34;color:var(--muted)}
+.tf b{color:var(--text)}
+.ten{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:26px}
+.ten .tf{font-size:25px}
+
+/* плашка-сноска на слайде */
+.note-slide{background:rgba(61,143,209,.09);border:1px solid rgba(61,143,209,.3);border-radius:18px;
+  padding:24px 32px;font-size:28px;line-height:1.36;color:var(--muted)}
+.note-slide b{color:var(--text)}
+
+/* подпись на титуле */
+.sign{font-size:28px;color:var(--muted);font-weight:600;margin-top:44px;letter-spacing:.02em}
+.sign b{color:var(--coral)}
+
+/* ── подгонка под 1080 ── */
+.badge{margin-bottom:22px!important}
+.agenda{gap:8px!important;margin-top:20px!important}
+.ag{padding:9px 22px!important;gap:22px!important;grid-template-columns:104px 1fr!important}
+.ag-t b{font-size:33px!important}
+.ag-t span{font-size:14px!important;margin-top:2px!important}
+.ag-b b{font-size:25px!important}
+.ag-b span{font-size:22px!important;margin-top:1px!important}
+.rule{gap:8px!important;margin-top:20px!important}
+.ru{padding:11px 26px!important}
+.ru b{font-size:25px!important}
+.ru span{font-size:23.5px!important}
+
+/* ── финальная посадка ── */
+.grid2 .card{padding:30px 34px!important;gap:13px!important}
+.grid3 .card{padding:26px 28px!important;gap:12px!important}
+.card-i{width:66px!important;height:66px!important;border-radius:17px!important}
+.card h3{font-size:33px!important}
+.grid3 .card h3{font-size:29px!important}
+.card p{font-size:25px!important;line-height:1.32!important}
+.grid3 .card p{font-size:24px!important;line-height:1.3!important}
+.grid2{gap:28px!important}
+.grid3{gap:22px!important}
+.step-p{padding:22px 32px!important}
+.steps-p{gap:18px!important;margin-top:30px!important}
+.ag{padding:6px 22px!important;grid-template-columns:126px 1fr!important}
+.ag-t{display:flex;align-items:baseline;justify-content:center;gap:6px}
+.ag-t b{font-size:31px!important}
+.ag-t span{font-size:24px!important;letter-spacing:0!important;text-transform:none!important;margin-top:0!important;display:inline!important;font-weight:600!important}
+.ag-b b{font-size:26px!important}
+.ag-b span{font-size:24px!important}
+.ag-t b{font-size:31px!important}
+.ag-t span{font-size:15px!important}
+.two{gap:16px!important}
+.tf{padding:20px 24px!important;font-size:25px!important}
+.ten{gap:14px!important;margin-top:22px!important}
+.ten .tf{font-size:24px!important}
+.note-slide{padding:20px 28px!important;font-size:26px!important}
+.chips{gap:18px!important;margin-top:30px!important}
+.chip{padding:18px 22px!important;gap:10px!important}
+
+.agenda{gap:7px!important;margin-top:18px!important}
+
+/* ── промпт на слайде ── */
+.prompt-slide{background:linear-gradient(180deg,rgba(224,116,97,.10),rgba(224,116,97,.04)),rgba(8,13,26,.96);
+  border:1px solid rgba(224,116,97,.28);border-left:5px solid var(--coral);border-radius:18px;
+  padding:26px 32px;box-shadow:0 18px 44px rgba(0,0,0,.42)}
+.prompt-slide pre{margin:0;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:26px;line-height:1.45;color:var(--text);white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+<!-- 1 · Титул -->
+<section class="slide" data-act="Старт">
+  <div class="bg" style="background-image:url(a5/bg-title.jpg)"></div>
+  <div class="wrap wrap--center">
+    <div class="badge a">Занятие 5 · 1 сентября · «ИИ. Новая реальность»</div>
+    <h1 class="a d1">Агенты<br>и <span class="accent">Codex</span></h1>
+    <div class="lead a d3" style="font-size:34px;max-width:1200px">До сих пор ИИ отвечал вам словами. Сегодня он начнёт делать работу руками: открывать файлы, менять их и показывать результат</div>
+    <div class="sign a d5">Альберт Валеев · neovida<b>.</b>ai</div>
+  </div>
+</section>
+
+<!-- 2 · Мостик -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <h2 class="a">Помните, <span class="accent">на чём мы остановились</span></h2>
+    <div class="lead a d1" style="margin-top:30px;font-size:33px">На прошлом занятии мы разбирали три режима ChatGPT и один из них отложили</div>
+    <div class="grid3 grid3--hero a d2" style="margin-top:32px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="chats-circle" style="--sz:40px"></i></div>
+        <h3>Чат</h3>
+        <p>Спросил, получил ответ. <b>Разобрали.</b></p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="package" style="--sz:40px"></i></div>
+        <h3>Работа</h3>
+        <p>Ходит по почте и диску, делает многошаговые задачи. <b>Разобрали.</b></p>
+      </div>
+      <div class="card card--hot">
+        <div class="card-i"><i class="ph-i" data-ph="cpu" style="--sz:40px"></i></div>
+        <h3>Codex</h3>
+        <p>Работает с файлами на вашем компьютере. <b>Отложили до сегодня.</b></p>
+      </div>
+    </div>
+    <div class="lead a d6" style="margin-top:36px;font-size:33px">Сегодня ставим третий и учимся им пользоваться</div>
+  </div>
+</section>
+
+<!-- 3 · Карта -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="map-trifold" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Два часа, две части</div>
+    <h2 class="a d1">Что <span class="accent">сегодня</span></h2>
+    <div class="agenda a d2">
+      <div class="ag ag--hot"><div class="ag-t"><b>45</b><span>мин</span></div><div class="ag-b"><b>Что такое агент</b><span>Четыре уровня, из чего он состоит и чем отличается от чата</span></div></div>
+      <div class="ag"><div class="ag-t"><b>10</b><span>мин</span></div><div class="ag-b"><b>Стоп-зоны</b><span>Что агенту нельзя доверять, пока вы не разобрались</span></div></div>
+      <div class="ag ag--hot"><div class="ag-t"><b>50</b><span>мин</span></div><div class="ag-b"><b>Ставим Codex руками</b><span>Приложение, папка, правила проекта, первый безопасный запрос</span></div></div>
+      <div class="ag"><div class="ag-t"><b>10</b><span>мин</span></div><div class="ag-b"><b>Живое демо</b><span>От пустой папки до готового файла на ваших глазах</span></div></div>
+      <div class="ag"><div class="ag-t"><b>5</b><span>мин</span></div><div class="ag-b"><b>Финал</b><span>Что унесли, домашка, занятие 6</span></div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:30px;font-size:31px">Четыре практики. К концу занятия Codex стоит у вас и работает</div>
+  </div>
+</section>
+
+<!-- 4 · Часть 1 титул -->
+<section class="slide" data-act="Агенты">
+  <div class="bg" style="background-image:url(a5/bg-agenty.jpg)"></div>
+  <div class="wrap wrap--center">
+    <div class="badge a">Часть 1 · 55 минут</div>
+    <h1 class="a d1" style="font-size:86px">Что такое агент</h1>
+    <div class="lead a d3" style="font-size:34px;max-width:1150px">Слово затёрли до дыры. Разберём, что за ним стоит на самом деле и почему это другой инструмент, а не улучшенный чат</div>
+  </div>
+</section>
+
+<!-- 5 · Отвечал против работает -->
+<section class="slide" data-act="Агенты">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="path" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Сдвиг, который произошёл</div>
+    <h2 class="a d1">Раньше ИИ отвечал.<br><span class="accent">Теперь он работает</span></h2>
+    <div class="grid2 a d2" style="margin-top:34px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="chats-circle" style="--sz:44px"></i></div>
+        <h3>Чат-ассистент</h3>
+        <p>Даёт текст, идею, объяснение. Живёт внутри окна и <b>не трогает ничего снаружи</b>.</p>
+        <p style="margin-top:8px;color:var(--ice)">«объясни» · «напиши» · «предложи»</p>
+      </div>
+      <div class="card card--hot">
+        <div class="card-i"><i class="ph-i" data-ph="robot" style="--sz:44px"></i></div>
+        <h3>Рабочий агент</h3>
+        <p>Видит ваш проект, <b>сам совершает действия</b>, проверяет, что вышло, и возвращает готовый файл.</p>
+        <p style="margin-top:8px;color:var(--ice)">разобрал файлы · собрал · проверил</p>
+      </div>
+    </div>
+    <div class="lead a d6" style="margin-top:38px;font-size:33px">Разница простая: одному вы <b>пересказываете</b> задачу, другому <b>отдаёте</b></div>
+  </div>
+</section>
+
+<!-- 6 · Четыре уровня -->
+<section class="slide" data-act="Агенты">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="stack" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Карта поля</div>
+    <h2 class="a d1">Четыре уровня, <span class="accent">и вы уже на третьем</span></h2>
+    <div class="rule a d2">
+      <div class="ru"><b>1 · Чат-ассистент</b><span>Отвечает, пишет, объясняет. ChatGPT, Claude, Gemini. Это занятия 1 и 2</span></div>
+      <div class="ru"><b>2 · Сценарная автоматизация</b><span>Идёт по заранее собранному маршруту: если условие, то действие. Make, n8n</span></div>
+      <div class="ru"><b>3 · Рабочий агент</b><span>Работает с файлами, браузером, командами и сервисами. Codex, Claude Code. <b>Сегодня сюда</b></span></div>
+      <div class="ru"><b>4 · Автономная система</b><span>Свой сервер, память, роли, расписания. Работает месяцами без вас</span></div>
+    </div>
+    <div class="lead a d7" style="margin-top:32px;font-size:32px">Между вторым и третьим уровнем главный разрыв: <b>маршрут вы больше не собираете</b>, агент строит его сам</div>
+  </div>
+</section>
+
+<!-- 7 · Из чего состоит -->
+<section class="slide" data-act="Агенты">
+  <div class="wrap">
+    <div class="split">
+      <div class="split-l">
+        <h2 class="a" style="font-size:54px">Мозг это одно.<br><span class="accent">Агент это пять частей</span></h2>
+        <div class="lead a d2" style="margin-top:24px;font-size:29px">Модель понимает смысл. Всё остальное надо приделать сверху, и как раз это отличает агента от чата</div>
+      </div>
+      <div class="split-r a d3"><img src="a5/img-iz-chego.jpg" alt=""></div>
+    </div>
+    <div class="rule a d4" style="margin-top:26px">
+      <div class="ru"><b>Модель</b><span>Понимает, что вы просите, и планирует шаги</span></div>
+      <div class="ru"><b>Контекст</b><span>Видит проект, файлы, историю и ваши правила</span></div>
+      <div class="ru"><b>Инструменты</b><span>Браузер, терминал, сервисы, документы. Ими он действует</span></div>
+      <div class="ru"><b>Цикл</b><span>Планирует, делает, проверяет, исправляет и заходит на второй круг</span></div>
+      <div class="ru"><b>Ваш контроль</b><span>Разрешения, ограничения и последнее слово. Это часть конструкции, а не помеха</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · Чат кончается, файлы остаются -->
+<section class="slide" data-act="Агенты">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="book-open-text" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Главное различие</div>
+    <h2 class="a d1">Чат заканчивается.<br><span class="accent">Файлы остаются</span></h2>
+    <div class="grid2 a d2" style="margin-top:34px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="chats-circle" style="--sz:44px"></i></div>
+        <h3>История чата</h3>
+        <p>Работает внутри одного разговора. Закрыли окно, и контекст ушёл. Завтра объясняете заново.</p>
+      </div>
+      <div class="card card--hot">
+        <div class="card-i"><i class="ph-i" data-ph="package" style="--sz:44px"></i></div>
+        <h3>Папка проекта</h3>
+        <p>Правила, решения и результаты лежат в файлах. Вернулись через неделю и <b>продолжили с того же места</b>.</p>
+      </div>
+    </div>
+    <div class="note-slide a d6" style="margin-top:34px"><b>Вы это уже проходили.</b> На занятии 4 мы заводили проекты в ChatGPT: там файлы и правила лежат в облаке. Codex делает то же самое, но <b>с папкой на вашем компьютере</b></div>
+  </div>
+</section>
+<!-- 9 · Три формата -->
+<section class="slide" data-act="Агенты">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="stack" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Где живут агенты</div>
+    <h2 class="a d1">Три формата, <span class="accent">и вам нужен первый</span></h2>
+    <div class="grid3 grid3--hero a d2" style="margin-top:34px">
+      <div class="card card--hot">
+        <div class="card-i"><i class="ph-i" data-ph="robot" style="--sz:40px"></i></div>
+        <h3>Готовые агенты</h3>
+        <p><b>Codex, Claude Code.</b> Готовый рабочий кабинет: открыл и работаешь обычными словами.</p>
+        <p style="margin-top:10px;color:var(--ice)">Сюда мы идём сегодня</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="gear-six" style="--sz:40px"></i></div>
+        <h3>ИИ-редакторы</h3>
+        <p><b>Cursor, VS Code.</b> Мастерская, куда подключают модели и расширения. Собирать надо самому.</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="cpu" style="--sz:40px"></i></div>
+        <h3>Через командную строку</h3>
+        <p><b>Codex CLI, Claude CLI.</b> Мощнее всего и без единой кнопки. Для тех, кто уже привык.</p>
+      </div>
+    </div>
+    <div class="lead a d6" style="margin-top:36px;font-size:32px">Начинаем с Codex по одной причине: он <b>внутри вашего ChatGPT</b>, отдельно платить и регистрироваться не надо</div>
+  </div>
+</section>
+
+<!-- 10 · Почему Codex -->
+<section class="slide" data-act="Агенты">
+  <div class="wrap">
+    <h2 class="a">Один экран, <span class="accent">много рук</span></h2>
+    <div class="lead a d1" style="margin-top:26px;font-size:32px">Вы пишете обычным языком. Он смотрит проект, предлагает план, правит файлы, запускает проверки и показывает, что вышло</div>
+    <div class="rule a d2" style="margin-top:28px">
+      <div class="ru"><b>Вы говорите словами</b><span>«собери отчёт из этих файлов», «почини таблицу», «разложи папку по датам»</span></div>
+      <div class="ru"><b>Он показывает план</b><span>Что понял, что собирается делать и каких файлов это коснётся</span></div>
+      <div class="ru"><b>Вы разрешаете</b><span>Каждое действие снаружи он спрашивает. Читать может, менять только с вашего согласия</span></div>
+      <div class="ru"><b>Он делает и проверяет</b><span>Правит файлы, запускает, ищет ошибки и сам заходит на второй круг</span></div>
+      <div class="ru"><b>Вы смотрите глазами</b><span>Результат лежит файлом. Не понравилось, говорите словами, что не так</span></div>
+    </div>
+    <div class="note-slide a d7" style="margin-top:28px"><b>Ключевая фраза всего занятия:</b> сначала спросить, потом разрешить. Важное действие всегда подтверждает человек</div>
+  </div>
+</section>
+
+<!-- 11 · Промпт скилл плагин -->
+<section class="slide" data-act="Агенты">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="medal" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Вы это уже знаете</div>
+    <h2 class="a d1">Те же три слова, <span class="accent">только теперь с руками</span></h2>
+    <div class="lead a d1" style="margin-top:24px;font-size:31px">На прошлом занятии мы разобрали промпт, навык и плагин. В Codex они устроены точно так же, но действуют не в окне, а в вашей папке</div>
+    <div class="rule a d3" style="margin-top:26px">
+      <div class="ru"><b>Промпт</b><span>Разовая просьба. «Собери отчёт за август». Живёт один запрос</span></div>
+      <div class="ru"><b>Навык</b><span>Сохранённый способ работы. «Как я всегда готовлю отчёт»: порядок, правила, что проверить</span></div>
+      <div class="ru"><b>Плагин</b><span>Новые руки: GitHub, диск, браузер, ваши сервисы. То, чем он физически действует</span></div>
+    </div>
+    <div class="note-slide a d6" style="margin-top:28px">Разница с ChatGPT одна, зато большая: там навык менял <b>ответ</b>, здесь навык меняет <b>то, что происходит с вашими файлами</b></div>
+  </div>
+</section>
+
+<!-- 12 · Главный цикл -->
+<section class="slide" data-act="Агенты">
+  <div class="wrap">
+    <div class="split">
+      <div class="split-l">
+        <h2 class="a" style="font-size:52px">Как выглядит<br><span class="accent">нормальная работа</span></h2>
+        <div class="lead a d2" style="margin-top:22px;font-size:29px">Один круг, восемь шагов. Если агент проскакивает вопросы и сразу лезет менять файлы, это плохой знак</div>
+        <div class="note-slide a d5" style="margin-top:22px">Хороший агент <b>задаёт вопросы до того</b>, как что-то трогает</div>
+      </div>
+      <div class="split-r a d3"><img src="a5/img-cikl.jpg" alt=""></div>
+    </div>
+    <div class="chips chips--15 a d4" style="margin-top:26px">
+      <div class="chip"><span class="n">1</span><h4>Задача</h4></div>
+      <div class="chip"><span class="n">2</span><h4>Вопросы</h4></div>
+      <div class="chip"><span class="n">3</span><h4>План</h4></div>
+      <div class="chip"><span class="n">4</span><h4>Разрешение</h4></div>
+      <div class="chip"><span class="n">5</span><h4>Действие</h4></div>
+      <div class="chip"><span class="n">6</span><h4>Результат</h4></div>
+      <div class="chip"><span class="n">7</span><h4>Проверка</h4></div>
+      <div class="chip"><span class="n">8</span><h4>Правка</h4></div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 · Стоп-зоны -->
+<section class="slide" data-act="Агенты">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="warning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Границы на сегодня</div>
+    <h2 class="a d1">Чего мы <span class="accent">не делаем</span></h2>
+    <div class="lead a d1" style="margin-top:22px;font-size:31px">Не потому что нельзя вообще, а потому что сначала надо научиться ставить задачу и проверять результат</div>
+    <div class="ten a d3" style="margin-top:26px">
+      <div class="tf"><b>Почта и сообщения.</b> Не отправляем письма за вас</div>
+      <div class="tf"><b>Пароли и ключи.</b> Не вводим и не кладём в папку проекта</div>
+      <div class="tf"><b>Деньги.</b> Никаких платежей и переводов</div>
+      <div class="tf"><b>Удаление.</b> Не чистим и не перезаписываем важное</div>
+      <div class="tf"><b>Рабочие базы.</b> Не трогаем живые данные компании</div>
+      <div class="tf"><b>От чужого имени.</b> Не действуем за другого человека</div>
+    </div>
+    <div class="lead a d7" style="margin-top:32px;font-size:32px">Работаем в <b>отдельной новой папке</b>, где нет ничего, что жалко потерять. Это и есть главное правило безопасности на сегодня</div>
+  </div>
+</section>
+<!-- 14 · Часть 2 титул -->
+<section class="slide" data-act="Codex">
+  <div class="bg" style="background-image:url(a5/bg-codex.jpg)"></div>
+  <div class="wrap wrap--center">
+    <div class="badge a">Часть 2 · 60 минут</div>
+    <h1 class="a d1" style="font-size:86px">Ставим Codex</h1>
+    <div class="lead a d3" style="font-size:34px;max-width:1150px">Дальше только руками. К концу занятия он стоит у вас, знает ваши правила и уже сделал первый файл</div>
+  </div>
+</section>
+
+<!-- 15 · Пять шагов -->
+<section class="slide" data-act="Codex">
+  <div class="wrap">
+    <h2 class="a">Пять шагов, <span class="accent">и он ваш</span></h2>
+    <div class="steps-p steps-p--tight a d1" style="margin-top:32px">
+      <div class="step-p ap d2"><span class="n">1</span><div class="t"><b>Открыли Codex</b> в ChatGPT и убедились, что он доступен</div></div>
+      <div class="step-p ap d3"><span class="n">2</span><div class="t"><b>Поставили приложение</b> на компьютер и вошли под тем же аккаунтом</div></div>
+      <div class="step-p ap d4"><span class="n">3</span><div class="t"><b>Создали папку</b> и открыли её в Codex. Это и есть его рабочий стол</div></div>
+      <div class="step-p ap d5"><span class="n">4</span><div class="t"><b>Написали правила</b> в файл, который он читает первым</div></div>
+      <div class="step-p ap d6"><span class="n">5</span><div class="t"><b>Дали первый запрос</b> и проверили, что он понял границы</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:34px;font-size:32px">Идём по одному, вместе. Кто отстал, говорите сразу, ждём всех</div>
+  </div>
+</section>
+
+<!-- 16 · Практика 1 -->
+<section class="slide" data-act="Codex">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 1 · 12 минут · шпаргалка, шаг 1</div>
+    <h2 class="a d1" style="font-size:56px">Открываем Codex <span class="accent">и ставим приложение</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:28px">
+      <div class="step-p ap d3"><span class="n">1</span><div class="t">В ChatGPT в левом меню нашли пункт <b>Codex</b> и открыли его</div></div>
+      <div class="step-p ap d4"><span class="n">2</span><div class="t">Скачали приложение под свою систему: <b>Mac или Windows</b></div></div>
+      <div class="step-p ap d5"><span class="n">3</span><div class="t">Установили и <b>вошли под тем же аккаунтом</b>, где у вас оплачен Plus</div></div>
+      <div class="step-p ap d6"><span class="n">4</span><div class="t">Убедились, что приложение открылось и не просит ничего доплачивать</div></div>
+    </div>
+    <div class="note-slide a d7" style="margin-top:30px"><b>Не начинаем с командной строки.</b> Есть привычный путь через окно с кнопками, и на первом занятии идём именно им</div>
+  </div>
+</section>
+
+<!-- 17 · Зоны интерфейса -->
+<section class="slide" data-act="Codex">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="eye" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Что где лежит</div>
+    <h2 class="a d1">Смотрим не на кнопки, <span class="accent">а на принцип</span></h2>
+    <div class="lead a d1" style="margin-top:22px;font-size:31px">Codex ценен тем, что показывает <b>весь процесс</b>: что понял, какой план построил, какие файлы трогает и где остановился спросить</div>
+    <div class="rule a d3" style="margin-top:26px">
+      <div class="ru"><b>Поле задачи</b><span>Сюда пишете обычными словами, как коллеге. Никаких команд заучивать не надо</span></div>
+      <div class="ru"><b>План и ход работы</b><span>Он вслух рассказывает, что собирается делать и на каком шаге сейчас</span></div>
+      <div class="ru"><b>Изменения</b><span>Список файлов, которые он предлагает поправить, и что именно в них поменяется</span></div>
+      <div class="ru"><b>Разрешения</b><span>Место, где он останавливается и ждёт вашего «да». Самая важная зона</span></div>
+    </div>
+    <div class="lead a d7" style="margin-top:30px;font-size:32px">Если чего-то не поняли, спросите его самого: <b>«объясни, что ты сейчас сделал и зачем»</b></div>
+  </div>
+</section>
+
+<!-- 18 · Папка -->
+<section class="slide" data-act="Codex">
+  <div class="wrap">
+    <div class="split">
+      <div class="split-l">
+        <h2 class="a" style="font-size:54px">Папка это <span class="accent">его рабочий стол</span></h2>
+        <div class="lead a d2" style="margin-top:24px;font-size:30px">Агент видит <b>только то, к чему вы дали доступ</b>. Не весь компьютер, не все документы, а одну папку, которую вы выбрали</div>
+        <div class="lead a d4" style="margin-top:20px;font-size:29px">Поэтому начинаем с новой пустой папки. Назовём её <b>«Мой первый проект»</b></div>
+      </div>
+      <div class="split-r a d3"><img src="a5/img-papka.jpg" alt=""></div>
+    </div>
+    <div class="two a d5" style="margin-top:26px">
+      <div class="tf"><b>Что кладём:</b> рабочие файлы, по которым он будет работать, и файл с правилами</div>
+      <div class="tf"><b>Чего не кладём:</b> пароли, ключи, договоры с персональными данными, бухгалтерию</div>
+    </div>
+  </div>
+</section>
+
+<!-- 19 · AGENTS.md -->
+<section class="slide" data-act="Codex">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="book-open-text" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Правила проекта</div>
+    <h2 class="a d1">Файл, <span class="accent">который он читает первым</span></h2>
+    <div class="lead a d1" style="margin-top:22px;font-size:31px">Называется <b>AGENTS.md</b> и лежит прямо в папке. Это не магия и не память: обычный текстовый файл, куда вы пишете, как работать именно здесь</div>
+    <div class="rule a d3" style="margin-top:26px">
+      <div class="ru"><b>Язык и тон</b><span>«Отвечай по-русски, простыми словами, без технического жаргона»</span></div>
+      <div class="ru"><b>Порядок работы</b><span>«Сначала задавай вопросы и показывай план. Не меняй файлы без моего подтверждения»</span></div>
+      <div class="ru"><b>После действия</b><span>«Коротко объясняй, что именно изменилось и как мне это проверить»</span></div>
+      <div class="ru"><b>Чего не делать</b><span>«Не храни здесь пароли. Не удаляй файлы без подтверждения. Ничего не отправляй наружу»</span></div>
+    </div>
+    <div class="note-slide a d7" style="margin-top:28px"><b>Узнаёте?</b> Это ровно то же самое, что инструкция проекта в ChatGPT с прошлого занятия. Только лежит файлом у вас на компьютере</div>
+  </div>
+</section>
+
+<!-- 20 · Практика 2 -->
+<section class="slide" data-act="Codex">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 2 · 15 минут · шпаргалка, шаг 2</div>
+    <h2 class="a d1" style="font-size:56px">Папка <span class="accent">и правила в ней</span></h2>
+    <div class="steps-p steps-p--tight a d2" style="margin-top:28px">
+      <div class="step-p ap d3"><span class="n">1</span><div class="t">Создали на рабочем столе <b>новую пустую папку</b> и назвали её понятно</div></div>
+      <div class="step-p ap d4"><span class="n">2</span><div class="t">Открыли её в Codex: он попросит выбрать папку при первом запуске</div></div>
+      <div class="step-p ap d5"><span class="n">3</span><div class="t">Попросили его <b>создать AGENTS.md</b> и продиктовали правила своими словами</div></div>
+      <div class="step-p ap d6"><span class="n">4</span><div class="t">Открыли файл глазами и убедились, что там написано то, что вы имели в виду</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:30px;font-size:32px">Готовый текст правил лежит в шпаргалке. Скопировали, поправили под себя, отдали ему</div>
+  </div>
+</section>
+
+<!-- 21 · Три уровня настроек -->
+<section class="slide" data-act="Codex">
+  <div class="wrap">
+    <div class="split">
+      <div class="split-l">
+        <h2 class="a" style="font-size:52px">Три уровня, <span class="accent">которые не путаем</span></h2>
+        <div class="lead a d2" style="margin-top:22px;font-size:29px">Правила живут на трёх этажах. Понимать это надо не ради теории, а чтобы знать, куда писать</div>
+      </div>
+      <div class="split-r a d3"><img src="a5/img-nastroyka.jpg" alt=""></div>
+    </div>
+    <div class="rule a d4" style="margin-top:26px">
+      <div class="ru"><b>1 · Что можно вообще</b><span>Общие ограничения Codex: какие действия он в принципе имеет право совершать</span></div>
+      <div class="ru"><b>2 · Как он говорит с вами</b><span>Персонализация: язык, тон, темп, насколько подробно объясняет</span></div>
+      <div class="ru"><b>3 · Как работать в этой папке</b><span>AGENTS.md: правила конкретного проекта. Меняются от папки к папке</span></div>
+    </div>
+    <div class="note-slide a d7" style="margin-top:26px">Есть ещё технический файл настроек. <b>Сегодня мы его не трогаем</b> и не просим Codex его менять</div>
+  </div>
+</section>
+<!-- 22 · Персонализация -->
+<section class="slide" data-act="Codex">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 3 · 12 минут · шпаргалка, шаг 3</div>
+    <h2 class="a d1" style="font-size:56px">Объясняем ему, <span class="accent">кто вы</span></h2>
+    <div class="lead a d1" style="margin-top:22px;font-size:31px">Codex по умолчанию разговаривает как с программистом. Первым делом это надо поменять, иначе половина ответов будет непонятной</div>
+    <div class="rule a d3" style="margin-top:26px">
+      <div class="ru"><b>Обычный язык</b><span>«Хочу отчёт», «не работает», «продолжай» он превращает в рабочий процесс сам</span></div>
+      <div class="ru"><b>Учебный темп</b><span>Объясняет коротко: что делаем, зачем и как мне это проверить</span></div>
+      <div class="ru"><b>Безопасность</b><span>Не трогает ничего за пределами папки и не действует наружу без подтверждения</span></div>
+      <div class="ru"><b>Порядок</b><span>Цель, план, маленькие шаги, проверка, честный итог. Даже если вы попросили одной фразой</span></div>
+    </div>
+    <div class="lead a d7" style="margin-top:30px;font-size:32px">Готовый текст персонализации в шпаргалке. Вставили один раз, работает во всех проектах</div>
+  </div>
+</section>
+
+<!-- 23 · Первый запрос -->
+<section class="slide" data-act="Codex">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 4 · 10 минут · шпаргалка, шаг 4</div>
+    <h2 class="a d1" style="font-size:56px">Первый запрос <span class="accent">должен быть безопасным</span></h2>
+    <div class="lead a d1" style="margin-top:22px;font-size:31px">Проверяем не силу, а управляемость. В первом запросе он ничего не ломает и не публикует, а показывает, что понял правила</div>
+    <div class="prompt-slide a d3" style="margin-top:26px">
+      <pre>Расскажи, какие задачи ты можешь брать в этой папке,
+какие действия потребуют моего подтверждения,
+и предложи первый безопасный проект для практики.
+
+Ничего пока не делай и не создавай файлы.</pre>
+    </div>
+    <div class="two a d6" style="margin-top:26px">
+      <div class="tf"><b>Хороший ответ:</b> пересказал ваши правила, честно назвал, где будет спрашивать, предложил задачу без риска</div>
+      <div class="tf"><b>Плохой ответ:</b> сразу начал создавать файлы, хотя вы просили пока ничего не делать</div>
+    </div>
+  </div>
+</section>
+
+<!-- 24 · Демо -->
+<section class="slide" data-act="Демо">
+  <div class="wrap">
+    <div class="split">
+      <div class="split-l">
+        <div class="badge a">Смотрим вместе · 10 минут</div>
+        <h2 class="a d1" style="font-size:52px">От пустой папки<br><span class="accent">до готового файла</span></h2>
+        <div class="lead a d3" style="margin-top:22px;font-size:29px">Показываю на своём экране весь путь целиком. Один безопасный запрос, один проверяемый файл</div>
+      </div>
+      <div class="split-r a d2"><img src="a5/img-rezultat.jpg" alt=""></div>
+    </div>
+    <div class="prompt-slide a d4" style="margin-top:24px">
+      <pre>Помоги разобрать мою рабочую неделю.
+Сначала задай уточняющие вопросы, по одному.
+После моих ответов создай один файл «План недели.md».
+
+Другие файлы не меняй, наружу ничего не отправляй.</pre>
+    </div>
+    <div class="lead a d7" style="margin-top:24px;font-size:31px">Обратите внимание на порядок: <b>он сначала спрашивает</b>, а файл появляется только после ваших ответов</div>
+  </div>
+</section>
+
+<!-- 25 · Что унесли -->
+<section class="slide" data-act="Финал">
+  <div class="wrap">
+    <h2 class="a">Что вы <span class="accent">унесли сегодня</span></h2>
+    <div class="steps-p steps-p--tight a d1" style="margin-top:30px">
+      <div class="step-p ap d2"><span class="n">✓</span><div class="t"><b>Понимание, что такое агент</b> и чем третий уровень отличается от чата</div></div>
+      <div class="step-p ap d3"><span class="n">✓</span><div class="t"><b>Codex стоит на компьютере</b> и работает под вашим аккаунтом</div></div>
+      <div class="step-p ap d4"><span class="n">✓</span><div class="t"><b>Рабочая папка</b> с файлом правил, который он читает первым</div></div>
+      <div class="step-p ap d5"><span class="n">✓</span><div class="t"><b>Персонализация</b>, после которой он говорит с вами по-человечески</div></div>
+      <div class="step-p ap d6"><span class="n">✓</span><div class="t"><b>Первый файл</b>, сделанный его руками и проверенный вашими глазами</div></div>
+    </div>
+    <div class="lead a d7" style="margin-top:32px;font-size:33px">Четыре занятия назад вы задавали вопросы в окне. Сегодня у вас <b>работник с доступом к файлам</b></div>
+  </div>
+</section>
+
+<!-- 26 · Домашка -->
+<section class="slide" data-act="Финал">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="house-line" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Домашнее задание</div>
+    <h2 class="a d1">Два дня, <span class="accent">и он станет привычкой</span></h2>
+    <div class="grid2 a d2" style="margin-top:34px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="steps" style="--sz:44px"></i></div>
+        <h3>Вторник</h3>
+        <p>Доводите настройку до конца и делаете <b>три файла</b> его руками: по одному на каждый тип задачи из вашей работы</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="package" style="--sz:44px"></i></div>
+        <h3>Среда</h3>
+        <p>Заводите <b>вторую папку под реальную задачу</b> и проходите весь цикл: вопросы, план, разрешение, результат, проверка</p>
+      </div>
+    </div>
+    <div class="lead a d5" style="margin-top:34px;font-size:32px">Хэштеги <b>#день1</b> и <b>#день2</b>. В отчёте: что поручили и что он реально сделал</div>
+  </div>
+</section>
+
+<!-- 27 · Финал -->
+<section class="slide" data-act="Финал">
+  <div class="bg" style="background-image:url(a5/bg-final.jpg)"></div>
+  <div class="wrap wrap--center">
+    <div class="badge a">Занятие 6 · пятница, 4 сентября, 08:00</div>
+    <h1 class="a d1" style="font-size:76px">Дальше <span class="accent">он научится большему</span></h1>
+    <div class="lead a d3" style="font-size:34px;max-width:1150px">Сегодня Codex работал в одной папке и по одной задаче. На следующем занятии дадим ему навыки и подключим к вашим сервисам</div>
+    <div class="sign a d5">Спасибо. Альберт Валеев · neovida<b>.</b>ai</div>
+  </div>
+</section>
+<div class="brand-corner">neovida<b>.</b>ai</div>
+<div id="bar"><i></i></div>
+</div></div>
+<button id="fs-btn" title="На весь экран (F)" aria-label="На весь экран">
+<svg class="i-open" viewBox="0 0 256 256" fill="currentColor"><path d="M216 48v48a8 8 0 0 1-16 0V56h-40a8 8 0 0 1 0-16h48a8 8 0 0 1 8 8ZM96 200H56v-40a8 8 0 0 0-16 0v48a8 8 0 0 0 8 8h48a8 8 0 0 0 0-16Zm112-48a8 8 0 0 0-8 8v40h-40a8 8 0 0 0 0 16h48a8 8 0 0 0 8-8v-48a8 8 0 0 0-8-8ZM96 40H48a8 8 0 0 0-8 8v48a8 8 0 0 0 16 0V56h40a8 8 0 0 0 0-16Z"/></svg>
+<svg class="i-close" viewBox="0 0 256 256" fill="currentColor"><path d="M144 96V48a8 8 0 0 1 16 0v40h40a8 8 0 0 1 0 16h-48a8 8 0 0 1-8-8Zm-40 56H56a8 8 0 0 0 0 16h40v40a8 8 0 0 0 16 0v-48a8 8 0 0 0-8-8Zm104 0h-48a8 8 0 0 0-8 8v48a8 8 0 0 0 16 0v-40h40a8 8 0 0 0 0-16ZM96 40a8 8 0 0 0-8 8v40H48a8 8 0 0 0 0 16h48a8 8 0 0 0 8-8V48a8 8 0 0 0-8-8Z"/></svg>
+</button>
+<script src="a5/assets.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.ph-i').forEach(el=>{
+    const n=el.dataset.ph; if(window.PH&&PH[n]) el.innerHTML=PH[n].replace('<svg ','<svg fill="currentColor" ');
+  });
+  document.querySelectorAll('.logo-i').forEach(el=>{
+    const n=el.dataset.logo; if(window.LOGO&&LOGO[n]) el.innerHTML=LOGO[n];
+  });
+  document.querySelectorAll('.bg').forEach(el=>{el.addEventListener('error',()=>el.remove())});
+  initDeck();
+});
+
+let cur=0,slides=[],barEl,actEl,noEl;
+function initDeck(){
+  slides=[...document.querySelectorAll('.slide')];
+  barEl=document.querySelector('#bar i');
+  const chrome=document.createElement('div');chrome.id='chrome';
+  chrome.innerHTML='<div id="act-label"></div><div id="slide-no"></div>';
+  document.getElementById('stage').appendChild(chrome);
+  actEl=document.getElementById('act-label');noEl=document.getElementById('slide-no');
+  const h=parseInt(location.hash.slice(1),10);
+  cur=(h>=1&&h<=slides.length)?h-1:0;
+  scale();window.addEventListener('resize',scale);
+  show(cur);
+  window.addEventListener('keydown',e=>{
+    if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='Home'){show(0)}
+    else if(e.key==='End'){show(slides.length-1)}
+    else if(e.key.toLowerCase()==='f'){toggleFS()}
+  });
+  document.getElementById('viewport').addEventListener('click',e=>{
+    (e.clientX>window.innerWidth*0.33)?next():prev();
+  });
+  const fsBtn=document.getElementById('fs-btn');
+  fsBtn.addEventListener('click',e=>{e.stopPropagation();toggleFS();});
+  document.addEventListener('fullscreenchange',()=>{fsBtn.classList.toggle('is-fs',!!document.fullscreenElement);});
+}
+function scale(){
+  const s=Math.min(window.innerWidth/1920,window.innerHeight/1080);
+  document.getElementById('stage').style.transform=`scale(${s})`;
+}
+function next(){if(cur<slides.length-1)show(cur+1)}
+function prev(){if(cur>0)show(cur-1)}
+function show(i){
+  slides.forEach(s=>s.classList.remove('active'));
+  cur=i;const sl=slides[i];sl.classList.add('active');
+  history.replaceState(null,'','#'+(i+1));
+  barEl.style.width=((i+1)/slides.length*100)+'%';
+  actEl.textContent=sl.dataset.act||'';
+  noEl.textContent=(i+1)+' / '+slides.length;
+}
+function toggleFS(){
+  if(!document.fullscreenElement)document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+</script>
+</body>
+</html>

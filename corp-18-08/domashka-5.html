@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Домашка · Занятие 5 · Агенты и Codex</title>
+<style>
+:root{
+  --bg:#0B1220; --bg2:#131B2E; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.1);
+  --text:#F4F1EC; --muted:#9AA3B2; --coral:#E07461; --coral-soft:rgba(224,116,97,.15); --ice:#3D8FD1;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(160deg,var(--bg),var(--bg2)) fixed;color:var(--text);font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;padding-bottom:90px}
+.wrap{max-width:780px;margin:0 auto;padding:26px 18px}
+header{padding:32px 0 8px}
+.brand{font-size:15px;font-weight:700;color:var(--muted)}
+.brand b{color:var(--coral)}
+h1{font-size:33px;line-height:1.14;font-weight:800;letter-spacing:-.01em;margin-top:10px}
+.sub{color:var(--muted);font-size:16px;margin-top:10px}
+.sub b{color:var(--text)}
+.howto{background:var(--coral-soft);border:1px solid rgba(224,116,97,.35);border-radius:14px;padding:14px 16px;margin-top:18px;font-size:15.5px}
+.howto b{color:var(--text)}
+.step{margin:38px 0 0}
+.step-h{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.step-n{flex:0 0 auto;min-width:38px;height:38px;border-radius:11px;background:var(--coral);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.step-t{font-size:22px;font-weight:800;line-height:1.2}
+.step-d{color:var(--muted);font-size:15.5px;margin:2px 0 12px 50px}
+.prompt{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:46px 18px 18px;margin:12px 0;cursor:pointer;transition:background .15s,border-color .2s,box-shadow .2s}
+.prompt:active{background:rgba(224,116,97,.12)}
+.prompt pre{white-space:pre-wrap;font-family:inherit;font-size:15.5px;line-height:1.6;color:var(--text)}
+.prompt .cp{position:absolute;top:12px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--coral)}
+.prompt .cp::after{content:"копировать";background:rgba(224,116,97,.16);border:1px solid rgba(224,116,97,.4);border-radius:999px;padding:5px 14px;font-size:12px;letter-spacing:.06em}
+.prompt.copied{border-color:#4caf7d;box-shadow:0 0 0 2px rgba(76,175,125,.35), 0 0 34px rgba(76,175,125,.28);background:rgba(76,175,125,.1)}
+.prompt.copied .cp{color:#4caf7d}
+.prompt.copied .cp::after{content:"скопировано ✓";background:rgba(76,175,125,.2);border-color:rgba(76,175,125,.55);color:#4caf7d}
+details.acc{background:var(--surface);border:1px solid var(--line);border-radius:13px;margin:8px 0;overflow:hidden}
+details.acc>summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:16px;font-weight:650;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:12px}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"открыть промпт";flex:0 0 auto;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.35);border-radius:999px;padding:5px 13px}
+details.acc[open]>summary::after{content:"свернуть";color:var(--muted);background:rgba(255,255,255,.06);border-color:var(--line)}
+details.acc[open]>summary{border-bottom:1px solid var(--line)}
+details.acc .prompt{margin:12px 14px 14px}
+.prac{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#F2A08E,var(--coral));color:#fff;font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:9px 20px;border-radius:999px;margin-bottom:10px;box-shadow:0 8px 26px rgba(224,116,97,.4)}
+details.acc--gpt>summary::after{content:"открыть ассистента"}
+details.acc--gpt[open]>summary::after{content:"свернуть"}
+.dl--big{background:rgba(224,116,97,.12);border-color:rgba(224,116,97,.45)}
+.dl--big .dl-i{background:var(--coral);color:#fff}
+.dl--big .dl-t b{font-size:16.5px}
+.dl{display:flex;align-items:center;gap:14px;margin:12px 0;padding:15px 17px;background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.38);border-radius:14px;text-decoration:none;color:var(--text)}
+.dl:active{background:rgba(76,175,125,.2)}
+.dl-i{flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:#4caf7d;color:#0B1220;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dl-t{display:block;min-width:0}
+.dl-t b{display:block;font-size:15.5px;font-weight:750}
+.dl-t em{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.chain{display:flex;flex-direction:column;gap:0;margin:14px 0}
+.ch{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 15px}
+.ch-n{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:rgba(224,116,97,.18);color:var(--coral);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ch-t{font-size:14.5px;color:var(--muted);line-height:1.35}
+.ch-t b{display:block;color:var(--text);font-size:15.5px;font-weight:750}
+.ch-ar{color:var(--coral);text-align:center;font-size:17px;line-height:1;padding:4px 0;opacity:.75}
+.ch--fin{border-color:rgba(76,175,125,.45);background:rgba(76,175,125,.09)}
+.ch--fin .ch-n{background:rgba(76,175,125,.2);color:#4caf7d}
+.trio{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.tr{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:15px 17px}
+.tr b{font-size:18px;font-weight:800;display:inline-block}
+.tr .q{display:inline-block;margin-left:9px;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.3);border-radius:999px;padding:4px 11px;vertical-align:2px}
+.tr p{margin-top:8px;font-size:15px;line-height:1.55;color:var(--muted)}
+.tr em{display:inline-block;margin-top:9px;font-style:normal;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tr-kak{border-left-color:#C9707F}.tr-kak .q{color:#E39CA8;background:rgba(201,112,127,.16);border-color:rgba(201,112,127,.35)}
+.tr-gde{border-left-color:var(--ice)}.tr-gde .q{color:var(--ice);background:rgba(61,143,209,.14);border-color:rgba(61,143,209,.35)}
+.sk-t{display:block;min-width:0}
+.sk-t em{display:block;font-style:normal;font-size:13px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.35}
+.skill-what{margin:12px 14px 0;font-size:15px;line-height:1.55;color:var(--muted)}
+.skill-what b{color:var(--text)}
+.prompt--skill pre{max-height:132px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.prompt--skill::after{content:"текст длинный, читать его не нужно: просто скопируйте";position:absolute;left:18px;right:18px;bottom:12px;font-size:13px;line-height:1.4;color:var(--muted)}
+.prompt--skill{padding-bottom:52px}
+.prompt--test{border-left-color:var(--ice)}
+.prompt--test .cp{color:var(--ice)}
+.prompt--test .cp::after{background:rgba(61,143,209,.16);border-color:rgba(61,143,209,.4);color:var(--ice)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0;font-size:15.5px;color:var(--muted)}
+.card b{color:var(--text)}
+.card ul{margin:8px 0 0 18px}
+.card li{margin:5px 0}
+.note{font-size:15px;color:var(--muted);background:rgba(61,143,209,.08);border:1px solid rgba(61,143,209,.25);border-radius:12px;padding:12px 14px;margin:10px 0}
+.note b{color:var(--text)}
+.ten{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.tf{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:11px;padding:11px 15px;font-size:15.5px;cursor:pointer}
+.tf:active{background:rgba(224,116,97,.12)}
+.tf.copied{border-color:#4caf7d;background:rgba(76,175,125,.16)}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0}
+.basket{border-radius:13px;padding:13px;font-size:14px;border:1px solid}
+.basket b{display:block;font-size:15px;margin-bottom:5px}
+.b-ok{background:rgba(76,175,125,.08);border-color:rgba(76,175,125,.35)}
+.b-mid{background:rgba(224,169,92,.08);border-color:rgba(224,169,92,.35)}
+.b-no{background:rgba(224,92,92,.08);border-color:rgba(224,92,92,.35)}
+.b-ok b{color:#4caf7d}.b-mid b{color:#e0a95c}.b-no b{color:#e05c5c}
+a{color:var(--ice)}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.links a{display:block;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;color:var(--text)}
+.links a:active{background:rgba(224,116,97,.14);border-color:rgba(224,116,97,.45)}
+.links a b{display:block;font-size:17px;font-weight:800}
+.links a span{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.links a em{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:var(--coral);margin-top:5px}
+.links a:first-child{grid-column:1 / -1}
+footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14.5px}
+@media(max-width:560px){.grid3{grid-template-columns:1fr}
+.prompt{padding-top:56px}
+.sk-t em{font-size:12.5px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">neovida<b>.</b>ai</div>
+  <h1>Домашка<br>после занятия 5</h1>
+  <div class="sub">1 и 2 сентября · <b>«Агенты и Codex»</b> · Альберт Валеев</div>
+  <div class="howto"><b>Два дня, две папки.</b> Во вторник доводите настройку до конца и заставляете Codex сделать три файла вашими задачами. В среду заводите вторую папку под реальную рабочую задачу и проходите весь цикл целиком.</div>
+  <div class="note"><b>Вся домашка сразу здесь,</b> на оба дня. Ждать ничего не надо.</div>
+  <div class="note"><b>Все промпты и разбор ошибок</b> лежат в <a href="shpargalka-5.html">шпаргалке занятия 5</a>. Открывайте её рядом.</div>
+  <div class="note" style="border-left-color:#4caf7d"><b>Правило безопасности, оно же главное.</b> Работайте в новых пустых папках. Никаких паролей, договоров с персональными данными, бухгалтерии и рабочих баз. Тогда даже неудачный запрос ничего вам не стоит.</div>
+</header>
+
+<div class="step">
+  <div class="prac">Вторник, 1 сентября</div>
+  <div class="step-h"><span class="step-n">1</span><span class="step-t">Доводим настройку и делаем три файла</span></div>
+  <div class="step-d">На занятии мы прошли путь вместе. Дома вы повторяете его один, без подсказок с экрана, и убеждаетесь, что всё стоит и работает</div>
+
+  <div class="step-d" style="margin-top:16px"><b>Часть 1. Проверяем, что всё на месте</b></div>
+  <div class="chain">
+    <div class="ch"><span class="ch-n">1</span><span class="ch-t">Приложение Codex <b>открывается и не просит доплатить</b></span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">2</span><span class="ch-t">Папка выбрана, в ней лежит <b>AGENTS.md</b> с вашими правилами</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">3</span><span class="ch-t">Персонализация вставлена. Спросили <b>«как ты будешь со мной работать»</b> и он пересказал правила</span></div>
+    <div class="ch ch--fin"><span class="ch-n">4</span><span class="ch-t">Не сходится хоть один пункт, вернитесь к шпаргалке и доделайте. Дальше без этого бессмысленно</span></div>
+  </div>
+
+  <div class="step-d" style="margin-top:22px"><b>Часть 2. Три файла его руками</b></div>
+  <div class="step-d">Возьмите три разные задачи из своей работы. Не выдуманные: те, что реально лежат на этой неделе</div>
+  <div class="ten">
+    <div class="tf"><b>Разобрать.</b> Длинный документ, переписка, стенограмма встречи. Просите вытащить главное</div>
+    <div class="tf"><b>Собрать.</b> Отчёт, план, список задач, письмо. Просите сделать с нуля по вашим вводным</div>
+    <div class="tf"><b>Посчитать.</b> Смета, сравнение вариантов, таблица. Просите разложить цифры и показать расчёт</div>
+  </div>
+  <div class="note"><b>Каждый раз следите за порядком.</b> Сначала он задаёт вопросы, потом показывает план, потом ждёт вашего «да» и только после этого делает. Проскочил вопросы и сразу полез в файлы, скажите: «останавливайся и спрашивай перед каждым изменением».</div>
+  <div class="prompt"><div class="cp">рамка, в которую подставляете свою задачу</div><pre>Задача: [что нужно сделать своими словами].
+
+Сначала задай мне уточняющие вопросы, по одному,
+пока тебе не хватает данных.
+
+Потом покажи короткий план: что сделаешь и какие файлы затронешь.
+Дождись моего подтверждения.
+
+Результат сохрани одним файлом с понятным названием.
+Другие файлы не меняй, наружу ничего не отправляй.</pre></div>
+  <div class="note" style="border-left-color:#4caf7d"><b>Что прислать во вторник.</b> Хэштег <b>#день1</b>, дальше:<br>
+  1. Codex стоит и открывается: да или нет<br>
+  2. Что ответил на вопрос «как ты будешь со мной работать»<br>
+  3. Три файла: что за задача была и <b>что он сделал</b> по каждой<br>
+  4. Где он попытался сделать что-то без спроса, если такое было<br>
+  5. Одной строкой: сколько времени это у вас заняло против обычного</div>
+</div>
+
+<div class="step">
+  <div class="prac">Среда, 2 сентября</div>
+  <div class="step-h"><span class="step-n">2</span><span class="step-t">Вторая папка под настоящую задачу</span></div>
+  <div class="step-d">Вчера вы тренировались. Сегодня берёте задачу, которую реально надо сделать, и проходите с ним весь круг от начала до конца</div>
+
+  <div class="step-d" style="margin-top:16px"><b>Как выбрать задачу</b></div>
+  <div class="ten">
+    <div class="tf"><b>Она у вас повторяется.</b> Делали больше трёх раз и будете делать ещё</div>
+    <div class="tf"><b>В ней есть файлы.</b> Документы, таблицы, выгрузки, а не только разговор</div>
+    <div class="tf"><b>Её не жалко.</b> Если выйдет плохо, ничего не сломается</div>
+  </div>
+  <div class="chain">
+    <div class="ch"><span class="ch-n">1</span><span class="ch-t">Создали <b>вторую новую папку</b> под эту задачу и назвали по делу</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">2</span><span class="ch-t">Положили в неё <b>копии</b> нужных файлов. Именно копии, не оригиналы</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">3</span><span class="ch-t">Попросили создать <b>AGENTS.md под эту задачу</b>: что за проект, что важно, чего не делать</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">4</span><span class="ch-t">Прошли весь цикл: вопросы, план, разрешение, действие, результат</span></div>
+    <div class="ch ch--fin"><span class="ch-n">5</span><span class="ch-t"><b>Открыли результат глазами</b> и сказали словами, что поправить</span></div>
+  </div>
+  <div class="prompt"><div class="cp">правила под конкретный проект</div><pre>Создай в этой папке AGENTS.md под конкретный проект.
+
+Проект: [о чём он, в двух строках].
+Что здесь лежит: [какие файлы и что в них].
+Что для меня важно: [на что смотреть в первую очередь].
+Чего не делать: [что трогать нельзя].
+
+Плюс общие правила: по-русски, простыми словами, сначала вопросы
+и план, файлы менять только с моего подтверждения, наружу
+ничего не отправлять.</pre></div>
+  <div class="note"><b>Копии, а не оригиналы.</b> Это не паранойя, а нормальная рабочая привычка. Через месяц вы будете давать ему оригиналы спокойно, а пока пусть между ним и вашими документами будет один шаг.</div>
+  <div class="note" style="border-left-color:#4caf7d"><b>Что прислать в среду.</b> Хэштег <b>#день2</b>, дальше:<br>
+  1. Что за задача и почему вы выбрали именно её<br>
+  2. Какие файлы положили в папку<br>
+  3. <b>Что он сделал</b> и сколько кругов правок понадобилось<br>
+  4. Что получилось лучше, чем вы ожидали, и что хуже<br>
+  5. Одной строкой: доверите ли вы ему эту задачу в следующий раз</div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">✓</span><span class="step-t">Как сдавать</span></div>
+  <div class="step-d">Отчёт занимает минуту. Присылайте в чат группы в тот же день, <b>первой строкой хэштег</b></div>
+  <div class="note" style="border-left-color:#4caf7d"><b>Хэштеги.</b> Вторник это <b>#день1</b>, среда <b>#день2</b>. Догоняете, ставьте хэштег того дня, задание которого делаете.</div>
+  <div class="prompt"><div class="cp">так выглядит готовый отчёт</div><pre>#день1
+
+Codex стоит, открывается, доплатить не просит.
+
+На вопрос «как будешь со мной работать» пересказал правила:
+по-русски, сначала вопросы, потом план, файлы только
+с подтверждения.
+
+Три файла:
+Разобрать: закинул стенограмму планёрки на сорок минут,
+получил список задач с ответственными. Две задачи я сам
+в записях пропустил.
+Собрать: сделал письмо подрядчику по срыву срока, спросил
+про сумму штрафа, я не знал, он оставил пропуск.
+Посчитать: сравнил три коммерческих по полной стоимости
+с доставкой. Самое дешёвое оказалось не самым выгодным.
+
+Без спроса ничего не делал.
+
+По времени: обычно на это уходит полдня, ушло сорок минут.</pre></div>
+  <div class="note"><b>Не получилось, застряли, выдало ерунду?</b> Это тоже результат. Присылайте как есть, вместе со своим запросом. На занятии 6 такие случаи разбираем вживую.</div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">3</span><span class="step-t">Занятие 6 · пятница, 4 сентября, 08:00 по Москве</span></div>
+  <div class="step-d"><b>Сегодня Codex работал в одной папке и по одной задаче. Дальше дадим ему навыки и подключим к вашим сервисам</b></div>
+  <div class="note">Приходите с тем, что соберёте за эти два дня. Особенно с тем, что не получилось: разберём вживую.</div>
+  <div class="links">
+    <a href="shpargalka-5.html"><b>Шпаргалка занятия 5</b><span>все промпты урока и разбор частых ошибок</span><em>открыть</em></a>
+    <a href="prezentaciya-5.html"><b>Презентация</b><span>слайды занятия 5</span><em>открыть</em></a>
+    <a href="https://chatgpt.com/codex"><b>Codex</b><span>chatgpt.com/codex</span><em>открыть</em></a>
+    <a href="shpargalka-4.html"><b>Шпаргалка занятия 4</b><span>проекты, навыки, плагины и расписание</span><em>открыть</em></a>
+  </div>
+</div>
+</div>
+<script>
+function bindCopy(el, getText){
+  el.addEventListener('click',()=>{
+    const t=getText();
+    const cp=el.querySelector('.cp');
+    const done=()=>{
+      el.classList.add('copied');
+      setTimeout(()=>el.classList.remove('copied'),1600);
+    };
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(done).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    });
+  });
+}
+document.querySelectorAll('.prompt').forEach(el=>bindCopy(el,()=>{const p=el.querySelector('pre');return p.innerText||p.textContent;}));
+document.querySelectorAll('.tf').forEach(el=>bindCopy(el,()=>(el.innerText||el.textContent).trim()));
+</script>
+</body>
+</html>
