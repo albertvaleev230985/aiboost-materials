@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Домашка · Занятие 4 · Платформа</title>
+<style>
+:root{
+  --bg:#0B1220; --bg2:#131B2E; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.1);
+  --text:#F4F1EC; --muted:#9AA3B2; --coral:#E07461; --coral-soft:rgba(224,116,97,.15); --ice:#3D8FD1;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(160deg,var(--bg),var(--bg2)) fixed;color:var(--text);font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;padding-bottom:90px}
+.wrap{max-width:780px;margin:0 auto;padding:26px 18px}
+header{padding:32px 0 8px}
+.brand{font-size:15px;font-weight:700;color:var(--muted)}
+.brand b{color:var(--coral)}
+h1{font-size:33px;line-height:1.14;font-weight:800;letter-spacing:-.01em;margin-top:10px}
+.sub{color:var(--muted);font-size:16px;margin-top:10px}
+.sub b{color:var(--text)}
+.howto{background:var(--coral-soft);border:1px solid rgba(224,116,97,.35);border-radius:14px;padding:14px 16px;margin-top:18px;font-size:15.5px}
+.howto b{color:var(--text)}
+.step{margin:38px 0 0}
+.step-h{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.step-n{flex:0 0 auto;min-width:38px;height:38px;border-radius:11px;background:var(--coral);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.step-t{font-size:22px;font-weight:800;line-height:1.2}
+.step-d{color:var(--muted);font-size:15.5px;margin:2px 0 12px 50px}
+.prompt{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:46px 18px 18px;margin:12px 0;cursor:pointer;transition:background .15s,border-color .2s,box-shadow .2s}
+.prompt:active{background:rgba(224,116,97,.12)}
+.prompt pre{white-space:pre-wrap;font-family:inherit;font-size:15.5px;line-height:1.6;color:var(--text)}
+.prompt .cp{position:absolute;top:12px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--coral)}
+.prompt .cp::after{content:"копировать";background:rgba(224,116,97,.16);border:1px solid rgba(224,116,97,.4);border-radius:999px;padding:5px 14px;font-size:12px;letter-spacing:.06em}
+.prompt.copied{border-color:#4caf7d;box-shadow:0 0 0 2px rgba(76,175,125,.35), 0 0 34px rgba(76,175,125,.28);background:rgba(76,175,125,.1)}
+.prompt.copied .cp{color:#4caf7d}
+.prompt.copied .cp::after{content:"скопировано ✓";background:rgba(76,175,125,.2);border-color:rgba(76,175,125,.55);color:#4caf7d}
+details.acc{background:var(--surface);border:1px solid var(--line);border-radius:13px;margin:8px 0;overflow:hidden}
+details.acc>summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:16px;font-weight:650;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:12px}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"открыть промпт";flex:0 0 auto;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.35);border-radius:999px;padding:5px 13px}
+details.acc[open]>summary::after{content:"свернуть";color:var(--muted);background:rgba(255,255,255,.06);border-color:var(--line)}
+details.acc[open]>summary{border-bottom:1px solid var(--line)}
+details.acc .prompt{margin:12px 14px 14px}
+.prac{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#F2A08E,var(--coral));color:#fff;font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:9px 20px;border-radius:999px;margin-bottom:10px;box-shadow:0 8px 26px rgba(224,116,97,.4)}
+details.acc--gpt>summary::after{content:"открыть ассистента"}
+details.acc--gpt[open]>summary::after{content:"свернуть"}
+.dl--big{background:rgba(224,116,97,.12);border-color:rgba(224,116,97,.45)}
+.dl--big .dl-i{background:var(--coral);color:#fff}
+.dl--big .dl-t b{font-size:16.5px}
+.dl{display:flex;align-items:center;gap:14px;margin:12px 0;padding:15px 17px;background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.38);border-radius:14px;text-decoration:none;color:var(--text)}
+.dl:active{background:rgba(76,175,125,.2)}
+.dl-i{flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:#4caf7d;color:#0B1220;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dl-t{display:block;min-width:0}
+.dl-t b{display:block;font-size:15.5px;font-weight:750}
+.dl-t em{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.chain{display:flex;flex-direction:column;gap:0;margin:14px 0}
+.ch{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 15px}
+.ch-n{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:rgba(224,116,97,.18);color:var(--coral);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ch-t{font-size:14.5px;color:var(--muted);line-height:1.35}
+.ch-t b{display:block;color:var(--text);font-size:15.5px;font-weight:750}
+.ch-ar{color:var(--coral);text-align:center;font-size:17px;line-height:1;padding:4px 0;opacity:.75}
+.ch--fin{border-color:rgba(76,175,125,.45);background:rgba(76,175,125,.09)}
+.ch--fin .ch-n{background:rgba(76,175,125,.2);color:#4caf7d}
+.trio{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.tr{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:15px 17px}
+.tr b{font-size:18px;font-weight:800;display:inline-block}
+.tr .q{display:inline-block;margin-left:9px;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.3);border-radius:999px;padding:4px 11px;vertical-align:2px}
+.tr p{margin-top:8px;font-size:15px;line-height:1.55;color:var(--muted)}
+.tr em{display:inline-block;margin-top:9px;font-style:normal;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tr-kak{border-left-color:#C9707F}.tr-kak .q{color:#E39CA8;background:rgba(201,112,127,.16);border-color:rgba(201,112,127,.35)}
+.tr-gde{border-left-color:var(--ice)}.tr-gde .q{color:var(--ice);background:rgba(61,143,209,.14);border-color:rgba(61,143,209,.35)}
+.sk-t{display:block;min-width:0}
+.sk-t em{display:block;font-style:normal;font-size:13px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.35}
+.skill-what{margin:12px 14px 0;font-size:15px;line-height:1.55;color:var(--muted)}
+.skill-what b{color:var(--text)}
+.prompt--skill pre{max-height:132px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.prompt--skill::after{content:"текст длинный, читать его не нужно: просто скопируйте";position:absolute;left:18px;right:18px;bottom:12px;font-size:13px;line-height:1.4;color:var(--muted)}
+.prompt--skill{padding-bottom:52px}
+.prompt--test{border-left-color:var(--ice)}
+.prompt--test .cp{color:var(--ice)}
+.prompt--test .cp::after{background:rgba(61,143,209,.16);border-color:rgba(61,143,209,.4);color:var(--ice)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0;font-size:15.5px;color:var(--muted)}
+.card b{color:var(--text)}
+.card ul{margin:8px 0 0 18px}
+.card li{margin:5px 0}
+.note{font-size:15px;color:var(--muted);background:rgba(61,143,209,.08);border:1px solid rgba(61,143,209,.25);border-radius:12px;padding:12px 14px;margin:10px 0}
+.note b{color:var(--text)}
+.ten{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.tf{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:11px;padding:11px 15px;font-size:15.5px;cursor:pointer}
+.tf:active{background:rgba(224,116,97,.12)}
+.tf.copied{border-color:#4caf7d;background:rgba(76,175,125,.16)}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0}
+.basket{border-radius:13px;padding:13px;font-size:14px;border:1px solid}
+.basket b{display:block;font-size:15px;margin-bottom:5px}
+.b-ok{background:rgba(76,175,125,.08);border-color:rgba(76,175,125,.35)}
+.b-mid{background:rgba(224,169,92,.08);border-color:rgba(224,169,92,.35)}
+.b-no{background:rgba(224,92,92,.08);border-color:rgba(224,92,92,.35)}
+.b-ok b{color:#4caf7d}.b-mid b{color:#e0a95c}.b-no b{color:#e05c5c}
+a{color:var(--ice)}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.links a{display:block;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;color:var(--text)}
+.links a:active{background:rgba(224,116,97,.14);border-color:rgba(224,116,97,.45)}
+.links a b{display:block;font-size:17px;font-weight:800}
+.links a span{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.links a em{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:var(--coral);margin-top:5px}
+.links a:first-child{grid-column:1 / -1}
+footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14.5px}
+@media(max-width:560px){.grid3{grid-template-columns:1fr}
+.prompt{padding-top:56px}
+.sk-t em{font-size:12.5px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">neovida<b>.</b>ai</div>
+  <h1>Домашка<br>после занятия 4</h1>
+  <div class="sub">2 и 3 сентября · <b>«Платформа: всё из одного окна»</b> · Альберт Валеев</div>
+  <div class="howto"><b>Два дня, два слоя.</b> В среду собираете память и инструменты: блокнот, который знает ваши документы, проект и навыки. В четверг, до 18:00, включаете автоматику: плагины и задачи по расписанию. К занятию 5 платформа у вас работает целиком, а не кусками.</div>
+  <div class="note"><b>Вся домашка сразу здесь,</b> на оба дня вперёд. Ждать ничего не надо.</div>
+  <div class="note"><b>Всё, что понадобится,</b> лежит в <a href="shpargalka-4.html">шпаргалке</a> и трёх библиотеках: <a href="navyki-4.html">навыки</a>, <a href="scenarii-4.html">сценарии</a>, <a href="proekty-4.html">проекты</a>.</div>
+  <div class="note" style="border-left-color:#4caf7d"><b>Если что-то на занятии проскочило мимо,</b> все шаги расписаны в шпаргалке по порядку. Открывайте её и идите сверху вниз, там ничего не пропущено.</div>
+</header>
+
+<div class="step">
+  <div class="prac">Среда, 2 сентября · задание 1</div>
+  <div class="step-h"><span class="step-n">1</span><span class="step-t">Блокнот: ваша память, которая живёт отдельно</span></div>
+  <div class="step-d">Ассистент отвечает из головы и выдумывает на границе своих знаний. Блокнот отвечает <b>только по вашим документам</b> и на каждый ответ показывает, из какого файла его взял</div>
+
+  <div class="step-d" style="margin-top:16px"><b>Часть 1. Собираем блокнот</b></div>
+  <div class="chain">
+    <div class="ch"><span class="ch-n">1</span><span class="ch-t">Открыли <b>notebook.google.com</b> и создали блокнот. Назвали по теме, а не «Блокнот 1»</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">2</span><span class="ch-t">Загрузили документы <b>по одной теме</b>: регламенты, инструкции, прайсы, договоры, презентации, переписку. Не мешайте разные темы в один блокнот, он начнёт путаться</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">3</span><span class="ch-t">Задали вопрос, ответ на который есть <b>только в этих файлах</b>, и нажали на сноску</span></div>
+    <div class="ch ch--fin"><span class="ch-n">4</span><span class="ch-t">Задали вопрос, ответа на который там <b>заведомо нет</b>. Должен честно сказать, что не нашёл</span></div>
+  </div>
+  <div class="note"><b>Сколько загружать.</b> Столько, сколько у вас есть по этой теме. Блокнот держит до трёхсот источников, так что ограничение не в нём, а в том, что вы найдёте у себя за вечер. Нечего загружать, возьмите то, что и так лежит: письма по проекту, любой договор, инструкцию для новичка, отчёт за месяц.</div>
+
+  <div class="step-d" style="margin-top:20px"><b>Часть 2. Подключаем блокнот к чату</b></div>
+  <div class="step-d">Ради этого всё и затевалось: блокнот собирается один раз, а вызывается из любого разговора</div>
+  <div class="chain">
+    <div class="ch"><span class="ch-n">5</span><span class="ch-t">Открыли <b>Gemini</b>, начали новый чат</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">6</span><span class="ch-t">Нажали <b>плюс</b> рядом с полем ввода и выбрали свой блокнот</span></div>
+    <div class="ch ch--fin"><span class="ch-n">7</span><span class="ch-t">Задали рабочий вопрос и убедились, что он отвечает <b>по вашим документам</b>, а не вообще</span></div>
+  </div>
+
+  <div class="step-d" style="margin-top:20px"><b>Часть 3. Студия: одни источники, восемь форматов</b></div>
+  <div class="ten">
+    <div class="tf">Аудиопересказ</div>
+    <div class="tf">Видеопересказ</div>
+    <div class="tf">Презентация</div>
+    <div class="tf">Ментальная карта</div>
+    <div class="tf">Отчёты</div>
+    <div class="tf">Карточки</div>
+    <div class="tf">Тест</div>
+    <div class="tf">Инфографика</div>
+    <div class="tf">Таблица данных</div>
+  </div>
+  <div class="note"><b>Сделайте минимум два формата.</b> Обязательно попробуйте <b>аудиопересказ</b>: двое ведущих двадцать минут обсуждают ваши документы. Это лучший способ вникнуть в чужой длинный текст, и слушается за рулём.</div>
+
+  <div class="note"><b>Отчёт за среду один, общий:</b> его форма в конце задания 2, ниже. Сначала доделайте оба задания.</div>
+</div>
+
+<div class="step">
+  <div class="prac">Среда, 2 сентября · задание 2</div>
+  <div class="step-h"><span class="step-n">2</span><span class="step-t">Проект и навыки: ставим себе инструменты</span></div>
+  <div class="step-d">Проект это кабинет, где лежат ваши файлы и правила. Навык это умение, которое живёт постоянно и зовётся одной фразой</div>
+
+  <div class="step-d" style="margin-top:16px"><b>Задание 1. Один проект, руками</b></div>
+  <div class="dl">
+    <a class="dl--big" href="proekty-4.html"><span class="dl-i">📁</span><span class="dl-t"><b>Двенадцать готовых инструкций</b>Клиент, тендер, КП, поставщики, найм, совещания, новичок, цифры, договоры, объект, тексты, личная стратегия</span><em>открыть</em></a>
+  </div>
+  <div class="chain">
+    <div class="ch"><span class="ch-n">1</span><span class="ch-t"><b>chatgpt.com/projects</b> → «Создать». Назвали по задаче</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">2</span><span class="ch-t">Взяли инструкцию <b>из библиотеки или написали свою</b>, подставили своё в скобках</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">3</span><span class="ch-t">Загрузили <b>три-четыре настоящих файла</b></span></div>
+    <div class="ch ch--fin"><span class="ch-n">4</span><span class="ch-t">Задали два проверочных вопроса: один по файлам, один заведомо мимо</span></div>
+  </div>
+  <div class="note"><b>Проверяем вторым вопросом.</b> Он должен честно сказать, что этого в файлах нет. Начал сочинять, значит в инструкции не хватает фразы «чего нет в загруженных файлах, не выдумывай».</div>
+
+  <div class="step-d" style="margin-top:22px"><b>Задание 2. Навыки: ставим готовые</b></div>
+  <div class="dl">
+    <a class="dl--big" href="navyki-4.html"><span class="dl-i">🎓</span><span class="dl-t"><b>Тринадцать навыков, скачиваются кнопкой</b>Первым идёт «Совет экспертов»: это ваша цепочка качества с занятия 2, свёрнутая в один навык</span><em>открыть</em></a>
+  </div>
+  <div class="step-d">Поставьте <b>минимум три</b>: обязательно «Совет экспертов» и ещё два под свою работу. Ставится за тридцать секунд: скачали архив, открыли <b>chatgpt.com/skills</b>, плюс, «Загрузить с компьютера»</div>
+  <div class="note"><b>Позовите каждый хотя бы раз.</b> Навык, который вы поставили и ни разу не применили, ничего вам не даст. «Совет экспертов» проще всего проверить на любом решении, которое вы сейчас обдумываете.</div>
+
+  <div class="step-d" style="margin-top:22px"><b>Задание 3. Проверьте каждый навык на живой задаче</b></div>
+  <div class="step-d">Поставить мало. Навык, который вы ни разу не позвали, ничего вам не даёт и только мешает выбирать из списка</div>
+  <div class="chain">
+    <div class="ch"><span class="ch-n">1</span><span class="ch-t">Взяли <b>реальную задачу этой недели</b>, а не выдуманную</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">2</span><span class="ch-t">Позвали навык через <b>собаку и имя</b>, либо просто описали задачу словами</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">3</span><span class="ch-t">Спросили: <b>«какой навык ты сейчас применил»</b>. Так видно, подхватился он или нет</span></div>
+    <div class="ch ch--fin"><span class="ch-n">4</span><span class="ch-t">Не понравился результат, <b>правьте запрос словами</b> и прогоняйте ещё раз</span></div>
+  </div>
+  <div class="note"><b>С «Совета экспертов» начать проще всего.</b> Возьмите решение, которое сейчас обдумываете, и скажите: «прогони это через совет экспертов». Сравните с тем, как вы делали это шестью сообщениями на занятии 2.</div>
+  <div class="note"><b>Навык не подхватился сам?</b> Это нормально. Позовите его явно, через собаку, и посмотрите, меняется ли ответ. Если меняется, значит он работает, просто описание не совпало с вашей формулировкой.</div>
+
+  <div class="note" style="border-left-color:#4caf7d"><b>Что прислать в среду.</b> Хэштег <b>#день1</b>, дальше шесть строк:<br>
+  1. Как называется блокнот и <b>что в нём лежит</b><br>
+  2. Что ответил вопрос, на который ответа в файлах нет: в блокноте и в проекте<br>
+  3. Какие два формата сделали в студии и что из этого реально пригодится<br>
+  4. Какой проект завели и какие файлы в нём лежат<br>
+  5. Какие три навыка поставили<br>
+  6. Какой из трёх оказался полезнее всех: <b>на какой задаче позвали и что он выдал</b></div>
+</div>
+
+<div class="step">
+  <div class="prac">Четверг, 3 сентября · до 18:00</div>
+  <div class="step-h"><span class="step-n">3</span><span class="step-t">Плагины и расписание: включаем автоматику</span></div>
+  <div class="step-d">Последний слой, минут на тридцать. До сих пор всё начиналось с того, что вы открыли чат. Сегодня система начинает работать без вас. Вечером занятие 5, поэтому отчёт до 18:00</div>
+
+  <div class="step-d" style="margin-top:16px"><b>Задание 1. Найти и подключить свои инструменты</b></div>
+  <div class="step-d">Не берите первое попавшееся из витрины. <b>Подумайте, чем вы реально пользуетесь каждый день</b>, и найдите это поиском</div>
+  <div class="chain">
+    <div class="ch"><span class="ch-n">1</span><span class="ch-t">Выписали <b>три сервиса</b>, в которые заходите ежедневно: почта, диск, календарь, планировщик, диктофон, доска задач</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">2</span><span class="ch-t">Открыли <b>chatgpt.com/plugins</b> и нашли каждый <b>через поиск</b>, а не глазами по витрине</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">3</span><span class="ch-t">Подключили <b>минимум два</b>. Открыли карточку и прочитали блоки «Приложение» и «Возможности»</span></div>
+    <div class="ch ch--fin"><span class="ch-n">4</span><span class="ch-t">Взяли <b>готовый сценарий прямо с карточки</b> и запустили на своих данных</span></div>
+  </div>
+  <div class="note"><b>Витрина обманывает.</b> На главной странице лежит десяток рекомендованных, а настоящий каталог в сотни раз больше и открывается только поиском. TickTick, Todoist, Habitify, Trello, Plaud, Zoom, Canva, семейный бюджет находятся именно так.</div>
+  <div class="note"><b>Notion особенный:</b> у него значок ноутбука вместо плюса, он требует десктопное приложение и в браузере не подключится. Не мучайтесь с ним в браузере.</div>
+
+  <div class="step-d" style="margin-top:22px"><b>Задание 2. Три задачи на расписании</b></div>
+  <div class="dl">
+    <a class="dl--big" href="scenarii-4.html"><span class="dl-i">⏰</span><span class="dl-t"><b>Двадцать готовых сценариев</b>Подставили своё в квадратных скобках и поставили. Плашка сверху говорит, нужен плагин или нет</span><em>открыть</em></a>
+  </div>
+  <div class="step-d"><b>Возьмите три разных, а не три похожих</b></div>
+  <div class="ten">
+    <div class="tf"><b>Одну утреннюю:</b> сводка по темам, разбор почты «что горит» или план дня из календаря</div>
+    <div class="tf"><b>Одну про деньги:</b> кому не ответили, что обещали, конкуренты, что пишут про нас, тендеры</div>
+    <div class="tf"><b>Одну личную:</b> тренировки и меню, что посмотреть на выходных, три вечерних вопроса</div>
+  </div>
+  <div class="note"><b>Перед тем как ставить, проверьте руками.</b> Отправьте тот же текст обычным сообщением в чат. Результат не понравился, правьте промпт сразу, а не мучайтесь неделю.</div>
+  <div class="note"><b>Хотите результат на почту,</b> допишите в конце: «готовый результат отправляй письмом на [ваш адрес]». Для этого должен быть подключён Gmail.</div>
+
+  <div class="note" style="border-left-color:#4caf7d"><b>Что прислать в четверг, до 18:00.</b> Хэштег <b>#день2</b>, дальше пять строк:<br>
+  1. Какие плагины подключили и <b>зачем именно эти</b><br>
+  2. Что выдал готовый сценарий с карточки на ваших данных<br>
+  3. Три задачи на расписании: какие и во сколько приходят<br>
+  4. По каждой одна строка: <b>что она вам даёт</b><br>
+  5. Одной строкой: что из всего собранного за два дня вы точно оставите, а что удалите через неделю</div>
+
+  <div class="note"><b>Бонус, если аппетит разыгрался.</b> Соберите калькулятор, который считаете руками каждую неделю, и опубликуйте его ссылкой через раздел «Сайты». Готовый промпт в <a href="shpargalka-4.html">шпаргалке</a>, шаг 6. Ссылку пришлите в чат, посмотрим все вместе.</div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">✓</span><span class="step-t">Как сдавать</span></div>
+  <div class="step-d">Отчёт занимает минуту. Присылайте в чат группы в тот же день, <b>первой строкой хэштег</b></div>
+  <div class="note" style="border-left-color:#4caf7d"><b>Хэштеги.</b> Среда это <b>#день1</b>, четверг до 18:00 это <b>#день2</b>. Догоняете, ставьте хэштег того дня, задание которого делаете, а не сегодняшнего.</div>
+  <div class="prompt"><div class="cp">ПРИМЕР отчёта за день 1 · блокнот и файлы выдуманы</div><pre>#день1
+
+Блокнот: «Работа с подрядчиками».
+Внутри: типовой договор, регламент приёмки, три акта и переписка
+по последнему объекту.
+
+Вопрос мимо файлов, про сроки гарантии у смежников: и блокнот,
+и проект честно сказали, что в источниках этого нет.
+
+В студии сделал аудиопересказ и ментальную карту. Аудио послушал
+за рулём, реально понял, где у нас в регламенте дырка.
+
+Проект: «Подрядчики, объект на Пушкина». Внутри договор и смета.
+
+Навыки: Совет экспертов, Аудит договора, Разбор недели.
+
+Полезнее всех Совет экспертов: прогнал через него решение
+по замене субподрядчика, увидел риск, о котором не думал.</pre></div>
+  <div class="note"><b>Это пример, а не эталон.</b> Блокнот, файлы, проекты и навыки у вас будут свои: подставляйте своё, а не переписывайте отсюда. Форма та же: шесть строк по списку из задания 2.</div>
+  <div class="note"><b>Не получилось, застряли, выдало ерунду?</b> Это тоже результат. Присылайте как есть, вместе со своим запросом. На занятии 5 такие случаи разбираем вживую.</div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">4</span><span class="step-t">Занятие 5 · четверг, 3 сентября, 19:00 · тот же кабинет</span></div>
+  <div class="step-d"><b>До сих пор система работала по вашей команде. Дальше она начнёт работать по своей</b></div>
+  <div class="note">Приходите с тем, что соберёте за эти два дня. Дальше будем учить систему работать самостоятельно.</div>
+  <div class="links">
+    <a href="shpargalka-4.html"><b>Шпаргалка занятия 4</b><span>вся методология урока и промпты по порядку</span><em>открыть</em></a>
+    <a href="navyki-4.html"><b>Библиотека навыков</b><span>тринадцать готовых, скачиваются кнопкой</span><em>открыть</em></a>
+    <a href="scenarii-4.html"><b>Двадцать сценариев расписания</b><span>подставили своё и поставили</span><em>открыть</em></a>
+    <a href="proekty-4.html"><b>Инструкции проектов</b><span>двенадцать готовых</span><em>открыть</em></a>
+    <a href="prezentaciya-4.html"><b>Презентация</b><span>слайды занятия 4</span><em>открыть</em></a>
+    <a href="https://notebook.google.com"><b>Блокноты</b><span>notebook.google.com</span><em>открыть</em></a>
+  </div>
+</div>
+</div>
+<script>
+function bindCopy(el, getText){
+  el.addEventListener('click',()=>{
+    const t=getText();
+    const cp=el.querySelector('.cp');
+    const done=()=>{
+      el.classList.add('copied');
+      setTimeout(()=>el.classList.remove('copied'),1600);
+    };
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(done).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    });
+  });
+}
+document.querySelectorAll('.prompt').forEach(el=>bindCopy(el,()=>{const p=el.querySelector('pre');return p.innerText||p.textContent;}));
+document.querySelectorAll('.tf').forEach(el=>bindCopy(el,()=>(el.innerText||el.textContent).trim()));
+</script>
+</body>
+</html>
