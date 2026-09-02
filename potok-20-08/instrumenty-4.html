@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Библиотека инструментов · Занятие 4</title>
+<style>
+:root{
+  --bg:#0B1220; --bg2:#131B2E; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.1);
+  --text:#F4F1EC; --muted:#9AA3B2; --coral:#E07461; --coral-soft:rgba(224,116,97,.15); --ice:#3D8FD1;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(160deg,var(--bg),var(--bg2)) fixed;color:var(--text);font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;padding-bottom:90px}
+.wrap{max-width:780px;margin:0 auto;padding:26px 18px}
+header{padding:32px 0 8px}
+.brand{font-size:15px;font-weight:700;color:var(--muted)}
+.brand b{color:var(--coral)}
+h1{font-size:33px;line-height:1.14;font-weight:800;letter-spacing:-.01em;margin-top:10px}
+.sub{color:var(--muted);font-size:16px;margin-top:10px}
+.sub b{color:var(--text)}
+.howto{background:var(--coral-soft);border:1px solid rgba(224,116,97,.35);border-radius:14px;padding:14px 16px;margin-top:18px;font-size:15.5px}
+.howto b{color:var(--text)}
+.step{margin:38px 0 0}
+.step-h{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.step-n{flex:0 0 auto;min-width:38px;height:38px;border-radius:11px;background:var(--coral);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.step-t{font-size:22px;font-weight:800;line-height:1.2}
+.step-d{color:var(--muted);font-size:15.5px;margin:2px 0 12px 50px}
+.prompt{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:46px 18px 18px;margin:12px 0;cursor:pointer;transition:background .15s,border-color .2s,box-shadow .2s}
+.prompt:active{background:rgba(224,116,97,.12)}
+.prompt pre{white-space:pre-wrap;font-family:inherit;font-size:15.5px;line-height:1.6;color:var(--text)}
+.prompt .cp{position:absolute;top:12px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--coral)}
+.prompt .cp::after{content:"копировать";background:rgba(224,116,97,.16);border:1px solid rgba(224,116,97,.4);border-radius:999px;padding:5px 14px;font-size:12px;letter-spacing:.06em}
+.prompt.copied{border-color:#4caf7d;box-shadow:0 0 0 2px rgba(76,175,125,.35), 0 0 34px rgba(76,175,125,.28);background:rgba(76,175,125,.1)}
+.prompt.copied .cp{color:#4caf7d}
+.prompt.copied .cp::after{content:"скопировано ✓";background:rgba(76,175,125,.2);border-color:rgba(76,175,125,.55);color:#4caf7d}
+details.acc{background:var(--surface);border:1px solid var(--line);border-radius:13px;margin:8px 0;overflow:hidden}
+details.acc>summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:16px;font-weight:650;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:12px}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"открыть промпт";flex:0 0 auto;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.35);border-radius:999px;padding:5px 13px}
+details.acc[open]>summary::after{content:"свернуть";color:var(--muted);background:rgba(255,255,255,.06);border-color:var(--line)}
+details.acc[open]>summary{border-bottom:1px solid var(--line)}
+details.acc .prompt{margin:12px 14px 14px}
+.prac{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#F2A08E,var(--coral));color:#fff;font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:9px 20px;border-radius:999px;margin-bottom:10px;box-shadow:0 8px 26px rgba(224,116,97,.4)}
+details.acc--gpt>summary::after{content:"открыть ассистента"}
+details.acc--gpt[open]>summary::after{content:"свернуть"}
+.dl--big{background:rgba(224,116,97,.12);border-color:rgba(224,116,97,.45)}
+.dl--big .dl-i{background:var(--coral);color:#fff}
+.dl--big .dl-t b{font-size:16.5px}
+.dl{display:flex;align-items:center;gap:14px;margin:12px 0;padding:15px 17px;background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.38);border-radius:14px;text-decoration:none;color:var(--text)}
+.dl:active{background:rgba(76,175,125,.2)}
+.dl-i{flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:#4caf7d;color:#0B1220;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dl-t{display:block;min-width:0}
+.dl-t b{display:block;font-size:15.5px;font-weight:750}
+.dl-t em{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.chain{display:flex;flex-direction:column;gap:0;margin:14px 0}
+.ch{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 15px}
+.ch-n{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:rgba(224,116,97,.18);color:var(--coral);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ch-t{font-size:14.5px;color:var(--muted);line-height:1.35}
+.ch-t b{display:block;color:var(--text);font-size:15.5px;font-weight:750}
+.ch-ar{color:var(--coral);text-align:center;font-size:17px;line-height:1;padding:4px 0;opacity:.75}
+.ch--fin{border-color:rgba(76,175,125,.45);background:rgba(76,175,125,.09)}
+.ch--fin .ch-n{background:rgba(76,175,125,.2);color:#4caf7d}
+.trio{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.tr{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:15px 17px}
+.tr b{font-size:18px;font-weight:800;display:inline-block}
+.tr .q{display:inline-block;margin-left:9px;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.3);border-radius:999px;padding:4px 11px;vertical-align:2px}
+.tr p{margin-top:8px;font-size:15px;line-height:1.55;color:var(--muted)}
+.tr em{display:inline-block;margin-top:9px;font-style:normal;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tr-kak{border-left-color:#C9707F}.tr-kak .q{color:#E39CA8;background:rgba(201,112,127,.16);border-color:rgba(201,112,127,.35)}
+.tr-gde{border-left-color:var(--ice)}.tr-gde .q{color:var(--ice);background:rgba(61,143,209,.14);border-color:rgba(61,143,209,.35)}
+.sk-t{display:block;min-width:0}
+.sk-t em{display:block;font-style:normal;font-size:13px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.35}
+.skill-what{margin:12px 14px 0;font-size:15px;line-height:1.55;color:var(--muted)}
+.skill-what b{color:var(--text)}
+.prompt--skill pre{max-height:132px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.prompt--skill::after{content:"текст длинный, читать его не нужно: просто скопируйте";position:absolute;left:18px;right:18px;bottom:12px;font-size:13px;line-height:1.4;color:var(--muted)}
+.prompt--skill{padding-bottom:52px}
+.prompt--test{border-left-color:var(--ice)}
+.prompt--test .cp{color:var(--ice)}
+.prompt--test .cp::after{background:rgba(61,143,209,.16);border-color:rgba(61,143,209,.4);color:var(--ice)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0;font-size:15.5px;color:var(--muted)}
+.card b{color:var(--text)}
+.card ul{margin:8px 0 0 18px}
+.card li{margin:5px 0}
+.note{font-size:15px;color:var(--muted);background:rgba(61,143,209,.08);border:1px solid rgba(61,143,209,.25);border-radius:12px;padding:12px 14px;margin:10px 0}
+.note b{color:var(--text)}
+.ten{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.tf{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:11px;padding:11px 15px;font-size:15.5px;cursor:pointer}
+.tf:active{background:rgba(224,116,97,.12)}
+.tf.copied{border-color:#4caf7d;background:rgba(76,175,125,.16)}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0}
+.basket{border-radius:13px;padding:13px;font-size:14px;border:1px solid}
+.basket b{display:block;font-size:15px;margin-bottom:5px}
+.b-ok{background:rgba(76,175,125,.08);border-color:rgba(76,175,125,.35)}
+.b-mid{background:rgba(224,169,92,.08);border-color:rgba(224,169,92,.35)}
+.b-no{background:rgba(224,92,92,.08);border-color:rgba(224,92,92,.35)}
+.b-ok b{color:#4caf7d}.b-mid b{color:#e0a95c}.b-no b{color:#e05c5c}
+a{color:var(--ice)}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.links a{display:block;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;color:var(--text)}
+.links a:active{background:rgba(224,116,97,.14);border-color:rgba(224,116,97,.45)}
+.links a b{display:block;font-size:17px;font-weight:800}
+.links a span{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.links a em{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:var(--coral);margin-top:5px}
+.links a:first-child{grid-column:1 / -1}
+footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14.5px}
+@media(max-width:560px){.grid3{grid-template-columns:1fr}
+.prompt{padding-top:56px}
+.sk-t em{font-size:12.5px}}
+
+/* ── подсказки под шагом ── */
+.tips{display:flex;flex-direction:column;gap:10px;margin:18px 0 4px}
+.tip{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--coral);border-radius:13px;padding:15px 18px;font-size:16px;line-height:1.55;color:var(--muted)}
+.tip b{color:var(--text);font-weight:700}
+.tip a{color:var(--coral)}
+/* ── сравнение двух ответов ── */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.cmp > div{border-radius:14px;padding:16px 18px;font-size:16px;line-height:1.55;color:var(--muted);border:1px solid}
+.cmp .ok{background:rgba(76,175,125,.09);border-color:rgba(76,175,125,.36)}
+.cmp .no{background:rgba(224,92,92,.09);border-color:rgba(224,92,92,.36)}
+.cmp .lbl{display:block;font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:9px}
+.cmp .ok .lbl{color:#4caf7d}
+.cmp .no .lbl{color:#e05c5c}
+.cmp b{color:var(--text);font-weight:700}
+@media(max-width:760px){.cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">neovida<b>.</b>ai</div>
+  <h1>Библиотека<br>инструментов</h1>
+  <div class="sub">Занятие 4 · <b>калькуляторы и приложения, которые можно отдать ссылкой</b> · Альберт Валеев</div>
+  <div class="howto"><b>Как пользоваться:</b> нашли свой инструмент, тапнули по промпту, он скопировался, вставили в ChatGPT. Поменять надо одну-две строки в квадратных скобках, примеры уже подставлены. Собранное публикуется через раздел «Сайты» и отдаётся любому человеку простой ссылкой: ему не нужен ни ChatGPT, ни подписка.</div>
+  <div class="howto" style="margin-top:12px"><b>Пороги и списки в промптах примерные.</b> 20% маржи, 5000 за час или список блюд это заготовки для старта: соберите инструмент и поменяйте детали словами, «жёлтый пусть будет от 15 процентов».</div>
+</header>
+
+<div class="step">
+  <div class="prac">Часть 1</div>
+  <div class="step-h"><span class="step-n">1</span><span class="step-t">Десять калькуляторов: считают и показывают светофор</span></div>
+  <div class="step-d">Скидка и отсрочка, стоимость часа, окупаемость запуска, расчёт КП, план и факт, стоимость подписчика, цена простоя, окупаемость рекламы, сравнение поставщиков, воронка запуска</div>
+<div class="prompt"><div class="cp">1 · скидка и отсрочка</div><pre>Сделай интерактивный калькулятор «Скидка и отсрочка».
+
+Поля ввода: сумма заказа, скидка в процентах, дней отсрочки платежа,
+моя маржа в процентах.
+Считает: маржу после скидки, во что обходится отсрочка из расчёта
+25% годовых, итоговую прибыль сделки в рублях.
+Светофор: зелёный, если итоговая маржа выше 20%, жёлтый от 10 до 20%,
+красный ниже 10%.
+
+Сделай красиво, на русском, результат видно сразу и крупно.</pre></div>
+
+  <div class="prompt"><div class="cp">2 · стоимость часа</div><pre>Сделай интерактивный калькулятор «Стоимость моего часа».
+
+Поля ввода: доход за месяц, рабочих дней в месяце, часов работы в день,
+доля времени на клиентов в процентах.
+Считает: стоимость моего часа и рабочего дня, сколько денег стоит час,
+отданный бесплатно.
+Светофор: зелёный, если час дороже 5000 рублей, жёлтый от 2000 до 5000,
+красный ниже 2000.
+
+Сделай красиво, на русском, результат видно сразу и крупно.</pre></div>
+
+  <div class="prompt"><div class="cp">3 · окупаемость запуска</div><pre>Сделай интерактивный калькулятор «Окупаемость запуска».
+
+Поля ввода: бюджет на трафик, цена продукта, ожидаемых регистраций,
+конверсия из регистрации в оплату в процентах.
+Считает: количество оплат, выручку, прибыль, стоимость одной регистрации
+и возврат на вложенный рубль.
+Светофор: зелёный, если возврат больше 200%, жёлтый от 100 до 200%,
+красный ниже 100%.
+
+Сделай красиво, на русском, результат видно сразу и крупно.</pre></div>
+
+  <div class="prompt"><div class="cp">4 · расчёт КП</div><pre>Сделай интерактивный калькулятор «Расчёт коммерческого предложения».
+
+Поля ввода: часы работ, ставка за час, материалы и закупка,
+наценка в процентах, скидка клиенту в процентах.
+Считает: себестоимость, цену для клиента, прибыль и маржу в процентах.
+Светофор: зелёный, если маржа выше 25%, жёлтый от 12 до 25%,
+красный ниже 12%.
+
+Сделай красиво, на русском, результат видно сразу и крупно.</pre></div>
+
+  <div class="prompt"><div class="cp">5 · план и факт</div><pre>Сделай интерактивный калькулятор «План и факт месяца».
+
+Поля ввода: план на месяц в рублях, факт на сегодня, сегодняшнее число,
+дней в месяце.
+Считает: процент выполнения, средний темп в день и прогноз на конец
+месяца при текущем темпе.
+Светофор: зелёный, если прогноз 100% плана и выше, жёлтый от 85 до 100%,
+красный ниже 85%.
+
+Сделай красиво, на русском, результат видно сразу и крупно.</pre></div>
+
+  <div class="prompt"><div class="cp">6 · стоимость подписчика</div><pre>Сделай интерактивный калькулятор «Стоимость подписчика».
+
+Поля ввода: бюджет на рекламу, пришло подписчиков, средний чек,
+конверсия подписчика в покупателя в процентах.
+Считает: цену подписчика, цену покупателя, выручку с притока
+и возврат на вложенный рубль.
+Светофор: зелёный, если покупатель обходится дешевле трети чека,
+жёлтый до двух третей чека, красный дороже.
+
+Сделай красиво, на русском, результат видно сразу и крупно.</pre></div>
+
+  <div class="prompt"><div class="cp">7 · цена простоя</div><pre>Сделай интерактивный калькулятор «Цена простоя».
+
+Поля ввода: выручка за месяц, рабочих дней в месяце, дней простоя,
+доля процессов, которые встают, в процентах.
+Считает: потери за день простоя и за весь простой, долю потерь
+от месячной выручки.
+Светофор: зелёный, если потери меньше 3% месячной выручки,
+жёлтый от 3 до 10%, красный выше 10%.
+
+Сделай красиво, на русском, результат видно сразу и крупно.</pre></div>
+
+  <div class="prompt"><div class="cp">8 · окупаемость рекламы</div><pre>Сделай интерактивный калькулятор «Окупаемость рекламы».
+
+Поля ввода: бюджет, получено заявок, конверсия заявки в оплату
+в процентах, средний чек, маржа в процентах.
+Считает: цену заявки, цену клиента, прибыль с кампании и возврат
+на вложенный рубль.
+Светофор: зелёный, если возврат выше 150%, жёлтый от 100 до 150%,
+красный ниже 100%.
+
+Сделай красиво, на русском, результат видно сразу и крупно.</pre></div>
+
+  <div class="prompt"><div class="cp">9 · сравнение поставщиков</div><pre>Сделай интерактивный калькулятор «Сравнение двух поставщиков».
+
+Поля ввода для каждого из двух: цена, срок поставки в днях,
+процент брака или срывов.
+Считает: итоговую стоимость с учётом цены ожидания и риска,
+и выводит крупно, кто выгоднее и на сколько рублей.
+Цену дня ожидания сделай отдельным полем сверху.
+
+Сделай красиво, на русском, результат видно сразу и крупно.</pre></div>
+
+  <div class="prompt"><div class="cp">10 · воронка запуска</div><pre>Сделай интерактивный калькулятор «Воронка запуска».
+
+Поля ввода: охват, перешли по ссылке, зарегистрировались,
+дошли до эфира или диагностики, купили.
+Считает: конверсию каждого шага и подсвечивает шаг с самым
+большим провалом.
+Светофор на каждом шаге: зелёный, если конверсия шага в норме,
+красный на самом слабом. Нормы шагов вынеси редактируемыми полями.
+
+Сделай красиво, на русском, результат видно сразу и крупно.</pre></div>
+
+  
+</div>
+
+<div class="step">
+  <div class="prac">Часть 2</div>
+  <div class="step-h"><span class="step-n">2</span><span class="step-t">Десять приложений: анкеты, трекеры, чек-листы</span></div>
+  <div class="step-d">Колесо баланса, бриф заказчика, подбор размера, контент-календарь, квиз перед диагностикой, чек-лист смены, меню недели, анкета в клуб, трекер привычек, опрос после услуги</div>
+<div class="prompt"><div class="cp">1 · колесо баланса · психологу, коучу, себе</div><pre>Сделай интерактивное приложение «Колесо баланса».
+
+Восемь сфер: здоровье, деньги, работа, семья, отношения, отдых,
+развитие, окружение. По каждой ползунок от 1 до 10.
+По мере движения ползунков рисуется круговая диаграмма-колесо.
+Внизу вывод: три самые проседающие сферы и один вопрос
+для размышления по каждой.
+
+Сделай красиво, на русском, чтобы клиент прошёл сам за три минуты.</pre></div>
+
+  <div class="prompt"><div class="cp">2 · анкета-бриф заказчика · стройка, услуги под заказ</div><pre>Сделай интерактивное приложение «Бриф заказчика» для [ниша.
+Например: строительство дома].
+
+Шаги анкеты: контакты, что хочет построить, участок и его статус,
+желаемая площадь и этажность, материалы, бюджет вилкой, сроки.
+В конце кнопка «Собрать бриф»: всё введённое собирается
+в аккуратный текст, который можно скопировать и отправить мне
+в мессенджер одним сообщением.
+
+Сделай красиво, на русском, поля с подсказками-примерами.</pre></div>
+
+  <div class="prompt"><div class="cp">3 · подбор размера · бренд одежды, товары</div><pre>Сделай интерактивное приложение «Подбор размера» для [товар.
+Например: худи и футболки].
+
+Покупатель вводит рост, вес и как любит носить: в облипку,
+по фигуре, оверсайз. Приложение выдаёт размер из сетки
+[вставьте свою размерную сетку или напиши: сетка стандартная
+S, M, L, XL] и подсказку, когда стоит взять размер больше.
+
+Сделай красиво, на русском, результат крупно.</pre></div>
+
+  <div class="prompt"><div class="cp">4 · контент-календарь · блог, эксперт</div><pre>Сделай интерактивное приложение «Контент-календарь на месяц».
+
+Сетка на 30 дней. На каждый день можно выбрать рубрику из списка
+[перечислите три-пять своих рубрик. Например: экспертный пост,
+личная история, разбор, анонс] и отметить статус: идея, снято,
+смонтировано, вышло. Сверху счётчики: сколько запланировано,
+сколько вышло, сколько дней без контента.
+
+Сделай красиво, на русском, статусы цветными.</pre></div>
+
+  <div class="prompt"><div class="cp">5 · квиз перед консультацией · школа, психолог, диагностика</div><pre>Сделай интерактивное приложение «Анкета перед [что у вас.
+Например: диагностикой, первой консультацией]».
+
+Пять вопросов по одному на экран: что сейчас болит сильнее всего,
+что уже пробовали, чего хотите через три месяца, что мешает,
+готовность заниматься по шкале от 1 до 10.
+В конце: благодарность, свод ответов одним текстом для копирования
+и фраза, что с человеком свяжутся.
+
+Сделай красиво, на русском, дружелюбным тоном.</pre></div>
+
+  <div class="prompt"><div class="cp">6 · чек-лист смены или обхода · производство, объект</div><pre>Сделай интерактивное приложение «Чек-лист [чего. Например: обхода
+подстанции, приёмки этапа на объекте]».
+
+Список из 10-15 пунктов проверки [перечислите свои пункты или
+напиши: подставь типовые для этой сферы]. У каждого пункта отметка
+«в порядке» или «проблема» и поле для заметки.
+Внизу кнопка «Итог смены»: сводка с числом проблем и всеми
+заметками одним текстом для отправки.
+
+Сделай красиво, на русском, крупные кнопки для телефона.</pre></div>
+
+  <div class="prompt"><div class="cp">7 · меню недели со списком покупок · семья</div><pre>Сделай интерактивное приложение «Меню недели».
+
+Сетка: семь дней, завтрак, обед и ужин. В каждую ячейку блюдо
+выбирается из моего списка [перечислите 10-15 блюд семьи.
+Например: сырники, борщ, паста, гречка с курицей] или вписывается своё.
+Кнопка «Список покупок»: собирает продукты по выбранным блюдам
+в один список с галочками для магазина.
+
+Сделай красиво, на русском, работает с телефона.</pre></div>
+
+  <div class="prompt"><div class="cp">8 · анкета в клуб или на курс · сообщества</div><pre>Сделай интерактивное приложение «Анкета вступления» для [что у вас.
+Например: клуб предпринимателей строительной сферы].
+
+Вопросы: имя и контакт, чем занимается, оборот или масштаб вилкой,
+что хочет получить от участия, чем готов делиться.
+В конце свод ответов одним текстом для копирования
+и мягкий вывод: наш человек или пока рано, по критериям
+[один-два критерия. Например: свой бизнес в стройке от года].
+
+Сделай красиво, на русском, по одному вопросу на экран.</pre></div>
+
+  <div class="prompt"><div class="cp">9 · трекер привычек на 30 дней · себе и клиентам</div><pre>Сделай интерактивное приложение «Трекер 30 дней».
+
+Три привычки [впишите свои. Например: тренировка, без сахара,
+подъём до 7:00]. Сетка 30 дней, каждый день отмечается галочкой.
+Сверху: текущая серия без пропусков, лучший результат, процент
+выполнения. При серии от 7 дней появляется подбадривающая фраза.
+
+Сделай красиво, на русском, одним экраном.</pre></div>
+
+  <div class="prompt"><div class="cp">10 · опрос после услуги · всем</div><pre>Сделай интерактивное приложение «Обратная связь» для [что у вас.
+Например: после тренинга, после сдачи объекта, после курса].
+
+Вопросы: оценка от 1 до 10, что понравилось больше всего,
+что улучшить, порекомендовали бы вы нас и кому.
+В конце благодарность и свод ответов одним текстом,
+который человек отправляет мне одной кнопкой «Скопировать».
+
+Сделай красиво, на русском, проходится за минуту.</pre></div>
+
+  
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">✓</span><span class="step-t">Ссылки</span></div>
+  <div class="links">
+    <a href="shpargalka-4.html"><b>Шпаргалка занятия 4</b><span>все шаги урока по порядку</span><em>открыть</em></a>
+    <a href="domashka-4.html"><b>Домашка</b><span>среда и четверг, до 18:00</span><em>открыть</em></a>
+    <a href="https://chatgpt.com"><b>ChatGPT</b><span>Visualize в плюсе, публикация в разделе «Сайты»</span><em>открыть</em></a>
+  </div>
+</div>
+</div>
+<script>
+function bindCopy(el, getText){
+  el.addEventListener('click',()=>{
+    const t=getText();
+    const cp=el.querySelector('.cp');
+    const done=()=>{
+      el.classList.add('copied');
+      setTimeout(()=>el.classList.remove('copied'),1600);
+    };
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(done).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    });
+  });
+}
+document.querySelectorAll('.prompt').forEach(el=>bindCopy(el,()=>{const p=el.querySelector('pre');return p.innerText||p.textContent;}));
+document.querySelectorAll('.tf').forEach(el=>bindCopy(el,()=>(el.innerText||el.textContent).trim()));
+</script>
+</body>
+</html>
