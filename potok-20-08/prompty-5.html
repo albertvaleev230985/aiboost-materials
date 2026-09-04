@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Промпты · Занятие 5 · AGENTS.md, кодекс и первый проект</title>
+<style>
+:root{
+  --bg:#0B1220; --bg2:#131B2E; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.1);
+  --text:#F4F1EC; --muted:#9AA3B2; --coral:#E07461; --coral-soft:rgba(224,116,97,.15); --ice:#3D8FD1;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(160deg,var(--bg),var(--bg2)) fixed;color:var(--text);font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;padding-bottom:90px}
+.wrap{max-width:780px;margin:0 auto;padding:26px 18px}
+header{padding:32px 0 8px}
+.brand{font-size:15px;font-weight:700;color:var(--muted)}
+.brand b{color:var(--coral)}
+h1{font-size:33px;line-height:1.14;font-weight:800;letter-spacing:-.01em;margin-top:10px}
+.sub{color:var(--muted);font-size:16px;margin-top:10px}
+.sub b{color:var(--text)}
+.howto{background:var(--coral-soft);border:1px solid rgba(224,116,97,.35);border-radius:14px;padding:14px 16px;margin-top:18px;font-size:15.5px}
+.howto b{color:var(--text)}
+.step{margin:38px 0 0}
+.step-h{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.step-n{flex:0 0 auto;min-width:38px;height:38px;border-radius:11px;background:var(--coral);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.step-t{font-size:22px;font-weight:800;line-height:1.2}
+.step-d{color:var(--muted);font-size:15.5px;margin:2px 0 12px 50px}
+.prompt{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:46px 18px 18px;margin:12px 0;cursor:pointer;transition:background .15s,border-color .2s,box-shadow .2s}
+.prompt:active{background:rgba(224,116,97,.12)}
+.prompt pre{white-space:pre-wrap;font-family:inherit;font-size:15.5px;line-height:1.6;color:var(--text)}
+.prompt .cp{position:absolute;top:12px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--coral)}
+.prompt .cp::after{content:"копировать";background:rgba(224,116,97,.16);border:1px solid rgba(224,116,97,.4);border-radius:999px;padding:5px 14px;font-size:12px;letter-spacing:.06em}
+.prompt.copied{border-color:#4caf7d;box-shadow:0 0 0 2px rgba(76,175,125,.35), 0 0 34px rgba(76,175,125,.28);background:rgba(76,175,125,.1)}
+.prompt.copied .cp{color:#4caf7d}
+.prompt.copied .cp::after{content:"скопировано ✓";background:rgba(76,175,125,.2);border-color:rgba(76,175,125,.55);color:#4caf7d}
+details.acc{background:var(--surface);border:1px solid var(--line);border-radius:13px;margin:8px 0;overflow:hidden}
+details.acc>summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:16px;font-weight:650;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:12px}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"открыть промпт";flex:0 0 auto;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.35);border-radius:999px;padding:5px 13px}
+details.acc[open]>summary::after{content:"свернуть";color:var(--muted);background:rgba(255,255,255,.06);border-color:var(--line)}
+details.acc[open]>summary{border-bottom:1px solid var(--line)}
+details.acc .prompt{margin:12px 14px 14px}
+.prac{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#F2A08E,var(--coral));color:#fff;font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:9px 20px;border-radius:999px;margin-bottom:10px;box-shadow:0 8px 26px rgba(224,116,97,.4)}
+details.acc--gpt>summary::after{content:"открыть ассистента"}
+details.acc--gpt[open]>summary::after{content:"свернуть"}
+.dl--big{background:rgba(224,116,97,.12);border-color:rgba(224,116,97,.45)}
+.dl--big .dl-i{background:var(--coral);color:#fff}
+.dl--big .dl-t b{font-size:16.5px}
+.dl{display:flex;align-items:center;gap:14px;margin:12px 0;padding:15px 17px;background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.38);border-radius:14px;text-decoration:none;color:var(--text)}
+.dl:active{background:rgba(76,175,125,.2)}
+.dl-i{flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:#4caf7d;color:#0B1220;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dl-t{display:block;min-width:0}
+.dl-t b{display:block;font-size:15.5px;font-weight:750}
+.dl-t em{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.chain{display:flex;flex-direction:column;gap:0;margin:14px 0}
+.ch{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 15px}
+.ch-n{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:rgba(224,116,97,.18);color:var(--coral);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ch-t{font-size:14.5px;color:var(--muted);line-height:1.35}
+.ch-t b{display:block;color:var(--text);font-size:15.5px;font-weight:750}
+.ch-ar{color:var(--coral);text-align:center;font-size:17px;line-height:1;padding:4px 0;opacity:.75}
+.ch--fin{border-color:rgba(76,175,125,.45);background:rgba(76,175,125,.09)}
+.ch--fin .ch-n{background:rgba(76,175,125,.2);color:#4caf7d}
+.trio{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.tr{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:15px 17px}
+.tr b{font-size:18px;font-weight:800;display:inline-block}
+.tr .q{display:inline-block;margin-left:9px;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.3);border-radius:999px;padding:4px 11px;vertical-align:2px}
+.tr p{margin-top:8px;font-size:15px;line-height:1.55;color:var(--muted)}
+.tr em{display:inline-block;margin-top:9px;font-style:normal;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tr-kak{border-left-color:#C9707F}.tr-kak .q{color:#E39CA8;background:rgba(201,112,127,.16);border-color:rgba(201,112,127,.35)}
+.tr-gde{border-left-color:var(--ice)}.tr-gde .q{color:var(--ice);background:rgba(61,143,209,.14);border-color:rgba(61,143,209,.35)}
+.sk-t{display:block;min-width:0}
+.sk-t em{display:block;font-style:normal;font-size:13px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.35}
+.skill-what{margin:12px 14px 0;font-size:15px;line-height:1.55;color:var(--muted)}
+.skill-what b{color:var(--text)}
+.prompt--skill pre{max-height:132px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.prompt--skill::after{content:"текст длинный, читать его не нужно: просто скопируйте";position:absolute;left:18px;right:18px;bottom:12px;font-size:13px;line-height:1.4;color:var(--muted)}
+.prompt--skill{padding-bottom:52px}
+.prompt--test{border-left-color:var(--ice)}
+.prompt--test .cp{color:var(--ice)}
+.prompt--test .cp::after{background:rgba(61,143,209,.16);border-color:rgba(61,143,209,.4);color:var(--ice)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0;font-size:15.5px;color:var(--muted)}
+.card b{color:var(--text)}
+.card ul{margin:8px 0 0 18px}
+.card li{margin:5px 0}
+.note{font-size:15px;color:var(--muted);background:rgba(61,143,209,.08);border:1px solid rgba(61,143,209,.25);border-radius:12px;padding:12px 14px;margin:10px 0}
+.note b{color:var(--text)}
+.ten{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.tf{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:11px;padding:11px 15px;font-size:15.5px;cursor:pointer}
+.tf:active{background:rgba(224,116,97,.12)}
+.tf.copied{border-color:#4caf7d;background:rgba(76,175,125,.16)}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0}
+.basket{border-radius:13px;padding:13px;font-size:14px;border:1px solid}
+.basket b{display:block;font-size:15px;margin-bottom:5px}
+.b-ok{background:rgba(76,175,125,.08);border-color:rgba(76,175,125,.35)}
+.b-mid{background:rgba(224,169,92,.08);border-color:rgba(224,169,92,.35)}
+.b-no{background:rgba(224,92,92,.08);border-color:rgba(224,92,92,.35)}
+.b-ok b{color:#4caf7d}.b-mid b{color:#e0a95c}.b-no b{color:#e05c5c}
+a{color:var(--ice)}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.links a{display:block;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;color:var(--text)}
+.links a:active{background:rgba(224,116,97,.14);border-color:rgba(224,116,97,.45)}
+.links a b{display:block;font-size:17px;font-weight:800}
+.links a span{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.links a em{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:var(--coral);margin-top:5px}
+.links a:first-child{grid-column:1 / -1}
+footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14.5px}
+@media(max-width:560px){.grid3{grid-template-columns:1fr}
+.prompt{padding-top:56px}
+.sk-t em{font-size:12.5px}}
+
+/* ── подсказки под шагом ── */
+.tips{display:flex;flex-direction:column;gap:10px;margin:18px 0 4px}
+.tip{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--coral);border-radius:13px;padding:15px 18px;font-size:16px;line-height:1.55;color:var(--muted)}
+.tip b{color:var(--text);font-weight:700}
+.tip a{color:var(--coral)}
+/* ── сравнение двух ответов ── */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.cmp > div{border-radius:14px;padding:16px 18px;font-size:16px;line-height:1.55;color:var(--muted);border:1px solid}
+.cmp .ok{background:rgba(76,175,125,.09);border-color:rgba(76,175,125,.36)}
+.cmp .no{background:rgba(224,92,92,.09);border-color:rgba(224,92,92,.36)}
+.cmp .lbl{display:block;font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:9px}
+.cmp .ok .lbl{color:#4caf7d}
+.cmp .no .lbl{color:#e05c5c}
+.cmp b{color:var(--text);font-weight:700}
+@media(max-width:760px){.cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">neovida<b>.</b>ai</div>
+  <h1>Промпты<br>занятие 5</h1>
+  <div class="sub"><b>«AGENTS.md, кодекс и первый проект»</b> · Альберт Валеев</div>
+  <div class="howto"><b>Всё в вашем окружении, в той папке, которую вы уже открыли в Codex.</b> Промпты идут по порядку, каждый копируется касанием и вставляется в чат Codex. Файлы он создаёт сам, вы только отвечаете на вопросы и говорите «да».</div>
+</header>
+
+<div class="step">
+  <div class="prac">AGENTS.md</div>
+  <div class="step-h"><span class="step-n">1</span><span class="step-t">Интервью: Codex узнаёт, кто вы</span></div>
+  <div class="step-d">Новый чат. Он задаёт вопросы по одному, к каждому расшифровка и пример в скобках. Отвечаете как есть, коротко. Файлов пока не создаёт</div>
+  <div class="prompt"><div class="cp">промпт 1 · в новый чат Codex</div><pre>Ты мой рабочий агент в этой папке. Это моё окружение: здесь живут и будут жить все мои проекты, и ты работаешь в каждом из них. Но ты пока не знаешь, кто я. Сейчас ты возьмёшь у меня интервью, а потом по моей команде соберёшь из ответов файл AGENTS.md, по которому будешь работать со мной всегда.
+
+Правила интервью:
+1. Задавай вопросы ПО ОДНОМУ. Дождись ответа, потом следующий. Список вопросов заранее не показывай.
+2. К каждому вопросу в скобках коротко поясни, что ты имеешь в виду, и дай один-два примера ответа из обычной жизни. Пример нужен, чтобы я понял вопрос, а не чтобы я его скопировал.
+3. Мне можно отвечать коротко, сумбурно и без красивых формулировок. Разбирайся сам.
+4. Ответ размытый или «всё нормально»: задай один уточняющий вопрос, не больше. Не превращай это в допрос.
+5. Ничего за меня не додумывай и не подсказывай «правильных» ответов.
+6. Сохраняй мои слова. Не переписывай живую речь гладким текстом.
+7. Пока идёт интервью, никаких файлов не создавай и не меняй.
+
+Пройди по блокам в этом порядке:
+1. Кто я. Имя, как ко мне обращаться, чем занимаюсь, какая у меня роль, сколько лет в этом деле.
+2. Моё дело. Что продаём или делаем, кому, чем отличаемся от других. Какие цифры для меня важны: оборот, средний чек, клиентов в месяц, объём производства. Только те цифры, которые я готов назвать.
+3. Люди вокруг. Команда, партнёры, подрядчики. Кому я сдаю результат, кто принимает решения кроме меня, с кем я согласовываю деньги.
+4. Мой рабочий день. Из чего он состоит. С какими файлами и программами я работаю каждый день: таблицы, 1С, CRM, мессенджеры, документы. Где живут мои данные.
+5. Что съедает время. Три-пять задач, которые повторяются каждую неделю и которые я хотел бы отдать тебе. Как я делаю их сейчас, шаг за шагом.
+6. Где я теряю деньги. Что я делаю сам, хотя не должен. Какое решение я откладываю уже давно. Где в моём деле дыра, о которой я знаю, но руки не доходят.
+7. Проекты и цели. Что в работе прямо сейчас, главная цель на квартал, что должно измениться к концу года.
+8. Что хочу построить с тобой. Первые три инструмента или проекта, которые я хотел бы получить в ближайший месяц, даже если пока не понимаю, как это делается.
+9. Как со мной общаться. Ты или вы, коротко или подробно, списком или текстом, мягко или прямо. Что меня раздражает в ответах.
+10. Как писать от моего имени. Кому я пишу чаще всего, каким тоном, какие слова и обороты мои, какие терпеть не могу. Попроси у меня один-два моих настоящих текста для примера, если они есть под рукой.
+11. Что для меня «сделано хорошо», а что халтура. Как я принимаю решения: быстро или долго, по цифрам или по чутью, один или с кем-то.
+12. Красные линии. Чего не делать никогда, даже если я попрошу в спешке: деньги, отправка сообщений, удаление файлов, клиентские данные, что ещё.
+13. Роль агента. Где помогать, где спорить со мной, куда не лезть. Что можно делать без спроса, а что только после моего «да».
+
+Когда все блоки пройдены, задай мне ещё три вопроса, которых нет в списке, но без которых ты не сможешь работать на меня хорошо. Потом в пяти строках скажи, что ты обо мне понял, назови одно противоречие, которое заметил в моих ответах, и жди моей команды.</pre></div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">2</span><span class="step-t">Упаковка: он записывает AGENTS.md</span></div>
+  <div class="step-d">Туда же, после интервью. Он показывает файл целиком, вы читаете, правите словами, говорите «да». Потом открываете папку и видите файл</div>
+  <div class="prompt"><div class="cp">промпт 2 · туда же, после интервью</div><pre>Теперь упакуй всё, что узнал, в файл AGENTS.md в корне этой папки.
+
+Как собрать:
+1. Пиши от первого лица моими словами. Разделы: Кто я · Моё дело · Люди вокруг · Мой день и инструменты · Что отдаю агенту · Где я теряю деньги · Проекты и цели · Как со мной общаться · Как писать от моего имени · Что для меня «хорошо» · Красные линии · Роль агента.
+2. Объём три-пять тысяч знаков. Всё, что не меняет твои ответы, выбрось. Ничего не выдумывай: чего я не говорил, того в файле нет.
+3. В конце добавь раздел «Правила работы в этом окружении»:
+Отвечай по-русски и простыми словами.
+Это окружение одно на все мои проекты. Каждый новый проект живёт в своей папке внутри этой, и во всех папках действует этот файл.
+Перед любым изменением файлов покажи план и дождись моего «да».
+После каждого действия коротко скажи, что изменилось и как это проверить.
+Не удаляй и не перезаписывай файлы без моего подтверждения.
+Не храни здесь пароли, ключи, банковские данные и чужие персональные данные.
+Не отправляй ничего от моего имени и не совершай платежей.
+Не говори «готово», пока сам не проверил.
+
+Сначала покажи файл целиком и дождись моего «да». После сохранения перечитай его и скажи своими словами, как теперь изменится твоя работа со мной.</pre></div>
+</div>
+
+<div class="step">
+  <div class="prac">Кодекс.md</div>
+  <div class="step-h"><span class="step-n">3</span><span class="step-t">Глубокое интервью: кто вы, что важно, куда идёте</span></div>
+  <div class="step-d">Новый чат. Сорок-шестьдесят минут в тишине. Двенадцать блоков, по одному вопросу, с расшифровкой и примером. Про работу не переспрашивает, она уже в AGENTS.md</div>
+  <div class="prompt"><div class="cp">промпт 3 · в новый чат Codex</div><pre>Прочитай AGENTS.md в этой папке: там моя работа. Теперь соберём документ обо мне как о человеке: кто я, что для меня важно и куда я иду. Он станет фундаментом для всего, что ты будешь делать для меня. Про работу второй раз не спрашивай, это уже есть.
+
+Правила:
+1. Задавай вопросы ПО ОДНОМУ. Дождись ответа, потом следующий. Список заранее не показывай.
+2. ОБЯЗАТЕЛЬНО: к каждому вопросу в скобках расшифровка и один-два примера ответа из обычной жизни, а не из книжек по саморазвитию. Например: «Какой у тебя сейчас период жизни? (подъём, стабильность, застой, спад или переход. Например: подъём, если за последние месяцы выросли доход и энергия. Или переход, если старое уже не подходит, а новое ещё не собралось)».
+3. Мне можно отвечать коротко и сумбурно. Разбирайся сам.
+4. Ответ поверхностный: один углубляющий вопрос, не больше.
+5. Не подсказывай «правильный» ответ и не выбирай за меня. Примеры в скобках это про смысл вопроса, а не готовый ответ.
+6. Сохраняй мои формулировки. Не превращай живые слова в гладкий текст.
+7. Говорю «пропусти»: иди дальше и пометь блок как незаполненный.
+8. Файлы не создавай и не меняй, пока я не скажу.
+
+Пройди по блокам в этом порядке:
+1. ГДЕ Я СЕЙЧАС. Оцени со мной шесть сфер от 1 до 10: тело, дело, отношения, развитие, приключения, состояние. По каждой одна строка, почему такая цифра.
+2. ДИНАМИКА. Какой сейчас период: подъём, стабильность, застой, спад, переход. По каким признакам это видно.
+3. ЦЕННОСТИ. Что по-настоящему важно на этом этапе. Помоги мне сократить список до трёх-пяти. Сокращать буду я, ты только спрашиваешь, что важнее.
+4. ПРИНЦИПЫ. По каким правилам я живу и принимаю решения. Чего не делаю никогда, что делаю всегда.
+5. СМЫСЛЫ. Ради чего всё это. Что должно остаться после меня.
+6. СИЛЬНЫЕ СТОРОНЫ. В чём я хорош, что даётся легче, чем другим, за чем ко мне приходят люди.
+7. ЧЕГО НЕ ХВАТАЕТ. Какое качество нужно развить, чтобы перейти на следующий уровень. Качество личности, а не навык вроде планирования.
+8. КУДА Я ИДУ. Каким я хочу быть через год: что меня окружает, каким я стал, что чувствую. Проси язык ощущений, а не только список достижений.
+9. ЦЕЛИ. По каждой значимой сфере одна главная цель на год и одна на месяц. По каждой спроси, ради чего она. Цель без смысла в кодекс не идёт.
+10. РИТМ. Как проходит мой день сейчас и как я хочу, чтобы он проходил. Раздели: что уже работает, а что пока только намерение.
+11. ЭНЕРГИЯ. Что стабильно забирает у меня силы и что стабильно даёт.
+12. ГРАНИЦЫ. Чего мне не советовать, на что не давить, где нужна прямота, а где поддержка.
+
+Когда пройдём все блоки, отдельным коротким разделом назови противоречия, которые ты заметил по фактам разговора: ценность названа, а в целях и в расписании её нет; цель требует времени, которого в описанном дне не существует; в образе будущего я другой, а ни одна цель к этому не ведёт; в источники энергии записано то, чего в неделе нет. По каждому противоречию одна строка, без морали и без советов. Потом жди моей команды.</pre></div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">4</span><span class="step-t">Упаковка: он записывает кодекс.md и связывает с AGENTS.md</span></div>
+  <div class="step-d">Туда же, после интервью. Показывает два изменения, ждёт «да». В папке появляется кодекс.md, в AGENTS.md раздел «Кодекс»</div>
+  <div class="prompt"><div class="cp">промпт 4 · туда же, после интервью</div><pre>Теперь упакуй кодекс в файл кодекс.md в корне этой папки, рядом с AGENTS.md.
+
+Как собрать:
+1. Все двенадцать блоков моими словами, заголовки как в интервью, плюс раздел «Противоречия». Ничего не сглаживай и не додумывай. Незаполненные блоки так и пометь.
+2. Не превращай мои слова в гладкий текст и не добавляй советов.
+3. После этого добавь в AGENTS.md раздел «Кодекс» с таким текстом:
+Мой полный кодекс лежит в файле кодекс.md в корне окружения. Читай его целиком перед задачами про мои цели, планы, приоритеты, решения и тексты от моего имени, и всегда, когда важно, кто я, а не только чем я занимаюсь. Если задача противоречит кодексу, скажи об этом до того, как делать.
+
+Сначала покажи оба изменения и дождись моего «да». После сохранения перечитай оба файла и скажи в пяти строках, что ты теперь знаешь обо мне такого, чего не знал до кодекса.</pre></div>
+</div>
+
+<div class="step">
+  <div class="prac">Проверка</div>
+  <div class="step-h"><span class="step-n">5</span><span class="step-t">Что он теперь о вас знает</span></div>
+  <div class="step-d">Новый чат. Хороший ответ: четыре блока вашими словами по файлам, в четвёртом честный список дыр. Плохой: общие фразы. Значит открыта не та папка</div>
+  <div class="prompt prompt--test"><div class="cp">промпт 5 · в новый чат Codex</div><pre>Что ты знаешь обо мне? Только из файлов этой папки, ничего не додумывая. Четыре блока:
+1. Кто я и чем занимаюсь.
+2. Что для меня важно и куда я иду.
+3. Что ты будешь делать без спроса, а что только после моего «да».
+4. Чего ты обо мне не знаешь и что стоит уточнить.</pre></div>
+</div>
+
+<div class="step">
+  <div class="prac">Первый проект</div>
+  <div class="step-h"><span class="step-n">6</span><span class="step-t">Он предлагает десять инструментов, вы выбираете один</span></div>
+  <div class="step-d">Новый чат. Он читает оба файла, предлагает десять под ваши боли. Выбираете из списка, называете свой или берёте из <a href="proekty-5.html">27 готовых проектов</a>. Дальше вопросы, ТЗ, ваше «да», сборка, проверка</div>
+  <div class="prompt"><div class="cp">промпт 6 · мастер-промпт · в новый чат Codex</div><pre>Прочитай AGENTS.md и кодекс.md в этой папке. Теперь ты знаешь, чем я занимаюсь, что съедает моё время, где я теряю деньги и куда я иду.
+
+Предложи мне десять инструментов, которые ты можешь собрать для меня прямо здесь, в этом окружении, за один вечер. Условия:
+1. Каждый инструмент закрывает конкретную мою боль из AGENTS.md: повторяющуюся задачу, ручную рутину, потерянные деньги или время. Не общие идеи вроде «сделать сайт», а вещи под мою работу.
+2. Первая версия работает локально, без сервера, без настоящего ИИ внутри, без внешних сервисов и без реальных персональных данных. Формы, расчёты, шаблоны, чек-листы, генераторы документов, панели, планировщики.
+3. По каждому: название, какую боль закрывает одной фразой, что делает первая версия в трёх-пяти пунктах, сколько часов в неделю сэкономит по твоей оценке.
+4. Отсортируй: сначала те, что дают больше пользы при меньшей сложности. Первые три отметь как «начать с этого».
+5. Ничего не создавай. Покажи список и спроси, какой беру. Я могу выбрать из списка или назвать свой.
+
+Когда я выберу, действуй так:
+1. Задай мне не больше пяти вопросов, без которых нельзя сделать хорошо. Остальное решай сам безопасным стандартным способом.
+2. Напиши короткое ТЗ на первую версию: для кого, что делает, какие поля и экраны, что не делаем сейчас. Покажи и дождись моего «да».
+3. Создай под проект папку внутри этого окружения с понятным названием, собери там первую версию, запусти и покажи, где открыть.
+4. Сам проверь в браузере, что всё открывается и работает, и только потом говори «готово».
+5. В конце предложи три следующих улучшения и спроси, какое делаем.</pre></div>
+</div>
+
+<div class="step">
+  <div class="prac">Докрутка</div>
+  <div class="step-h"><span class="step-n">7</span><span class="step-t">Он предлагает, вы командуете</span></div>
+  <div class="step-d">В том же чате, где собирали проект. Руками ничего не переписываете</div>
+  <div class="prompt"><div class="cp">докрутка 1 · пять улучшений</div><pre>Перечитай AGENTS.md и посмотри на то, что собрал, моими глазами. Предложи пять улучшений, от самого полезного к менее. По каждому одна строка: что изменится для меня. Ничего не делай, жди выбора.</pre></div>
+  <div class="prompt"><div class="cp">докрутка 2 · сделай всё</div><pre>Делай все пять по очереди. Перед каждым коротко скажи, что меняешь, после каждого покажи, где посмотреть. К следующему не переходи, пока предыдущее не проверено в браузере.</pre></div>
+  <div class="prompt"><div class="cp">докрутка 3 · под мой голос</div><pre>Все тексты внутри приложения перепиши так, как пишу я: возьми тон, слова и запреты из раздела «Как писать от моего имени» в AGENTS.md. Покажи «было и стало» на трёх примерах, потом применяй ко всему.</pre></div>
+  <div class="prompt"><div class="cp">докрутка 4 · проверь сам</div><pre>Открой приложение в браузере и пройди по нему как пользователь: заполни поля тестовыми данными, нажми все кнопки, попробуй сломать. Что нашёл, почини и покажи список: что было, что стало.</pre></div>
+  <div class="prompt"><div class="cp">докрутка 5 · правка словами</div><pre>Посмотри на приложение. Хочу поправить: [что именно, своими словами].
+Сначала скажи, какие файлы затронешь, и дождись моего «да». После правки покажи, где открыть, и объясни, что изменилось.</pre></div>
+  <div class="prompt"><div class="cp">докрутка 6 · второй проект</div><pre>Заведи внутри этого окружения новую папку «[название]» и собери там [что нужно, двумя фразами]. Правила те же: сначала вопросы и ТЗ, потом моё «да», потом сборка и проверка в браузере.</pre></div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">8</span><span class="step-t">Ссылки</span></div>
+  <div class="links">
+    <a href="proekty-5.html"><b>27 готовых проектов</b><span>по три на каждую сферу зала, каждый готовым промптом</span><em>открыть</em></a>
+    <a href="https://chatgpt.com/codex"><b>Codex</b><span>chatgpt.com/codex</span><em>открыть</em></a>
+    <a href="shpargalka-4.html"><b>Шпаргалка занятия 4</b><span>блокноты, проекты, навыки, плагины</span><em>открыть</em></a>
+  </div>
+</div>
+<footer>neovida.ai · «ИИ. Новая реальность», поток 20.08 · занятие 5 · промпты</footer>
+</div>
+<script>
+function bindCopy(el, getText){
+  el.addEventListener('click',()=>{
+    const t=getText();
+    const cp=el.querySelector('.cp');
+    const done=()=>{
+      el.classList.add('copied');
+      setTimeout(()=>el.classList.remove('copied'),1600);
+    };
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(done).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    });
+  });
+}
+document.querySelectorAll('.prompt').forEach(el=>bindCopy(el,()=>{const p=el.querySelector('pre');return p.innerText||p.textContent;}));
+document.querySelectorAll('.tf').forEach(el=>bindCopy(el,()=>(el.innerText||el.textContent).trim()));
+</script>
+</body>
+</html>
