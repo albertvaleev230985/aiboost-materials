@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Библиотека скиллов · Занятие 6</title>
+<style>
+:root{
+  --bg:#0B1220; --bg2:#131B2E; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.1);
+  --text:#F4F1EC; --muted:#9AA3B2; --coral:#E07461; --coral-soft:rgba(224,116,97,.15); --ice:#3D8FD1;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(160deg,var(--bg),var(--bg2)) fixed;color:var(--text);font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;padding-bottom:90px}
+.wrap{max-width:780px;margin:0 auto;padding:26px 18px}
+header{padding:32px 0 8px}
+.brand{font-size:15px;font-weight:700;color:var(--muted)}
+.brand b{color:var(--coral)}
+h1{font-size:33px;line-height:1.14;font-weight:800;letter-spacing:-.01em;margin-top:10px}
+.sub{color:var(--muted);font-size:16px;margin-top:10px}
+.sub b{color:var(--text)}
+.howto{background:var(--coral-soft);border:1px solid rgba(224,116,97,.35);border-radius:14px;padding:14px 16px;margin-top:18px;font-size:15.5px}
+.howto b{color:var(--text)}
+.step{margin:38px 0 0}
+.step-h{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.step-n{flex:0 0 auto;min-width:38px;height:38px;border-radius:11px;background:var(--coral);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.step-t{font-size:22px;font-weight:800;line-height:1.2}
+.step-d{color:var(--muted);font-size:15.5px;margin:2px 0 12px 50px}
+.prompt{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:46px 18px 18px;margin:12px 0;cursor:pointer;transition:background .15s,border-color .2s,box-shadow .2s}
+.prompt:active{background:rgba(224,116,97,.12)}
+.prompt pre{white-space:pre-wrap;font-family:inherit;font-size:15.5px;line-height:1.6;color:var(--text)}
+.prompt .cp{position:absolute;top:12px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--coral)}
+.prompt .cp::after{content:"копировать";background:rgba(224,116,97,.16);border:1px solid rgba(224,116,97,.4);border-radius:999px;padding:5px 14px;font-size:12px;letter-spacing:.06em}
+.prompt.copied{border-color:#4caf7d;box-shadow:0 0 0 2px rgba(76,175,125,.35), 0 0 34px rgba(76,175,125,.28);background:rgba(76,175,125,.1)}
+.prompt.copied .cp{color:#4caf7d}
+.prompt.copied .cp::after{content:"скопировано ✓";background:rgba(76,175,125,.2);border-color:rgba(76,175,125,.55);color:#4caf7d}
+details.acc{background:var(--surface);border:1px solid var(--line);border-radius:13px;margin:8px 0;overflow:hidden}
+details.acc>summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:16px;font-weight:650;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:12px}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"открыть промпт";flex:0 0 auto;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.35);border-radius:999px;padding:5px 13px}
+details.acc[open]>summary::after{content:"свернуть";color:var(--muted);background:rgba(255,255,255,.06);border-color:var(--line)}
+details.acc[open]>summary{border-bottom:1px solid var(--line)}
+details.acc .prompt{margin:12px 14px 14px}
+.prac{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#F2A08E,var(--coral));color:#fff;font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:9px 20px;border-radius:999px;margin-bottom:10px;box-shadow:0 8px 26px rgba(224,116,97,.4)}
+details.acc--gpt>summary::after{content:"открыть ассистента"}
+details.acc--gpt[open]>summary::after{content:"свернуть"}
+.dl--big{background:rgba(224,116,97,.12);border-color:rgba(224,116,97,.45)}
+.dl--big .dl-i{background:var(--coral);color:#fff}
+.dl--big .dl-t b{font-size:16.5px}
+.dl{display:flex;align-items:center;gap:14px;margin:12px 0;padding:15px 17px;background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.38);border-radius:14px;text-decoration:none;color:var(--text)}
+.dl:active{background:rgba(76,175,125,.2)}
+.dl-i{flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:#4caf7d;color:#0B1220;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dl-t{display:block;min-width:0}
+.dl-t b{display:block;font-size:15.5px;font-weight:750}
+.dl-t em{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.chain{display:flex;flex-direction:column;gap:0;margin:14px 0}
+.ch{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 15px}
+.ch-n{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:rgba(224,116,97,.18);color:var(--coral);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ch-t{font-size:14.5px;color:var(--muted);line-height:1.35}
+.ch-t b{display:block;color:var(--text);font-size:15.5px;font-weight:750}
+.ch-ar{color:var(--coral);text-align:center;font-size:17px;line-height:1;padding:4px 0;opacity:.75}
+.ch--fin{border-color:rgba(76,175,125,.45);background:rgba(76,175,125,.09)}
+.ch--fin .ch-n{background:rgba(76,175,125,.2);color:#4caf7d}
+.trio{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.tr{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:15px 17px}
+.tr b{font-size:18px;font-weight:800;display:inline-block}
+.tr .q{display:inline-block;margin-left:9px;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.3);border-radius:999px;padding:4px 11px;vertical-align:2px}
+.tr p{margin-top:8px;font-size:15px;line-height:1.55;color:var(--muted)}
+.tr em{display:inline-block;margin-top:9px;font-style:normal;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tr-kak{border-left-color:#C9707F}.tr-kak .q{color:#E39CA8;background:rgba(201,112,127,.16);border-color:rgba(201,112,127,.35)}
+.tr-gde{border-left-color:var(--ice)}.tr-gde .q{color:var(--ice);background:rgba(61,143,209,.14);border-color:rgba(61,143,209,.35)}
+.sk-t{display:block;min-width:0}
+.sk-t em{display:block;font-style:normal;font-size:13px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.35}
+.skill-what{margin:12px 14px 0;font-size:15px;line-height:1.55;color:var(--muted)}
+.skill-what b{color:var(--text)}
+.prompt--skill pre{max-height:132px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.prompt--skill::after{content:"текст длинный, читать его не нужно: просто скопируйте";position:absolute;left:18px;right:18px;bottom:12px;font-size:13px;line-height:1.4;color:var(--muted)}
+.prompt--skill{padding-bottom:52px}
+.prompt--test{border-left-color:var(--ice)}
+.prompt--test .cp{color:var(--ice)}
+.prompt--test .cp::after{background:rgba(61,143,209,.16);border-color:rgba(61,143,209,.4);color:var(--ice)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0;font-size:15.5px;color:var(--muted)}
+.card b{color:var(--text)}
+.card ul{margin:8px 0 0 18px}
+.card li{margin:5px 0}
+.note{font-size:15px;color:var(--muted);background:rgba(61,143,209,.08);border:1px solid rgba(61,143,209,.25);border-radius:12px;padding:12px 14px;margin:10px 0}
+.note b{color:var(--text)}
+.ten{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.tf{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:11px;padding:11px 15px;font-size:15.5px;cursor:pointer}
+.tf:active{background:rgba(224,116,97,.12)}
+.tf.copied{border-color:#4caf7d;background:rgba(76,175,125,.16)}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0}
+.basket{border-radius:13px;padding:13px;font-size:14px;border:1px solid}
+.basket b{display:block;font-size:15px;margin-bottom:5px}
+.b-ok{background:rgba(76,175,125,.08);border-color:rgba(76,175,125,.35)}
+.b-mid{background:rgba(224,169,92,.08);border-color:rgba(224,169,92,.35)}
+.b-no{background:rgba(224,92,92,.08);border-color:rgba(224,92,92,.35)}
+.b-ok b{color:#4caf7d}.b-mid b{color:#e0a95c}.b-no b{color:#e05c5c}
+a{color:var(--ice)}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.links a{display:block;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;color:var(--text)}
+.links a:active{background:rgba(224,116,97,.14);border-color:rgba(224,116,97,.45)}
+.links a b{display:block;font-size:17px;font-weight:800}
+.links a span{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.links a em{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:var(--coral);margin-top:5px}
+.links a:first-child{grid-column:1 / -1}
+footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14.5px}
+@media(max-width:560px){.grid3{grid-template-columns:1fr}
+.prompt{padding-top:56px}
+.sk-t em{font-size:12.5px}}
+
+/* ── подсказки под шагом ── */
+.tips{display:flex;flex-direction:column;gap:10px;margin:18px 0 4px}
+.tip{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--coral);border-radius:13px;padding:15px 18px;font-size:16px;line-height:1.55;color:var(--muted)}
+.tip b{color:var(--text);font-weight:700}
+.tip a{color:var(--coral)}
+/* ── сравнение двух ответов ── */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.cmp > div{border-radius:14px;padding:16px 18px;font-size:16px;line-height:1.55;color:var(--muted);border:1px solid}
+.cmp .ok{background:rgba(76,175,125,.09);border-color:rgba(76,175,125,.36)}
+.cmp .no{background:rgba(224,92,92,.09);border-color:rgba(224,92,92,.36)}
+.cmp .lbl{display:block;font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:9px}
+.cmp .ok .lbl{color:#4caf7d}
+.cmp .no .lbl{color:#e05c5c}
+.cmp b{color:var(--text);font-weight:700}
+@media(max-width:760px){.cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">neovida<b>.</b>ai</div>
+  <h1>Двенадцать скиллов<br>занятие 6</h1>
+  <div class="sub"><b>«Под вашу настоящую работу»</b> · Альберт Валеев</div>
+  <div class="howto"><b>Как этим пользоваться.</b> Все ставятся одинаково: копируете просьбу установки, вставляете в чат Codex, он читает скилл, ставит и перезапускается. Потом копируете промпт прогона и подставляете свои данные. Каждый скилл бесплатный: это инструкция, а не программа и не подписка. Работает тот агент, за которого вы уже платите.</div>
+  <div class="note" style="border-left-color:#e05c5c"><b>Досмотр перед каждой установкой.</b> Промпт досмотра лежит в <a href="shpargalka-6.html">шпаргалке, шаг 4</a>. Даже на этом наборе: вы отрабатываете привычку, а не проверяете конкретный файл.</div>
+  <div class="note"><b>Ставить все двенадцать не нужно.</b> Возьмите три-четыре под свои повторяющиеся дела и прогоните на настоящих задачах, а не на учебных. Результат должен уйти в работу.</div>
+  <div class="note" style="border-left-color:#4caf7d"><b>Универсальная просьба на установку.</b> Меняете только имя и адрес: <b>«Поставь мне скилл [имя] из репозитория [адрес]. Сначала прочитай его и скажи в трёх строках, что он делает и не просит ли лишнего. Потом ставь командой npx skills add [адрес] --skill [имя] -a codex -y. Я работаю в приложении и терминал не открываю, сделай всё сам и перезапустись.»</b></div>
+</header>
+
+<div class="step">
+<div class="step-d" style="margin-top:16px"><b>Документы и расчёты</b> · репозиторий на все четыре: github.com/letta-ai/skills</div>
+  <details class="acc"><summary>slides · коммерческое предложение и презентация слайдами</summary><div class="prompt"><div class="cp">прогон · в чат Codex · копировать целиком</div><pre>Собери мне коммерческое предложение слайдами скиллом $slides.
+Кому: [клиент или тип клиента].
+Что продаём: [услуга или продукт].
+Цена и условия: [цифры].
+Почему мы: [2-3 аргумента своими словами].
+Что клиент должен сделать после: [следующий шаг].
+
+Сделай 6-8 слайдов, без воды.
+Потом сам отрендери слайды в картинки и проверь вёрстку: где текст вылез за поля или наложился, поправь и покажи ещё раз.
+В конце скажи, где лежит файл .pptx и как мне его открыть.</pre></div></details>
+  <details class="acc"><summary>doc · регламент, договор, письмо в Word</summary><div class="prompt"><div class="cp">прогон · в чат Codex · копировать целиком</div><pre>Собери мне регламент в Word скиллом $doc.
+Процесс: [что за процесс, например «приём заявки от клиента»].
+Кто исполняет: [должность].
+Что на входе: [что человек получает].
+Что на выходе: [что должно получиться].
+Где чаще всего ошибаются: [1-2 реальных косяка].
+
+Сделай пошагово, простым языком, с таблицей ответственных и списком «частые ошибки и что делать».
+Проверь, как документ выглядит на странице, чтобы таблица не уехала за поля.
+В конце скажи, где лежит файл.</pre></div></details>
+  <details class="acc"><summary>spreadsheet · смета и расчёт в Excel живыми формулами</summary><div class="prompt"><div class="cp">прогон · в чат Codex · копировать целиком</div><pre>Собери мне смету в Excel скиллом $spreadsheet.
+Что считаем: [типовой заказ или услуга].
+Позиции и цены: [перечислите своими словами, можно голосом].
+Нужно: количество, цена за единицу, сумма по строке, итог, наценка и итог с наценкой.
+
+Обязательное условие: все суммы только формулами. Посчитанные числа руками не вбивай.
+Потом сам поменяй цену в одной строке и покажи мне, что итог пересчитался.
+В конце скажи, где лежит файл.</pre></div></details>
+  <details class="acc"><summary>pdf · читает счета и акты, собирает свои PDF</summary><div class="prompt"><div class="cp">прогон · в чат Codex · копировать целиком</div><pre>Разбери скиллом $pdf эти счета (файлы прикладываю) и сведи их в одну таблицу:
+контрагент, номер, дата, сумма, НДС, назначение платежа, срок оплаты.
+
+Если какого-то поля в документе нет, так и напиши «нет в документе». Ничего не додумывай и не округляй.
+В конце отдай мне таблицу файлом и назови общую сумму по всем счетам.</pre></div></details>
+</div>
+
+<div class="step">
+<div class="step-d" style="margin-top:16px"><b>Ещё два про PDF</b> · репозиторий на оба: github.com/TerminalSkills/skills</div>
+  <details class="acc"><summary>pdf-merge-split · склеить комплект в один файл и разрезать обратно</summary><div class="prompt"><div class="cp">прогон · в чат Codex · копировать целиком</div><pre>Склей скиллом $pdf-merge-split эти файлы в один PDF в таком порядке: [перечислите, например счёт, акт, приложение].
+Файлы прикладываю.
+
+Название итогового файла: [контрагент, номер сделки, дата].
+В конце скажи, сколько получилось страниц и где лежит файл.</pre></div></details>
+  <details class="acc"><summary>pdf-ocr · распознаёт счёт, присланный фотографией</summary><div class="prompt"><div class="cp">прогон · в чат Codex · копировать целиком</div><pre>Этот счёт прислали фотографией, текста в файле нет. Распознай его скиллом $pdf-ocr и достань:
+контрагент, ИНН, номер счёта, дата, сумма, НДС, назначение платежа, банковские реквизиты.
+
+Что распозналось плохо и вызывает сомнения, отметь отдельно и покажи мне, чтобы я проверил глазами.
+Ничего не додумывай: не уверен в цифре, так и напиши.</pre></div></details>
+</div>
+
+<div class="step">
+<div class="step-d" style="margin-top:16px"><b>Клиенты, конкуренты и договоры</b> · репозиторий на все четыре: github.com/anthropics/knowledge-work-plugins</div>
+  <details class="acc"><summary>competitive-intelligence · разбор конкурентов с ценами и аргументами</summary><div class="prompt"><div class="cp">прогон · в чат Codex · копировать целиком</div><pre>Разбери скиллом $competitive-intelligence двух моих конкурентов: [название 1] и [название 2].
+Мой рынок и город: [ниша, город].
+Что продаю я и по какой цене: [коротко].
+
+Нужно: что они предлагают, по каким ценам, чем берут клиента, что запустили за последние 90 дней, где они сильнее меня, где слабее, и пять вопросов, которыми я вскрою их слабые места на переговорах.
+
+Каждую цифру подтверждай ссылкой. Чего не нашёл, так и пиши «не нашёл», не придумывай.</pre></div></details>
+  <details class="acc"><summary>contract-review · проверка договора по категориям риска</summary><div class="prompt"><div class="cp">прогон · в чат Codex · копировать целиком</div><pre>Проверь скиллом $contract-review договор, файл прикладываю.
+Кто я в этой сделке: [заказчик или исполнитель].
+Что для меня критично: [сроки, оплата, ответственность, что-то ещё].
+
+Нужно: опасные пункты человеческим языком с делением по серьёзности, что именно мне грозит по каждому, план переговоров и отдельный файл с предлагаемыми правками.
+
+Отдельно скажи, чего в договоре нет, а должно быть.</pre></div>
+  <div class="note" style="margin-top:12px"><b>Честно про ограничение.</b> Скилл заточен под западную практику, российские нормы он не проверяет. Это второй взгляд, а не замена юристу. Пользу даёт на структуре и на пунктах, которые вы просто не заметили.</div></details>
+  <details class="acc"><summary>draft-response · ответ клиенту, когда сообщить нечего хорошего</summary><div class="prompt"><div class="cp">прогон · в чат Codex · копировать целиком</div><pre>Подготовь скиллом $draft-response ответ клиенту.
+Ситуация: [что произошло, честно, со сроками и цифрами].
+Что пишет клиент: [вставьте его сообщение как есть].
+Какой это клиент: [давно с нами / новый / крупный / скандальный].
+Что я реально могу предложить: [варианты, которые вы готовы дать].
+Чего я предложить не могу: [границы].
+
+Тон: спокойный, на «вы», без оправданий и без самобичевания.
+Ничего не отправляй. Дай мне два варианта ответа: короткий и подробный.</pre></div></details>
+  <details class="acc"><summary>job-post-builder · вакансия, план интервью и оффер одним комплектом</summary><div class="prompt"><div class="cp">прогон · в чат Codex · копировать целиком</div><pre>Собери скиллом $job-post-builder комплект на вакансию.
+Должность: [название].
+Чем человек будет заниматься: [3-4 задачи своими словами].
+Что обязательно, а что желательно: [требования].
+Условия: [зарплата, график, офис или удалённо, город].
+Кто руководитель и как устроена команда: [коротко].
+
+Нужно: текст вакансии, план собеседования с вопросами по блокам и бланком оценки в баллах, шаблон оффера.
+Пиши по-русски, без канцелярита.</pre></div></details>
+</div>
+
+<div class="step">
+<div class="step-d" style="margin-top:16px"><b>Контент и картинки</b></div>
+  <details class="acc"><summary>social · контент-план и посты под площадки · coreyhaines31/marketingskills</summary><div class="prompt"><div class="cp">прогон · в чат Codex · копировать целиком</div><pre>Сделай мне скиллом $social контент-план на неделю.
+Площадки: Telegram и ВКонтакте (LinkedIn и X не предлагай, они мне не нужны).
+Кто я и что продаю: [коротко].
+Кто читает: [ваша аудитория своими словами].
+О чём я точно не пишу: [запретные темы].
+
+Нужно: 7 тем с рабочими заголовками, по каждой одна строка «зачем это читателю», и один пост целиком, готовый к публикации.
+Пиши по-русски, живым языком, без канцелярита. Длинные тире не используй.</pre></div>
+  <div class="note" style="margin-top:12px"><b>Две ловушки.</b> Имя скилла ровно <b>social</b>: в каталоге висит устаревшая страница social-content, по этому имени установка сломается. И второе: скилл сделан под западный рынок, площадки в примерах придётся заменить на наши.</div></details>
+  <details class="acc"><summary>усилитель картинок · заставляет Codex рисовать по-настоящему</summary>
+  <div class="step-d">Генерация картинок <b>уже встроена</b> в Codex, ставить нечего. Проблема в другом: он ей не пользуется и подсовывает вместо картинки нарисованный кодом квадрат или градиент. Выглядит дёшево, и это самая частая жалоба. Усилитель это чинит.</div>
+  <div class="prompt"><div class="cp">шаг 1 · ставим усилитель</div><pre>Поставь мне скилл student-imagegen-enforcer.
+Скачай его сам вот отсюда: https://materials.neovida.ai/corp-18-08/skills/student-imagegen-enforcer.zip
+
+Что он делает: заставляет тебя рисовать картинки встроенной генерацией, а не подсовывать мне SVG, градиент, canvas или серую заглушку.
+
+Сделай всё сам, я работаю в приложении и руками ничего не делаю:
+1. распакуй архив;
+2. положи папку скилла туда, откуда ты подхватываешь скиллы, это ~/.codex/skills/. Должно получиться ~/.codex/skills/student-imagegen-enforcer/SKILL.md;
+3. перезапустись, иначе скилл не подхватится. Если сам перезапуститься не можешь, так и скажи, я закрою и открою Codex.
+
+В конце покажи мне, что скилл реально появился: назови путь к файлу и подтверди, что видишь его у себя в списке.</pre></div>
+  <div class="prompt"><div class="cp">шаг 2 · проверяем, что приходит картинка, а не заглушка</div><pre>Нарисуй мне картинку встроенной генерацией.
+Что нужно: [опишите картинку под свою работу, например: обложка поста про сдачу объекта, крупный кадр конструкции на закате, без людей и без текста].
+
+Условия:
+1. это должна быть настоящая сгенерированная картинка, файл .png или .jpg;
+2. SVG, CSS-градиент, canvas, фигуры кодом и серые заглушки мне не подходят, это не картинка;
+3. если встроенная генерация тебе сейчас недоступна, остановись и скажи это прямо, ничего не подделывай.
+
+В конце скажи, где лежит файл и как мне его открыть.</pre></div></details>
+</div>
+
+<div class="step">
+<div class="step-d" style="margin-top:16px"><b>Главный скилл занятия</b></div>
+  <details class="acc"><summary>deep-research · Дипресёрч: двенадцать сервисов, 189 инструментов</summary>
+  <div class="step-d">Мы зовём его Франкенштейном. Обычный поиск отвечает из головы модели и пары ссылок. Этот идёт в интернет по-настоящему: читает страницы целиком, лезет в соцсети, карты и маркетплейсы, разбирает PDF, заходит под логином через настоящий браузер и перепроверяет факты у четырёх независимых поисковиков. Шесть сервисов работают сразу, шесть просят бесплатный ключ. Установка и все промпты в <a href="shpargalka-6.html">шпаргалке, шаг 5</a>.</div>
+  <div class="prompt"><div class="cp">прогон · любое исследование по своей работе</div><pre>Проведи для меня исследование скиллом deep-research.
+Тема: [что нужно выяснить].
+Зачем мне это: [какое решение я приму по результатам].
+Что я уже знаю: [коротко, чтобы не искал заново].
+
+Нужно: факты с цифрами, кто это сказал и когда, ссылка на каждый источник.
+Требования: каждую цифру подтверждай ссылкой; противоречия между источниками показывай отдельно; чего не нашёл, так и пиши «не нашёл».
+В конце: короткий вывод в пять строк и файл с полным разбором.</pre></div></details>
+</div>
+</div>
+<script>
+function bindCopy(el, getText){
+  el.addEventListener('click',()=>{
+    const t=getText();
+    const cp=el.querySelector('.cp');
+    const done=()=>{
+      el.classList.add('copied');
+      setTimeout(()=>el.classList.remove('copied'),1600);
+    };
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(done).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    });
+  });
+}
+document.querySelectorAll('.prompt').forEach(el=>bindCopy(el,()=>{const p=el.querySelector('pre');return p.innerText||p.textContent;}));
+document.querySelectorAll('.tf').forEach(el=>bindCopy(el,()=>(el.innerText||el.textContent).trim()));
+</script>
+</body>
+</html>

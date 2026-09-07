@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ. Новая реальность · Занятие 5 · Агенты и Codex</title>
+<style>
+/* ══════════ ТОКЕНЫ ══════════ */
+:root{
+  --bg0:#0B1220; --bg1:#131B2E;
+  --surface:rgba(21,30,50,.92);
+  --line:rgba(255,255,255,.09);
+  --text:#F4F1EC; --muted:#9AA3B2;
+  --coral:#E07461; --coral-soft:rgba(224,116,97,.16);
+  --emerald:#10b981; --emerald-soft:rgba(16,185,129,.16);
+  --glow:rgba(224,116,97,.42);
+  --steel:#7FA6D0;
+  --sh:0 24px 60px rgba(0,0,0,.45), 0 4px 14px rgba(0,0,0,.35);
+  --r:24px;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#05080F;overflow:hidden}
+body{font-family:-apple-system,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ══════════ СЦЕНА 1920x1080 ══════════ */
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{width:1920px;height:1080px;flex:0 0 auto;position:relative;background:linear-gradient(160deg,var(--bg0),var(--bg1));overflow:hidden;transform-origin:center center}
+
+/* ══════════ СЛАЙД ══════════ */
+.slide{position:absolute;inset:0;display:none;padding:66px 96px;flex-direction:column}
+.slide.active{display:flex}
+.bg{position:absolute;inset:0;width:100%;height:100%;background-size:cover;background-position:center;background-repeat:no-repeat;object-fit:cover;z-index:0;opacity:.2}
+.bg--strong{opacity:.55}
+.bg--mid{opacity:.34}
+.veil{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(11,18,32,.25) 0%,rgba(11,18,32,.55) 55%,rgba(11,18,32,.92) 100%)}
+.veil--left{background:linear-gradient(90deg,rgba(11,18,32,.94) 0%,rgba(11,18,32,.72) 46%,rgba(11,18,32,.18) 100%)}
+.veil--flat{background:rgba(11,18,32,.74)}
+.wrap{position:relative;z-index:2;display:flex;flex-direction:column;flex:1;min-height:0}
+
+/* ══════════ ЗАПАСНОЙ АКЦЕНТ ══════════ */
+.slide.em{--coral:#10b981;--coral-soft:rgba(16,185,129,.16);--glow:rgba(16,185,129,.4)}
+.c-coral{color:#E07461}
+.c-em{color:#10b981}
+
+/* ══════════ ТИПОГРАФИКА ══════════ */
+.kicker{font-size:27px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--coral);margin-bottom:28px}
+h1{font-size:118px;line-height:1.04;font-weight:800;letter-spacing:-.015em;max-width:1560px}
+h2{font-size:66px;line-height:1.08;font-weight:750;letter-spacing:-.01em;max-width:1560px}
+.lead{font-size:38px;line-height:1.35;color:var(--muted);max-width:1440px;font-weight:450}
+.lead b,.lead strong{color:var(--text);font-weight:650}
+.src{font-size:25px;color:var(--muted);opacity:1;margin-top:auto;padding-top:26px}
+.accent{color:var(--coral)}
+
+/* ══════════ АНИМАЦИИ ══════════ */
+@keyframes rise{from{opacity:0;transform:translateY(46px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes bgZoom{from{transform:scale(1.07)}to{transform:scale(1)}}
+@keyframes growW{from{width:0}}
+@keyframes growH{from{height:0}}
+@keyframes popIn{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}
+.slide.active .a{animation:rise .75s var(--ease) both}
+.slide.active .af{animation:fadeIn 1s ease both}
+.slide.active .ap{animation:popIn .6s var(--ease) both}
+.slide.active .bg{animation:bgZoom 9s ease-out both}
+@keyframes emerge{0%{opacity:.08;filter:brightness(.3) blur(9px);transform:scale(1.09)}100%{opacity:.62;filter:brightness(1) blur(0);transform:scale(1)}}
+.slide.active .bg--emerge{animation:emerge 5.5s cubic-bezier(.22,.61,.36,1) both}
+.d1{animation-delay:.09s!important}.d2{animation-delay:.18s!important}.d3{animation-delay:.27s!important}.d4{animation-delay:.36s!important}.d5{animation-delay:.45s!important}.d6{animation-delay:.54s!important}.d7{animation-delay:.63s!important}.d8{animation-delay:.72s!important}.d9{animation-delay:.81s!important}.d10{animation-delay:.9s!important}
+
+/* ══════════ ИКОНКИ / ЛОГО / МОНОГРАММЫ ══════════ */
+.ph-i{display:inline-flex;line-height:0}
+.ph-i svg{width:var(--sz,48px);height:var(--sz,48px)}
+.logo-i{display:inline-flex;line-height:0;color:var(--text)}
+.logo-i svg{height:var(--sz,44px);width:auto;fill:currentColor}
+.mono{display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:50%;background:var(--mc,var(--coral-soft));border:1px solid var(--coral);color:var(--coral);font-weight:800;font-size:30px;flex:0 0 auto}
+.ico-chip{display:inline-flex;align-items:center;justify-content:center;width:96px;height:96px;border-radius:26px;background:var(--coral-soft);color:var(--coral);flex:0 0 auto}
+
+/* ══════════ КАРТОЧКИ ══════════ */
+.cards{display:grid;gap:36px;margin-top:56px}
+.cards.c2{grid-template-columns:1fr 1fr}
+.cards.c3{grid-template-columns:1fr 1fr 1fr}
+.cards.c4{grid-template-columns:repeat(4,1fr);gap:26px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:44px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:22px;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--coral),transparent 70%);opacity:.75}
+.card .num{font-size:70px;font-weight:800;color:var(--coral);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.card h3{font-size:34px;font-weight:700;line-height:1.2}
+.card p{font-size:27px;line-height:1.4;color:var(--muted)}
+.card p b{color:var(--text)}
+.card .head{display:flex;align-items:center;gap:24px;min-height:80px}
+.card--sm{padding:32px 34px;gap:16px}
+.card--sm h3{font-size:31px}
+.card--sm p{font-size:26px}
+.card--sm .head{min-height:72px;gap:20px}
+
+/* ══════════ БИГ-СТАТ ══════════ */
+.stat-center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:8px}
+.stat-num{font-size:210px;font-weight:800;letter-spacing:-.03em;color:var(--coral);line-height:1}
+.stat-cap{font-size:44px;font-weight:650;margin-top:10px}
+.stat-sub{font-size:32px;color:var(--muted);margin-top:14px;max-width:1400px;line-height:1.4}
+
+/* ══════════ СПЛИТ ══════════ */
+.split{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;flex:1;align-items:center;margin-top:20px}
+.split.rev{grid-template-columns:.95fr 1.05fr}
+.split .txt{display:flex;flex-direction:column;gap:24px}
+.split .txt h2{font-size:58px}
+.split .txt .kicker{margin-bottom:0}
+.split .pic{border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);border:1px solid var(--line);height:560px}
+.split .pic img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ══════════ СПИСОК-ПРАВИЛА ══════════ */
+.rules{display:flex;flex-direction:column;gap:26px;margin-top:52px;max-width:1560px}
+.rule{display:flex;align-items:center;gap:32px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px 38px}
+.rule .ico-chip{width:78px;height:78px;border-radius:20px}
+.rule .t{font-size:31px;line-height:1.35}
+.rule .t b{color:var(--coral)}
+.rules--tight{gap:20px!important}
+.rules--tight .rule{padding:20px 34px}
+.rules--tight .ico-chip{width:64px;height:64px;border-radius:18px}
+.rules--tight .t{font-size:29px}
+.rules--7{gap:11px!important}
+.rules--7 .rule{padding:14px 30px}
+.rules--7 .ico-chip{width:56px;height:56px;border-radius:15px}
+.rules--7 .t{font-size:27px;line-height:1.3}
+
+/* ══════════ ПРАКТИКА ══════════ */
+.badge{display:inline-flex;align-items:center;gap:14px;background:var(--coral);color:#fff;font-size:26px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:14px 30px;border-radius:999px;margin-bottom:30px;box-shadow:0 10px 34px var(--glow);align-self:flex-start}
+.steps-p{display:flex;flex-direction:column;gap:22px;margin-top:40px;max-width:1560px}
+.step-p{display:flex;gap:30px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:26px 36px}
+.step-p .n{width:64px;height:64px;border-radius:50%;background:var(--coral);color:#fff;font-size:30px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.step-p .t{font-size:30px;line-height:1.38;padding-top:12px}
+.step-p .t b{color:var(--coral)}
+.steps-p--tight{gap:18px!important}
+.steps-p--tight .step-p{padding:18px 32px}
+.steps-p--tight .step-p .n{width:56px;height:56px;font-size:27px}
+.steps-p--tight .step-p .t{font-size:28px;padding-top:8px}
+
+/* ══════════ ПРОМПТ-БЛОК ══════════ */
+.prompt{font-family:"SF Mono",Menlo,Consolas,monospace;background:linear-gradient(180deg,rgba(224,116,97,.10),rgba(224,116,97,.05)),rgba(8,13,26,.97);border:1px solid rgba(224,116,97,.22);border-left:5px solid var(--coral);border-radius:16px;padding:26px 32px;font-size:27px;line-height:1.46;white-space:pre-wrap;color:var(--text);font-weight:450;box-shadow:0 18px 44px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.05)}
+.prompt .ph{color:var(--coral);font-weight:650}
+.prompt b{font-weight:750;color:#fff}
+.prompt--sm{font-size:26px;padding:24px 28px;line-height:1.42}
+.prompt--lg{font-size:29px;padding:30px 36px;line-height:1.5}
+.p-lbl{font-size:25px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--steel);margin-bottom:12px}
+.slide.em .p-lbl{color:#6EE7B7}
+.pgrid{display:grid;gap:30px;margin-top:32px}
+.pgrid.p2{grid-template-columns:1fr 1fr}
+.pcol{display:flex;flex-direction:column}
+
+/* ══════════ ТАБЛИЦА ══════════ */
+.tbl{display:grid;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface);margin-top:34px;box-shadow:var(--sh)}
+.tbl > div{padding:24px 30px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-size:27px;line-height:1.34;display:flex;align-items:center;color:var(--muted)}
+.tbl .th{font-size:25px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:rgba(255,255,255,.06);color:var(--text)}
+.tbl .q{font-weight:700;color:var(--text)}
+.tbl .hi{color:var(--text)}
+.tbl--compact{margin-top:18px!important}
+.tbl--compact > div{padding:10px 22px!important;font-size:24.5px!important;line-height:1.24!important}
+.tbl.t3{grid-template-columns:1.06fr 1fr 1.06fr}
+.tbl.t3 > div:nth-child(3n){border-right:none}
+.tbl.t3 > div:nth-last-child(-n+3){border-bottom:none}
+.tbl--tall > div{padding:38px 30px}
+.pgrid--mid{flex:1;align-content:center}
+
+/* ══════════ БОЛЬШОЕ СРАВНЕНИЕ НАДВОЕ ══════════ */
+.big2{display:grid;grid-template-columns:1fr 2px 1fr;gap:64px;align-items:center;margin-top:34px}
+.big2-i{text-align:center}
+.big2-l{font-size:142px;font-weight:800;letter-spacing:-.025em;line-height:1}
+.big2-t{font-size:52px;line-height:1.22;margin-top:24px;color:var(--muted);font-weight:450}
+.big2-t b{color:var(--text);font-weight:750}
+.big2-div{width:3px;height:400px;border-radius:2px;background:linear-gradient(180deg,transparent,rgba(244,241,236,.38) 22%,rgba(244,241,236,.38) 78%,transparent)}
+
+/* ══════════ ФОРМУЛА РКЗФО ══════════ */
+.fx{display:grid;grid-template-columns:repeat(5,1fr);gap:26px;margin-top:46px}
+.fx-i{background:#141d31;border:1px solid var(--line);border-radius:22px;padding:34px 24px;text-align:center;box-shadow:var(--sh)}
+.fx-l{font-size:104px;font-weight:800;color:var(--coral);line-height:1;letter-spacing:-.02em}
+.fx-w{font-size:34px;font-weight:750;margin-top:16px}
+.fx-s{font-size:25px;color:var(--muted);margin-top:10px;line-height:1.3}
+
+/* ══════════ ЧИПЫ-ПРИЁМЫ ══════════ */
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:44px}
+.chips--15{grid-template-columns:repeat(5,1fr)!important;gap:10px!important}
+.chips--15 .chip{padding:22px 20px;border-radius:18px;gap:12px}
+.chips--15 .chip h4{font-size:26px;line-height:1.2}
+.chips--15 .chip p{display:none}
+.chips--15 .chip .n{font-size:24px}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:22px 26px;display:flex;flex-direction:column;gap:16px;position:relative;overflow:hidden}
+.chip::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--coral),transparent 75%);opacity:.8}
+.chip .n{font-size:25px;font-weight:800;color:var(--coral);letter-spacing:.1em}
+.chip .hd{display:flex;align-items:center;gap:16px;color:var(--coral)}
+.chip h4{font-size:31px;font-weight:750;line-height:1.18}
+.chip p{font-size:25px;color:var(--muted);line-height:1.32}
+
+/* ══════════ ФРАЗЫ ══════════ */
+.phrases{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:40px}
+.phr{display:flex;gap:20px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 26px}
+.phr .i{font-size:26px;font-weight:800;color:var(--coral);flex:0 0 auto;min-width:38px;font-variant-numeric:tabular-nums}
+.phr .t{font-size:28px;line-height:1.32}
+
+/* ══════════ ЛЕСТНИЦА ══════════ */
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;align-items:end;flex:1;margin-top:36px;max-height:700px}
+.lad{background:#141d31;border:1px solid var(--line);border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;gap:12px;justify-content:flex-end;box-shadow:var(--sh);overflow:hidden}
+.slide.active .lad{animation:growH .9s var(--ease) both}
+.lad .lad-i{display:inline-flex;color:var(--muted);margin-bottom:auto}
+.lad.here .lad-i{color:var(--emerald)}
+.lad .n{font-size:25px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lad h4{font-size:34px;font-weight:750;line-height:1.14}
+.lad p{font-size:25px;color:var(--muted);line-height:1.3}
+.lad.here{border-color:var(--emerald);background:#122a22}
+.lad.here .n{color:var(--emerald)}
+.tag-here{display:inline-block;font-size:24px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--emerald)}
+
+/* ══════════ ХРОМ ══════════ */
+#chrome{position:absolute;left:0;right:0;bottom:0;z-index:50;padding:0 44px 20px;display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}
+#act-label{font-size:24px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:650}
+#slide-no{font-size:24px;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:650}
+#bar{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.07);z-index:51}
+#bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#E07461,#F0A08E);transition:width .45s var(--ease),background .45s ease}
+.slide.active.em ~ #bar i{background:linear-gradient(90deg,#10b981,#4ade80)}
+.brand-corner{position:absolute;top:44px;left:64px;z-index:40;font-size:25px;font-weight:700;color:var(--muted)}
+.brand-corner b{color:#E07461}
+#fs-btn{position:fixed;top:20px;right:20px;z-index:120;width:46px;height:46px;padding:0;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(11,18,32,.5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#9AA3B2;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.4;transition:opacity .2s,color .2s,border-color .2s,background .2s}
+#fs-btn:hover{opacity:1;color:#F4F1EC;border-color:#E07461;background:rgba(224,116,97,.16)}
+#fs-btn svg{width:23px;height:23px}
+#fs-btn .i-close{display:none}
+#fs-btn.is-fs .i-open{display:none}
+#fs-btn.is-fs .i-close{display:block}
+
+/* ── повестка занятия ── */
+.agenda{display:flex;flex-direction:column;gap:11px;margin-top:26px}
+.ag{display:grid;grid-template-columns:118px 1fr;align-items:center;gap:26px;
+    background:rgba(255,255,255,.035);border:1px solid var(--line);border-left:4px solid rgba(224,116,97,.55);
+    border-radius:15px;padding:13px 24px}
+.ag--hot{background:linear-gradient(90deg,rgba(224,116,97,.15),rgba(224,116,97,.03));border-color:rgba(224,116,97,.42);border-left-color:var(--coral)}
+.ag-t{text-align:center;line-height:1}
+.ag-t b{display:block;font-size:38px;font-weight:800;color:var(--coral);letter-spacing:-.02em}
+.ag-t span{display:block;font-size:16px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.ag-b b{display:block;font-size:28px;font-weight:800;color:var(--text);line-height:1.15}
+.ag-b span{display:block;font-size:24px;color:var(--muted);line-height:1.25;margin-top:3px}
+/* ── два столбца, правило и следствие ── */
+.rule{display:flex;flex-direction:column;gap:11px;margin-top:30px}
+.ru{display:grid;grid-template-columns:0.85fr 1.15fr;align-items:center;gap:28px;
+    background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:15px;padding:15px 26px}
+.ru b{font-size:27px;font-weight:800;color:var(--coral);line-height:1.2}
+.ru span{font-size:25px;color:var(--muted);line-height:1.28}
+
+/* ══ НЕДОСТАЮЩИЕ КОМПОНЕНТЫ ══ */
+.wrap--center{justify-content:center;align-items:flex-start}
+.wrap--center .lead{max-width:1250px}
+
+/* две колонки: текст и картинка */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:66px;align-items:center;flex:1;min-height:0}
+.split--wide{grid-template-columns:1.15fr .85fr}
+.split-l{display:flex;flex-direction:column;justify-content:center;min-width:0}
+.split-r{display:flex;align-items:center;justify-content:center;min-width:0;height:100%}
+.split-r img{width:100%;height:auto;max-height:660px;object-fit:cover;border-radius:26px;
+  border:1px solid rgba(255,255,255,.09);box-shadow:0 30px 80px rgba(0,0,0,.55)}
+
+/* сетки карточек */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:34px;flex:1;min-height:0;align-content:center}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;flex:1;min-height:0;align-content:center}
+.grid2 .card,.grid3 .card{padding:36px 38px;gap:16px;justify-content:flex-start}
+.grid3 .card{padding:32px 30px}
+.card h3{font-size:36px;font-weight:800;line-height:1.15;margin:0}
+.grid3 .card h3{font-size:32px}
+.card p{font-size:26px;line-height:1.36;color:var(--muted);margin:0}
+.grid3 .card p{font-size:24px}
+.card-i{width:78px;height:78px;border-radius:20px;display:flex;align-items:center;justify-content:center;
+  background:rgba(224,116,97,.13);border:1px solid rgba(224,116,97,.34);color:var(--coral);flex:none}
+.card--hot{background:linear-gradient(160deg,rgba(224,116,97,.16),rgba(224,116,97,.04)),var(--surface);
+  border-color:rgba(224,116,97,.45);box-shadow:0 26px 70px rgba(224,116,97,.14)}
+.card--hot .card-i{background:var(--coral);color:#fff;border-color:transparent}
+.grid3--hero{grid-template-columns:1fr 1.22fr 1fr;align-items:stretch}
+.grid3--hero .card--hot{transform:scale(1.03)}
+
+/* цитата */
+.quote{position:relative;padding-left:92px;max-width:1560px}
+.q-mark{position:absolute;left:0;top:-24px;font-size:150px;line-height:1;color:var(--coral);opacity:.5;font-weight:800}
+.q-text{font-size:66px;line-height:1.16;font-weight:800;margin:0;letter-spacing:-.02em}
+
+/* два тезиса в строку */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.tf{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);
+  border-radius:16px;padding:24px 28px;font-size:26px;line-height:1.34;color:var(--muted)}
+.tf b{color:var(--text)}
+.ten{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:26px}
+.ten .tf{font-size:25px}
+
+/* плашка-сноска на слайде */
+.note-slide{background:rgba(61,143,209,.09);border:1px solid rgba(61,143,209,.3);border-radius:18px;
+  padding:24px 32px;font-size:28px;line-height:1.36;color:var(--muted)}
+.note-slide b{color:var(--text)}
+
+/* подпись на титуле */
+.sign{font-size:28px;color:var(--muted);font-weight:600;margin-top:44px;letter-spacing:.02em}
+.sign b{color:var(--coral)}
+
+/* ── подгонка под 1080 ── */
+.badge{margin-bottom:22px!important}
+.agenda{gap:8px!important;margin-top:20px!important}
+.ag{padding:9px 22px!important;gap:22px!important;grid-template-columns:104px 1fr!important}
+.ag-t b{font-size:33px!important}
+.ag-t span{font-size:14px!important;margin-top:2px!important}
+.ag-b b{font-size:25px!important}
+.ag-b span{font-size:22px!important;margin-top:1px!important}
+.rule{gap:8px!important;margin-top:20px!important}
+.ru{padding:11px 26px!important}
+.ru b{font-size:25px!important}
+.ru span{font-size:23.5px!important}
+
+/* ── финальная посадка ── */
+.grid2 .card{padding:30px 34px!important;gap:13px!important}
+.grid3 .card{padding:26px 28px!important;gap:12px!important}
+.card-i{width:66px!important;height:66px!important;border-radius:17px!important}
+.card h3{font-size:33px!important}
+.grid3 .card h3{font-size:29px!important}
+.card p{font-size:25px!important;line-height:1.32!important}
+.grid3 .card p{font-size:24px!important;line-height:1.3!important}
+.grid2{gap:28px!important}
+.grid3{gap:22px!important}
+.step-p{padding:22px 32px!important}
+.steps-p{gap:18px!important;margin-top:30px!important}
+.ag{padding:6px 22px!important;grid-template-columns:126px 1fr!important}
+.ag-t{display:flex;align-items:baseline;justify-content:center;gap:6px}
+.ag-t b{font-size:31px!important}
+.ag-t span{font-size:24px!important;letter-spacing:0!important;text-transform:none!important;margin-top:0!important;display:inline!important;font-weight:600!important}
+.ag-b b{font-size:26px!important}
+.ag-b span{font-size:24px!important}
+.ag-t b{font-size:31px!important}
+.ag-t span{font-size:15px!important}
+.two{gap:16px!important}
+.tf{padding:20px 24px!important;font-size:25px!important}
+.ten{gap:14px!important;margin-top:22px!important}
+.ten .tf{font-size:24px!important}
+.note-slide{padding:20px 28px!important;font-size:26px!important}
+.chips{gap:18px!important;margin-top:30px!important}
+.chip{padding:18px 22px!important;gap:10px!important}
+
+.agenda{gap:7px!important;margin-top:18px!important}
+
+/* ── промпт на слайде ── */
+.prompt-slide{background:linear-gradient(180deg,rgba(224,116,97,.10),rgba(224,116,97,.04)),rgba(8,13,26,.96);
+  border:1px solid rgba(224,116,97,.28);border-left:5px solid var(--coral);border-radius:18px;
+  padding:26px 32px;box-shadow:0 18px 44px rgba(0,0,0,.42)}
+.prompt-slide pre{margin:0;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:26px;line-height:1.45;color:var(--text);white-space:pre-wrap}
+
+/* ── занятие 5: шрифты не мельче 25 ── */
+.ru b{font-size:26px!important}
+.ru span{font-size:25.5px!important;line-height:1.3!important}
+.ru{padding:12px 26px!important;gap:26px!important}
+.rule{gap:9px!important}
+.ten .tf{font-size:25px!important}
+.two .tf{font-size:25.5px!important}
+
+.grid3 .card p{font-size:25px!important;line-height:1.31!important}
+.grid3 .card{padding:24px 26px!important}
+.ag-b span{font-size:25px!important}
+.ag{padding:7px 22px!important}
+
+/* ── занятие 5: картинка в шапочном split не должна распирать блок ── */
+.split{flex:none!important}
+.split-r{overflow:hidden}
+.split-r img{max-height:330px!important;width:100%;object-fit:cover}
+
+/* ── правки после разбора дизайнера ── */
+.split-r img{max-height:330px!important;width:100%;object-fit:contain!important;background:transparent}
+.steps-p{max-width:none!important}
+.chips--15{grid-template-columns:repeat(4,1fr)!important}
+.ag-t span{font-size:22px!important}
+/* сравнение хорошо/плохо на слайде */
+.two--verdict .tf{border-left-width:5px}
+.two--verdict .tf.ok{border-left-color:#4caf7d;background:rgba(76,175,125,.09)}
+.two--verdict .tf.no{border-left-color:#e05c5c;background:rgba(224,92,92,.09)}
+.two--verdict .tf.ok b{color:#4caf7d}
+.two--verdict .tf.no b{color:#e05c5c}
+
+/* ── контент по центру, чтобы не было дыры внизу ── */
+.slide.active .wrap{justify-content:center}
+.slide.active .wrap--center{justify-content:center}
+/* полноэкранная инфографика */
+.figfull{display:flex;align-items:center;justify-content:center;flex:1;min-height:0;margin-top:14px}
+.figfull img{max-width:100%;max-height:760px;width:auto;height:auto;border-radius:20px;
+  border:1px solid rgba(255,255,255,.10);box-shadow:0 26px 70px rgba(0,0,0,.55)}
+
+/* инфографика крупнее */
+.figfull{margin-top:10px}
+.figfull img{max-height:800px!important}
+
+/* ── картинка в split занимает всю колонку ── */
+.split-r img{max-height:none!important;width:100%!important;aspect-ratio:16/10;object-fit:cover!important;border-radius:20px}
+.split{gap:52px!important;align-items:center}
+
+/* ── колонки фиксированные, слова не скачут ── */
+.ru{grid-template-columns:430px 1fr!important;align-items:start!important;text-align:left}
+.ru b{display:block;text-align:left}
+.ru span{display:block;text-align:left}
+
+/* ── строки списков одной ширины, слова в одну линию ── */
+.rule{align-items:stretch!important;width:100%}
+.ru{width:100%}
+.ten,.two,.chips,.steps-p,.agenda{align-items:stretch!important;width:100%}
+.step-p{width:100%}
+
+/* ── жирное внутри описания остаётся в строке ── */
+.ru span b{display:inline!important;color:var(--text)}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+<!-- 1 · Титул -->
+<section class="slide" data-act="Старт">
+  <div class="bg" style="background-image:url(a6/bg-title.jpg)"></div>
+  <div class="wrap wrap--center">
+    <div class="badge a">Занятие 6 · 8 сентября · «ИИ. Новая реальность»</div>
+    <h1 class="a d1">Ссылка<br>и <span class="accent">скиллы</span></h1>
+    <div class="lead a d3" style="font-size:34px;max-width:1200px">Ваше приложение выходит из компьютера в интернет. А агент перестаёт быть пустым и обрастает инструментами</div>
+    <div class="sign a d5">Альберт Валеев · neovida<b>.</b>ai</div>
+  </div>
+</section>
+
+<!-- 2 · Мостик -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <h2 class="a">Помните, <span class="accent">на чём мы остановились</span></h2>
+    <div class="lead a d1" style="margin-top:30px;font-size:33px">В пятницу вы поставили Codex, объяснили ему, кто вы, и он собрал вам первое приложение</div>
+    <div class="grid3 grid3--hero a d2" style="margin-top:32px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="identification-card" style="--sz:40px"></i></div>
+        <h3>Он знает вас</h3>
+        <p>Персонализация, досье и AGENTS.md. <b>Сделано.</b></p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="package" style="--sz:40px"></i></div>
+        <h3>Он собрал приложение</h3>
+        <p>Генератор КП, дашборд, чек-лист. <b>Сделано.</b></p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="lock-key" style="--sz:40px"></i></div>
+        <h3>Его видите только вы</h3>
+        <p>Приложение лежит у вас на компьютере. <b>Вот это чиним сегодня.</b></p>
+      </div>
+    </div>
+    <div class="lead a d5" style="margin-top:30px;font-size:31px">И вторая вещь: агент пока пустой. Он умеет думать и писать, но у него нет инструментов под вашу работу</div>
+  </div>
+</section>
+
+<!-- 3 · Повестка -->
+<section class="slide" data-act="Старт">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="map-trifold" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Два часа, две части</div>
+    <h2 class="a d1">Что <span class="accent">сегодня</span></h2>
+    <div class="agenda a d2">
+      <div class="ag ag--hot"><div class="ag-t"><b>50</b><span>мин</span></div><div class="ag-b"><b>Публичная ссылка</b><span>Приложение переезжает в интернет и получает адрес, который можно отправить</span></div></div>
+      <div class="ag ag--hot"><div class="ag-t"><b>60</b><span>мин</span></div><div class="ag-b"><b>Скиллы</b><span>Маркетплейс, досмотр, свой набор под работу и Дипресёрч на двенадцать сервисов</span></div></div>
+      <div class="ag"><div class="ag-t"><b>10</b><span>мин</span></div><div class="ag-b"><b>Финал</b><span>Что унесли, домашка, занятие 7</span></div></div>
+    </div>
+    <div class="lead a d6" style="margin-top:30px;font-size:31px">Пять практик. К концу занятия у вас есть живая ссылка на своё приложение и агент с инструментами</div>
+  </div>
+</section>
+
+<!-- 4 · Часть 1 титул -->
+<section class="slide" data-act="Ссылка">
+  <div class="bg" style="background-image:url(a6/bg-chast1.jpg)"></div>
+  <div class="wrap wrap--center">
+    <div class="badge a">Часть 1 · 50 минут</div>
+    <h1 class="a d1" style="font-size:86px">Публичная ссылка</h1>
+    <div class="lead a d3" style="font-size:34px;max-width:1150px">От папки на вашем компьютере до адреса, который открывается у любого человека</div>
+  </div>
+</section>
+
+<!-- 5 · Проблема -->
+<section class="slide" data-act="Ссылка">
+  <div class="wrap">
+    <div class="split split--wide">
+      <div class="split-l">
+        <div class="badge a"><i class="ph-i" data-ph="warning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Где мы застряли</div>
+        <h2 class="a d1">Приложение есть, <span class="accent">а показать нельзя</span></h2>
+        <div class="lead a d2" style="margin-top:22px;font-size:31px">Вы собрали генератор КП. Он работает. Открывается по адресу, который начинается со слова <b>localhost</b></div>
+        <div class="two a d3" style="margin-top:24px">
+          <div class="tf"><b>Отправили этот адрес коллеге.</b> У него не открылось. И не откроется никогда</div>
+          <div class="tf"><b>localhost значит «этот компьютер».</b> Не ваш компьютер вообще, а тот, за которым сидит открывающий</div>
+        </div>
+      </div>
+      <div class="split-r"><img src="a6/img-localhost.jpg" alt="Приложение видно только автору"></div>
+    </div>
+    <div class="lead a d5" style="margin-top:26px;font-size:31px">Пока приложение живёт только у вас, это личная игрушка. Инструментом отдела оно станет через час</div>
+  </div>
+</section>
+
+<!-- 6 · Что нужно -->
+<section class="slide" data-act="Ссылка">
+  <div class="wrap">
+    <h2 class="a">Чтобы приложение увидели другие, <span class="accent">ему нужно место в интернете</span></h2>
+    <div class="lead a d1" style="margin-top:26px;font-size:32px">Файл на вашем диске никому не доступен. Его нужно положить туда, откуда он раздаётся всем, и получить на него адрес</div>
+    <div class="chips chips--15 a d2" style="margin-top:30px">
+      <div class="chip"><span class="n">1</span><h4>Папка у вас</h4></div>
+      <div class="chip"><span class="n">2</span><h4>Склад в интернете</h4></div>
+      <div class="chip"><span class="n">3</span><h4>Витрина</h4></div>
+      <div class="chip"><span class="n">4</span><h4>Адрес</h4></div>
+    </div>
+    <div class="lead a d5" style="margin-top:30px;font-size:31px">Весь сегодняшний час это один путь. Пройдём его целиком на вашем приложении, не на учебном</div>
+  </div>
+</section>
+
+<!-- 7 · Три слова -->
+<section class="slide" data-act="Ссылка">
+  <div class="wrap">
+    <div class="split split--wide">
+      <div class="split-l">
+        <div class="badge a"><i class="ph-i" data-ph="book-open-text" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Слова, которые перестают быть мутными</div>
+        <h2 class="a d1">Git это <span class="accent">история сохранений</span></h2>
+        <div class="lead a d2" style="margin-top:22px;font-size:31px">Не облако и не сайт. Это летопись: каждое сохранение записано, подписано и его можно откатить</div>
+        <div class="rule a d3" style="margin-top:22px">
+          <div class="ru"><b>Коммит</b><span>сохранение с подписью: «добавил поле цены», а не «правки»</span></div>
+          <div class="ru"><b>Пуш</b><span>отправка сохранений с вашего компьютера на склад в интернете</span></div>
+          <div class="ru"><b>Репозиторий</b><span>папка проекта вместе со всей её историей</span></div>
+        </div>
+      </div>
+      <div class="split-r"><img src="a6/img-commit.jpg" alt="История сохранений проекта"></div>
+    </div>
+    <div class="lead a d5" style="margin-top:26px;font-size:30px">Команды набирать не будете. Всё это делает Codex, вы говорите словами. Но знать, что происходит, надо</div>
+  </div>
+</section>
+
+<!-- 8 · GitHub -->
+<section class="slide" data-act="Ссылка">
+  <div class="wrap">
+    <div class="split split--wide">
+      <div class="split-l">
+        <div class="badge a"><i class="ph-i" data-ph="stack" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Куда переезжает проект</div>
+        <h2 class="a d1">GitHub: <span class="accent">склад и витрина в одном</span></h2>
+        <div class="lead a d2" style="margin-top:22px;font-size:31px">Сначала он просто хранит вашу папку со всей историей. А потом умеет ту же папку показать миру по адресу</div>
+        <div class="two a d3" style="margin-top:24px">
+          <div class="tf"><b>Склад.</b> Проект лежит целиком, с историей. Мак сломался, проект жив</div>
+          <div class="tf"><b>Витрина.</b> Одна настройка, и тот же проект открывается по ссылке у кого угодно</div>
+        </div>
+      </div>
+      <div class="split-r"><img src="a6/img-github.jpg" alt="Склад и витрина"></div>
+    </div>
+    <div class="lead a d5" style="margin-top:26px;font-size:30px">Отдельный хостинг сегодня не подключаем. GitHub умеет раздавать вашу страницу сам, этого хватает</div>
+  </div>
+</section>
+
+<!-- 9 · Статика -->
+<section class="slide" data-act="Ссылка">
+  <div class="wrap">
+    <div class="split split--wide">
+      <div class="split-l">
+        <div class="badge a"><i class="ph-i" data-ph="cpu" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Почему это вообще получится</div>
+        <h2 class="a d1">Ваше приложение это <span class="accent">три файла</span></h2>
+        <div class="lead a d2" style="margin-top:22px;font-size:31px">Codex собирал его нарочно так: без сервера, без базы, без входа по паролю. Такое выкладывается в одно движение</div>
+        <div class="rule a d3" style="margin-top:22px">
+          <div class="ru"><b>index.html</b><span>текст и структура: что вообще на странице</span></div>
+          <div class="ru"><b>styles.css</b><span>внешний вид: цвета, отступы, как выглядит на телефоне</span></div>
+          <div class="ru"><b>script.js</b><span>логика: что считается, когда вы нажимаете кнопку</span></div>
+        </div>
+      </div>
+      <div class="split-r"><img src="a6/img-statika.jpg" alt="Три файла приложения"></div>
+    </div>
+    <div class="lead a d5" style="margin-top:26px;font-size:30px">Сервер ничего не вычисляет, он просто отдаёт эти файлы. Поэтому нечему падать и нечему утекать</div>
+  </div>
+</section>
+
+<!-- 10 · Что из этого следует -->
+<section class="slide" data-act="Ссылка">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="scales" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Границы первой версии</div>
+    <h2 class="a d1">Что из этого <span class="accent">следует</span></h2>
+    <div class="ten a d2" style="margin-top:26px">
+      <div class="tf"><b>Все видят одно и то же.</b> Персонально ничего не меняется</div>
+      <div class="tf"><b>Данные остаются в браузере.</b> У каждого свои, между людьми не ходят</div>
+      <div class="tf"><b>Личных кабинетов нет.</b> Хранить негде, входа по паролю тоже нет</div>
+      <div class="tf"><b>Общей базы нет.</b> Коллега не увидит то, что вы ввели у себя</div>
+      <div class="tf"><b>Для первой версии это плюс.</b> Нечему утечь и нечего сломать</div>
+      <div class="tf"><b>Нужна общая база, это следующий шаг.</b> Сначала научимся публиковать</div>
+    </div>
+    <div class="lead a d6" style="margin-top:28px;font-size:31px">Инструмент для отдела, где каждый работает со своими цифрами, из этого получается уже сегодня</div>
+  </div>
+</section>
+<!-- 11 · Три клика -->
+<section class="slide" data-act="Ссылка">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="hand-tap" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Витрина включается руками, это единственное место</div>
+    <h2 class="a d1">Публикация: <span class="accent">три клика</span></h2>
+    <div class="chips chips--15 a d2" style="margin-top:30px">
+      <div class="chip"><span class="n">1</span><h4>Settings</h4></div>
+      <div class="chip"><span class="n">2</span><h4>Pages</h4></div>
+      <div class="chip"><span class="n">3</span><h4>Ветка main</h4></div>
+    </div>
+    <div class="rule a d4" style="margin-top:28px">
+      <div class="ru"><b>Settings</b><span>вкладка сверху в вашем проекте на GitHub</span></div>
+      <div class="ru"><b>Pages</b><span>раздел в левом меню настроек</span></div>
+      <div class="ru"><b>Ветка main, папка корневая</b><span>выбрали, сохранили, через минуту адрес готов</span></div>
+    </div>
+    <div class="lead a d6" style="margin-top:28px;font-size:31px">Адрес выглядит так: <b>ваше-имя.github.io/название-проекта</b>. Материалы этого курса лежат ровно там же</div>
+  </div>
+</section>
+
+<!-- 12 · Практика 1 -->
+<section class="slide" data-act="Ссылка">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 1 · 10 минут · шпаргалка, шаг 1</div>
+    <h2 class="a d1">Заводим <span class="accent">аккаунт на GitHub</span></h2>
+    <div class="steps-p steps-p--tight a d1" style="margin-top:26px">
+      <div class="step-p ap d2"><span class="n">1</span><div class="t">Открыли <b>github.com</b> и нажали <b>Sign up</b></div></div>
+      <div class="step-p ap d3"><span class="n">2</span><div class="t">Рабочая почта, пароль, имя пользователя <b>латиницей</b>: оно попадёт в адрес вашего приложения</div></div>
+      <div class="step-p ap d4"><span class="n">3</span><div class="t">Подтвердили почту по письму и прошли картинку-проверку</div></div>
+      <div class="step-p ap d5"><span class="n">4</span><div class="t">Тариф <b>Free</b>, карту не спрашивают. Всё, что делаем сегодня, бесплатно</div></div>
+    </div>
+    <div class="lead a d6" style="margin-top:26px;font-size:31px">Аккаунт уже есть, отдыхаете эти десять минут или помогаете соседу</div>
+  </div>
+</section>
+
+<!-- 13 · Практика 2 -->
+<section class="slide" data-act="Ссылка">
+  <div class="wrap">
+    <div class="split split--wide">
+      <div class="split-l">
+        <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 2 · 20 минут · шпаргалка, шаг 2</div>
+        <h2 class="a d1">Codex сам <span class="accent">выкладывает ваш проект</span></h2>
+        <div class="steps-p steps-p--tight a d2" style="margin-top:22px">
+          <div class="step-p ap d3"><span class="n">1</span><div class="t">Открыли <b>тот самый чат</b>, где собирали приложение, и отправили промпт из шпаргалки</div></div>
+          <div class="step-p ap d4"><span class="n">2</span><div class="t">Он попросит <b>войти в GitHub</b>: браузер откроется сам, вы подтверждаете</div></div>
+          <div class="step-p ap d5"><span class="n">3</span><div class="t">Он создал проект, отправил файлы и <b>сказал, где нажать три клика</b></div></div>
+          <div class="step-p ap d6"><span class="n">4</span><div class="t">Открыли ссылку <b>с телефона</b>. Работает не у вас, значит работает у всех</div></div>
+        </div>
+      </div>
+      <div class="split-r"><img src="a6/img-live-link.jpg" alt="Живая ссылка на приложение"></div>
+    </div>
+    <div class="lead a d7" style="margin-top:24px;font-size:30px">Проверка простая: попросите соседа открыть вашу ссылку у себя. Открылось, значит вы это сделали</div>
+  </div>
+</section>
+
+<!-- 14 · Стоп-зоны публикации -->
+<section class="slide" data-act="Ссылка">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="warning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Публичное значит публичное</div>
+    <h2 class="a d1">Чего <span class="accent">не выкладываем</span></h2>
+    <div class="lead a d2" style="margin-top:22px;font-size:31px">Публичный проект на GitHub видят все, включая поисковики. Удалили файл, а он остаётся в истории</div>
+    <div class="ten a d3" style="margin-top:24px">
+      <div class="tf"><b>Настоящие клиенты.</b> Ни имён, ни телефонов, ни сумм сделок</div>
+      <div class="tf"><b>Ключи и пароли.</b> Ни в файлах, ни в комментариях к коду</div>
+      <div class="tf"><b>Прайсы и себестоимость.</b> Всё, что не должен видеть конкурент</div>
+      <div class="tf"><b>Внутренние документы.</b> Договоры, регламенты, переписка</div>
+      <div class="tf"><b>Данные сотрудников.</b> Оклады, оценки, личные дела</div>
+      <div class="tf"><b>Выкладываем пустое приложение.</b> Данные каждый вводит у себя</div>
+    </div>
+    <div class="lead a d6" style="margin-top:26px;font-size:31px">Правило одно: приложение публичное, данные ваши. Проверьте перед публикацией, что в файлах только примеры</div>
+  </div>
+</section>
+
+<!-- 15 · Честно про бесплатное -->
+<section class="slide" data-act="Ссылка">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="scales" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Честно про бесплатное</div>
+    <h2 class="a d1">Где заканчивается <span class="accent">бесплатный тариф</span></h2>
+    <div class="two a d2" style="margin-top:26px">
+      <div class="tf ok"><b>Учебный и внутренний проект.</b> Инструмент для себя и коллег, никто не платит за доступ. Бесплатно и без ограничений по времени</div>
+      <div class="tf no"><b>Коммерческий сайт.</b> Продаёте доступ или это витрина, на которой зарабатываете. Правила GitHub Pages это запрещают, нужен платный хостинг</div>
+    </div>
+    <div class="rule a d4" style="margin-top:26px">
+      <div class="ru"><b>Размер</b><span>сайт до 1 ГБ, этого хватает с огромным запасом</span></div>
+      <div class="ru"><b>Обновление</b><span>после правки до 10 минут, около 10 обновлений в час</span></div>
+      <div class="ru"><b>Свой домен</b><span>можно привязать, но не сегодня</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 · Что теперь можно -->
+<section class="slide" data-act="Ссылка">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="trend-up" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Что изменилось за час</div>
+    <h2 class="a d1">Что теперь <span class="accent">можно</span></h2>
+    <div class="grid3 a d2" style="margin-top:28px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="users-three" style="--sz:38px"></i></div>
+        <h3>Отдать отделу</h3>
+        <p>Генератор КП открывают все менеджеры, а не только вы</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="phone-call" style="--sz:38px"></i></div>
+        <h3>Открыть на объекте</h3>
+        <p>Чек-лист приёмки работает с телефона прораба</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="handshake" style="--sz:38px"></i></div>
+        <h3>Показать руководителю</h3>
+        <p>Не рассказ про ИИ, а ссылка, которую он откроет при вас</p>
+      </div>
+    </div>
+    <div class="lead a d5" style="margin-top:30px;font-size:32px">Правка тоже словами: сказали Codex «поменяй», он поправил и отправил, через минуту обновилось на сайте</div>
+  </div>
+</section>
+<!-- 17 · Часть 2 титул -->
+<section class="slide" data-act="Скиллы">
+  <div class="bg" style="background-image:url(a6/bg-chast2.jpg)"></div>
+  <div class="wrap wrap--center">
+    <div class="badge a">Часть 2 · 60 минут</div>
+    <h1 class="a d1" style="font-size:86px">Скиллы</h1>
+    <div class="lead a d3" style="font-size:34px;max-width:1150px">Агент перестаёт быть умным собеседником и становится работником с инструментами</div>
+  </div>
+</section>
+
+<!-- 18 · Что такое скилл -->
+<section class="slide" data-act="Скиллы">
+  <div class="wrap">
+    <div class="split split--wide">
+      <div class="split-l">
+        <div class="badge a"><i class="ph-i" data-ph="medal" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Что это вообще</div>
+        <h2 class="a d1">Скилл это <span class="accent">способность</span></h2>
+        <div class="lead a d2" style="margin-top:22px;font-size:31px">Не программа и не подписка. Это инструкция, по которой агент делает работу целиком и одинаково хорошо каждый раз</div>
+        <div class="two a d3" style="margin-top:24px">
+          <div class="tf"><b>Вы не зовёте его вручную.</b> Задача подошла, агент сам взял нужный скилл и применил</div>
+          <div class="tf"><b>Денег не стоит.</b> Работает тот агент, за которого вы уже платите. Расход только токены</div>
+        </div>
+      </div>
+      <div class="split-r"><img src="a6/img-skill.jpg" alt="Агент обрастает инструментами"></div>
+    </div>
+    <div class="lead a d5" style="margin-top:26px;font-size:30px">Один скилл собирает настоящий Word с таблицами, другой читает счета из PDF, третий разбирает конкурентов</div>
+  </div>
+</section>
+
+<!-- 19 · Навык против скилла -->
+<section class="slide" data-act="Скиллы">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="path" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Мы это уже проходили, но там было другое</div>
+    <h2 class="a d1">Навык ChatGPT против <span class="accent">скилла Codex</span></h2>
+    <div class="two a d2" style="margin-top:26px">
+      <div class="tf"><b>Навык на занятии 4.</b> Живёт внутри ChatGPT, работает со словами: разобрать, написать, посоветовать. Результат приходит в чат, дальше вы копируете руками</div>
+      <div class="tf"><b>Скилл сегодня.</b> Живёт в Codex, работает с файлами и интернетом: собирает документы, читает сканы, ходит по сайтам. Результат это файл на вашем компьютере</div>
+    </div>
+    <div class="rule a d4" style="margin-top:26px">
+      <div class="ru"><b>Общее</b><span>и там и там это методика, а не разовый промпт</span></div>
+      <div class="ru"><b>Разное</b><span>навык говорит, скилл делает руками</span></div>
+      <div class="ru"><b>Вместе</b><span>обдумали в ChatGPT, собрали файлом в Codex</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 20 · Маркетплейс -->
+<section class="slide" data-act="Скиллы">
+  <div class="wrap">
+    <div class="split split--wide">
+      <div class="split-l">
+        <div class="badge a"><i class="ph-i" data-ph="globe-hemisphere-west" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Откуда их берут</div>
+        <h2 class="a d1">Маркетплейс: <span class="accent">skills.sh</span></h2>
+        <div class="lead a d2" style="margin-top:22px;font-size:31px">Открытый каталог скиллов. Их пишут компании и разработчики, лежат они бесплатно, ставятся одной просьбой</div>
+        <div class="rule a d3" style="margin-top:22px">
+          <div class="ru"><b>Кто пишет</b><span>OpenAI, Anthropic, Vercel, независимые команды</span></div>
+          <div class="ru"><b>Сколько стоит</b><span>ничего, лицензии открытые</span></div>
+          <div class="ru"><b>Как ставится</b><span>сказали Codex имя, он нашёл и поставил сам</span></div>
+        </div>
+      </div>
+      <div class="split-r"><img src="a6/img-marketplace.jpg" alt="Каталог скиллов"></div>
+    </div>
+    <div class="lead a d5" style="margin-top:26px;font-size:30px">Смысл не в том, чтобы поставить сто штук. Смысл в том, чтобы закрыть свою повторяющуюся работу</div>
+  </div>
+</section>
+
+<!-- 21 · Два базовых -->
+<section class="slide" data-act="Скиллы">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="stack" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>С чего начинается набор</div>
+    <h2 class="a d1">Два скилла, <span class="accent">которые ставят первыми</span></h2>
+    <div class="grid2 a d2" style="margin-top:28px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="detective" style="--sz:40px"></i></div>
+        <h3>Который ищет скиллы</h3>
+        <p>Ставится один раз. Дальше вы говорите «найди что-нибудь под смету», и он сам идёт по каталогу и приносит варианты</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="shield-check" style="--sz:40px"></i></div>
+        <h3>Который проверяет скиллы</h3>
+        <p>Читает чужой скилл до установки и рассказывает, что тот делает на вашем компьютере. Это досмотр</p>
+      </div>
+    </div>
+    <div class="lead a d5" style="margin-top:30px;font-size:31px">Порядок железный: сначала досмотр, потом установка. Даже когда скилл принёс я</div>
+  </div>
+</section>
+
+<!-- 22 · Практика 3 -->
+<section class="slide" data-act="Скиллы">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 3 · 10 минут · шпаргалка, шаг 3</div>
+    <h2 class="a d1">Ставим <span class="accent">поисковик скиллов</span></h2>
+    <div class="steps-p steps-p--tight a d1" style="margin-top:26px">
+      <div class="step-p ap d2"><span class="n">1</span><div class="t">Новый чат в Codex, <b>в своём окружении</b>. Отправили промпт из шпаргалки</div></div>
+      <div class="step-p ap d3"><span class="n">2</span><div class="t">Он сам находит адрес в каталоге и <b>показывает, что нашёл</b>, до установки</div></div>
+      <div class="step-p ap d4"><span class="n">3</span><div class="t">Ставит и <b>перезапускается</b>. Не может сам, закрываете и открываете Codex руками</div></div>
+      <div class="step-p ap d5"><span class="n">4</span><div class="t">Проверили: «какие скиллы у тебя есть». Он перечислил, значит встало</div></div>
+    </div>
+    <div class="lead a d6" style="margin-top:26px;font-size:30px">Терминал не открываем. Всё делает агент, вы копируете просьбу и читаете ответ</div>
+  </div>
+</section>
+
+<!-- 23 · Досмотр -->
+<section class="slide" data-act="Скиллы">
+  <div class="wrap">
+    <div class="split split--wide">
+      <div class="split-l">
+        <div class="badge a"><i class="ph-i" data-ph="shield-check" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Правило, которое не нарушаем</div>
+        <h2 class="a d1">Чужой скилл это <span class="accent">незнакомец</span></h2>
+        <div class="lead a d2" style="margin-top:22px;font-size:31px">Вы пускаете его ходить по своему компьютеру. Сначала смотрит агент, решение всё равно за вами</div>
+        <div class="two a d3" style="margin-top:24px">
+          <div class="tf"><b>Что спрашиваем.</b> Что делает, какие команды запускает, куда ходит в интернет, видит ли ключи и личные данные</div>
+          <div class="tf"><b>Чего требуем.</b> Ничего не устанавливай, просто прочитай и отчитайся</div>
+        </div>
+      </div>
+      <div class="split-r"><img src="a6/img-dosmotr.jpg" alt="Досмотр скилла до установки"></div>
+    </div>
+    <div class="lead a d5" style="margin-top:26px;font-size:30px">В компании это не паранойя, а норма. У вас на компьютере лежат договоры и цифры</div>
+  </div>
+</section>
+
+<!-- 24 · Что настораживает -->
+<section class="slide" data-act="Скиллы">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="eye" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Читая отчёт агента, держите в голове</div>
+    <h2 class="a d1">Десять вещей, <span class="accent">которые настораживают</span></h2>
+    <div class="ten a d2" style="margin-top:24px">
+      <div class="tf"><b>Автор без истории.</b> Аккаунт создан вчера, других работ нет</div>
+      <div class="tf"><b>Исходников не видно.</b> Только архив, читать нечего</div>
+      <div class="tf"><b>Не обновлялся два года.</b> Живой скилл чинят</div>
+      <div class="tf"><b>Описание из трёх строк.</b> Общие слова без конкретики</div>
+      <div class="tf"><b>Просит больше, чем нужно.</b> Скилл про сметы лезет в почту</div>
+      <div class="tf"><b>Читает всё подряд.</b> Не свою папку, а весь диск</div>
+      <div class="tf"><b>Умеет удалять и отправлять.</b> Действия, которых вы не просили</div>
+      <div class="tf"><b>Ходит на чужие адреса.</b> Которых нет в описании</div>
+      <div class="tf"><b>Лезет за ключами.</b> Без всякой причины</div>
+      <div class="tf"><b>Требует боевые данные сразу.</b> Попробовать на примерах нельзя</div>
+    </div>
+  </div>
+</section>
+
+<!-- 25 · Практика 4 -->
+<section class="slide" data-act="Скиллы">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 4 · 20 минут · шпаргалка, шаг 4</div>
+    <h2 class="a d1">Досмотр и <span class="accent">первый рабочий скилл</span></h2>
+    <div class="steps-p steps-p--tight a d1" style="margin-top:26px">
+      <div class="step-p ap d2"><span class="n">1</span><div class="t">Выбрали один скилл из библиотеки под <b>своё повторяющееся дело</b></div></div>
+      <div class="step-p ap d3"><span class="n">2</span><div class="t">Прогнали <b>досмотр</b> и прочитали отчёт. Что-то смущает, не ставим</div></div>
+      <div class="step-p ap d4"><span class="n">3</span><div class="t">Поставили, агент <b>перезапустился</b></div></div>
+      <div class="step-p ap d5"><span class="n">4</span><div class="t">Прогнали <b>на настоящей задаче</b>: своя смета, свой договор, свой счёт</div></div>
+    </div>
+    <div class="lead a d6" style="margin-top:26px;font-size:30px">Учебных примеров не берём. Результат должен уйти в работу, а не остаться в чате</div>
+  </div>
+</section>
+
+<!-- 26 · Двенадцать скиллов -->
+<section class="slide" data-act="Скиллы">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="package" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Библиотека занятия · отдельная страница</div>
+    <h2 class="a d1">Двенадцать скиллов <span class="accent">под вашу работу</span></h2>
+    <div class="grid2 a d2" style="margin-top:26px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="book-open-text" style="--sz:36px"></i></div>
+        <h3>Документы и расчёты</h3>
+        <p>Презентация и КП слайдами, договор и регламент в Word, смета в Excel живыми формулами, чтение счетов из PDF</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="paperclip" style="--sz:36px"></i></div>
+        <h3>Ещё про PDF</h3>
+        <p>Склеить комплект закрывающих в один файл и обратно. Распознать счёт, присланный фотографией</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="detective" style="--sz:36px"></i></div>
+        <h3>Клиенты и договоры</h3>
+        <p>Разбор конкурентов с ценами и аргументами, проверка договора по рискам, ответ на неприятное письмо, комплект на вакансию</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="sparkle" style="--sz:36px"></i></div>
+        <h3>Контент и картинки</h3>
+        <p>Контент-план и посты под площадки. И усилитель, который заставляет Codex рисовать настоящую картинку, а не заглушку кодом</p>
+      </div>
+    </div>
+    <div class="lead a d6" style="margin-top:26px;font-size:30px">Каждый с готовым промптом прогона. Ставить все сразу не нужно, берите под свои дела</div>
+  </div>
+</section>
+<!-- 27 · Дипресёрч титул -->
+<section class="slide" data-act="Скиллы">
+  <div class="wrap">
+    <div class="split split--wide">
+      <div class="split-l">
+        <div class="badge a"><i class="ph-i" data-ph="detective" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Главный скилл занятия</div>
+        <h2 class="a d1">Дипресёрч: <span class="accent">один скилл на двенадцать сервисов</span></h2>
+        <div class="lead a d2" style="margin-top:22px;font-size:31px">Мы зовём его Франкенштейном: он собран из двенадцати разных сервисов, внутри которых <b>189 инструментов</b></div>
+        <div class="two a d3" style="margin-top:24px">
+          <div class="tf"><b>Обычный поиск.</b> Спросили, получили ответ из головы модели плюс пара ссылок</div>
+          <div class="tf"><b>Дипресёрч.</b> Идёт в интернет по-настоящему: читает страницы целиком, лезет в соцсети и карты, разбирает PDF, перепроверяет факты у четырёх независимых поисковиков</div>
+        </div>
+      </div>
+      <div class="split-r"><img src="a6/img-frankenstein.jpg" alt="Дипресёрч: двенадцать сервисов в одном"></div>
+    </div>
+    <div class="lead a d5" style="margin-top:24px;font-size:30px">Один источник это мнение. Два независимых источника, сказавших одно и то же, это уже факт</div>
+  </div>
+</section>
+
+<!-- 28 · Кто за что отвечает -->
+<section class="slide" data-act="Скиллы">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="stack" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Выбирать самому не нужно, агент решает сам</div>
+    <h2 class="a d1">Что теперь <span class="accent">умеет ваш агент</span></h2>
+    <div class="ten a d2" style="margin-top:24px">
+      <div class="tf"><b>Быстрый ответ со ссылками.</b> Поиск, заточенный под ИИ</div>
+      <div class="tf"><b>«Не знаю, как это называется».</b> Поиск по смыслу, а не по словам</div>
+      <div class="tf"><b>Прочитать страницу целиком.</b> Без рекламы и меню, чистым текстом</div>
+      <div class="tf"><b>Обойти весь сайт.</b> Собрать карту всех страниц конкурента</div>
+      <div class="tf"><b>Соцсети и видео.</b> Готовые сборщики под каждую площадку</div>
+      <div class="tf"><b>Карты, отзывы, маркетплейсы.</b> Оттуда же</div>
+      <div class="tf"><b>Сайт блокирует, отдаёт капчу.</b> Тяжёлая артиллерия пробивает</div>
+      <div class="tf"><b>PDF и научные статьи.</b> Читает и достаёт нужное</div>
+      <div class="tf"><b>Зайти под своим логином.</b> Открывает настоящий браузер и кликает</div>
+      <div class="tf"><b>Перепроверить чужой результат.</b> Четыре независимых поисковика</div>
+    </div>
+  </div>
+</section>
+
+<!-- 29 · Ключи -->
+<section class="slide" data-act="Скиллы">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="key" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Что нужно, чтобы это заработало</div>
+    <h2 class="a d1">Половина работает <span class="accent">сразу, половина просит ключ</span></h2>
+    <div class="two a d2" style="margin-top:26px">
+      <div class="tf ok"><b>Шесть сервисов без регистрации.</b> Встают вместе со скиллом и работают сразу. Этого уже хватает, чтобы увидеть разницу с обычным поиском</div>
+      <div class="tf"><b>Шесть просят бесплатный ключ.</b> Регистрация на сайте сервиса, карта не нужна. Лимитов хватает с запасом на рабочие задачи</div>
+    </div>
+    <div class="rule a d4" style="margin-top:26px">
+      <div class="ru"><b>Ключи вставляете не вы</b><span>отдали агенту одним сообщением, он разложил по настройкам и проверил живым запросом</span></div>
+      <div class="ru"><b>Набор работает частями</b><span>поставили половину, всё равно работает. Это не поломка</span></div>
+      <div class="ru"><b>Часть сайтов из России не открывается</b><span>нужен VPN, на уроке это не чиним</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 30 · Практика 5 -->
+<section class="slide" data-act="Скиллы">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="lightning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Практика 5 · 15 минут · шпаргалка, шаг 5</div>
+    <h2 class="a d1">Ставим Дипресёрч и <span class="accent">делаем первое исследование</span></h2>
+    <div class="steps-p steps-p--tight a d1" style="margin-top:26px">
+      <div class="step-p ap d2"><span class="n">1</span><div class="t">Досмотр, потом установка одной просьбой из шпаргалки. Агент <b>перезапустился</b></div></div>
+      <div class="step-p ap d3"><span class="n">2</span><div class="t">Спросили: <b>«покажи, что у тебя подключилось и что реально отвечает»</b></div></div>
+      <div class="step-p ap d4"><span class="n">3</span><div class="t">Первый запрос по своей работе: <b>разбор двух настоящих конкурентов</b> с ценами и ссылками</div></div>
+      <div class="step-p ap d5"><span class="n">4</span><div class="t">Потребовали: <b>каждую цифру подтверди ссылкой</b>, чего не нашёл, так и пиши</div></div>
+    </div>
+    <div class="lead a d6" style="margin-top:26px;font-size:30px">Разница видна сразу: обычный чат вам ответит за десять секунд, этот будет работать несколько минут и принесёт источники</div>
+  </div>
+</section>
+
+<!-- 31 · Стоп-зоны скиллов -->
+<section class="slide" data-act="Скиллы">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="warning" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Границы на сегодня</div>
+    <h2 class="a d1">Чего <span class="accent">не делаем со скиллами</span></h2>
+    <div class="ten a d2" style="margin-top:24px">
+      <div class="tf"><b>Не ставим без досмотра.</b> Даже то, что принёс я</div>
+      <div class="tf"><b>Не ставим впрок.</b> Только под своё повторяющееся дело</div>
+      <div class="tf"><b>Не даём боевые данные сразу.</b> Сначала пример, потом настоящее</div>
+      <div class="tf"><b>Не выкладываем ключи.</b> Ни в чат, ни в файлы, ни в проект</div>
+      <div class="tf"><b>Не отправляем результат клиенту не глядя.</b> Скилл готовит, отправляете вы</div>
+      <div class="tf"><b>Не считаем проверку договора юристом.</b> Это второй взгляд, а не замена</div>
+    </div>
+    <div class="lead a d6" style="margin-top:26px;font-size:31px">Скилл это работник с инструментом, а не начальник. Решение и подпись всегда за человеком</div>
+  </div>
+</section>
+
+<!-- 32 · Что унесли -->
+<section class="slide" data-act="Финал">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="flag-checkered" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Итог занятия</div>
+    <h2 class="a d1">Что вы <span class="accent">унесли сегодня</span></h2>
+    <div class="grid3 a d2" style="margin-top:28px">
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="globe-hemisphere-west" style="--sz:38px"></i></div>
+        <h3>Живая ссылка</h3>
+        <p>Ваше приложение открывается у любого человека с любого устройства</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="shield-check" style="--sz:38px"></i></div>
+        <h3>Привычка досмотра</h3>
+        <p>Ни один чужой скилл не попадает на компьютер, пока агент его не прочитал</p>
+      </div>
+      <div class="card">
+        <div class="card-i"><i class="ph-i" data-ph="detective" style="--sz:38px"></i></div>
+        <h3>Агент с инструментами</h3>
+        <p>Свои скиллы под свои дела и Дипресёрч на двенадцать сервисов</p>
+      </div>
+    </div>
+    <div class="lead a d5" style="margin-top:30px;font-size:32px">Пять занятий назад вы спрашивали у чата. Сегодня у вас работник, который делает и публикует</div>
+  </div>
+</section>
+
+<!-- 33 · Домашка -->
+<section class="slide" data-act="Финал">
+  <div class="wrap">
+    <div class="badge a"><i class="ph-i" data-ph="list-checks" style="--sz:22px;vertical-align:-3px;margin-right:8px"></i>Домашка · до пятницы</div>
+    <h2 class="a d1">Что делаем <span class="accent">до следующего занятия</span></h2>
+    <div class="steps-p steps-p--tight a d1" style="margin-top:26px">
+      <div class="step-p ap d2"><span class="n">1</span><div class="t"><b>Довели ссылку до ума.</b> Три круга правок словами, обновилось на сайте</div></div>
+      <div class="step-p ap d3"><span class="n">2</span><div class="t"><b>Собрали свой набор скиллов.</b> Десять своих повторяющихся дел, под них скиллы из библиотеки</div></div>
+      <div class="step-p ap d4"><span class="n">3</span><div class="t"><b>Прогнали минимум три на настоящих задачах.</b> Своя смета, свой договор, свой счёт</div></div>
+      <div class="step-p ap d5"><span class="n">4</span><div class="t"><b>Провели одно исследование Дипресёрчем.</b> Со ссылками на источники</div></div>
+    </div>
+    <div class="lead a d6" style="margin-top:26px;font-size:31px">Отчёт с хэштегом <b>#скиллы</b>: ссылка на ваше приложение, что поставили, что сработало и что оказалось бесполезным</div>
+  </div>
+</section>
+
+<!-- 34 · Финал -->
+<section class="slide" data-act="Финал">
+  <div class="bg" style="background-image:url(a6/bg-final.jpg)"></div>
+  <div class="wrap wrap--center">
+    <h1 class="a" style="font-size:78px">Спасибо<br><span class="accent">за работу</span></h1>
+    <div class="lead a d2" style="font-size:34px;max-width:1150px;margin-top:24px">Занятие 7 в пятницу, 08:00. Материалы и домашка придут в чат сегодня вечером</div>
+    <div class="sign a d4">neovida<b>.</b>ai</div>
+  </div>
+</section>
+<div class="brand-corner">neovida<b>.</b>ai</div>
+<div id="bar"><i></i></div>
+</div></div>
+<button id="fs-btn" title="На весь экран (F)" aria-label="На весь экран">
+<svg class="i-open" viewBox="0 0 256 256" fill="currentColor"><path d="M216 48v48a8 8 0 0 1-16 0V56h-40a8 8 0 0 1 0-16h48a8 8 0 0 1 8 8ZM96 200H56v-40a8 8 0 0 0-16 0v48a8 8 0 0 0 8 8h48a8 8 0 0 0 0-16Zm112-48a8 8 0 0 0-8 8v40h-40a8 8 0 0 0 0 16h48a8 8 0 0 0 8-8v-48a8 8 0 0 0-8-8ZM96 40H48a8 8 0 0 0-8 8v48a8 8 0 0 0 16 0V56h40a8 8 0 0 0 0-16Z"/></svg>
+<svg class="i-close" viewBox="0 0 256 256" fill="currentColor"><path d="M144 96V48a8 8 0 0 1 16 0v40h40a8 8 0 0 1 0 16h-48a8 8 0 0 1-8-8Zm-40 56H56a8 8 0 0 0 0 16h40v40a8 8 0 0 0 16 0v-48a8 8 0 0 0-8-8Zm104 0h-48a8 8 0 0 0-8 8v48a8 8 0 0 0 16 0v-40h40a8 8 0 0 0 0-16ZM96 40a8 8 0 0 0-8 8v40H48a8 8 0 0 0 0 16h48a8 8 0 0 0 8-8V48a8 8 0 0 0-8-8Z"/></svg>
+</button>
+<script src="a6/assets.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.ph-i').forEach(el=>{
+    const n=el.dataset.ph; if(window.PH&&PH[n]) el.innerHTML=PH[n].replace('<svg ','<svg fill="currentColor" ');
+  });
+  document.querySelectorAll('.logo-i').forEach(el=>{
+    const n=el.dataset.logo; if(window.LOGO&&LOGO[n]) el.innerHTML=LOGO[n];
+  });
+  document.querySelectorAll('.bg').forEach(el=>{el.addEventListener('error',()=>el.remove())});
+  initDeck();
+});
+
+let cur=0,slides=[],barEl,actEl,noEl;
+function initDeck(){
+  slides=[...document.querySelectorAll('.slide')];
+  barEl=document.querySelector('#bar i');
+  const chrome=document.createElement('div');chrome.id='chrome';
+  chrome.innerHTML='<div id="act-label"></div><div id="slide-no"></div>';
+  document.getElementById('stage').appendChild(chrome);
+  actEl=document.getElementById('act-label');noEl=document.getElementById('slide-no');
+  const h=parseInt(location.hash.slice(1),10);
+  cur=(h>=1&&h<=slides.length)?h-1:0;
+  scale();window.addEventListener('resize',scale);
+  show(cur);
+  window.addEventListener('keydown',e=>{
+    if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='Home'){show(0)}
+    else if(e.key==='End'){show(slides.length-1)}
+    else if(e.key.toLowerCase()==='f'){toggleFS()}
+  });
+  document.getElementById('viewport').addEventListener('click',e=>{
+    (e.clientX>window.innerWidth*0.33)?next():prev();
+  });
+  const fsBtn=document.getElementById('fs-btn');
+  fsBtn.addEventListener('click',e=>{e.stopPropagation();toggleFS();});
+  document.addEventListener('fullscreenchange',()=>{fsBtn.classList.toggle('is-fs',!!document.fullscreenElement);});
+}
+function scale(){
+  const s=Math.min(window.innerWidth/1920,window.innerHeight/1080);
+  document.getElementById('stage').style.transform=`scale(${s})`;
+}
+function next(){if(cur<slides.length-1)show(cur+1)}
+function prev(){if(cur>0)show(cur-1)}
+function show(i){
+  slides.forEach(s=>s.classList.remove('active'));
+  cur=i;const sl=slides[i];sl.classList.add('active');
+  history.replaceState(null,'','#'+(i+1));
+  barEl.style.width=((i+1)/slides.length*100)+'%';
+  actEl.textContent=sl.dataset.act||'';
+  noEl.textContent=(i+1)+' / '+slides.length;
+}
+function toggleFS(){
+  if(!document.fullscreenElement)document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+</script>
+</body>
+</html>
