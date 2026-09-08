@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Шпаргалка · Занятие 6 · Поиск и аналитика</title>
+<style>
+:root{
+  --bg:#0B1220; --bg2:#131B2E; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.1);
+  --text:#F4F1EC; --muted:#9AA3B2; --coral:#E07461; --coral-soft:rgba(224,116,97,.15); --ice:#3D8FD1;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(160deg,var(--bg),var(--bg2)) fixed;color:var(--text);font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;padding-bottom:90px}
+.wrap{max-width:780px;margin:0 auto;padding:26px 18px}
+header{padding:32px 0 8px}
+.brand{font-size:15px;font-weight:700;color:var(--muted)}
+.brand b{color:var(--coral)}
+h1{font-size:33px;line-height:1.14;font-weight:800;letter-spacing:-.01em;margin-top:10px}
+.sub{color:var(--muted);font-size:16px;margin-top:10px}
+.sub b{color:var(--text)}
+.howto{background:var(--coral-soft);border:1px solid rgba(224,116,97,.35);border-radius:14px;padding:14px 16px;margin-top:18px;font-size:15.5px}
+.howto b{color:var(--text)}
+.step{margin:38px 0 0}
+.step-h{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.step-n{flex:0 0 auto;min-width:38px;height:38px;border-radius:11px;background:var(--coral);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.step-t{font-size:22px;font-weight:800;line-height:1.2}
+.step-d{color:var(--muted);font-size:15.5px;margin:2px 0 12px 50px}
+.prompt{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:14px 18px 18px;margin:12px 0;cursor:pointer;transition:background .15s,border-color .2s,box-shadow .2s}
+.prompt:active{background:rgba(224,116,97,.12)}
+.prompt pre{white-space:pre-wrap;font-family:inherit;font-size:15.5px;line-height:1.6;color:var(--text)}
+.prompt .cp{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--coral);line-height:1.3}
+.prompt .cp::after{content:"копировать";flex:0 0 auto;background:rgba(224,116,97,.16);border:1px solid rgba(224,116,97,.4);border-radius:999px;padding:5px 14px;font-size:12px;letter-spacing:.06em}
+.prompt.copied{border-color:#4caf7d;box-shadow:0 0 0 2px rgba(76,175,125,.35), 0 0 34px rgba(76,175,125,.28);background:rgba(76,175,125,.1)}
+.prompt.copied .cp{color:#4caf7d}
+.prompt.copied .cp::after{content:"скопировано ✓";background:rgba(76,175,125,.2);border-color:rgba(76,175,125,.55);color:#4caf7d}
+details.acc{background:var(--surface);border:1px solid var(--line);border-radius:13px;margin:8px 0;overflow:hidden}
+details.acc>summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:16px;font-weight:650;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:12px}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"открыть промпт";flex:0 0 auto;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.35);border-radius:999px;padding:5px 13px}
+details.acc[open]>summary::after{content:"свернуть";color:var(--muted);background:rgba(255,255,255,.06);border-color:var(--line)}
+details.acc[open]>summary{border-bottom:1px solid var(--line)}
+details.acc .prompt{margin:12px 14px 14px}
+.prac{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#F2A08E,var(--coral));color:#fff;font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:9px 20px;border-radius:999px;margin-bottom:10px;box-shadow:0 8px 26px rgba(224,116,97,.4)}
+details.acc--gpt>summary::after{content:"открыть ассистента"}
+details.acc--gpt[open]>summary::after{content:"свернуть"}
+.dl--big{background:rgba(224,116,97,.12);border-color:rgba(224,116,97,.45)}
+.dl--big .dl-i{background:var(--coral);color:#fff}
+.dl--big .dl-t b{font-size:16.5px}
+.dl{display:flex;align-items:center;gap:14px;margin:12px 0;padding:15px 17px;background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.38);border-radius:14px;text-decoration:none;color:var(--text)}
+.dl:active{background:rgba(76,175,125,.2)}
+.dl-i{flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:#4caf7d;color:#0B1220;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dl-t{display:block;min-width:0}
+.dl-t b{display:block;font-size:15.5px;font-weight:750}
+.dl-t em{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.chain{display:flex;flex-direction:column;gap:0;margin:14px 0}
+.ch{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 15px}
+.ch-n{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:rgba(224,116,97,.18);color:var(--coral);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ch-t{font-size:14.5px;color:var(--muted);line-height:1.35}
+.ch-t b{display:block;color:var(--text);font-size:15.5px;font-weight:750}
+.ch-ar{color:var(--coral);text-align:center;font-size:17px;line-height:1;padding:4px 0;opacity:.75}
+.ch--fin{border-color:rgba(76,175,125,.45);background:rgba(76,175,125,.09)}
+.ch--fin .ch-n{background:rgba(76,175,125,.2);color:#4caf7d}
+.trio{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.tr{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:15px 17px}
+.tr b{font-size:18px;font-weight:800;display:inline-block}
+.tr .q{display:inline-block;margin-left:9px;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.3);border-radius:999px;padding:4px 11px;vertical-align:2px}
+.tr p{margin-top:8px;font-size:15px;line-height:1.55;color:var(--muted)}
+.tr em{display:inline-block;margin-top:9px;font-style:normal;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tr-kak{border-left-color:#C9707F}.tr-kak .q{color:#E39CA8;background:rgba(201,112,127,.16);border-color:rgba(201,112,127,.35)}
+.tr-gde{border-left-color:var(--ice)}.tr-gde .q{color:var(--ice);background:rgba(61,143,209,.14);border-color:rgba(61,143,209,.35)}
+.sk-t{display:block;min-width:0}
+.sk-t em{display:block;font-style:normal;font-size:13px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.35}
+.skill-what{margin:12px 14px 0;font-size:15px;line-height:1.55;color:var(--muted)}
+.skill-what b{color:var(--text)}
+.prompt--skill pre{max-height:132px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.prompt--skill::after{content:"текст длинный, читать его не нужно: просто скопируйте";position:absolute;left:18px;right:18px;bottom:12px;font-size:13px;line-height:1.4;color:var(--muted)}
+.prompt--skill{padding-bottom:52px}
+.prompt--test{border-left-color:var(--ice)}
+.prompt--test .cp{color:var(--ice)}
+.prompt--test .cp::after{background:rgba(61,143,209,.16);border-color:rgba(61,143,209,.4);color:var(--ice)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0;font-size:15.5px;color:var(--muted)}
+.card b{color:var(--text)}
+.card ul{margin:8px 0 0 18px}
+.card li{margin:5px 0}
+.note{font-size:15px;color:var(--muted);background:rgba(61,143,209,.08);border:1px solid rgba(61,143,209,.25);border-radius:12px;padding:12px 14px;margin:10px 0}
+.note b{color:var(--text)}
+.ten{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.tf{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:11px;padding:11px 15px;font-size:15.5px;cursor:pointer}
+.tf:active{background:rgba(224,116,97,.12)}
+.tf.copied{border-color:#4caf7d;background:rgba(76,175,125,.16)}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0}
+.basket{border-radius:13px;padding:13px;font-size:14px;border:1px solid}
+.basket b{display:block;font-size:15px;margin-bottom:5px}
+.b-ok{background:rgba(76,175,125,.08);border-color:rgba(76,175,125,.35)}
+.b-mid{background:rgba(224,169,92,.08);border-color:rgba(224,169,92,.35)}
+.b-no{background:rgba(224,92,92,.08);border-color:rgba(224,92,92,.35)}
+.b-ok b{color:#4caf7d}.b-mid b{color:#e0a95c}.b-no b{color:#e05c5c}
+a{color:var(--ice)}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.links a{display:block;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;color:var(--text)}
+.links a:active{background:rgba(224,116,97,.14);border-color:rgba(224,116,97,.45)}
+.links a b{display:block;font-size:17px;font-weight:800}
+.links a span{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.links a em{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:var(--coral);margin-top:5px}
+.links a:first-child{grid-column:1 / -1}
+footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14.5px}
+@media(max-width:560px){.grid3{grid-template-columns:1fr}
+.sk-t em{font-size:12.5px}}
+
+/* ── подсказки под шагом ── */
+.tips{display:flex;flex-direction:column;gap:10px;margin:18px 0 4px}
+.tip{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--coral);border-radius:13px;padding:15px 18px;font-size:16px;line-height:1.55;color:var(--muted)}
+.tip b{color:var(--text);font-weight:700}
+.tip a{color:var(--coral)}
+/* ── сравнение двух ответов ── */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.cmp > div{border-radius:14px;padding:16px 18px;font-size:16px;line-height:1.55;color:var(--muted);border:1px solid}
+.cmp .ok{background:rgba(76,175,125,.09);border-color:rgba(76,175,125,.36)}
+.cmp .no{background:rgba(224,92,92,.09);border-color:rgba(224,92,92,.36)}
+.cmp .lbl{display:block;font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:9px}
+.cmp .ok .lbl{color:#4caf7d}
+.cmp .no .lbl{color:#e05c5c}
+.cmp b{color:var(--text);font-weight:700}
+@media(max-width:760px){.cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">neovida<b>.</b>ai</div>
+  <h1>Шпаргалка<br>занятие 6</h1>
+  <div class="sub">8 сентября · <b>«Поиск и аналитика»</b> · Альберт Валеев</div>
+  <div class="howto"><b>Держите открытой весь урок.</b> Шесть практик, шесть шагов, дальше инструменты, связка и домашка. Все промпты копируются касанием: нажали на блок, он скопирован. Квадратные скобки замените на своё.</div>
+  <div class="note"><b>Нет своих данных с собой?</b> В шаге 4 лежат десять демо-таблиц под сферы зала, скачиваются кнопкой. Данные в них выдуманы, механика настоящая.</div>
+</header>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">0</span><span class="step-t">С чего начать</span></div>
+  <div class="step-d">В ChatGPT нажмите плюсик «Добавить файлы и другое» слева от строки ввода. Там два разных режима, и путать их дорого. Третий режим, «Работа», это тумблер сверху страницы.</div>
+  <div class="trio">
+    <div class="tr"><b>Поиск в сети</b><span class="q">10 секунд</span><p>Быстрый факт: цена, адрес, что вышло на неделе, кто выиграл тендер.</p></div>
+    <div class="tr tr-kak"><b>Глубокое исследование</b><span class="q">5–30 минут</span><p>Решение на деньги: рынок, конкуренты, поставщики, репутация. Задаёт уточняющие вопросы, показывает план, отчёт со ссылками скачивается в Word или PDF. Окно можно закрыть, отчёт дождётся в истории. То же самое запускает команда <b>/Deepresearch</b> в строке.</p></div>
+    <div class="tr tr-gde"><b>Работа</b><span class="q">свой лимит недели</span><p>Когда надо не узнать, а сделать руками: зайти на площадки, собрать таблицу цен, заполнить форму. Лимит отдельный, на болтовню не тратим.</p></div>
+  </div>
+  <div class="tips">
+    <div class="tip"><b>Правило трёх врачей.</b> Важную цифру спросите у трёх разных ИИ. Совпали: верим. Разошлись: открываем ссылку и смотрим первоисточник. Цифры, даты, названия, законы и цены проверяем всегда: это то, что ИИ придумывает увереннее всего.</div>
+    <div class="tip"><b>Второй врач без VPN: Алиса AI.</b> Откройте <a href="https://alice.yandex.ru">alice.yandex.ru</a>, в чате нажмите значок четырёх шаров и выберите <b>«Исследовать»</b>. Сам строит план, читает сотни сайтов, отдаёт отчёт с расчётами и ссылками, его можно скачать в PDF или Word. Бесплатно есть пробные запросы, с подпиской Плюс 10 в месяц. К одному запросу можно приложить один файл. Сильная сторона: законы, суды, госзакупки, местные новости.</div>
+    <div class="tip"><b>Третий врач: Kimi.</b> <a href="https://www.kimi.com">kimi.com</a>, без VPN и бесплатно. Внутри глубокое исследование и таблицы. Открывается по-китайски, язык переключается в настройках. Резерв: <a href="https://chat.qwen.ai">chat.qwen.ai</a> и <a href="https://chat.z.ai">chat.z.ai</a>.</div>
+    <div class="tip"><b>Про лимит.</b> Глубокое исследование не бесконечное, счётчик виден в интерфейсе. Тратьте его на вопросы, которые стоят отчёта. «Сколько стоит бетон» это Поиск в сети.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Практика 1</div>
+  <div class="step-h"><span class="step-n">1</span><span class="step-t">Исследование рынка и конкурентов</span></div>
+  <div class="step-d">Базовый промпт работает в любой сфере. Ниже готовые под сферы зала, откройте свой и подставьте скобки</div>
+  <div class="prompt"><div class="cp">универсальный</div><pre>Ты бизнес-аналитик с опытом в сфере [ваша отрасль] в России.
+Проведи глубокий анализ рынка [ваша ниша] в [город].
+Найди: топ-10 конкурентов с сайтами, цены конкретными цифрами, сильные и слабые стороны по отзывам, каналы привлечения клиентов.
+Определи мою позицию на рынке: где я отстаю, где опережаю, в чём могу отстроиться.
+Формат: таблица сравнения плюс 5 рекомендаций. Ссылка на каждый факт.</pre></div>
+
+  <details class="acc"><summary>Электросети, метрология, тарифное дело</summary>
+  <div class="prompt"><div class="cp">тарифы и практика ФАС</div><pre>Ты аналитик рынка электроэнергетики и тарифного регулирования в России.
+Разбери, как за последние два года менялось регулирование услуг по передаче электроэнергии и практика ФАС и региональных комитетов по тарифам в [регион]: что изменилось в методиках, какие споры сетевые компании выигрывали и проигрывали, какие требования к обоснованию потерь и расходов появились.
+Отдельно: что нужно подготовить компании моего масштаба [16–50 человек] к следующей тарифной заявке.
+Итог: хронология изменений, 5 рисков, 5 аргументов, которые срабатывали. Ссылки на документы и решения.</pre></div>
+  <div class="prompt"><div class="cp">поставщики приборов учёта и оборудования</div><pre>Ты закупщик-эксперт по электротехническому оборудованию.
+Найди производителей и поставщиков [приборов учёта, трансформаторов тока, метрологического оборудования с характеристиками] в России и ЕАЭС.
+Не ограничивайся первой страницей: каталоги, отраслевые порталы, реестр средств измерений, выставки.
+Для каждого: цена, минимальный заказ, срок поставки, поверка и сертификаты, отзывы сетевых компаний.
+Итог: таблица по итоговой цене с доставкой и вывод, у кого брать и почему.</pre></div>
+  </details>
+
+  <details class="acc"><summary>Строительство домов, ИЖС, сметы</summary>
+  <div class="prompt"><div class="cp">цены на материалы в Уфе</div><pre>Ты снабженец строительной компании в Уфе.
+Собери актуальные цены на [газобетон, арматуру, кровлю, окна, утеплитель] у поставщиков и строительных баз Уфы и Башкортостана: опт и розница, доставка, минимальный объём, как двигались цены за последний год.
+Не ограничивайся первой страницей: каталоги, базы, маркетплейсы стройматериалов, объявления.
+Итог: таблица по цене с доставкой, где переплачивают чаще всего, когда выгоднее закупать. Ссылки на предложения.</pre></div>
+  <div class="prompt"><div class="cp">подрядчики и конкуренты</div><pre>Ты аналитик рынка загородного строительства.
+Собери компании, которые строят дома [технология: газобетон, каркас, брус] в [регион]: цены за квадратный метр по этапам, сроки, что входит и что нет, отзывы заказчиков, типичные конфликты и претензии.
+Итог: таблица сравнения, где я могу отстроиться, и 5 вещей, которые чаще всего идут не так у клиентов. Ссылки.</pre></div>
+  </details>
+
+  <details class="acc"><summary>Бренд одежды, маркетплейсы</summary>
+  <div class="prompt"><div class="cp">конкуренты на Wildberries и Ozon</div><pre>Ты аналитик рынка одежды на маркетплейсах.
+Разбери 10 брендов в категории [худи и базовая одежда] на Wildberries и Ozon с ценой от [сумма] до [сумма]: цены, скидки, как собраны карточки, за что хвалят и за что ругают в отзывах дословными цитатами, как быстро отвечают на вопросы.
+Отдельно: что общего у пяти лучших карточек.
+Итог: таблица сравнения, 5 ходов, чтобы отстроиться, и 3 ошибки, которых не повторять. Ссылки на карточки.</pre></div>
+  <div class="prompt"><div class="cp">поставщики ткани и фурнитуры</div><pre>Ты закупщик швейного производства.
+Найди поставщиков [футер трёхнитка с начёсом, плотность, состав] и фурнитуры [молнии, шнуры, люверсы] в России, Турции и Китае.
+Не ограничивайся первой страницей: оптовые площадки, отраслевые порталы, выставки, каталоги фабрик.
+Для каждого: цена за метр или единицу, минимальный заказ, срок, образцы, условия оплаты.
+Итог: таблица по итоговой цене с доставкой и вывод, у кого брать первую партию.</pre></div>
+  </details>
+
+  <details class="acc"><summary>Онлайн-школа, продажи в Telegram и MAX</summary>
+  <div class="prompt"><div class="cp">школы-конкуренты</div><pre>Ты аналитик рынка онлайн-образования.
+Собери школы и экспертов, которые учат [продажам и продвижению в Telegram и MAX]: продукты и тарифы, форматы, как ведут в воронку (лид-магнит, эфир, диагностика), сколько идёт запуск, что пишут ученики в отзывах и жалобах.
+Посмотри 5 сильных игроков и найди у них общее.
+Итог: таблица сравнения, где у них слабо, 5 вещей, которые усилить мне в ближайший запуск. Ссылки.</pre></div>
+  <div class="prompt"><div class="cp">что заходит в нише</div><pre>Ты аналитик соцсетей и контента.
+Разбери, какие форматы в нише [тема] набирают охваты в 2026 году в Telegram, MAX и Instagram: темы, длина, приёмы удержания в первые 3 секунды, структура, что перестало работать.
+Итог: 10 идей единиц контента под меня с обоснованием, почему каждая зайдёт. Ссылки на примеры.</pre></div>
+  </details>
+
+  <details class="acc"><summary>Психолог предпринимателей</summary>
+  <div class="prompt"><div class="cp">рынок и позиционирование</div><pre>Ты аналитик рынка психологических услуг для бизнеса.
+Разбери рынок психологов и коучей для собственников и руководителей в [город] и онлайн: цены за сессию, форматы (личная, группа, стратегическая сессия), темы, с которыми приходят, как позиционируются сильные, что пишут клиенты в отзывах.
+Отдельно: какие запросы собственников ищут в поиске и соцсетях чаще всего.
+Итог: карта позиционирований, где свободно, 5 тем для контента и 3 формата, которые сейчас продаются. Ссылки.</pre></div>
+  </details>
+
+  <details class="acc"><summary>Тренинги, невербалика, кинетика</summary>
+  <div class="prompt"><div class="cp">корпоративный рынок обучения</div><pre>Ты аналитик рынка корпоративного обучения в России.
+Собери, кто обучает невербальной коммуникации, переговорам и публичным выступлениям корпоративно: программы, цена за день, длительность, кто заказывает (какие отрасли и должности), отзывы HR и участников, как продают (сайт, выступления, рекомендации).
+Итог: таблица игроков, 5 аргументов, которыми они выигрывают, и где мой оффер сильнее. Ссылки.</pre></div>
+  <div class="prompt"><div class="cp">досье на компанию перед встречей</div><pre>Собери досье на компанию [название], город [город].
+Чем занимается, масштаб и обороты, ключевые люди и их публичные высказывания, новости за последний год, вакансии (по ним видно, куда растут), судебные дела, конфликты и репутация.
+Определи 3 болевые точки, которые видно со стороны, и где им нужна коммуникация и переговоры.
+Итог: одна страница брифинга и 3 варианта, что им предложить. Ссылки на каждый факт.</pre></div>
+  </details>
+
+  <details class="acc"><summary>Клуб предпринимателей-строителей</summary>
+  <div class="prompt"><div class="cp">клубы и сообщества</div><pre>Ты аналитик рынка деловых сообществ.
+Собери деловые клубы и сообщества предпринимателей строительной сферы в [регион] и федеральные: взносы, что входит, мероприятия, партнёрские программы, как набирают участников, отзывы участников и что критикуют.
+Итог: таблица сравнения, чего не хватает рынку, 5 форматов, которые я могу предложить первым. Ссылки.</pre></div>
+  <div class="prompt"><div class="cp">досье на кандидата в клуб или партнёра</div><pre>Собери досье на компанию [название] и её собственника [имя]: чем занимается, масштаб, репутация, суды и долги по открытым источникам, публичные выступления, с кем в партнёрстве.
+Итог: короткий вывод, стоит ли звать в клуб или в партнёры, и 3 вопроса, которые задать при встрече. Ссылки на каждый факт.</pre></div>
+  </details>
+
+  <details class="acc"><summary>Семья и дом</summary>
+  <div class="prompt"><div class="cp">садик, школа, секция</div><pre>Сравни [частные детские сады или школы] рядом с [район, город]: цены и что входит, программа, группы и педагоги, режим, питание, отзывы родителей за последние два года, на что жалуются.
+Итог: таблица сравнения, 3 лучших варианта под [возраст ребёнка] и три вопроса, которые задать на встрече. Ссылки.</pre></div>
+  <div class="prompt"><div class="cp">крупная покупка или услуга</div><pre>Помоги выбрать [коляску, автокресло, страховку, клинику, курсы]. Собери варианты в [город] и онлайн: цена, что входит, отзывы за последний год, типичные жалобы, скрытые условия.
+Итог: таблица сравнения, лучший вариант под мой случай [описание] и чего не делать. Ссылки на каждый факт.</pre></div>
+  </details>
+
+  <details class="acc"><summary>Блог о здоровье и биохакинге</summary>
+  <div class="prompt"><div class="cp">проверка утверждения по науке</div><pre>Проверь утверждение: [магний перед сном улучшает сон].
+Ищи только научные источники: обзоры, клинические исследования, рекомендации медицинских ассоциаций. Блоги и продавцов добавок не используй.
+Для каждого источника: год, размер выборки, вывод, ограничения.
+Итог: что доказано, что спорно, что не подтверждено, рабочие дозировки и кому нельзя. Формулировка для поста, которую не стыдно показать врачу. Ссылки на исследования.</pre></div>
+  <div class="prompt"><div class="cp">что заходит в нише здоровья</div><pre>Ты аналитик соцсетей.
+Разбери 10 сильных аккаунтов о женском здоровье и биохакинге в Instagram и Telegram: темы, форматы, длина роликов, крючки в первые 3 секунды, какие ролики набирают сохранения, как монетизируют.
+Итог: что общего у лучших, 10 идей роликов под меня с обоснованием. Ссылки на примеры.</pre></div>
+  </details>
+
+  <div class="step-d" style="margin-top:18px"><b>Работают в любой сфере</b></div>
+  <details class="acc"><summary>Цена вопроса: сколько это стоит на самом деле</summary>
+  <div class="prompt"><div class="cp">настоящая цена</div><pre>Найди, сколько сейчас стоит [товар или услуга] в [город]: минимальная, средняя и максимальная цена, из чего складывается разница, что входит в дешёвый вариант и чего в нём нет.
+Не ограничивайся первой страницей: маркетплейсы, отраслевые площадки, сайты компаний, объявления.
+Итог: таблица по цене, где переплачивают чаще всего, и справедливая цена для моего случая. Ссылки.</pre></div>
+  </details>
+  <details class="acc"><summary>Новый канал привлечения</summary>
+  <div class="prompt"><div class="cp">каналы и гипотезы</div><pre>Разбери, как в нише [ниша] в России сейчас привлекают клиентов: какие каналы работают, примерная стоимость заявки по каждому, что перестало работать за последний год.
+Посмотри, что делают 5 сильных игроков ниши.
+Итог: 5 гипотез под мой бюджет [сумма] в месяц, для каждой: что делаем, сколько стоит, как поймём за 2 недели, что не сработало. Ссылки на примеры.</pre></div>
+  </details>
+  <details class="acc"><summary>Найм: кого и за сколько</summary>
+  <div class="prompt"><div class="cp">рынок труда</div><pre>Ты аналитик рынка труда.
+Собери данные по позиции [должность] в [город]: зарплатные вилки по грейдам, что предлагают компании-конкуренты, дефицитные навыки, что пишут сотрудники в отзывах о работодателях этой сферы.
+Итог: вилка, которую надо ставить, чтобы получать отклики, и 5 нематериальных вещей, которыми реально удерживают. Ссылки на вакансии и отзывы.</pre></div>
+  </details>
+  <details class="acc"><summary>Закон и риски</summary>
+  <div class="prompt"><div class="cp">что изменилось в регулировании</div><pre>Что изменилось в регулировании сферы [сфера] в России за последний год и что меняется в ближайшие 6 месяцев.
+Для каждого изменения: суть простыми словами, с какой даты, кого касается, штрафы и ответственность, что нужно сделать компании моего размера [размер].
+Только действующие документы, со ссылками на официальные источники. Если данные противоречивы, скажи об этом прямо.</pre></div>
+  </details>
+  <details class="acc"><summary>Сервис или программа под задачу</summary>
+  <div class="prompt"><div class="cp">выбор инструмента</div><pre>Сравни сервисы для задачи [задача]: функции, тарифы, ограничения для российских пользователей, нужен ли VPN, есть ли оплата из России, отзывы и типичные жалобы, насколько сложно внедрить.
+Итог: 3 варианта под мой случай [описание случая и бюджет] с обоснованием и один вариант, с которого начать бесплатно.</pre></div>
+  </details>
+  <div class="tips">
+    <div class="tip"><b>Как запускать.</b> Плюсик, «Глубокое исследование», вставили промпт, отправили. ИИ задаст два-три уточняющих вопроса и покажет план: ответьте коротко, план можно поправить. Дальше 5–30 минут, окно можно закрыть.</div>
+    <div class="tip"><b>Пока считает,</b> тот же промпт в Алису AI (значок четырёх шаров, «Исследовать»). В конце сравните два отчёта: что совпало, тому верим, что разошлось, смотрим по ссылке.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Практика 2</div>
+  <div class="step-h"><span class="step-n">2</span><span class="step-t">Зеркало 360: что интернет знает о вас</span></div>
+  <div class="step-d">Полезно перед переговорами, эфиром, выходом на новый рынок. И просто раз в квартал. Нет компании: своё имя, конкурент или тот, кому собираетесь платить</div>
+  <div class="prompt"><div class="cp">репутация компании</div><pre>Проведи глубокое исследование всех упоминаний [название компании, город] в интернете.
+Ищи: отзывы на Яндекс Картах, 2ГИС, Google Maps, отзовики, упоминания в соцсетях и Telegram, статьи, форумы, сайты жалоб.
+Для каждого упоминания: ссылка, тональность, ключевая цитата, дата.
+Итог: оценка репутации по 10-балльной шкале, топ-3 плюса, топ-3 минуса, что исправить первым и что можно закрыть за неделю.</pre></div>
+  <div class="prompt"><div class="cp">личный бренд</div><pre>Проведи глубокое исследование всех публичных упоминаний человека [имя фамилия, город, сфера] в интернете: соцсети, статьи, выступления, комментарии, упоминания в СМИ и профессиональных сообществах.
+Для каждого: ссылка, тональность, дата.
+Итог: как этого человека видит незнакомый клиент или партнёр перед встречей, сильные стороны образа, пробелы, и что стоит добавить в публичное поле в ближайший месяц.</pre></div>
+  <div class="prompt"><div class="cp">разведка по конкуренту</div><pre>Проведи глубокое исследование компании [конкурент, город]: услуги и цены, позиционирование, каналы привлечения, отзывы клиентов и сотрудников, новости и изменения за год.
+Отдельно выпиши: за что их хвалят и за что ругают, дословными цитатами.
+Итог: их сильные и слабые места, и 5 конкретных ходов, которыми я могу забрать их недовольных клиентов.</pre></div>
+  <div class="prompt"><div class="cp">тот, кому собираюсь платить</div><pre>Проведи глубокое исследование [клиника, детский сад, застройщик, подрядчик, школа: название и город] перед тем, как я заплачу.
+Ищи: отзывы за последние два года на всех площадках, жалобы, суды и долги по открытым источникам, смену владельцев, новости.
+Для каждого факта: ссылка и дата.
+Итог: 5 причин доверять, 5 причин насторожиться, и 3 вопроса, которые задать им до оплаты.</pre></div>
+</div>
+
+<div class="step">
+  <div class="prac">Практика 3</div>
+  <div class="step-h"><span class="step-n">3</span><span class="step-t">Поставщики, товары и настоящая цена</span></div>
+  <div class="step-d">Фраза «не ограничивайся первой страницей» и есть вся ценность. Без неё вы получите три верхних результата поиска</div>
+  <div class="prompt"><div class="cp">поиск поставщика</div><pre>Ты закупщик-эксперт в сфере [ваша сфера].
+Найди поставщиков [продукт с характеристиками: размер, материал, класс, объём].
+География поиска: [Россия, Китай, Турция].
+Не ограничивайся первой страницей: копай каталоги, оптовые площадки, отраслевые порталы, профильные выставки.
+Для каждого: цена опт и розница, минимальный заказ, срок поставки, документы и сертификаты, условия оплаты.
+Итог: таблица, отсортированная по итоговой цене с доставкой, и вывод, у кого брать и почему.</pre></div>
+  <div class="prompt"><div class="cp">подрядчик под задачу</div><pre>Найди подрядчиков под задачу: [описание задачи] в [город или удалённо].
+Для каждого: профиль и опыт именно в этой задаче, примерная стоимость, сроки, портфолио и реальные отзывы, риски работы с ними.
+Не ограничивайся первой страницей выдачи: профильные площадки, сообщества, каталоги, отзывы на сторонних ресурсах.
+Итог: короткий список из 5 кандидатов с обоснованием и вопросы, которые надо задать каждому до предоплаты.</pre></div>
+  <div class="prompt"><div class="cp">сервис или программа под задачу</div><pre>Сравни сервисы для задачи [задача]: функции, тарифы, ограничения для российских пользователей, нужен ли VPN, есть ли оплата из России, отзывы и типичные жалобы, насколько сложно внедрить.
+Итог: 3 варианта под мой случай [описание случая и бюджет] с обоснованием и один вариант, с которого начать бесплатно.</pre></div>
+  <div class="prompt prompt--test"><div class="cp">режим «Работа»: цены с площадок руками агента</div><pre>Зайди на Wildberries, Ozon и Авито и собери цены на [товар с характеристиками] от 10 продавцов: цена, скидка, рейтинг продавца, срок доставки в [город], количество отзывов.
+Собери в таблицу, отсортируй по цене с доставкой, отметь подозрительно дешёвые предложения и объясни, чем они подозрительны.
+В конце скажи, какую цену считать рыночной.</pre></div>
+  <div class="tips">
+    <div class="tip"><b>Режим «Работа»</b> это тумблер сверху страницы ChatGPT. Агент сам ходит по сайтам и кликает, поэтому промпт ему пишут как задачу для стажёра: куда зайти, что собрать, в каком виде отдать. Лимит у него отдельный, недельный.</div>
+    <div class="tip"><b>Норма для практики:</b> найти цену, которая отличается от вашей текущей. В любую сторону.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Практика 4</div>
+  <div class="step-h"><span class="step-n">4</span><span class="step-t">Аналитика: свои данные под рентген</span></div>
+  <div class="step-d">Перед загрузкой вычищаем: ФИО клиентов и сотрудников, телефоны, адреса, номера договоров, реквизиты, номера карт. Оставляем даты, суммы, категории, количества, статусы. Имена можно заменить на «Клиент 1, Клиент 2»: анализ не пострадает</div>
+  <div class="step-d" style="margin-top:14px"><b>Нет своей выгрузки с собой: берите демо-таблицу под свою сферу.</b> Данные выдуманы, внутри спрятаны сезонность, одна тихая утечка и одна аномалия</div>
+  <a class="dl" href="a6/demo/demo-elektroseti-poteri.csv" download><span class="dl-i">CSV</span><span class="dl-t"><b>Электросети: потери по десяти фидерам за 12 месяцев</b><em>отпуск в сеть, полезный отпуск, потери в кВт·ч и процентах, отключения</em></span></a>
+  <a class="dl" href="a6/demo/demo-izhs-smety-plan-fakt.csv" download><span class="dl-i">CSV</span><span class="dl-t"><b>Стройка: сметы план и факт по 12 объектам</b><em>технология, площадь, статьи сметы, отклонения</em></span></a>
+  <a class="dl" href="a6/demo/demo-brend-odezhdy-prodazhi.csv" download><span class="dl-i">CSV</span><span class="dl-t"><b>Бренд одежды: продажи по позициям и каналам</b><em>сайт, Wildberries, Ozon, шоурум, возвраты, 12 месяцев</em></span></a>
+  <a class="dl" href="a6/demo/demo-onlayn-shkola-zapuski.csv" download><span class="dl-i">CSV</span><span class="dl-t"><b>Онлайн-школа: воронка шести запусков</b><em>бюджет, охват, регистрации, эфир, заявки, оплаты, чек</em></span></a>
+  <a class="dl" href="a6/demo/demo-psiholog-zapisi.csv" download><span class="dl-i">CSV</span><span class="dl-t"><b>Психолог: записи клиентов за год</b><em>источник, формат, стоимость, повторный, роль клиента</em></span></a>
+  <a class="dl" href="a6/demo/demo-treningi-zayavki.csv" download><span class="dl-i">CSV</span><span class="dl-t"><b>Тренинги: заявки по продуктам и источникам</b><em>корпоративные, открытые, консультации, статус, дни до решения</em></span></a>
+  <a class="dl" href="a6/demo/demo-klub-uchastniki.csv" download><span class="dl-i">CSV</span><span class="dl-t"><b>Клуб: 80 участников</b><em>сфера, взнос, посещения, приведённые гости, продление</em></span></a>
+  <a class="dl" href="a6/demo/demo-semeyniy-byudzhet.csv" download><span class="dl-i">CSV</span><span class="dl-t"><b>Семья: расходы по категориям за 12 месяцев</b><em>продукты, дети, здоровье, авто, подписки, путешествия</em></span></a>
+  <a class="dl" href="a6/demo/demo-blog-rilsy-statistika.csv" download><span class="dl-i">CSV</span><span class="dl-t"><b>Блог: статистика 60 рилсов</b><em>тема, длительность, крючок, просмотры, сохранения, подписки</em></span></a>
+  <a class="dl" href="a6/demo/demo-universalnaya-biznes.csv" download><span class="dl-i">CSV</span><span class="dl-t"><b>Универсальная: выручка и расходы малого бизнеса</b><em>12 месяцев, себестоимость, зарплаты, реклама, заявки, жалобы</em></span></a>
+  <a class="dl dl--big" href="a6/demo/demo-tablicy.zip" download><span class="dl-i">ZIP</span><span class="dl-t"><b>Все десять таблиц одним архивом</b><em>19 КБ, открываются в Excel, Google Таблицах и Numbers</em></span></a>
+  <div class="note"><b>Как загрузить.</b> Плюсик, «Добавить фото и файлы», выбрали файл. Следом вставили промпт. ИИ сначала перескажет таблицу своими словами: проверьте, что понял верно, только потом читайте выводы.</div>
+  <div class="prompt"><div class="cp">разбор таблицы</div><pre>Проанализируй загруженную таблицу как опытный бизнес-аналитик.
+Шаг 1. Опиши, что видишь: какие столбцы, сколько строк, за какой период. Скажи прямо, если данные кривые, неполные или противоречивые.
+Шаг 2. Посчитай ключевые показатели, найди закономерности, связи между столбцами и аномалии.
+Шаг 3. Построй 4 графика, которые лучше всего объясняют картину.
+Шаг 4. Дай 5 выводов и 3 рекомендации: что изменить, чтобы вырасти.
+Отдельно: одно действие, которое даст максимальный эффект в ближайший месяц.</pre></div>
+  <div class="prompt"><div class="cp">где утекают деньги</div><pre>Проанализируй загруженную таблицу расходов как финансовый аналитик.
+Разбей расходы по категориям и по месяцам, покажи структуру в процентах.
+Найди: что растёт быстрее выручки (или дохода семьи), разовые аномальные траты, подписки и регулярные платежи, о которых легко забыть, категории с наибольшим потенциалом экономии.
+Итог: таблица по категориям, 3 места, где деньги утекают тише всего, и сколько можно вернуть за месяц без потери качества.</pre></div>
+  <div class="prompt"><div class="cp">что прибыльно, что тянет вниз</div><pre>Проанализируй загруженную таблицу продаж, сделок или заявок.
+Посчитай по каждой позиции, каналу или направлению: объём, выручку, долю в общем результате, динамику по месяцам.
+Найди: что даёт основную выручку, что съедает время и внимание при малой отдаче, что растёт и заслуживает усиления, что стоит закрыть.
+Итог: таблица с рекомендацией по каждой позиции (усилить, оставить, закрыть) и обоснованием.</pre></div>
+  <div class="prompt"><div class="cp">воронка: где теряем</div><pre>Проанализируй загруженную таблицу воронки как аналитик маркетинга.
+Посчитай конверсии на каждом шаге и стоимость одного человека на каждом шаге, включая стоимость одного оплатившего.
+Сравни запуски между собой: где лучший и худший шаг, чем они отличались.
+Итог: на каком шаге теряем больше всего денег, 3 гипотезы, что менять в следующем запуске, и сколько регистраций нужно на план [сумма] оплат.</pre></div>
+  <div class="prompt"><div class="cp">потери, брак, отклонения: где выше нормы</div><pre>Проанализируй загруженную таблицу как инженер-аналитик.
+Для каждого объекта (фидера, объекта, позиции) посчитай средний показатель за период и отклонение от нормы [норма или среднее по всем].
+Найди: у кого показатель стабильно выше нормы, у кого он вырос в последние месяцы и с какого месяца, есть ли сезонность.
+Итог: таблица объектов по срочности, вероятные причины по каждому, и что проверить первым в ближайшую неделю.</pre></div>
+  <div class="prompt"><div class="cp">нет своих данных</div><pre>Создай реалистичный пример таблицы [продаж, заявок, расходов] за 12 месяцев для бизнеса [сфера, размер], со всеми типичными колонками.
+Затем проанализируй её как опытный бизнес-аналитик: закономерности, аномалии, графики, выводы и рекомендации.
+В конце объясни, какие колонки мне стоит начать вести у себя, чтобы такой анализ работал на реальных данных.</pre></div>
+
+  <div class="step-d" style="margin-top:20px"><b>Аналитик прямо в файле: ChatGPT для Excel и Google Таблиц</b></div>
+  <div class="step-d">Надстройка, которая живёт внутри таблицы: пишет и чинит формулы, чистит кривые данные, строит графики, объясняет, из какой ячейки взялась цифра, перед правкой спрашивает разрешение. Ставить дома, под VPN</div>
+  <div class="chain">
+    <div class="ch"><span class="ch-n">1</span><span class="ch-t"><b>Excel:</b> Вставка, Надстройки (или «Получить надстройки»), в поиске «ChatGPT», добавить. <b>Google Таблицы:</b> Расширения, Дополнения, установить дополнения, в поиске «ChatGPT»</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">2</span><span class="ch-t">Открыли панель надстройки справа, <b>вошли своим аккаунтом ChatGPT</b></span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">3</span><span class="ch-t">Открыли свой файл и попросили <b>объяснить одну формулу</b> или найти ошибку</span></div>
+    <div class="ch ch--fin"><span class="ch-n">4</span><span class="ch-t">Попросили <b>построить график и посчитать итоги по месяцам</b>. Он покажет, что собирается менять, и спросит разрешения</span></div>
+  </div>
+  <div class="prompt"><div class="cp">внутри Excel или Таблиц</div><pre>Посмотри этот лист. Объясни простыми словами, как считается столбец [название], из каких ячеек берутся цифры и есть ли в формулах ошибки.
+Потом добавь новый лист «Итоги по месяцам»: сумма по каждому месяцу, среднее, лучший и худший месяц, и построй график.
+Перед изменениями покажи, что именно собираешься сделать.</pre></div>
+  <div class="note"><b>Свой аналитик есть и у Google Таблиц:</b> кнопка Gemini в правом верхнем углу файла. Умеет то же самое в своём стиле. Пробуйте оба и оставляйте тот, что вам понятнее.</div>
+</div>
+
+<div class="step">
+  <div class="prac">Практика 5</div>
+  <div class="step-h"><span class="step-n">5</span><span class="step-t">Отзывы, комментарии и переписки</span></div>
+  <div class="step-d">Один отзыв это один пациент. Тридцать отзывов это поликлиника, и у неё есть общий диагноз. Комментарии под роликами и вопросы клиентов работают так же</div>
+  <div class="prompt"><div class="cp">разбор отзывов</div><pre>Ты аналитик клиентского опыта.
+Проанализируй отзывы ниже. Не пропускай ни один, каждый важен.
+Определи: тональность каждого, топ-5 жалоб с цитатами, топ-5 похвал с цитатами, неожиданные инсайты, которые я сам бы не заметил.
+Отдельно раздели: что из жалоб можно исправить за неделю и почти бесплатно, а что требует денег и времени.
+Итог: диаграмма тональности и 3 действия на ближайшие 7 дней.
+
+Отзывы:
+[вставьте сюда 20-30 отзывов]</pre></div>
+  <div class="prompt"><div class="cp">комментарии под роликами</div><pre>Ты аналитик аудитории.
+Проанализируй комментарии ниже под моими роликами. Не пропускай ни один.
+Определи: какие вопросы повторяются, какие возражения и страхи звучат, за что благодарят, какие темы просят раскрыть, кто спорит и с чем.
+Итог: 10 тем для следующих роликов с обоснованием из комментариев, 5 возражений, которые надо закрыть в контенте, и 3 фразы аудитории, которые стоит использовать дословно.
+
+Комментарии:
+[вставьте текст]</pre></div>
+  <div class="prompt"><div class="cp">разбор переписок и вопросов клиентов</div><pre>Проанализируй переписки с клиентами ниже.
+Найди: 10 самых частых вопросов, на каком шаге чаще всего срывается разговор, какие возражения повторяются, где мы отвечаем слишком долго или слишком сложно.
+Итог: список частых вопросов с готовыми короткими ответами, 5 мест, где мы теряем клиента, и что переписать в скриптах.
+
+Переписки:
+[вставьте текст]</pre></div>
+  <div class="tips">
+    <div class="tip"><b>Где брать отзывы.</b> 2ГИС или Яндекс Карты: своя компания, ближайший конкурент или тот, кому собираетесь платить. Открыли карточку, скопировали 20-30 отзывов подряд, вставили после промпта.</div>
+    <div class="tip"><b>Читайте раздел «неожиданные инсайты» первым.</b> Обычно самое ценное там. Одно открытие принесите в чат группы: чужие находки часто и про вас тоже.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Практика 6</div>
+  <div class="step-h"><span class="step-n">6</span><span class="step-t">Прогноз: что будет дальше</span></div>
+  <div class="step-d">ИИ считает по истории. Он не знает, что в ноябре уходит ключевой мастер и что рядом открылся конкурент. Его скорость плюс ваш контекст</div>
+  <div class="prompt"><div class="cp">прогноз на 3 месяца</div><pre>Ты аналитик данных. Проанализируй загруженную таблицу и построй прогноз.
+Шаг 1. Найди сезонность: есть ли повторяющиеся циклы по месяцам или дням недели.
+Шаг 2. Определи тренд: растём, падаем или стоим на месте.
+Шаг 3. Построй прогноз на 3 месяца вперёд, метод подбери сам под характер данных.
+Шаг 4. Покажи на одном графике: историю, прогноз и доверительный интервал.
+В конце честно скажи, насколько ты уверен в прогнозе и что может его сломать.</pre></div>
+  <div class="prompt"><div class="cp">когда закончится и когда заказывать</div><pre>Ты аналитик запасов и закупок.
+Проанализируй таблицу расхода по позициям за 12 месяцев. Для каждой позиции определи: средний расход в месяц, сезонные пики, текущий остаток.
+Спрогнозируй, когда позиция закончится при текущем темпе.
+Учти срок поставки [14 дней] и посчитай, когда нужно разместить заказ, чтобы не встать.
+Итог: таблица (позиция, остаток, дата окончания, дата заказа, рекомендуемый объём), отсортированная по срочности.</pre></div>
+  <div class="prompt"><div class="cp">сезонность спроса и загрузки</div><pre>Проанализируй помесячные данные [заявок, записей, продаж, обращений, потерь] за последний год или два.
+Найди сезонные пики и провалы, объясни вероятные причины, посчитай, насколько сильно отличаются месяцы.
+Итог: календарь года по месяцам с пометками (усиливать команду, запускать акцию, открывать запись, делать закупку, готовить бригаду) и 3 решения, которые надо принять уже сейчас, чтобы успеть.</pre></div>
+  <div class="prompt"><div class="cp">следующий запуск или сезон по истории прошлых</div><pre>По загруженной истории [запусков, сезонов, потоков] спрогнозируй следующий: сколько [регистраций, заявок, заказов] нужно, чтобы выйти на план [сумма или количество], при конверсиях как в среднем и как в лучшем случае.
+Покажи три сценария: пессимистичный, базовый, оптимистичный, и что в каждом надо сделать иначе.
+Отдельно: одна метрика, за которой следить каждый день.</pre></div>
+  <div class="prompt"><div class="cp">проверка прогноза вашим контекстом</div><pre>Вот твой прогноз. Теперь пересчитай его с учётом моих вводных, которых нет в цифрах: [например: в январе мы не работаем две недели, с октября поднимаем цену на 15 процентов, рядом открылся конкурент].
+Покажи, как меняется прогноз, что становится риском и что становится возможностью.
+Дай итоговый план на 3 месяца: что делаем в каждом месяце.</pre></div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">7</span><span class="step-t">Куда идти и чем добивать</span></div>
+  <div class="step-d">Работают без VPN, проверено 18.08.2026, адреса живы 08.09. Русские сервисы находят законы, суды, госзакупки и местные новости, которых не видят западные</div>
+  <div class="links">
+    <a href="https://alice.yandex.ru"><b>Алиса AI</b><span>Режим «Исследовать»: значок четырёх шаров в чате. Отчёт с расчётами и ссылками, выгрузка в PDF и Word. Бесплатно пробные запросы, с Плюс 10 в месяц</span><em>alice.yandex.ru</em></a>
+    <a href="https://giga.chat"><b>GigaChat</b><span>«Провести исследование»: собирает источники, выдаёт доклад. Режим в старших тарифах</span><em>giga.chat</em></a>
+    <a href="https://www.kimi.com"><b>Kimi K3</b><span>Глубокое исследование, таблицы и презентации в одном окне. Язык переключается в настройках</span><em>kimi.com</em></a>
+    <a href="https://chat.qwen.ai"><b>Qwen</b><span>Файлы, картинки, разбор таблиц. Платного тарифа нет вообще</span><em>chat.qwen.ai</em></a>
+    <a href="https://chat.z.ai"><b>GLM</b><span>Ровный резерв, когда у остальных очередь. Быстрые сравнения и таблицы</span><em>chat.z.ai</em></a>
+  </div>
+  <div class="step-d" style="margin-top:18px"><b>С VPN:</b> ChatGPT, Gemini (тянет почту, Диск и блокноты в исследование), Perplexity, Claude, Grok.</div>
+  <div class="step-d" style="margin-top:14px"><b>Специализированные, обзором.</b> Платим только тогда, когда упёрлись в потолок бесплатного и точно знаете, зачем</div>
+  <div class="links">
+    <a href="https://www.perplexity.ai"><b>Perplexity и браузер Comet</b><span>Факты со ссылкой на каждый. Кнопка «Проверить источники» сверяет утверждения с первоисточниками: третий врач</span><em>perplexity.ai</em></a>
+    <a href="https://julius.ai"><b>Julius AI</b><span>Загрузили таблицу, получили дашборд и графики без формул</span><em>julius.ai</em></a>
+    <a href="https://rows.com"><b>Rows</b><span>Таблица со встроенным ИИ: аномалии и прогнозы прямо в ячейках</span><em>rows.com</em></a>
+    <a href="https://www.similarweb.com"><b>SimilarWeb</b><span>Откуда идёт трафик к сайтам конкурентов</span><em>similarweb.com</em></a>
+    <a href="https://brand24.com"><b>Brand24</b><span>Упоминания бренда и тональность в реальном времени</span><em>brand24.com</em></a>
+    <a href="https://www.apollo.io"><b>Apollo.io</b><span>База компаний и контактов ЛПР со скорингом, кто скорее купит: HR-директора, закупщики, прорабы в регионе</span><em>apollo.io</em></a>
+    <a href="https://tgstat.ru"><b>TGStat</b><span>Статистика любого Telegram-канала: рост, охваты, вовлечённость. Сколько на самом деле читают у конкурента</span><em>tgstat.ru</em></a>
+    <a href="https://www.rusprofile.ru"><b>Rusprofile и Контур.Фокус</b><span>Досье на контрагента по ИНН: суды, долги, связи, госконтракты. Rusprofile бесплатно в базе, Фокус платный</span><em>rusprofile.ru · focus.kontur.ru</em></a>
+  </div>
+  <div class="step-d" style="margin-top:18px"><b>Каждый хорош в своём: выбирайте под задачу</b></div>
+  <div class="card">
+    <b>Исследование рынка и конкурентов:</b> ChatGPT, Kimi. Самый глубокий анализ, десятки источников.<br>
+    <b>Факт-чек со ссылками:</b> Perplexity. Каждый факт подкреплён ссылкой, кнопка «Проверить источники».<br>
+    <b>Длинные документы, договоры, сметы:</b> Claude, ChatGPT. Claude читает документ целиком.<br>
+    <b>Почта, Диск, календарь:</b> Gemini. Единственный ИИ с доступом к вашему Google.<br>
+    <b>Без VPN и без лимитов:</b> Kimi, Qwen, GLM. Мощные, бесплатные, открываются из России.<br>
+    <b>Законы, суды, госзакупки, местные новости:</b> Алиса AI, GigaChat. Видят российские источники.<br>
+    <b>Исследование по своим файлам:</b> Gemini Notebook. Отвечает только по вашим документам.<br>
+    <b>Что обсуждают прямо сейчас:</b> Grok. Живые соцсети.<br>
+    <b>Таблица, не выходя из Excel:</b> ChatGPT для Excel и Google Таблиц.
+  </div>
+  <div class="note"><b>Лимиты, чтобы не застрять.</b> Kimi, Qwen и GLM бесплатно и без VPN. Алиса AI: пробные запросы бесплатно, с Плюс 10 в месяц. ChatGPT: лимит на месяц в вашей подписке, счётчик виден в интерфейсе. Gemini: бесплатно, но лимит в день. Gemini Notebook: 10 глубоких поисков источников в месяц. Perplexity: поиск бесплатно, исследование с ограничением. Главное не застревать на сервисе, а довести исследование до решения.</div>
+  <div class="note"><b>Где брать данные для практики:</b> 2ГИС и Яндекс Карты, выгрузки из CRM и 1С, выписка из личного кабинета банка, статистика соцсетей и рекламного кабинета, отчёты маркетплейсов, история заявок из Telegram.</div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">8</span><span class="step-t">Связка: чтобы это работало завтра</span></div>
+  <div class="step-d">Отчёт, который остался лежать в чате, через неделю мёртв. Четыре шага, чтобы он жил</div>
+  <div class="chain">
+    <div class="ch"><span class="ch-n">1</span><span class="ch-t"><b>Скачали отчёт</b> в Word или PDF: кнопка сверху отчёта в ChatGPT, у Алисы значок под ответом</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">2</span><span class="ch-t">Положили <b>в базу знаний ассистента</b> из занятия 3. Теперь он отвечает на фактах о рынке, а не из головы</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">3</span><span class="ch-t">Вторую копию <b>в блокнот</b> из занятия 4. Оттуда получатся пересказ, презентация и таблица данных</span></div>
+    <div class="ch ch--fin"><span class="ch-n">4</span><span class="ch-t">Поставили <b>в расписание</b> из занятия 4: раз в месяц то же исследование, сравнили два отчёта. Это уже управление, а не разовое любопытство</span></div>
+  </div>
+  <div class="prompt"><div class="cp">вопрос ассистенту по свежему отчёту</div><pre>В твоей базе знаний лежит исследование рынка [ниша, город] от [дата].
+Опираясь только на него, ответь: какие 3 решения мне стоит принять в ближайший месяц, что из этого самое срочное и на какие цифры из отчёта ты опираешься.
+Если данных для вывода не хватает, скажи прямо, чего именно не хватает.</pre></div>
+  <div class="prompt"><div class="cp">задача в расписание: конкуренты раз в месяц</div><pre>Каждый первый понедельник месяца в 8:00 проведи поиск по [5 конкурентов: названия] и [моя ниша, город]: новые продукты и цены, акции, изменения на сайтах и в соцсетях, новые отзывы и жалобы, новости и упоминания в СМИ.
+Сравни с прошлым месяцем и пришли короткую сводку: что изменилось, что для меня риск, что возможность, и одно действие на этот месяц.</pre></div>
+  <div class="step-d" style="margin-top:18px"><b>Блокнот сам ходит в интернет</b></div>
+  <div class="step-d">NotebookLM с июля 2026 называется Gemini Notebook. Всё, что вы собрали на занятии 4, на месте, и появилось два умения</div>
+  <div class="chain">
+    <div class="ch"><span class="ch-n">1</span><span class="ch-t">Открыли блокнот, в «Источниках» нажали <b>поиск в интернете</b>: обычный или глубокий. Написали тему, он сам нашёл и сложил источники, вы только проверили список</span></div>
+    <div class="ch-ar">↓</div>
+    <div class="ch"><span class="ch-n">2</span><span class="ch-t">В Студии выбрали <b>«Таблица данных»</b>: из текстов и отчётов собирается сравнительная таблица, её можно выгрузить в Google Таблицы</span></div>
+    <div class="ch ch--fin"><span class="ch-n">3</span><span class="ch-t">Лимит: бесплатно <b>10 глубоких исследований в месяц</b>. Хватает на одно серьёзное досье в неделю</span></div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">9</span><span class="step-t">Домашнее задание</span></div>
+  <div class="step-d">Два дня. Страница с заданиями придёт утром в среду, вся сразу на оба дня</div>
+  <div class="card">
+    <b>Среда, #день1.</b> Исследование под реальное решение: вопрос, который стоит перед вами в ближайший месяц (поставщик, цена, канал, найм, садик, покупка). ChatGPT плюс второй врач: Алиса AI или Kimi. В чат: какой вопрос, скрин с выводами и ссылками, одна строка, что теперь сделаете иначе.<br><br>
+    <b>Четверг до 18:00, #день2.</b> Свои данные под рентген: таблица или отзывы, один вывод, который меняет поведение на неделе. И связка: отчёт в базу знаний ассистента или в блокнот, вопрос ему, скрин ответа.<br><br>
+    <b>Бонус по желанию.</b> Поставить ChatGPT в Excel или Google Таблицы и попросить объяснить одну формулу из своего файла.
+  </div>
+  <div class="links">
+    <a href="domashka-6.html"><b>Домашка занятия 6</b><span>Среда и четверг, оба дня на одной странице, промпты копируются касанием</span><em>открыть</em></a>
+    <a href="prezentaciya-6.html"><b>Презентация занятия 6</b><span>Все 51 слайд, если хотите пересмотреть разбор промптов</span><em>открыть</em></a>
+    <a href="shpargalka-4.html"><b>Шпаргалка занятия 4</b><span>Блокноты, проекты, навыки, плагины, расписание: нужны для связки</span><em>открыть</em></a>
+  </div>
+</div>
+
+<footer>ИИ. Новая реальность · Поток 5 · Занятие 6 · neovida.ai</footer>
+</div>
+<script>
+function bindCopy(el, getText){
+  el.addEventListener('click',()=>{
+    const t=getText();
+    const cp=el.querySelector('.cp');
+    const done=()=>{
+      el.classList.add('copied');
+      setTimeout(()=>el.classList.remove('copied'),1600);
+    };
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(done).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    });
+  });
+}
+document.querySelectorAll('.prompt').forEach(el=>bindCopy(el,()=>{const p=el.querySelector('pre');return p.innerText||p.textContent;}));
+document.querySelectorAll('.tf').forEach(el=>bindCopy(el,()=>(el.innerText||el.textContent).trim()));
+</script>
+</body>
+</html>
