@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Шпаргалка · Занятие 7 · API, MCP и команда агентов</title>
+<style>
+:root{
+  --bg:#0B1220; --bg2:#131B2E; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.1);
+  --text:#F4F1EC; --muted:#9AA3B2; --coral:#E07461; --coral-soft:rgba(224,116,97,.15); --ice:#3D8FD1;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(160deg,var(--bg),var(--bg2)) fixed;color:var(--text);font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;padding-bottom:90px}
+.wrap{max-width:780px;margin:0 auto;padding:26px 18px}
+header{padding:32px 0 8px}
+.brand{font-size:15px;font-weight:700;color:var(--muted)}
+.brand b{color:var(--coral)}
+h1{font-size:33px;line-height:1.14;font-weight:800;letter-spacing:-.01em;margin-top:10px}
+.sub{color:var(--muted);font-size:16px;margin-top:10px}
+.sub b{color:var(--text)}
+.howto{background:var(--coral-soft);border:1px solid rgba(224,116,97,.35);border-radius:14px;padding:14px 16px;margin-top:18px;font-size:15.5px}
+.howto b{color:var(--text)}
+.step{margin:38px 0 0}
+.step-h{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.step-n{flex:0 0 auto;min-width:38px;height:38px;border-radius:11px;background:var(--coral);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.step-t{font-size:22px;font-weight:800;line-height:1.2}
+.step-d{color:var(--muted);font-size:15.5px;margin:2px 0 12px 50px}
+.prompt{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:46px 18px 18px;margin:12px 0;cursor:pointer;transition:background .15s,border-color .2s,box-shadow .2s}
+.prompt:active{background:rgba(224,116,97,.12)}
+.prompt pre{white-space:pre-wrap;font-family:inherit;font-size:15.5px;line-height:1.6;color:var(--text)}
+.prompt .cp{position:absolute;top:12px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--coral)}
+.prompt .cp::after{content:"копировать";background:rgba(224,116,97,.16);border:1px solid rgba(224,116,97,.4);border-radius:999px;padding:5px 14px;font-size:12px;letter-spacing:.06em}
+.prompt.copied{border-color:#4caf7d;box-shadow:0 0 0 2px rgba(76,175,125,.35), 0 0 34px rgba(76,175,125,.28);background:rgba(76,175,125,.1)}
+.prompt.copied .cp{color:#4caf7d}
+.prompt.copied .cp::after{content:"скопировано ✓";background:rgba(76,175,125,.2);border-color:rgba(76,175,125,.55);color:#4caf7d}
+details.acc{background:var(--surface);border:1px solid var(--line);border-radius:13px;margin:8px 0;overflow:hidden}
+details.acc>summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:16px;font-weight:650;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:12px}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"открыть промпт";flex:0 0 auto;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.35);border-radius:999px;padding:5px 13px}
+details.acc[open]>summary::after{content:"свернуть";color:var(--muted);background:rgba(255,255,255,.06);border-color:var(--line)}
+details.acc[open]>summary{border-bottom:1px solid var(--line)}
+details.acc .prompt{margin:12px 14px 14px}
+.prac{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#F2A08E,var(--coral));color:#fff;font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:9px 20px;border-radius:999px;margin-bottom:10px;box-shadow:0 8px 26px rgba(224,116,97,.4)}
+details.acc--gpt>summary::after{content:"открыть ассистента"}
+details.acc--gpt[open]>summary::after{content:"свернуть"}
+.dl--big{background:rgba(224,116,97,.12);border-color:rgba(224,116,97,.45)}
+.dl--big .dl-i{background:var(--coral);color:#fff}
+.dl--big .dl-t b{font-size:16.5px}
+.dl{display:flex;align-items:center;gap:14px;margin:12px 0;padding:15px 17px;background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.38);border-radius:14px;text-decoration:none;color:var(--text)}
+.dl:active{background:rgba(76,175,125,.2)}
+.dl-i{flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:#4caf7d;color:#0B1220;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dl-t{display:block;min-width:0}
+.dl-t b{display:block;font-size:15.5px;font-weight:750}
+.dl-t em{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.chain{display:flex;flex-direction:column;gap:0;margin:14px 0}
+.ch{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 15px}
+.ch-n{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:rgba(224,116,97,.18);color:var(--coral);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ch-t{font-size:14.5px;color:var(--muted);line-height:1.35}
+.ch-t b{display:block;color:var(--text);font-size:15.5px;font-weight:750}
+.ch-ar{color:var(--coral);text-align:center;font-size:17px;line-height:1;padding:4px 0;opacity:.75}
+.ch--fin{border-color:rgba(76,175,125,.45);background:rgba(76,175,125,.09)}
+.ch--fin .ch-n{background:rgba(76,175,125,.2);color:#4caf7d}
+.trio{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.tr{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:14px;padding:15px 17px}
+.tr b{font-size:18px;font-weight:800;display:inline-block}
+.tr .q{display:inline-block;margin-left:9px;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--coral);background:rgba(224,116,97,.14);border:1px solid rgba(224,116,97,.3);border-radius:999px;padding:4px 11px;vertical-align:2px}
+.tr p{margin-top:8px;font-size:15px;line-height:1.55;color:var(--muted)}
+.tr em{display:inline-block;margin-top:9px;font-style:normal;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tr-kak{border-left-color:#C9707F}.tr-kak .q{color:#E39CA8;background:rgba(201,112,127,.16);border-color:rgba(201,112,127,.35)}
+.tr-gde{border-left-color:var(--ice)}.tr-gde .q{color:var(--ice);background:rgba(61,143,209,.14);border-color:rgba(61,143,209,.35)}
+.sk-t{display:block;min-width:0}
+.sk-t em{display:block;font-style:normal;font-size:13px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.35}
+.skill-what{margin:12px 14px 0;font-size:15px;line-height:1.55;color:var(--muted)}
+.skill-what b{color:var(--text)}
+.prompt--skill pre{max-height:132px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.prompt--skill::after{content:"текст длинный, читать его не нужно: просто скопируйте";position:absolute;left:18px;right:18px;bottom:12px;font-size:13px;line-height:1.4;color:var(--muted)}
+.prompt--skill{padding-bottom:52px}
+.prompt--test{border-left-color:var(--ice)}
+.prompt--test .cp{color:var(--ice)}
+.prompt--test .cp::after{background:rgba(61,143,209,.16);border-color:rgba(61,143,209,.4);color:var(--ice)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0;font-size:15.5px;color:var(--muted)}
+.card b{color:var(--text)}
+.card ul{margin:8px 0 0 18px}
+.card li{margin:5px 0}
+.note{font-size:15px;color:var(--muted);background:rgba(61,143,209,.08);border:1px solid rgba(61,143,209,.25);border-radius:12px;padding:12px 14px;margin:10px 0}
+.note b{color:var(--text)}
+.ten{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.tf{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:11px;padding:11px 15px;font-size:15.5px;cursor:pointer}
+.tf:active{background:rgba(224,116,97,.12)}
+.tf.copied{border-color:#4caf7d;background:rgba(76,175,125,.16)}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0}
+.basket{border-radius:13px;padding:13px;font-size:14px;border:1px solid}
+.basket b{display:block;font-size:15px;margin-bottom:5px}
+.b-ok{background:rgba(76,175,125,.08);border-color:rgba(76,175,125,.35)}
+.b-mid{background:rgba(224,169,92,.08);border-color:rgba(224,169,92,.35)}
+.b-no{background:rgba(224,92,92,.08);border-color:rgba(224,92,92,.35)}
+.b-ok b{color:#4caf7d}.b-mid b{color:#e0a95c}.b-no b{color:#e05c5c}
+a{color:var(--ice)}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.links a{display:block;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;color:var(--text)}
+.links a:active{background:rgba(224,116,97,.14);border-color:rgba(224,116,97,.45)}
+.links a b{display:block;font-size:17px;font-weight:800}
+.links a span{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.links a em{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:var(--coral);margin-top:5px}
+.links a:first-child{grid-column:1 / -1}
+footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14.5px}
+@media(max-width:560px){.grid3{grid-template-columns:1fr}
+.prompt{padding-top:56px}
+.sk-t em{font-size:12.5px}}
+
+/* ── подсказки под шагом ── */
+.tips{display:flex;flex-direction:column;gap:10px;margin:18px 0 4px}
+.tip{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--coral);border-radius:13px;padding:15px 18px;font-size:16px;line-height:1.55;color:var(--muted)}
+.tip b{color:var(--text);font-weight:700}
+.tip a{color:var(--coral)}
+/* ── сравнение двух ответов ── */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.cmp > div{border-radius:14px;padding:16px 18px;font-size:16px;line-height:1.55;color:var(--muted);border:1px solid}
+.cmp .ok{background:rgba(76,175,125,.09);border-color:rgba(76,175,125,.36)}
+.cmp .no{background:rgba(224,92,92,.09);border-color:rgba(224,92,92,.36)}
+.cmp .lbl{display:block;font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:9px}
+.cmp .ok .lbl{color:#4caf7d}
+.cmp .no .lbl{color:#e05c5c}
+.cmp b{color:var(--text);font-weight:700}
+@media(max-width:760px){.cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">neovida<b>.</b>ai</div>
+  <h1>Шпаргалка<br>занятие 7</h1>
+  <div class="sub">11 сентября · <b>«API, MCP и команда агентов»</b> · Альберт Валеев</div>
+  <div class="howto"><b>Держите открытой весь урок.</b> Девять шагов, идём строго по порядку. Первые четыре про Дипресёрч: нашёл, досмотрел, поставил, перезапустил, спросил. Следующие два про помощников. Все тексты копируются касанием и вставляются в чат Codex.</div>
+  <div class="note"><b>Терминал не открываем ни разу.</b> Вы копируете просьбу, вставляете в Codex и читаете, что он ответил. Всё остальное он делает сам. Если агент пишет «сделайте это в терминале», значит просьба потерялась: вставьте её заново целиком и добавьте строку «терминал не открываю, сделай сам».</div>
+  <div class="note" style="border-left-color:#e05c5c"><b>Ключ это как пароль от квартиры.</b> Файл с ключами никуда не пересылайте, в чат не выкладывайте и на скриншоты не берите. Ключ где-то засветился: заходите в кабинет сервиса, выпускаете новый, старый отзываете.</div>
+</header>
+
+<div class="step">
+  <div class="prac">Практика 1</div>
+  <div class="step-h"><span class="step-n">1</span><span class="step-t">Открываем Codex и смотрим, что уже стоит <em style="font-style:normal;color:var(--coral);font-size:15px;font-weight:700">5 минут</em></span></div>
+  <div class="step-d">Codex на компьютере, ваша рабочая папка, новый чат</div>
+  <div class="prompt"><div class="cp">просьба 1 · что у меня стоит</div><pre>Покажи, какие скиллы у меня сейчас стоят, и есть ли среди них deep-research (он же «Дипресёрч»).
+Заодно проверь, установлен ли у меня Node.js: выполни node --version.
+Ничего не ставь и не меняй.
+Ответь тремя строками:
+1. список моих скиллов;
+2. стоит ли deep-research: да или нет;
+3. Node.js есть или нет, и какая версия.</pre></div>
+  <div class="tips">
+    <div class="tip"><b>Дальше развилка.</b> Если deep-research уже стоит, шаги 2 и 3 пропускаете и идёте сразу на перезапуск и проверку. Не стоит, идёте по порядку. Стоит, но не помните, как ставили, всё равно идите по порядку: повторная установка ничего не ломает.</div>
+    <div class="tip"><b>Зачем Node.js.</b> Половина сервисов запускается через эту программу-помощник, вы её никогда не увидите. Без неё встанут только четыре сервиса из шести бесплатных. Codex ответил «Node.js нет», попросите: «Поставь мне Node.js версии LTS сам. Не можешь, так и скажи». Не смог: заходите на nodejs.org, жмёте зелёную кнопку LTS, ставите как обычную программу, две минуты. После этого закройте и откройте Codex заново.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Практика 2</div>
+  <div class="step-h"><span class="step-n">2</span><span class="step-t">Скачиваем файл и досматриваем <em style="font-style:normal;color:var(--coral);font-size:15px;font-weight:700">10 минут</em></span></div>
+  <div class="step-d">Скилл это один текстовый файл. Скачайте его <b>на рабочий стол</b> кнопкой ниже: так установка не зависит от того, откроется ли сайт. Не скачали, тоже не беда: в просьбе установки есть ссылка, Codex скачает файл сам</div>
+  <div class="links">
+    <a href="files/deep-research-SKILL.md" download><b>deep-research-SKILL.md</b><span>один текстовый файл, 18 килобайт. Сохраните на рабочий стол, не переименовывайте</span><em>скачать</em></a>
+  </div>
+  <div class="step-d" style="margin-top:14px">Чужой скилл это незнакомец, которому вы выдали инструкцию ходить по вашему компьютеру. Этот файл собрали мы, но привычку ставим с первого раза: <b>сначала читает агент, решение за вами</b></div>
+  <div class="prompt"><div class="cp">просьба 2 · досмотр · он ничего не ставит</div><pre>На рабочем столе лежит файл скилла, имя начинается с deep-research-SKILL.
+Ничего не устанавливай и не запускай, просто прочитай его и отчитайся простыми словами:
+1. что этот скилл делает;
+2. какие команды он будет запускать на моём компьютере;
+3. ходит ли он в интернет и куда именно;
+4. может ли он увидеть мои ключи, пароли или личные данные, и что он с ними делает;
+5. есть ли в нём что-то опасное или странное;
+6. поставил бы ты его себе и почему.
+Отдельно ответь честно: не вредный ли он.</pre></div>
+  <div class="cmp">
+    <div class="ok"><span class="lbl">Пример ответа</span>Скилл подключает двенадцать поисковых сервисов штатной командой Codex и описывает, как вести исследование. В интернет ходит только на адреса этих сервисов. Ключи записывает в настройки Codex, в чат их не выводит. <b>Опасных команд нет, ставить можно</b></div>
+    <div class="no"><span class="lbl">Насторожило</span>Что-то в ответе не сходится с этим описанием, не ставьте. Скриншот в чат группы, разберём вместе</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Практика 3</div>
+  <div class="step-h"><span class="step-n">3</span><span class="step-t">Ставим, перезапускаем, проверяем <em style="font-style:normal;color:var(--coral);font-size:15px;font-weight:700">15 минут</em></span></div>
+  <div class="step-d">Одна просьба, минут десять. Часть времени Codex будет <b>молча ставить сервисы</b>, это нормально. Спрашивает разрешение на команду, разрешайте. В конце он скажет, что сам перезапуститься не может: так и должно быть, перезапуск за вами</div>
+  <div class="prompt"><div class="cp">просьба 3 · установка</div><pre>Разверни мне скилл «Дипресёрч» целиком.
+Файл скилла лежит у меня на рабочем столе, имя начинается с deep-research-SKILL.
+Если файла там нет, скачай его сам отсюда:
+https://materials.neovida.ai/corp-18-08/files/deep-research-SKILL.md
+
+Я работаю в приложении и терминал не открываю: папки не создаю, файлы не раскладываю, команды не ввожу. Сделай всё сам, по шагам:
+
+0. Проверь, что есть Node.js (node --version). Если его нет, поставь сам: на Windows командой winget install OpenJS.NodeJS.LTS, на Mac через Homebrew, если он установлен. Не получается, остановись и скажи мне, я поставлю с nodejs.org и вернусь.
+
+1. Создай папку ~/.codex/skills/deep-research/ и положи туда файл скилла. Назови его ровно SKILL.md, с другим именем ты его не увидишь. Если твоя версия Codex читает скиллы из ~/.agents/skills/, положи копию и туда.
+
+2. Подключи шесть сервисов, которым не нужна регистрация: parallel-search, you-search-free, anysearch, rivalsearch, open-websearch, playwright. Точные команды подключения написаны внутри файла скилла, раздел «Шаг 1», бери их оттуда. Подключаются они командой codex mcp add. У open-websearch обязателен флаг MODE=stdio, без него сервер молча зависает. Если команды codex в системе нет, впиши эти сервисы прямо в файл настроек ~/.codex/config.toml, раздел mcp_servers. Сервисам, которые запускаются через npx, поставь в настройках startup_timeout_sec = 60: при первом запуске они долго скачиваются и иначе не успевают подняться.
+
+3. Остальные шесть, это Tavily, Firecrawl, Exa, Apify, Jina и Bright Data, пока не подключай. Просто напиши списком: какой ключ нужен и на какой странице его завести. Ключи я заведу сам.
+
+4. Перезапустись, чтобы всё поднялось. Если сам перезапуститься не можешь, так и скажи, я закрою и открою Codex.
+
+В конце покажи простым списком: что реально подключилось, что не поднялось и почему, и какие задачи я теперь могу тебе ставить.</pre></div>
+  <div class="tips">
+    <div class="tip"><b>Чем заканчивается шаг.</b> Codex пишет: скилл лежит в папке, шесть сервисов подключены, для остальных шести нужны ключи, вот список из шести адресов, перезапуститься сам не могу. <b>Список адресов сохраните</b>, он пригодится для ключей. Если вместо этого он спросил «продолжать?», ответьте «да, делай всё до конца».</div>
+  </div>
+  <div class="step-d" style="margin-top:18px"><b>Перезапуск, это половина всех «у меня не встало».</b> Скиллы и сервисы подхватываются только при старте. Не перезапустили, будете смотреть на пустой список и думать, что всё сломалось</div>
+  <div class="cmp">
+    <div class="ok"><span class="lbl">Mac</span>Нажмите <b>⌘ + Q</b> или в меню приложения выберите «Завершить». Красный кружок закрывает только окно, приложение продолжает жить</div>
+    <div class="no"><span class="lbl">Windows</span>Закройте окно крестиком, потом посмотрите в трей возле часов: если иконка приложения там, нажмите на неё правой кнопкой и выберите «Выход»</div>
+  </div>
+  <div class="step-d" style="margin-top:14px">Откройте приложение заново, та же рабочая папка, новый чат. Наберите <b>/skills</b>: в списке должен появиться deep-research. Или наберите знак <b>$</b> и начните печатать «deep», он подскажет</div>
+  <div class="prompt"><div class="cp">просьба 4 · после перезапуска · проверка</div><pre>Покажи, какие внешние сервисы у меня сейчас подключены.
+Сходи и проверь по-настоящему, не по памяти.
+Ответь простым списком:
+1. что подключено;
+2. что из этого реально отвечает, а что молчит;
+3. у молчащих: в чём причина, простыми словами;
+4. что мне из-за этого сейчас недоступно.
+Ничего не удаляй и не переподключай без моего слова.</pre></div>
+  <div class="tips">
+    <div class="tip"><b>Пример ответа.</b> «Подключено 6 сервисов, отвечают 6, доступно около 50 инструментов». Это норма. <b>Отвечают четыре, молчат open-websearch и playwright:</b> почти всегда нет Node.js, вернитесь к шагу 1. <b>Молчит один любой:</b> не чините руками, просьба «почини сервис» в шаге 8.</div>
+    <div class="tip"><b>Уже можно работать.</b> Шесть сервисов без регистрации это половина набора и полноценное исследование. Ключи добавляют глубину: чтение сайтов целиком, соцсети, карты, закрытые от роботов страницы. Их заводим дома, шаг 7.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="prac">Практика 4</div>
+  <div class="step-h"><span class="step-n">4</span><span class="step-t">Спрашиваем скилл, как им пользоваться, и запускаем <em style="font-style:normal;color:var(--coral);font-size:15px;font-weight:700">15 минут</em></span></div>
+  <div class="step-d">Пятый пункт общего правила: нашёл, досмотрел, поставил, перезапустил, <b>спросил, как пользоваться</b>. Без него скилл стоит, а вы о нём забываете</div>
+  <div class="prompt"><div class="cp">просьба 5 · как тобой пользоваться</div><pre>Расскажи, как мне пользоваться скиллом «Дипресёрч».
+Ответь на три вопроса отдельно:
+1. когда ты включаешь его сам? Приведи 5 примеров моих фраз, на которые ты среагируешь и полезешь в интернет, и 5 фраз, на которые не среагируешь;
+2. как позвать его вручную, если ты не включился сам? Покажи точную запись;
+3. как ты решаешь, каким из двенадцати сервисов брать конкретный вопрос, и что делаешь, когда два источника противоречат друг другу.
+И скажи прямо: что мне писать, чтобы ты искал глубоко и задействовал несколько сервисов сразу, а не отвечал первой ссылкой.
+Объясняй так, как объяснял бы человеку без технического опыта.</pre></div>
+  <div class="ten">
+    <div class="tf"><b>$ доллар, это скилл.</b> Всегда $имя: <b>$deep-research</b>. Наберите $, и он подскажет список</div>
+    <div class="tf"><b>@ собачка, в Codex это не про скиллы.</b> Она подставляет файл из вашей папки. Ищете через неё скилл, не находите и решаете, что он не встал. Он встал</div>
+    <div class="tf"><b>/ слэш.</b> /skills показывает список того, что стоит. А /deep-research не работает: слэшем скилл не позвать</div>
+  </div>
+  <div class="step-d" style="margin-top:14px"><b>Просьба к скиллу = вызов плюс задача, больше ничего.</b> Не пересказывайте скиллу его же методологию: всё, что делать, уже внутри. Хватает одной строки, например: <b>$deep-research найди всех, кто в Уфе продаёт абонементы на детское плавание, с ценами и отзывами. Источники покажи.</b> Чего скилл не знает, он спросит сам</div>
+  <div class="step-d" style="margin-top:14px"><b>Первое настоящее исследование.</b> Учебное не считается. Возьмите вопрос, ответ на который вам действительно нужен на этой неделе, и доведите до результата, на который можно опереться в решении</div>
+  <div class="prompt"><div class="cp">просьба 6 · исследование</div><pre>$deep-research Проведи для меня глубокое исследование. Задача рабочая, не учебная.
+
+Вопрос: [что нужно узнать, например: стоит ли поднимать цену на абонемент, какого подрядчика на кровлю брать, где дешевле купить это оборудование].
+Зачем мне это: [какое решение приму по результату, например: менять ли поставщика, запускать ли новое направление, брать ли этого человека].
+Мой рынок и город: [ниша и город, например: школа плавания, Уфа].
+Что я уже знаю: [коротко, чтобы не тратить время на очевидное].
+
+Условия работы:
+1. не отвечай по памяти там, где факт можно проверить: цены, даты, условия, контакты, законы устаревают;
+2. ключевые цифры и даты подтверждай двумя независимыми источниками, а не одним;
+3. по каждому факту давай ссылку, по которой я сам могу его проверить;
+4. чего не нашёл, так и пиши «не нашёл». Не додумывай и не сглаживай;
+5. в конце отдельно перечисли, где данные противоречат друг другу и чему, по-твоему, можно верить.
+
+Формат ответа:
+- короткий вывод в 5 строк, с которого я начну читать;
+- таблица с фактами и ссылками;
+- что из этого меняет моё решение;
+- чего не хватает, чтобы решить окончательно.
+Отчёт сохрани файлом ИССЛЕДОВАНИЕ-[тема].md в мою рабочую папку.</pre></div>
+  <div class="tips">
+    <div class="tip"><b>Работает дольше обычного чата, это нормально.</b> Обычный ответ приходит за секунды, исследование идёт минуты: он реально ходит по сайтам и читает их.</div>
+    <div class="tip"><b>Пятнадцать готовых запросов для практики под разные сферы</b> лежат на <a href="https://materials.neovida.ai/novaya-realnost-4/dipresersh.html">развёрнутой странице скилла</a>, внизу. Всё в квадратных скобках заменяете на своё.</div>
+  </div>
+</div>
+<div class="step">
+  <div class="prac">Практика 5</div>
+  <div class="step-h"><span class="step-n">5</span><span class="step-t">Своя роль из моих слов <em style="font-style:normal;color:var(--coral);font-size:15px;font-weight:700">15 минут</em></span></div>
+  <div class="step-d">Это ядро урока и основной путь. Вы не пишете .toml руками и не разбираетесь в формате. Вы обычными словами говорите, чего хотите от помощника, Codex сам собирает файл, кладёт куда надо и тут же его проверяет</div>
+  <div class="prompt"><div class="cp">просьба 7 · создать папку для ролей</div><pre>Создай у меня папку ~/.codex/agents/ , если её ещё нет. Потом покажи, что в ней лежит сейчас, и подтверди одной строкой, что папка на месте и Codex её видит.</pre></div>
+  <div class="prompt"><div class="cp">просьба 8 · сделай роль из моих слов · главный промпт</div><pre>Сделай мне помощника для Codex, отдельную роль файлом .toml.
+
+Вот чего я хочу от него, своими словами:
+[опишите обычными словами: кто это, что он проверяет или делает, на что смотрит в первую очередь, что для вас «плохо», в каком виде вы хотите получать ответ]
+
+Собери роль по этим правилам:
+1. Сначала задай мне не больше пяти вопросов, только то, без чего роль выйдет размытой. Дальше не спрашивай, а делай.
+2. Формат .toml. Поля: name (латиницей, через дефис), description (одно предложение: когда эту роль звать), sandbox_mode, developer_instructions.
+3. developer_instructions пиши по-русски, обращайся к роли на «ты». Внутри: одна строка «кто ты», дальше нумерованный список, что смотреть и в каком порядке, дальше в каком виде отвечать.
+4. Каждый пункт должен быть проверяемым. Не «следи за качеством», а «больше четырёх размеров шрифта, замечание». Пустые строки выкидывай.
+5. Если роль только смотрит и ничего не меняет, поставь sandbox_mode = &quot;read-only&quot; и напиши в инструкции прямым текстом, что файлы она не трогает.
+6. Не бери имя default, worker или explorer, это встроенные роли Codex.
+7. Положи файл в ~/.codex/agents/ и скажи мне одной строкой: как роль называется и какой фразой её теперь звать.
+
+Потом сразу проверь её: позови эту роль на [укажите файл или папку, на которых удобно проверить] и покажи мне, что она ответила. Если ответ вышел общий и бесполезный, скажи, какую строку в роли надо поправить.</pre></div>
+  <div class="tips">
+    <div class="tip"><b>Сначала опишите своими словами:</b> кто это, что смотрит, что для вас «плохо», в каком виде хотите ответ. Пишите как коллеге, а не как программе.</div>
+    <div class="tip"><b>Требуйте проверяемых формулировок.</b> «Следи за качеством» пустая строка. «Больше четырёх размеров шрифта на странице, замечание» рабочая.</div>
+    <div class="tip"><b>Роль, которую ни разу не позвали, не считается сделанной.</b> В конце Codex сам зовёт свежую роль на ваш файл и показывает, что она ответила.</div>
+    <div class="tip"><b>Агент не собрал роль сам?</b> Три готовые лежат в <a href="roli-7.html">библиотеке ролей</a>: проверяющий по дизайну, редактор текста, разведчик. Отдаёте агенту просьбой сохранить, руками файлы не создаёте.</div>
+  </div>
+  <div class="step-d" style="margin-top:18px"><b>Как позвать помощника.</b> Никаких значков, никаких команд. Обычная фраза в чате: Codex сам понимает, кого вы зовёте, по полю description в роли. Значки $ и @ для ролей не нужны: доллар это скиллы</div>
+  <div class="prompt"><div class="cp">просьба 9 · позвать одного помощника</div><pre>Позови проверяющего по дизайну на [файл или папку]. Дождись его ответа и покажи мне его целиком, ничего не сокращая и не смягчая. Свои правки пока не вноси, сначала я посмотрю список.</pre></div>
+  <div class="prompt"><div class="cp">просьба 10 · каких помощников я вообще завёл</div><pre>Перечисли все роли-помощники, которые у меня есть: файлы в ~/.codex/agents/ и в .codex/agents/ этого проекта. По каждой: имя, одна строка чем занимается, и стоит ли read-only. Если у какой-то роли не хватает обязательного поля или имя совпало со встроенной (default, worker, explorer), скажи прямо.</pre></div>
+</div>
+
+<div class="step">
+  <div class="prac">Практика 6</div>
+  <div class="step-h"><span class="step-n">6</span><span class="step-t">Банда под задачу и помощник параллельно <em style="font-style:normal;color:var(--coral);font-size:15px;font-weight:700">15 минут</em></span></div>
+  <div class="step-d">Codex из коробки запускает до шести помощников одновременно. Они работают параллельно, Codex дожидается всех и отдаёт вам один общий ответ. Для начала ставим три: шесть помощников на простой задаче это шесть раз потраченная квота</div>
+  <div class="prompt"><div class="cp">просьба 11 · сколько помощников работают разом</div><pre>Открой ~/.codex/config.toml и найди секцию [agents]. Покажи мне, чему сейчас равен max_concurrent_threads_per_session или его старое имя max_threads. Если ни того ни другого нет, добавь max_concurrent_threads_per_session = 3. Если параметр есть и он больше трёх, поставь 3. Выше поднимать не надо: платит за это моя месячная квота. Покажи мне строку «было» и строку «стало», сам файл больше ничем не трогай.</pre></div>
+  <div class="prompt"><div class="cp">просьба 12 · пусть агент сам соберёт команду · главный вау-промпт</div><pre>У меня задача: [опишите словами].
+
+Скажи, какие помощники нужны, чтобы решить её надёжно, чтобы они друг друга страховали. Назови каждого и объясни, зачем он.
+
+Теперь создай этих помощников и расскажи, как вы будете выполнять задачу: кто куда пойдёт и что принесёт.
+
+Ты оркестратор: все результаты приходят к тебе, ты собираешь один общий ответ и показываешь мне.</pre></div>
+  <div class="tips">
+    <div class="tip"><b>Пока помощники работают, чат молчит.</b> Это нормально: ответ придёт один, общий. Что делают оба, видно в разделе <b>Subagents</b>: Active работают, Done закончили. Нажимаете на завершённого, видите его ответ целиком.</div>
+    <div class="tip"><b>Смысл не в количестве, а в разных углах зрения:</b> один смотрит вёрстку, второй тексты, третий ищет, где то же самое уже сделано в проекте.</div>
+  </div>
+  <div class="prompt"><div class="cp">просьба 13 · раздать задачу троим сразу · когда роли из библиотеки стоят</div><pre>Раздай эту работу помощникам и запусти их разом, а не по очереди.
+
+Что проверяем: [что именно нужно проверить или собрать]
+Где: [папка или список файлов]
+
+Кого зови:
+1. проверяющего по дизайну, на вёрстку и внешний вид;
+2. редактора текста, на все надписи, заголовки и кнопки;
+3. разведчика, пусть найдёт, где в проекте уже сделано то же самое, чтобы мы не плодили копии.
+
+Дождись всех троих и собери один общий ответ:
+1. Что чинить в первую очередь, не больше пяти пунктов.
+2. Остальное списком.
+3. Где помощники сказали разное, покажи расхождение отдельно, не выбирай за меня.
+Одинаковые замечания от разных помощников склей в одно. Сам пока ничего не правь.</pre></div>
+  <div class="step-d" style="margin-top:18px"><b>Подход 2, параллельно.</b> Агент занят задачей, а вам нужно ещё что-то. В тот же чат новую задачу не пишут: агент бросит текущую и переключится. Вместо этого просите отдельного помощника под новое дело</div>
+  <div class="prompt"><div class="cp">просьба 14 · делегировать, не прерывая</div><pre>Текущую задачу не бросай и не меняй.
+
+Создай отдельного помощника, пусть параллельно займётся вот этим: [новое дело]. Когда закончит, покажи мне его результат отдельно от текущей работы.</pre></div>
+  <div class="prompt"><div class="cp">просьба 15 · показать ответ конкретного помощника</div><pre>Покажи мне ответ помощника [имя роли] по последней задаче целиком, слово в слово, без сокращений и без твоих комментариев. Отдельно скажи одной строкой: с чем из его замечаний ты не согласен и почему.</pre></div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">7</span><span class="step-t">Ключи для шести оставшихся сервисов · дома</span></div>
+  <div class="step-d">Шесть сервисов уже работают. Ещё шесть просят <b>бесплатный ключ</b>. Карта не нужна нигде, кроме Bright Data, и там только через три месяца. <b>Первые три важнее остальных:</b> Tavily, Firecrawl, Exa. Набор работает частями, это не поломка. Из России часть сайтов открывается только через VPN</div>
+  <div class="ten">
+    <div class="tf"><b>1. Tavily</b> · app.tavily.com · 1000 запросов в месяц · быстрый поиск с готовыми ссылками на источники</div>
+    <div class="tf"><b>2. Firecrawl</b> · firecrawl.dev/app/api-keys · 1000 страниц в месяц · читает любой сайт целиком</div>
+    <div class="tf"><b>3. Exa</b> · dashboard.exa.ai/api-keys · 20 $ на старте и 10 $ каждый месяц · ищет по смыслу</div>
+    <div class="tf"><b>4. Apify</b> · console.apify.com/settings/integrations · 5 $ в месяц · соцсети, карты, маркетплейсы, отзывы</div>
+    <div class="tf"><b>5. Jina</b> · jina.ai/api-dashboard · 10 млн токенов на ключ · PDF, научные базы, скриншоты</div>
+    <div class="tf"><b>6. Bright Data</b> · brightdata.com/ai/mcp-server · 5000 запросов первые три месяца, дальше попросит карту · закрытые от роботов сайты</div>
+  </div>
+  <div class="step-d" style="margin-top:14px"><b>Как собираем, три действия.</b> Заведите один текстовый файл на рабочем столе, назовите КЛЮЧИ.txt (на Mac это TextEdit, в меню «Формат» выберите «Преобразовать в простой текст», на Windows Блокнот). Идите по списку: на каждом сайте регистрируетесь, находите раздел API keys, копируете ключ, вставляете в файл и подписываете строкой, от какого он сервиса. Сохранили файл, и всё, больше руками ничего</div>
+  <div class="prompt"><div class="cp">просьба 16 · подключи ключи</div><pre>Мои ключи лежат в файле [путь к файлу, например: ~/Desktop/КЛЮЧИ.txt или C:\Users\Имя\Desktop\КЛЮЧИ.txt]. Возле каждого подписано, от какого он сервиса.
+Возьми их оттуда и подключи все сервисы, которым они нужны. Точные команды подключения написаны внутри файла моего скилла ~/.codex/skills/deep-research/SKILL.md, раздел «Шаг 2», бери их оттуда.
+Сделай сам:
+1. подключи каждый сервис, ключ пропиши в его настройках;
+2. сервисам, которые запускаются через npx, поставь startup_timeout_sec = 60;
+3. перезапустись, чтобы они поднялись. Если сам перезапуститься не можешь, так и скажи, я закрою и открою Codex.
+Ключи никуда не выкладывай и никуда не отправляй, кроме настроек этих сервисов. Мне в ответ их не печатай.
+В конце покажи: какие сервисы подключил и какие ключи из файла не подошли.</pre></div>
+  <div class="step-d" style="margin-top:14px">Дальше как в шаге 3: закрываете Codex полностью, открываете заново и в новом чате вставляете просьбу ниже. Она короткая, потому что после перезапуска Codex не помнит прошлый разговор</div>
+  <div class="prompt"><div class="cp">просьба 17 · после перезапуска · итог</div><pre>Продолжаем: я перезапустил Codex после подключения ключей.
+Проверь по-настоящему, какие внешние сервисы теперь отвечают, а какие молчат, и почему.
+Покажи итог двумя строками: сколько сервисов подключено из двенадцати и сколько инструментов мне доступно.
+Ключи в ответе не печатай.</pre></div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">8</span><span class="step-t">Если пошло не так</span></div>
+  <div class="tips">
+    <div class="tip"><b>Сервис в списке есть, а инструментов от него нет.</b> Выйдите из Codex и зайдите заново. Сервисы поднимаются при старте.</div>
+    <div class="tip"><b>Ошибка со словом npx.</b> Не установлен Node.js. Поставьте его с nodejs.org и повторите. Это самая частая причина «у меня не поставилось».</div>
+    <div class="tip"><b>Сервис не отвечает, а вы в России.</b> Почти всегда VPN, гадать тут не о чем.</div>
+    <div class="tip"><b>Ключ скопировался с лишним пробелом или переносом строки.</b> Скопируйте заново, целиком и без хвостов.</div>
+    <div class="tip"><b>Роль не зовётся.</b> Просьба 19 ниже проверяет всё сама.</div>
+    <div class="tip"><b>Звали роль через @ или $ и ничего не вышло.</b> В Codex роли зовут обычной фразой.</div>
+    <div class="tip"><b>Помощник начал править файлы, а вы просили только смотреть.</b> В роли нет строки sandbox_mode = "read-only". Попросите агента дописать её и показать «было» и «стало».</div>
+    <div class="tip"><b>Пишет, что помощников запустить не удалось, хотя предыдущие уже закончили.</b> Завершённые какое-то время занимают слот. Начните новый чат.</div>
+    <div class="tip"><b>Попросили ревью, агент сделал его сам и роль не позвал.</b> Скажите прямо: «позови проверяющего по дизайну», а не «проверь».</div>
+    <div class="tip"><b>Квота кончилась быстрее, чем ждали.</b> Скорее всего, звали шестерых там, где хватало одного. Один вызов субагента это около 60 тысяч токенов.</div>
+  </div>
+  <div class="prompt"><div class="cp">просьба 18 · почини сервис</div><pre>Сервис [название, например: firecrawl, open-websearch, playwright] не работает. Разберись и почини.
+Порядок:
+1. посмотри, что именно с ним не так;
+2. почини сам, если это в твоих силах: настройки, флаги, переустановка;
+3. перезапустись и проверь, что он ожил. Если сам перезапуститься не можешь, так и скажи, я закрою и открою Codex;
+4. если починить не выходит, отключи его командой codex mcp remove, чтобы он не мешал остальным, и скажи мне об этом прямо.
+В конце объясни простыми словами: что было, что ты сделал, работает он сейчас или нет и что я из-за этого теряю.</pre></div>
+  <div class="prompt"><div class="cp">просьба 19 · разобраться, почему роль не зовётся</div><pre>Моя роль [имя] не зовётся. Разберись и скажи, в чём дело.
+
+Проверь по порядку и отчитайся по каждому пункту одной строкой:
+1. Файл существует и лежит в ~/.codex/agents/ (или в .codex/agents/ этого проекта).
+2. Расширение именно .toml, формат не сломан.
+3. Есть все три обязательных поля: name, description, developer_instructions.
+4. Имя не совпадает со встроенными: default, worker, explorer.
+5. Поле description объясняет, КОГДА эту роль звать, а не какая она хорошая.
+
+Что нашёл, почини. Что не смог, скажи прямо, что не смог, и не выдумывай обходной путь.</pre></div>
+  <div class="prompt"><div class="cp">просьба 20 · сначала скажи, кого зовёшь</div><pre>Прежде чем звать помощников, скажи мне тремя строками: сколько их будет, кого именно и на какие файлы каждый пойдёт. Дождись моего «давай». Если задачу можно закрыть одним помощником, зови одного и объясни, почему остальные не нужны.</pre></div>
+  <div class="prompt"><div class="cp">просьба 21 · дописать строку после промаха</div><pre>Помощник [имя роли] сегодня промахнулся: [что он пропустил или сделал не так].
+
+Роль заново не переписывай. Открой ~/.codex/agents/[имя].toml и допиши в developer_instructions один короткий пункт, который закрывает именно этот случай. Формулируй проверяемо: не «будь внимательнее», а конкретное условие, при котором роль обязана поставить замечание.
+
+Покажи мне строку «было» и строку «стало». Остальные пункты не трогай. Потом позови роль ещё раз на тот же файл и покажи, изменился ли ответ.</pre></div>
+</div>
+
+<div class="step">
+  <div class="step-h"><span class="step-n">9</span><span class="step-t">Ссылки</span></div>
+  <div class="links">
+    <a href="roli-7.html"><b>Библиотека ролей</b><span>три готовые роли: проверяющий по дизайну, редактор текста, разведчик</span><em>открыть</em></a>
+    <a href="prezentaciya-7.html"><b>Презентация</b><span>слайды занятия 7</span><em>открыть</em></a>
+    <a href="files/deep-research-SKILL.md" download><b>Файл скилла Дипресёрч</b><span>тот же, что в шаге 2</span><em>скачать</em></a>
+    <a href="https://materials.neovida.ai/novaya-realnost-4/dipresersh.html"><b>Дипресёрч, развёрнутая страница</b><span>видео сборки, разбор всех двенадцати сервисов, пятнадцать запросов для практики</span><em>открыть</em></a>
+    <a href="shpargalka-6.html"><b>Шпаргалка занятия 6</b><span>ссылка, скиллы, магазин skills.sh</span><em>открыть</em></a>
+    <a href="skilly-6.html"><b>Библиотека скиллов</b><span>двенадцать разобранных с прошлого занятия</span><em>открыть</em></a>
+  </div>
+</div>
+</div>
+<script>
+function bindCopy(el, getText){
+  el.addEventListener('click',()=>{
+    const t=getText();
+    const cp=el.querySelector('.cp');
+    const done=()=>{
+      el.classList.add('copied');
+      setTimeout(()=>el.classList.remove('copied'),1600);
+    };
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(done).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    });
+  });
+}
+document.querySelectorAll('.prompt').forEach(el=>bindCopy(el,()=>{const p=el.querySelector('pre');return p.innerText||p.textContent;}));
+document.querySelectorAll('.tf').forEach(el=>bindCopy(el,()=>(el.innerText||el.textContent).trim()));
+</script>
+</body>
+</html>
