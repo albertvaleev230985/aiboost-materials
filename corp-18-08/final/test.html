@@ -21,9 +21,9 @@
 </main>
 
 <script type="module">
-import { renderHeader, getMe, runTimer, triggerCelebration, certificateScreenHTML, saveLocal, loadLocal } from './app.js?v=20260915c';
-import { QUESTIONS, scoreFor, strengthReport } from './questions.js?v=20260915c';
-import { subscribeSession, pushAnswer, setUserScore, getUserAnswers, registerUser } from './firebase.js?v=20260915c';
+import { renderHeader, getMe, runTimer, triggerCelebration, certificateScreenHTML, saveLocal, loadLocal } from './app.js?v=20260915d';
+import { QUESTIONS, scoreFor, strengthReport } from './questions.js?v=20260915d';
+import { subscribeSession, pushAnswer, setUserScore, getUserAnswers, registerUser } from './firebase.js?v=20260915d';
 
 const me = getMe();
 renderHeader(me, { showLogout: true });
@@ -42,6 +42,7 @@ const content = document.getElementById('content');
 
 let session = { phase: 'lobby', currentQuestion: -1, timerStartedAt: null, timerDurationSec: 30, showCorrect: false };
 let myAnswers = loadLocal(me.slug, 'answers') || {};
+let freshAnswers = {}; // ответы, данные уже на этой загрузке страницы
 let stopTimer = null;
 
 // Страховка: если хост нажал «Сбросить» после регистрации, участник заново
@@ -50,12 +51,12 @@ registerUser(me.slug, me.name).catch((e) => console.warn('re-register failed', e
 
 // Ответы живут в Firebase: после перезагрузки страницы подтягиваем их, чтобы
 // не отвечать заново и чтобы итог показывал реальный балл
+// Источник правды: Firebase (то, что видит дашборд). Локальная копия нужна
+// только для мгновенной отрисовки до ответа сервера и на случай обрыва связи
 getUserAnswers(me.slug).then((remote) => {
-  if (remote && Object.keys(remote).length) {
-    myAnswers = { ...remote, ...myAnswers };
-    saveLocal(me.slug, 'answers', myAnswers);
-    render();
-  }
+  myAnswers = { ...(remote || {}), ...freshAnswers };
+  saveLocal(me.slug, 'answers', myAnswers);
+  render();
 }).catch((e) => console.warn('answers restore failed', e));
 
 // Сразу показываем initial state (lobby) — иначе при пустой Firebase-сессии
@@ -118,6 +119,7 @@ function render() {
     btn.addEventListener('click', () => {
       if (locked) return;
       myAnswers[qIdx] = i;
+      freshAnswers[qIdx] = i;
       saveLocal(me.slug, 'answers', myAnswers);
       pushAnswer(me.slug, qIdx, i).catch(e => console.warn('push answer failed', e));
       setUserScore(me.slug, scoreFor(myAnswers)).catch(()=>{});
