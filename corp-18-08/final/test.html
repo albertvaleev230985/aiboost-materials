@@ -21,9 +21,9 @@
 </main>
 
 <script type="module">
-import { renderHeader, getMe, runTimer, triggerCelebration, certificateScreenHTML, saveLocal, loadLocal } from './app.js?v=20260915d';
-import { QUESTIONS, scoreFor, strengthReport } from './questions.js?v=20260915d';
-import { subscribeSession, pushAnswer, setUserScore, getUserAnswers, registerUser } from './firebase.js?v=20260915d';
+import { renderHeader, getMe, runTimer, triggerCelebration, certificateScreenHTML, saveLocal, loadLocal } from './app.js?v=20260915e';
+import { QUESTIONS, scoreFor, strengthReport } from './questions.js?v=20260915e';
+import { subscribeSession, pushAnswer, setUserScore, getUserAnswers, registerUser } from './firebase.js?v=20260915e';
 
 const me = getMe();
 renderHeader(me, { showLogout: true });
@@ -67,6 +67,11 @@ render();
 subscribeSession((s) => {
   const prev = session;
   session = s || session;
+  if (prev.phase !== session.phase) {
+    // Смена фазы (например, хост сбросил сессию и заново запустил тест):
+    // напоминаем о себе в списке участников, ответы не трогаем
+    registerUser(me.slug, me.name).catch(() => {});
+  }
   if (prev.currentQuestion !== session.currentQuestion || prev.phase !== session.phase || prev.timerStartedAt !== session.timerStartedAt || prev.showCorrect !== session.showCorrect) {
     if (stopTimer) { stopTimer(); stopTimer = null; }
     render();
