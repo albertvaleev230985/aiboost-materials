@@ -3,7 +3,7 @@
 // Правила: test mode (продлены до ~10.06.2026)
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-import { getDatabase, ref, set, update, push, onValue, remove, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
+import { getDatabase, ref, get, set, update, push, onValue, remove, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyC7XyCFvIlwAWs-GMih04ok1uavVARP-Ck',
@@ -56,13 +56,24 @@ export function resetAll() {
 }
 
 // ===== Пользователи =====
-export function registerUser(slug, name) {
-  return set(ref(db, `${ROOT}/users/${slug}`), {
-    name,
-    joinedAt: serverTimestamp(),
-    answers: {},
-    score: 0,
-  });
+// update, а не set: повторный вход с тем же именем (новый браузер, слетел localStorage)
+// не стирает уже данные ответы и балл
+export async function registerUser(slug, name) {
+  const snap = await get(ref(db, `${ROOT}/users/${slug}`));
+  const patch = { name, lastSeenAt: serverTimestamp() };
+  if (!snap.exists()) { patch.joinedAt = serverTimestamp(); patch.score = 0; }
+  return update(ref(db, `${ROOT}/users/${slug}`), patch);
+}
+
+// Одноразовое чтение своих ответов: после перезагрузки страницы участник
+// видит уже данные ответы, а не пустой тест
+export async function getUserAnswers(slug) {
+  const snap = await get(ref(db, `${ROOT}/users/${slug}/answers`));
+  const v = snap.val();
+  if (!v) return {};
+  const out = {};
+  (Array.isArray(v) ? v.map((x, i) => [i, x]) : Object.entries(v)).forEach(([k, x]) => { if (x !== null && x !== undefined) out[Number(k)] = x; });
+  return out;
 }
 
 export function subscribeUsers(callback) {

@@ -21,9 +21,9 @@
 </main>
 
 <script type="module">
-import { renderHeader, getMe, runTimer, triggerCelebration, certificateScreenHTML } from './app.js?v=20260915';
-import { QUESTIONS, scoreFor, strengthReport } from './questions.js?v=20260915';
-import { subscribeSession, pushAnswer, setUserScore } from './firebase.js?v=20260915';
+import { renderHeader, getMe, runTimer, triggerCelebration, certificateScreenHTML, saveLocal, loadLocal } from './app.js?v=20260915b';
+import { QUESTIONS, scoreFor, strengthReport } from './questions.js?v=20260915b';
+import { subscribeSession, pushAnswer, setUserScore, getUserAnswers, registerUser } from './firebase.js?v=20260915b';
 
 const me = getMe();
 renderHeader(me, { showLogout: true });
@@ -41,8 +41,22 @@ if (!me) {
 const content = document.getElementById('content');
 
 let session = { phase: 'lobby', currentQuestion: -1, timerStartedAt: null, timerDurationSec: 30, showCorrect: false };
-let myAnswers = {};
+let myAnswers = loadLocal(me.slug, 'answers') || {};
 let stopTimer = null;
+
+// Страховка: если хост нажал «Сбросить» после регистрации, участник заново
+// появится в списке при следующем открытии теста (update, ответы не трогает)
+registerUser(me.slug, me.name).catch((e) => console.warn('re-register failed', e));
+
+// Ответы живут в Firebase: после перезагрузки страницы подтягиваем их, чтобы
+// не отвечать заново и чтобы итог показывал реальный балл
+getUserAnswers(me.slug).then((remote) => {
+  if (remote && Object.keys(remote).length) {
+    myAnswers = { ...remote, ...myAnswers };
+    saveLocal(me.slug, 'answers', myAnswers);
+    render();
+  }
+}).catch((e) => console.warn('answers restore failed', e));
 
 // Сразу показываем initial state (lobby) — иначе при пустой Firebase-сессии
 // первый callback приходит с теми же дефолтами, проверка на изменения возвращает false
@@ -104,6 +118,7 @@ function render() {
     btn.addEventListener('click', () => {
       if (locked) return;
       myAnswers[qIdx] = i;
+      saveLocal(me.slug, 'answers', myAnswers);
       pushAnswer(me.slug, qIdx, i).catch(e => console.warn('push answer failed', e));
       setUserScore(me.slug, scoreFor(myAnswers)).catch(()=>{});
       render();
@@ -171,12 +186,12 @@ function renderGoToCard() {
 
 function renderCertificate() {
   // Финал: экран «курс пройден» с салютом, под ним личный результат теста
-  renderFinalReport();
+  renderFinalReport(false);
   content.insertAdjacentHTML('afterbegin', `<div class="card outline-violet">${certificateScreenHTML(me.name)}</div>`);
   requestAnimationFrame(() => triggerCelebration());
 }
 
-function renderFinalReport() {
+function renderFinalReport(withThanks = true) {
   const ansArr = QUESTIONS.map((_, i) => myAnswers[i] ?? null);
   const report = strengthReport(ansArr);
   const s = report.score;
@@ -204,11 +219,12 @@ function renderFinalReport() {
         <div class="card-title">${report.toRefresh.length} ${plural(report.toRefresh.length, 'тема','темы','тем')}: в&nbsp;шпаргалках занятий (ссылки в&nbsp;чате)</div>
       </div>` : ''}
 
+    ${withThanks ? `
     <div class="card outline-violet mt-4">
       <div class="card-tag violet">Спасибо</div>
       <div class="card-title">Ты прошёл финал курса</div>
-      <div class="card-body">Все материалы курса остаются по тем же ссылкам в&nbsp;чате. Вечером придут три вопроса обратной связи, ответь на них, это две минуты.</div>
-    </div>
+      <div class="card-body">Все материалы курса остаются по тем же ссылкам в&nbsp;чате. Вечером придут четыре вопроса обратной связи, ответь на них, это две минуты.</div>
+    </div>` : ''}
   `;
 }
 

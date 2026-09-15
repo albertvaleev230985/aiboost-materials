@@ -21,8 +21,8 @@
 </main>
 
 <script type="module">
-import { renderHeader, getMe, setMe, isValidFullName, nameToSlug, triggerCelebration, certificateScreenHTML } from './app.js?v=20260915';
-import { registerUser, subscribeSession } from './firebase.js?v=20260915';
+import { renderHeader, getMe, setMe, isValidFullName, nameToSlug, triggerCelebration, certificateScreenHTML } from './app.js?v=20260915b';
+import { registerUser, subscribeSession } from './firebase.js?v=20260915b';
 
 const me = getMe();
 renderHeader(me);
@@ -36,6 +36,8 @@ if (me) {
 }
 
 function renderWelcome(me) {
+  // Страховка: после «Сбросить» на дашборде участник снова появится в списке
+  registerUser(me.slug, me.name).catch((e) => console.warn('re-register failed', e));
   content.innerHTML = `
     <div class="h1">Привет, ${escapeHtml(me.name)}!</div>
     <div class="lead">Это финал курса. Сегодня живой тест на 28 вопросов по всем семи занятиям, разбор ошибок и путь продукта в Codex.</div>
@@ -68,7 +70,7 @@ function renderWelcome(me) {
     // Альберт нажал «Финал», салют в блоке active-action.
     if (phase === 'certificate') {
       action.innerHTML = `<div class="card outline-violet"><div class="card-title">Курс пройден</div><div class="card-body">Восемь занятий позади. У тебя есть сайт в интернете, приложение и агент, который работает. Все шпаргалки и записи остаются по тем же ссылкам.</div></div>`;
-      status.innerHTML = `<div class="card-tag violet"><i class="ph ph-confetti"></i> Финал курса</div><div class="card-body">Спасибо за работу. Сегодня вечером в чат придут три вопроса обратной связи, ответь на них, это две минуты.</div>`;
+      status.innerHTML = `<div class="card-tag violet"><i class="ph ph-confetti"></i> Финал курса</div><div class="card-body">Спасибо за работу. Сегодня вечером в чат придут четыре вопроса обратной связи, ответь на них, это две минуты.</div>`;
       if (lastCelebratePhase !== 'certificate') {
         lastCelebratePhase = 'certificate';
         requestAnimationFrame(() => triggerCelebration());
@@ -98,7 +100,7 @@ function renderWelcome(me) {
           <div class="card-tag violet"><i class="ph ph-check-circle"></i> Урок завершён</div>
           <div class="card-title">Спасибо!</div>
           <div class="card-body">
-            Все материалы курса остаются по тем же ссылкам. Вечером в&nbsp;чат придут три вопроса обратной связи.
+            Все материалы курса остаются по тем же ссылкам. Вечером в&nbsp;чат придут четыре вопроса обратной связи.
           </div>
         </div>
       `;
