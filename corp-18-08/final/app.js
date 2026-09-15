@@ -118,7 +118,7 @@ function __ensureAudio() {
   try {
     if (!__audioCtx) __audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (__audioCtx.state === 'suspended') __audioCtx.resume();
-  } catch (e) { /* ignore — пользователь не кликал, аудио заблокировано */ }
+  } catch (e) { /* ignore, пользователь не кликал, аудио заблокировано */ }
 }
 
 function __makeNoiseBuffer(ctx, durationSec) {
@@ -213,28 +213,20 @@ function __playFirework(opts) {
   }, delayMs);
 }
 
-// HTML-блок поздравления с большой кнопкой «Скачать сертификат» — переиспользуется во всех ролях участника.
-export function certificateScreenHTML(name) {
+export function certificateScreenHTML(name, report) {
   const safeName = (name || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  // Локально структура: веб-апп/ <-> сертификаты/ (Cyrillic).
-  // На materials.neovida.ai: lesson-8/ <-> lesson-8/certificate/ (English, flat).
-  const isLocal = location.pathname.includes('веб-апп') || location.pathname.includes('%D0%B2%D0%B5%D0%B1');
-  const certBase = isLocal ? '../сертификаты/live.html' : 'certificate/live.html';
-  const certUrl = `${certBase}?name=${encodeURIComponent(name || '')}`;
+  const score = report ? `<div class="cert-celebrate-body"><strong>Твой результат: ${report.score} из ${report.total}.</strong> Темы, которые стоит освежить, лежат ниже, разбор к каждой прямо здесь.</div>` : '';
   return `
     <div class="cert-celebrate">
-      <div class="cert-celebrate-icon"><i class="ph ph-graduation-cap"></i></div>
-      <div class="cert-celebrate-kicker">Поздравляем, выпускник!</div>
+      <div class="cert-celebrate-icon"><i class="ph ph-confetti"></i></div>
+      <div class="cert-celebrate-kicker">Курс пройден</div>
       <div class="cert-celebrate-name">${safeName}</div>
       <div class="cert-celebrate-body">
-        Ты&nbsp;прошёл(а) восемь занятий курса <strong>«ИИ. Новая реальность»</strong> и&nbsp;получил(а) персональный сертификат.
-        Скачай его&nbsp;— и&nbsp;добро пожаловать в&nbsp;новую реальность <i class="ph ph-rocket-launch icon-coral"></i>
+        Восемь занятий позади. У&nbsp;тебя есть сайт в&nbsp;интернете, приложение и&nbsp;агент, который работает. Все шпаргалки и&nbsp;записи остаются по&nbsp;тем&nbsp;же ссылкам в&nbsp;чате.
       </div>
-      <a href="${certUrl}" target="_blank" rel="noopener" class="btn btn-primary btn-big cert-celebrate-btn">
-        <i class="ph ph-graduation-cap"></i> Открыть мой сертификат
-      </a>
+      ${score}
       <div class="cert-celebrate-foot">
-        Откроется в&nbsp;новой вкладке. Там кнопка <strong>«Скачать PDF»</strong>&nbsp;— один клик.
+        Сегодня вечером в&nbsp;чат придут четыре вопроса обратной связи. Ответь на них, это две минуты.
       </div>
     </div>
   `;
