@@ -17,8 +17,13 @@ window.addEventListener('hashchange', openHash);
 document.querySelectorAll('.copy').forEach(button => {
   button.onclick = async () => {
     const card = button.closest('.instruction'), text = card.querySelector('pre'), status = card.querySelector('.copy-status');
-    try { await navigator.clipboard.writeText(text.textContent); status.textContent = 'Инструкция скопирована.'; }
-    catch { card.querySelectorAll('details').forEach(detail => detail.open = true); const range = document.createRange(); range.selectNodeContents(text); const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range); status.textContent = 'Текст выделен. Скопируй его вручную: Ctrl+C / ⌘C или меню выделения на телефоне.'; }
+    card.querySelectorAll('details').forEach(detail => detail.open = true);
+    try { await navigator.clipboard.writeText(text.textContent); status.textContent = 'Инструкция скопирована.'; return; } catch {}
+    const range = document.createRange(); range.selectNodeContents(text);
+    const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+    let copied = false;
+    try { copied = document.execCommand('copy'); } catch {}
+    status.textContent = copied ? 'Инструкция скопирована.' : 'Текст выделен. Скопируй его вручную: Ctrl+C / \u2318C или меню выделения на телефоне.';
   };
 });
 filter(); openHash();
