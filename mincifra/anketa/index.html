@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Мастер-класс по ИИ для команды МФЦ · Анкета</title>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" async onload="try{window.lucide&&lucide.createIcons&&lucide.createIcons()}catch(e){}"></script>
+<style>
+  :root {
+    --coral: #E07461;
+    --coral-light: #F0A090;
+    --coral-dark: #C55A48;
+    --purple: #8B6EB5;
+    --bg: #08080D;
+    --surface: rgba(255,255,255,0.03);
+    --surface-hover: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --text: #E8E8ED;
+    --text-secondary: #8888A0;
+    --text-dim: #44445A;
+    --font: -apple-system, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; overflow-x: hidden; }
+  .lucide { flex-shrink: 0; }
+
+  .splash { position: fixed; inset: 0; z-index: 1000; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; transition: opacity 0.6s, transform 0.6s; }
+  .splash.hide { opacity: 0; transform: scale(1.05); pointer-events: none; }
+  .splash-logo { width: 72px; height: 72px; border-radius: 20px; background: linear-gradient(135deg, var(--coral), var(--coral-dark)); display: flex; align-items: center; justify-content: center; animation: splashPulse 1.5s ease infinite; font-size: 36px; font-weight: 900; color: #fff; letter-spacing: -2px; }
+  @keyframes splashPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(224,116,97,0.4); } 50% { box-shadow: 0 0 0 20px rgba(224,116,97,0); } }
+  .splash-text { font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--coral); opacity: 0; animation: fadeUp 0.6s 0.3s forwards; }
+  .splash-bar { width: 120px; height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; opacity: 0; animation: fadeUp 0.4s 0.5s forwards; }
+  .splash-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--coral), var(--coral-light)); border-radius: 2px; animation: barFill 1.2s 0.4s cubic-bezier(0.4,0,0.2,1) forwards; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes barFill { to { width: 100%; } }
+
+  .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--coral), var(--coral-light), var(--purple)); background-size: 200% 100%; animation: shimmer 3s ease infinite; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); z-index: 100; }
+  @keyframes shimmer { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+  .main { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; padding: 0 20px; opacity: 0; transition: opacity 0.5s 0.2s; }
+  .main.visible { opacity: 1; }
+
+  .hero { text-align: center; padding: 44px 0 24px; animation: heroIn 0.8s cubic-bezier(0.16,1,0.3,1); }
+  @keyframes heroIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(224,116,97,0.08); border: 1px solid rgba(224,116,97,0.15); border-radius: 100px; padding: 6px 18px; font-size: 12px; font-weight: 700; color: var(--coral); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 20px; }
+  .hero h1 { font-size: 32px; font-weight: 900; color: #fff; margin-bottom: 10px; letter-spacing: -0.5px; line-height: 1.15; }
+  .hero h1 span { background: linear-gradient(135deg, var(--coral), var(--coral-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero-subtitle { font-size: 15px; color: var(--text-secondary); max-width: 440px; margin: 0 auto; }
+  .hero-meta { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 7px 14px; border-radius: 100px; background: var(--surface); border: 1px solid var(--border); font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+  .hero-meta .lucide { width: 14px; height: 14px; color: var(--coral); }
+
+  .step-indicator { display: flex; justify-content: center; align-items: center; margin: 8px 0 32px; }
+  .step-dot { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border); color: var(--text-dim); background: var(--bg); transition: all 0.4s cubic-bezier(0.4,0,0.2,1); position: relative; z-index: 2; flex-shrink: 0; font-weight: 800; font-size: 14px; }
+  .step-dot.active { border-color: var(--coral); color: #fff; background: var(--coral); box-shadow: 0 0 20px rgba(224,116,97,0.3); }
+  .step-dot.done { border-color: var(--coral); color: #fff; background: var(--coral); }
+  .step-line { width: 44px; height: 2px; background: var(--border); transition: background 0.4s; flex-shrink: 0; }
+  .step-line.done { background: var(--coral); }
+
+  .step-counter { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(15,15,25,0.85); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 100px; padding: 8px 20px; font-size: 13px; font-weight: 600; color: var(--text-secondary); z-index: 50; display: flex; align-items: center; gap: 8px; transition: opacity 0.3s; white-space: nowrap; }
+  .step-counter .current { color: var(--coral); font-weight: 800; }
+  .step-counter.typing { opacity: 0; pointer-events: none; }
+
+  .toast { position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%) translateY(10px); background: rgba(224,116,97,0.95); color: #fff; border-radius: 12px; padding: 10px 18px; font-size: 14px; font-weight: 600; z-index: 60; opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; max-width: calc(100vw - 40px); text-align: center; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .step { display: none; }
+  .step.active { display: block; animation: stepIn 0.45s cubic-bezier(0.16,1,0.3,1); }
+  .step.leaving { animation: stepOut 0.25s cubic-bezier(0.4,0,1,1) forwards; }
+  @keyframes stepIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes stepOut { from { opacity: 1; } to { opacity: 0; transform: translateX(-40px); } }
+  .step-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--coral); margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+  .step-title::after { content: ''; flex: 1; height: 1px; background: rgba(224,116,97,0.15); }
+
+  .field { margin-bottom: 26px; }
+  .field label { display: block; font-size: 15px; font-weight: 600; color: #D0D0DD; margin-bottom: 8px; line-height: 1.4; }
+  .field label .req { color: var(--coral); }
+  .field .hint { font-size: 13px; color: #7A7A92; margin: -4px 0 10px; }
+  input[type="text"], textarea { width: 100%; padding: 14px 16px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; color: var(--text); font-size: 15px; font-family: inherit; transition: all 0.25s; outline: none; }
+  textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
+  input[type="text"]:focus, textarea:focus { border-color: rgba(224,116,97,0.5); background: var(--surface-hover); box-shadow: 0 0 0 4px rgba(224,116,97,0.08); }
+  input::placeholder, textarea::placeholder { color: var(--text-dim); }
+
+  .radio-group, .checkbox-group { display: flex; flex-direction: column; gap: 8px; border-radius: 16px; transition: box-shadow 0.3s; }
+  .radio-group.error, .checkbox-group.error { box-shadow: 0 0 0 2px rgba(224,116,97,0.35); }
+  .option { display: flex; align-items: center; gap: 12px; padding: 13px 16px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.25s cubic-bezier(0.4,0,0.2,1); user-select: none; -webkit-user-select: none; position: relative; overflow: hidden; }
+  .option:hover { background: var(--surface-hover); border-color: var(--border-hover); transform: translateY(-1px); }
+  .option:active { transform: translateY(0) scale(0.99); }
+  .option.selected { background: rgba(224,116,97,0.06); border-color: rgba(224,116,97,0.3); box-shadow: 0 0 20px rgba(224,116,97,0.06); }
+  .radio-dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.15); flex-shrink: 0; transition: all 0.25s; display: flex; align-items: center; justify-content: center; }
+  .selected .radio-dot { border-color: var(--coral); }
+  .selected .radio-dot::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--coral); animation: dotPopIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+  .check-box { width: 20px; height: 20px; border-radius: 7px; border: 2px solid rgba(255,255,255,0.15); flex-shrink: 0; transition: all 0.25s; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; color: transparent; }
+  .selected .check-box { border-color: var(--coral); background: var(--coral); color: #fff; animation: boxPop 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes dotPopIn { from { transform: scale(0); } to { transform: scale(1); } }
+  @keyframes boxPop { 50% { transform: scale(1.15); } }
+  .option-text { font-size: 14px; color: #B0B0C0; transition: color 0.2s; line-height: 1.4; }
+  .selected .option-text { color: var(--text); }
+
+  .nav-row { display: flex; gap: 12px; margin-top: 32px; padding-bottom: 90px; }
+  .btn { flex: 1; padding: 16px; border-radius: 14px; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); border: none; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-next { background: linear-gradient(135deg, var(--coral), var(--coral-dark)); color: #fff; }
+  .btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(224,116,97,0.35); }
+  .btn-next:disabled { opacity: 0.5; cursor: wait; transform: none !important; box-shadow: none !important; }
+  .btn-back { background: var(--surface); border: 1.5px solid var(--border); color: var(--text-secondary); flex: 0 0 auto; width: 52px; padding: 16px 0; }
+  .btn-back:hover { background: var(--surface-hover); color: var(--text); }
+
+  .success { display: none; text-align: center; padding: 40px 0 80px; }
+  .success.visible { display: block; animation: successIn 0.6s cubic-bezier(0.16,1,0.3,1); }
+  @keyframes successIn { from { opacity: 0; transform: scale(0.95) translateY(20px); } to { opacity: 1; transform: none; } }
+  .profile-card { background: linear-gradient(135deg, rgba(224,116,97,0.06), rgba(139,110,181,0.04)); border: 1px solid rgba(224,116,97,0.12); border-radius: 20px; padding: 32px 24px; margin-bottom: 24px; text-align: left; }
+  .profile-name { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+  .profile-role { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; }
+  .profile-insight { padding: 16px; background: rgba(255,255,255,0.02); border-radius: 12px; margin-bottom: 16px; border-left: 3px solid var(--coral); }
+  .profile-insight p { font-size: 14px; line-height: 1.6; color: #C0C0D0; }
+  .profile-powers-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--coral); margin: 20px 0 12px; }
+  .program-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .program-item:last-child { border: none; }
+  .program-num { width: 28px; height: 28px; border-radius: 8px; background: rgba(224,116,97,0.1); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: var(--coral); flex-shrink: 0; }
+  .program-text { font-size: 14px; color: #C0C0D0; line-height: 1.5; padding-top: 3px; }
+  .program-text strong { color: var(--text); font-weight: 600; }
+  .success-badge { display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; font-size: 14px; color: var(--text); margin-bottom: 12px; }
+  .success-note { font-size: 14px; color: var(--text-secondary); margin-top: 12px; line-height: 1.6; }
+
+  .footer { text-align: center; padding: 24px; font-size: 12px; color: var(--text-dim); display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .footer a { color: var(--coral); text-decoration: none; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25%,75% { transform: translateX(-6px); } 50% { transform: translateX(6px); } }
+  .shake { animation: shake 0.4s; }
+
+  @media (max-width: 480px) {
+    .hero { padding: 32px 0 20px; }
+    .hero h1 { font-size: 27px; }
+    .step-dot { width: 36px; height: 36px; }
+    .step-line { width: 28px; }
+    .profile-card { padding: 24px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="splash" id="splash">
+  <div class="splash-logo">N</div>
+  <div class="splash-text">neovida</div>
+  <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+</div>
+
+<div class="progress-bar" id="progress" style="width: 0%"></div>
+
+<div class="main" id="mainContent">
+
+  <div class="hero" id="heroBlock">
+    <div class="hero-badge"><span style="font-weight:900;font-size:14px;letter-spacing:-1px">N</span> neovida</div>
+    <h1>Мастер-класс по ИИ <span>для команды МФЦ</span></h1>
+    <p class="hero-subtitle">Три коротких шага, около пяти минут. По ответам соберём практику под ваши реальные задачи.</p>
+    <div class="hero-meta"><i data-lucide="clock"></i> Три часа практики с Альбертом Валеевым</div>
+  </div>
+
+  <div class="step-indicator" id="stepIndicator">
+    <div class="step-dot active" data-step="0">1</div>
+    <div class="step-line" data-line="0"></div>
+    <div class="step-dot" data-step="1">2</div>
+    <div class="step-line" data-line="1"></div>
+    <div class="step-dot" data-step="2">3</div>
+  </div>
+
+  <!-- Шаг 1. О вас -->
+  <div class="step active" data-step="0">
+    <div class="step-title">О вас</div>
+    <div class="field">
+      <label>Как вас зовут <span class="req">*</span></label>
+      <div class="hint">Имя и фамилия</div>
+      <input type="text" id="f_name" placeholder="Например: Гульнара Ахметова" autocomplete="name">
+    </div>
+    <div class="field">
+      <label>Ваша должность <span class="req">*</span></label>
+      <input type="text" id="f_position" placeholder="Например: специалист операционного зала, наставник, методист отдела обучения">
+    </div>
+    <div class="field">
+      <label>Чем в основном занимаетесь в МФЦ <span class="req">*</span></label>
+      <div class="radio-group" data-field="mfc_role">
+        <div class="option" data-value="Приём заявителей в окне"><div class="radio-dot"></div><span class="option-text">Приём заявителей в окне</span></div>
+        <div class="option" data-value="Обучение и наставничество"><div class="radio-dot"></div><span class="option-text">Обучение новичков и наставничество</span></div>
+        <div class="option" data-value="Методология и инструкции"><div class="radio-dot"></div><span class="option-text">Методология, инструкции, взаимодействие с ведомствами</span></div>
+        <div class="option" data-value="Контакт-центр и консультации"><div class="radio-dot"></div><span class="option-text">Контакт-центр и консультации</span></div>
+        <div class="option" data-value="Контроль качества"><div class="radio-dot"></div><span class="option-text">Контроль качества обслуживания</span></div>
+        <div class="option" data-value="Руководство офисом или отделом"><div class="radio-dot"></div><span class="option-text">Руководство офисом или отделом</span></div>
+        <div class="option" data-value="Другое"><div class="radio-dot"></div><span class="option-text">Другое</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Сколько лет работаете в МФЦ <span class="req">*</span></label>
+      <div class="radio-group" data-field="experience">
+        <div class="option" data-value="До года"><div class="radio-dot"></div><span class="option-text">До года</span></div>
+        <div class="option" data-value="1–3 года"><div class="radio-dot"></div><span class="option-text">1–3 года</span></div>
+        <div class="option" data-value="3–7 лет"><div class="radio-dot"></div><span class="option-text">3–7 лет</span></div>
+        <div class="option" data-value="Больше 7 лет"><div class="radio-dot"></div><span class="option-text">Больше 7 лет</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Офис или отдел</label>
+      <div class="hint">Необязательно</div>
+      <input type="text" id="f_office" placeholder="Например: офис на Новомостовой, отдел обучения">
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-next" onclick="nextStep()">Начнём <i data-lucide="arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- Шаг 2. Рабочие задачи -->
+  <div class="step" data-step="1">
+    <div class="step-title">Рабочие задачи</div>
+    <div class="field">
+      <label>Какие услуги ведёте или сопровождаете чаще всего <span class="req">*</span></label>
+      <div class="hint">Своими словами, через запятую</div>
+      <textarea id="f_services" rows="3" placeholder="Например: регистрация прав Росреестра, паспорта, пособия СФР, водительские удостоверения"></textarea>
+    </div>
+    <div class="field">
+      <label>Что съедает больше всего времени в работе <span class="req">*</span></label>
+      <div class="hint">Отметьте всё, что подходит</div>
+      <div class="checkbox-group" data-field="time_eaters">
+        <div class="option" data-value="Найти нужный пункт в инструкции или регламенте"><div class="check-box">✓</div><span class="option-text">Найти нужный пункт в инструкции или регламенте</span></div>
+        <div class="option" data-value="Объяснить заявителю перечень документов"><div class="check-box">✓</div><span class="option-text">Объяснить заявителю, какие документы нужны и почему</span></div>
+        <div class="option" data-value="Проверить пакет документов"><div class="check-box">✓</div><span class="option-text">Проверить пакет документов на полноту и ошибки</span></div>
+        <div class="option" data-value="Посчитать пошлину и льготы"><div class="check-box">✓</div><span class="option-text">Посчитать госпошлину и учесть льготы</span></div>
+        <div class="option" data-value="Ответить на вопросы коллег и новичков"><div class="check-box">✓</div><span class="option-text">Ответить на вопросы коллег и новичков</span></div>
+        <div class="option" data-value="Письма, ответы на обращения, служебные записки"><div class="check-box">✓</div><span class="option-text">Письма, ответы на обращения, служебные записки</span></div>
+        <div class="option" data-value="Отчёты и таблицы"><div class="check-box">✓</div><span class="option-text">Отчёты и таблицы</span></div>
+        <div class="option" data-value="Обучение новичков, тесты и инструкции"><div class="check-box">✓</div><span class="option-text">Обучение новичков, подготовка тестов и инструкций</span></div>
+        <div class="option" data-value="Отказы и возвраты"><div class="check-box">✓</div><span class="option-text">Работа с отказами ведомств и возвратами</span></div>
+        <div class="option" data-value="Сложные разговоры с заявителями"><div class="check-box">✓</div><span class="option-text">Сложные разговоры с заявителями</span></div>
+        <div class="option" data-value="Другое"><div class="check-box">✓</div><span class="option-text">Другое</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Три вопроса, на которые вам чаще всего приходится искать ответ <span class="req">*</span></label>
+      <div class="hint">От заявителей, коллег или новичков. Чем конкретнее, тем полезнее будет практика</div>
+      <textarea id="f_hard_questions" rows="4" placeholder="Например: какие документы нужны при продаже доли в квартире; как считать пошлину при наследстве на четверых; что делать, если заявитель иностранный гражданин"></textarea>
+    </div>
+    <div class="field">
+      <label>Где сейчас ищете ответ, когда не уверены</label>
+      <div class="hint">Можно несколько</div>
+      <div class="checkbox-group" data-field="where_answers">
+        <div class="option" data-value="Инструкция в общей папке"><div class="check-box">✓</div><span class="option-text">Инструкция в общей папке</span></div>
+        <div class="option" data-value="Коллега или наставник"><div class="check-box">✓</div><span class="option-text">Спрашиваю коллегу или наставника</span></div>
+        <div class="option" data-value="Отдел обучения"><div class="check-box">✓</div><span class="option-text">Звоню или пишу в отдел обучения</span></div>
+        <div class="option" data-value="Сайт ведомства или Госуслуги"><div class="check-box">✓</div><span class="option-text">Сайт ведомства, Госуслуги, КонсультантПлюс</span></div>
+        <div class="option" data-value="Субботние вопросы-ответы"><div class="check-box">✓</div><span class="option-text">База субботних вопросов и ответов</span></div>
+        <div class="option" data-value="Помню сам(а)"><div class="check-box">✓</div><span class="option-text">Обычно помню сам(а)</span></div>
+        <div class="option" data-value="Другое"><div class="check-box">✓</div><span class="option-text">Другое</span></div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-back" onclick="prevStep()"><i data-lucide="arrow-left"></i></button>
+      <button class="btn btn-next" onclick="nextStep()">Далее <i data-lucide="arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- Шаг 3. Опыт с ИИ и мастер-класс -->
+  <div class="step" data-step="2">
+    <div class="step-title">Опыт с ИИ и мастер-класс</div>
+    <div class="field">
+      <label>Насколько вы знакомы с нейросетями <span class="req">*</span></label>
+      <div class="hint">Выберите то, что ближе всего к правде сегодня</div>
+      <div class="radio-group" data-field="ai_level">
+        <div class="option" data-value="Ни разу не пробовал(а)"><div class="radio-dot"></div><span class="option-text">Ни разу не пробовал(а)</span></div>
+        <div class="option" data-value="Пробовал(а) пару раз"><div class="radio-dot"></div><span class="option-text">Пробовал(а) пару раз, задавал(а) простые вопросы</span></div>
+        <div class="option" data-value="Пользуюсь иногда"><div class="radio-dot"></div><span class="option-text">Пользуюсь иногда: тексты, ответы на вопросы, идеи</span></div>
+        <div class="option" data-value="Пользуюсь регулярно"><div class="radio-dot"></div><span class="option-text">Пользуюсь регулярно, есть свои приёмы</span></div>
+        <div class="option" data-value="Есть свои настроенные помощники"><div class="radio-dot"></div><span class="option-text">Есть свои настроенные помощники под задачи</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Какими нейросетями пользовались</label>
+      <div class="hint">Можно несколько</div>
+      <div class="checkbox-group" data-field="ai_tools">
+        <div class="option" data-value="ChatGPT"><div class="check-box">✓</div><span class="option-text">ChatGPT</span></div>
+        <div class="option" data-value="GigaChat"><div class="check-box">✓</div><span class="option-text">GigaChat</span></div>
+        <div class="option" data-value="Алиса"><div class="check-box">✓</div><span class="option-text">Алиса</span></div>
+        <div class="option" data-value="DeepSeek"><div class="check-box">✓</div><span class="option-text">DeepSeek</span></div>
+        <div class="option" data-value="Qwen"><div class="check-box">✓</div><span class="option-text">Qwen</span></div>
+        <div class="option" data-value="Другое"><div class="check-box">✓</div><span class="option-text">Другое</span></div>
+        <div class="option" data-value="Пока ничем"><div class="check-box">✓</div><span class="option-text">Пока ничем</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Для чего уже применяли нейросети</label>
+      <div class="hint">Можно несколько, рабочее и личное</div>
+      <div class="checkbox-group" data-field="ai_usecases">
+        <div class="option" data-value="Тексты и письма"><div class="check-box">✓</div><span class="option-text">Тексты и письма</span></div>
+        <div class="option" data-value="Ответы на вопросы и поиск"><div class="check-box">✓</div><span class="option-text">Ответы на вопросы и поиск информации</span></div>
+        <div class="option" data-value="Пересказ документов"><div class="check-box">✓</div><span class="option-text">Пересказ и разбор документов</span></div>
+        <div class="option" data-value="Таблицы и расчёты"><div class="check-box">✓</div><span class="option-text">Таблицы и расчёты</span></div>
+        <div class="option" data-value="Личные вопросы"><div class="check-box">✓</div><span class="option-text">Личные вопросы: учёба, здоровье, путешествия, дети</span></div>
+        <div class="option" data-value="Пока ни для чего"><div class="check-box">✓</div><span class="option-text">Пока ни для чего</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Одна рабочая задача, которую хотели бы решить с помощью ИИ <span class="req">*</span></label>
+      <div class="hint">Одним предложением. Её и попробуем разобрать на мастер-классе</div>
+      <textarea id="f_specific_task" rows="3" placeholder="Например: быстро находить в инструкции, какие документы нужны в нестандартной ситуации"></textarea>
+    </div>
+    <div class="field">
+      <label>Будет ли у вас ноутбук на мастер-классе <span class="req">*</span></label>
+      <div class="radio-group" data-field="device">
+        <div class="option" data-value="Рабочий ноутбук"><div class="radio-dot"></div><span class="option-text">Да, рабочий ноутбук</span></div>
+        <div class="option" data-value="Личный ноутбук"><div class="radio-dot"></div><span class="option-text">Да, личный ноутбук</span></div>
+        <div class="option" data-value="Только телефон"><div class="radio-dot"></div><span class="option-text">Ноутбука не будет, только телефон</span></div>
+        <div class="option" data-value="Пока не знаю"><div class="radio-dot"></div><span class="option-text">Пока не знаю</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Qwen: зарегистрировались ли на chat.qwen.ai <span class="req">*</span></label>
+      <div class="hint">На мастер-классе работаем в нём. Регистрация через Google-аккаунт или по электронной почте, VPN не нужен</div>
+      <div class="radio-group" data-field="qwen">
+        <div class="option" data-value="Да, вошёл(ла)"><div class="radio-dot"></div><span class="option-text">Да, зарегистрировался(ась) и вошёл(ла)</span></div>
+        <div class="option" data-value="Пока нет, сделаю до встречи"><div class="radio-dot"></div><span class="option-text">Пока нет, сделаю до встречи</span></div>
+        <div class="option" data-value="Не получается, нужна помощь"><div class="radio-dot"></div><span class="option-text">Не получается, нужна помощь</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Что хотите унести с мастер-класса</label>
+      <div class="hint">Необязательно, одна-две фразы</div>
+      <textarea id="f_expectations" rows="3" placeholder="Например: понять, как ИИ поможет в приёме, и уйти с готовыми запросами под мои задачи"></textarea>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-back" onclick="prevStep()"><i data-lucide="arrow-left"></i></button>
+      <button class="btn btn-next" id="submitBtn" onclick="submitForm()"><i data-lucide="send"></i> Отправить анкету</button>
+    </div>
+  </div>
+
+  <div class="success" id="profileScreen">
+    <div id="profileContent"></div>
+  </div>
+
+</div>
+
+<div class="step-counter" id="stepCounter">Шаг <span class="current" id="stepNum">1</span> из 3</div>
+<div class="toast" id="toast"></div>
+
+<div class="footer"><span style="font-weight:900;letter-spacing:-1px;color:var(--coral)">N</span> <a href="https://neovida.ai">neovida.ai</a> · 2026</div>
+
+<script>
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbybNxodSevTQSglBBlaVjYvirKwrpW35wNM9HibQ0qh03idmXnKYedlETx65ajw7yRE/exec';
+  const COURSE_META = {
+    course_id: 'mfc-rb',
+    cohort_id: 'mfc-rb-2026-10',
+    source: 'aiboost-materials/mincifra/anketa/index.html'
+  };
+  const TOTAL_STEPS = 3;
+  const STORAGE_KEY = 'nv-anketa-mfc-rb-2026-10';
+
+  const emptyState = () => ({
+    name:'', position:'', mfc_role:'', experience:'', office:'',
+    services:'', time_eaters:[], hard_questions:'', where_answers:[],
+    ai_level:'', ai_tools:[], ai_usecases:[], specific_task:'', device:'', qwen:'', expectations:''
+  });
+  let state = emptyState();
+  let currentStep = 0;
+  let responseId = '';
+
+  function makeResponseId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'r-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  }
+
+  const textFields = {
+    f_name:'name', f_position:'position', f_office:'office',
+    f_services:'services', f_hard_questions:'hard_questions',
+    f_specific_task:'specific_task', f_expectations:'expectations'
+  };
+
+  // Иконки приходят из интернета, у части людей этот адрес закрыт. Анкета работает и без них.
+  function drawIcons() {
+    try { if (window.lucide && lucide.createIcons) lucide.createIcons(); } catch (e) {}
+  }
+  drawIcons();
+
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('hide');
+    document.getElementById('mainContent').classList.add('visible');
+  }, 1700);
+
+  document.querySelectorAll('.radio-group').forEach(g => {
+    const f = g.dataset.field;
+    g.querySelectorAll('.option').forEach(o => {
+      o.addEventListener('click', () => {
+        g.querySelectorAll('.option').forEach(x => x.classList.remove('selected'));
+        o.classList.add('selected');
+        state[f] = o.dataset.value;
+        g.classList.remove('error');
+        saveDraft();
+      });
+    });
+  });
+
+  document.querySelectorAll('.checkbox-group').forEach(g => {
+    const f = g.dataset.field;
+    g.querySelectorAll('.option').forEach(o => {
+      o.addEventListener('click', () => {
+        o.classList.toggle('selected');
+        state[f] = Array.from(g.querySelectorAll('.option.selected')).map(x => x.dataset.value);
+        g.classList.remove('error');
+        saveDraft();
+      });
+    });
+  });
+
+  Object.keys(textFields).forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', e => { state[textFields[id]] = e.target.value; saveDraft(); });
+  });
+
+  // На телефоне клавиатура поднимает поле под плавающий счётчик, прячем его на время ввода.
+  document.querySelectorAll('input, textarea').forEach(el => {
+    el.addEventListener('focus', () => document.getElementById('stepCounter').classList.add('typing'));
+    el.addEventListener('blur', () => document.getElementById('stepCounter').classList.remove('typing'));
+  });
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+  function flagGroup(field, msg) {
+    const g = document.querySelector(`[data-field="${field}"]`);
+    if (g) { g.classList.add('error'); g.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    showToast(msg);
+    return false;
+  }
+  function shakeField(id, msg) {
+    const el = document.getElementById(id);
+    el.classList.add('shake'); el.style.borderColor = 'var(--coral)';
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.focus({ preventScroll: true });
+    setTimeout(() => { el.classList.remove('shake'); el.style.borderColor = ''; }, 600);
+    if (msg) showToast(msg);
+    return false;
+  }
+
+  function validateStep(s) {
+    if (s === 0) {
+      if (!state.name.trim()) return shakeField('f_name', 'Напишите, как вас зовут');
+      if (!state.position.trim()) return shakeField('f_position', 'Напишите вашу должность');
+      if (!state.mfc_role) return flagGroup('mfc_role', 'Выберите, чем занимаетесь в МФЦ');
+      if (!state.experience) return flagGroup('experience', 'Укажите стаж в МФЦ');
+    }
+    if (s === 1) {
+      if (!state.services.trim()) return shakeField('f_services', 'Напишите, какие услуги ведёте чаще всего');
+      if (!state.time_eaters.length) return flagGroup('time_eaters', 'Отметьте хотя бы одно, что съедает время');
+      if (!state.hard_questions.trim()) return shakeField('f_hard_questions', 'Напишите вопросы, на которые ищете ответ');
+    }
+    if (s === 2) {
+      if (!state.ai_level) return flagGroup('ai_level', 'Выберите, насколько знакомы с нейросетями');
+      if (!state.specific_task.trim()) return shakeField('f_specific_task', 'Напишите одну задачу для мастер-класса');
+      if (!state.device) return flagGroup('device', 'Укажите, будет ли ноутбук');
+      if (!state.qwen) return flagGroup('qwen', 'Укажите, как дела с Qwen');
+    }
+    return true;
+  }
+
+  // Перед отправкой проверяем ВСЕ шаги: человек мог вернуться к черновику с пустым полем.
+  function validateAllSteps() {
+    for (let s = 0; s < TOTAL_STEPS; s++) {
+      if (!validateStep(s)) { if (currentStep !== s) goToStep(s); return false; }
+    }
+    return true;
+  }
+
+  function goToStep(n, instant) {
+    const old = document.querySelector('.step.active');
+    const next = document.querySelector(`.step[data-step="${n}"]`);
+    const apply = () => {
+      if (old) old.classList.remove('leaving');
+      next.classList.add('active');
+      currentStep = n; updateIndicator(); updateProgress();
+      document.getElementById('stepNum').textContent = n + 1;
+      window.scrollTo({ top: 0, behavior: instant ? 'auto' : 'smooth' });
+      saveDraft();
+    };
+    if (instant || !old) { if (old) old.classList.remove('active'); apply(); return; }
+    old.classList.remove('active'); old.classList.add('leaving');
+    setTimeout(apply, 250);
+  }
+  function nextStep() { if (validateStep(currentStep) && currentStep < TOTAL_STEPS - 1) goToStep(currentStep + 1); }
+  function prevStep() { if (currentStep > 0) goToStep(currentStep - 1); }
+  function updateIndicator() {
+    document.querySelectorAll('.step-dot').forEach(d => {
+      const s = parseInt(d.dataset.step);
+      d.classList.remove('active', 'done');
+      if (s < currentStep) d.classList.add('done'); else if (s === currentStep) d.classList.add('active');
+    });
+    document.querySelectorAll('.step-line').forEach(l => l.classList.toggle('done', parseInt(l.dataset.line) < currentStep));
+  }
+  function updateProgress() {
+    document.getElementById('progress').style.width = Math.round(((currentStep + 1) / TOTAL_STEPS) * 100) + '%';
+  }
+
+  function saveDraft() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, step: currentStep, responseId })); } catch (e) {}
+  }
+  function clearDraft() { try { localStorage.removeItem(STORAGE_KEY); } catch (e) {} }
+  function restoreDraft() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) {}
+    if (!saved || !saved.state) return;
+    state = Object.assign(emptyState(), saved.state);
+    if (saved.responseId) responseId = saved.responseId;
+    Object.keys(textFields).forEach(id => {
+      const el = document.getElementById(id);
+      if (el && state[textFields[id]]) el.value = state[textFields[id]];
+    });
+    document.querySelectorAll('.radio-group').forEach(g => {
+      const v = state[g.dataset.field];
+      g.querySelectorAll('.option').forEach(o => o.classList.toggle('selected', !!v && o.dataset.value === v));
+    });
+    document.querySelectorAll('.checkbox-group').forEach(g => {
+      const arr = Array.isArray(state[g.dataset.field]) ? state[g.dataset.field] : [];
+      g.querySelectorAll('.option').forEach(o => o.classList.toggle('selected', arr.includes(o.dataset.value)));
+    });
+    const step = Math.min(Math.max(parseInt(saved.step) || 0, 0), TOTAL_STEPS - 1);
+    if (step > 0) goToStep(step, true);
+  }
+  restoreDraft();
+
+  function resetSubmitButton() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="send"></i> Отправить анкету';
+    drawIcons();
+  }
+  function errorText(code) {
+    if (/^missing_/.test(code)) return 'Один из ответов не дошёл. Пройдите шаги ещё раз, пожалуйста';
+    if (code === 'invalid_cohort_id' || code === 'unknown_course_id') return 'Ссылка устарела. Напишите Альберту, он пришлёт новую';
+    return 'Сервер не принял анкету. Попробуйте ещё раз через минуту';
+  }
+
+  async function submitForm() {
+    if (!validateAllSteps()) return;
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = 'Отправляем';
+
+    if (!responseId) responseId = makeResponseId();
+    const payload = {
+      ...state,
+      response_id: responseId,
+      course_id: COURSE_META.course_id,
+      cohort_id: COURSE_META.cohort_id,
+      source: COURSE_META.source,
+      client_submitted_at: new Date().toISOString()
+    };
+    const body = JSON.stringify(payload);
+
+    // Экран успеха только после подтверждения сервера. Вслепую нельзя:
+    // человек уйдёт довольным, а анкеты у нас не будет.
+    let confirmed = false;
+    try {
+      const response = await Promise.race([
+        fetch(SCRIPT_URL, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000))
+      ]);
+      const result = await response.json().catch(() => null);
+      if (result && result.status === 'ok') {
+        confirmed = true;
+      } else if (result && result.status === 'error') {
+        resetSubmitButton();
+        showToast(errorText(result.error));
+        return;
+      }
+    } catch (e) {
+      try {
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body });
+      } catch (e2) {
+        resetSubmitButton();
+        showToast('Не удалось отправить. Проверьте интернет и попробуйте ещё раз');
+        return;
+      }
+    }
+    if (confirmed) clearDraft();
+    showProfile();
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
+
+  function showProfile() {
+    const active = document.querySelector('.step.active');
+    if (active) active.classList.remove('active');
+    document.getElementById('stepIndicator').style.display = 'none';
+    document.getElementById('heroBlock').style.display = 'none';
+    document.getElementById('stepCounter').style.display = 'none';
+    document.getElementById('progress').style.width = '100%';
+
+    const firstName = escapeHtml(state.name.trim().split(/\s+/)[0]);
+    const program = [
+      { n: '1', text: '<strong>Как ставить задачу нейросети</strong>, чтобы ответ был рабочим с первого раза' },
+      { n: '2', text: '<strong>Помощник, который знает вашу работу</strong>: настройка под свои услуги и задачи' },
+      { n: '3', text: '<strong>Что можно и что нельзя</strong> отдавать нейросети в работе с заявителями' },
+      { n: '4', text: '<strong>Практика на ваших задачах</strong>: разберём то, что вы написали в этой анкете' }
+    ];
+    const html = `
+      <div class="profile-card">
+        <div class="profile-name">${firstName}, спасибо!</div>
+        <div class="profile-role">Анкета для мастер-класса по ИИ · команда МФЦ</div>
+        <div class="profile-insight"><p>Ваши ответы уже у Альберта. Практика соберётся под задачи вашей команды: с инструкциями, услугами и вопросами, которые вы описали.</p></div>
+        <div class="profile-powers-title">Что разберём на мастер-классе</div>
+        <div class="program-list">
+          ${program.map(p => `<div class="program-item"><div class="program-num">${p.n}</div><div class="program-text">${p.text}</div></div>`).join('')}
+        </div>
+      </div>
+      <div class="success-badge"><i data-lucide="check-circle"></i> Анкета принята</div>
+      <p class="success-note">До встречи: зарегистрируйтесь на chat.qwen.ai и возьмите ноутбук.<br>Дату и время сообщит ваш руководитель.</p>
+    `;
+    const screen = document.getElementById('profileScreen');
+    document.getElementById('profileContent').innerHTML = html;
+    screen.classList.add('visible');
+    drawIcons();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
