@@ -309,7 +309,7 @@
 
   function shuffleQuestion(question) {
     var order = question.options.map(function (_, index) { return index; });
-    var state = (Math.imul(question.id, 0x9e3779b1) ^ 0x2e8b0d) >>> 0;
+    var state = (Math.imul(question.id, 0x9e3779b1) ^ 0x2e8abf) >>> 0;
     function next() {
       state ^= state << 13;
       state ^= state >>> 17;
