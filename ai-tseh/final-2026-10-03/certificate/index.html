@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="data:,">
+  <title>Сертификат · Практикум AI Цех</title>
+  <link rel="stylesheet" href="fonts/fonts.css">
+  <link rel="stylesheet" href="cert.css">
+  <style>
+    :root {
+      --bg: #202224;
+      --text: #f0ece2;
+      --muted: #a39c90;
+      --copper: #c77a3a;
+      --copper-light: #e0aa6f;
+      --line: rgba(240, 236, 226, .16);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); }
+    body {
+      color: var(--text);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .page { width: min(100%, 1180px); margin: 0 auto; padding: 18px 16px 40px; }
+    .bar {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+      margin-bottom: 16px;
+    }
+    .who { font-size: 14px; color: var(--muted); line-height: 1.4; }
+    .who strong { color: var(--text); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 10px 16px;
+      border: 1px solid transparent; border-radius: 8px; font: inherit; font-weight: 800; font-size: 15px;
+      cursor: pointer; text-decoration: none;
+    }
+    .btn-primary { color: #21160d; background: var(--copper-light); }
+    .btn-secondary { color: var(--text); border-color: rgba(240,236,226,.28); background: rgba(255,255,255,.04); }
+    .btn:disabled { opacity: .55; cursor: progress; }
+    .status { min-height: 20px; margin: 10px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .stage { position: relative; width: 100%; overflow: hidden; border-radius: 4px; box-shadow: 0 30px 80px rgba(0,0,0,.4); }
+    .stage .nvc { position: absolute; left: 0; top: 0; }
+    .stage img.cert-image { display: block; width: 100%; height: auto; }
+    .hint { margin: 14px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    @media print {
+      @page { size: A4 landscape; margin: 0; }
+      html, body { width: 297mm; height: 210mm; background: #f1e9dc; }
+      .bar, .hint, .status { display: none !important; }
+      .page { width: auto; padding: 0; margin: 0; }
+      .stage { height: auto !important; box-shadow: none; border-radius: 0; overflow: visible; }
+      .stage .nvc { position: static; transform: none !important; visibility: visible !important; }
+      .stage img.cert-image { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="bar">
+      <div class="who">Сертификат Практикума AI Цех для <strong id="who">&nbsp;</strong></div>
+      <div class="actions">
+        <button class="btn btn-primary" id="download-pdf" type="button" disabled>Скачать PDF</button>
+        <button class="btn btn-secondary" id="download-png" type="button" disabled>Скачать картинку</button>
+      </div>
+    </div>
+    <div class="stage" id="stage"></div>
+    <p class="status" id="status" role="status">Готовлю файлы для скачивания…</p>
+    <p class="hint">На iPhone кнопка откроет меню «Поделиться»: там «Сохранить изображение» или «Сохранить в Файлы». Если ничего не открылось, нажми на сертификат и подержи палец, затем «Сохранить в Фото».</p>
+  </main>
+
+  <script src="cert.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var params = new URLSearchParams(window.location.search);
+      var data = window.NVCert.normalise({ name: params.get('name'), serial: params.get('serial'), date: params.get('date') });
+      var stage = document.getElementById('stage');
+      var status = document.getElementById('status');
+      var pdfButton = document.getElementById('download-pdf');
+      var pngButton = document.getElementById('download-png');
+      var files = null;
+
+      document.getElementById('who').textContent = data.name;
+      document.title = 'Сертификат · ' + data.name + ' · AI Цех';
+
+      var cert = window.NVCert.create(data);
+      stage.appendChild(cert);
+      function refit() { window.NVCert.fit(stage, cert); }
+      refit();
+      window.addEventListener('resize', refit);
+
+      window.NVCert.whenReady(cert).then(function () {
+        refit();
+        return window.NVCert.makeFiles(data);
+      }).then(function (made) {
+        files = made;
+        var img = new Image();
+        img.className = 'cert-image';
+        img.alt = 'Сертификат Практикума AI Цех: ' + data.name;
+        img.onload = function () {
+          stage.appendChild(img);
+          cert.style.visibility = 'hidden';
+          stage.style.height = 'auto';
+        };
+        img.src = URL.createObjectURL(made.png);
+        pdfButton.disabled = false;
+        pngButton.disabled = false;
+        status.textContent = 'Файлы готовы.';
+      }).catch(function (error) {
+        console.error(error);
+        status.textContent = 'Не получилось собрать файл в этом браузере. Открой ссылку в Chrome или Safari, либо нажми Ctrl+P / «Печать» и сохрани как PDF.';
+      });
+
+      function send(blob, ext) {
+        if (!blob) return;
+        window.NVCert.deliver(blob, window.NVCert.filename(data, ext)).then(function (result) {
+          status.textContent = result === 'shared' ? 'Готово.' : result === 'cancelled' ? '' : 'Файл скачан. Ищи его в «Загрузках».';
+        });
+      }
+      pdfButton.addEventListener('click', function () { send(files && files.pdf, 'pdf'); });
+      pngButton.addEventListener('click', function () { send(files && files.png, 'png'); });
+    }());
+  </script>
+</body>
+</html>
