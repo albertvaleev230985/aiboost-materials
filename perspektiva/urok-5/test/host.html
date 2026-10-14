@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="robots" content="noindex, nofollow">
+<title>Дашборд ведущего · финал курса · ООО «Перспектива»</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-top"><span class="brand-dot"></span>neovida · Нейропросвещение</div>
+    <div class="brand-sub">ООО «Перспектива» · команда LT · финал курса · ведущий</div>
+  </div>
+  <div class="user-chip"><span class="net" id="net"></span><button class="btn btn-sm btn-coral" id="qr-btn"><i class="ph ph-qr-code"></i> QR на вход</button></div>
+</header>
+
+<main class="wrap wide">
+  <div class="tabs no-print" id="tabs">
+    <button class="tab active" data-tab="lesson"><i class="ph ph-presentation-chart"></i> Урок</button>
+    <button class="tab" data-tab="report"><i class="ph ph-file-text"></i> Отчёт руководству</button>
+  </div>
+  <div id="content"></div>
+  <div id="report-pane" style="display:none">
+    <div class="report-tools no-print">
+      <button class="btn btn-primary" id="print-btn"><i class="ph ph-file-pdf"></i> Скачать PDF / печать</button>
+      <button class="btn btn-ghost" id="copy-btn"><i class="ph ph-copy"></i> Скопировать отчёт текстом</button>
+      <a class="btn btn-ghost" id="report-link" target="_blank" rel="noopener"><i class="ph ph-link"></i> Отчёт отдельной ссылкой</a>
+      <span class="muted small" id="tool-hint"></span>
+    </div>
+    <div id="report-body"></div>
+  </div>
+</main>
+
+<div class="modal-backdrop" id="modal"><div class="modal"><button class="close" id="modal-close" aria-label="Закрыть"><i class="ph ph-x"></i></button><div id="modal-body"></div></div></div>
+
+<div class="qr-overlay" id="qr">
+  <div class="qr-title">Финал курса: тест, карта, сертификат</div>
+  <div class="qr-box" id="qr-box"></div>
+  <div class="qr-url">materials.neovida.ai/perspektiva/urok-5/test/</div>
+  <button class="btn btn-dark" id="qr-close"><i class="ph ph-x"></i> Закрыть</button>
+</div>
+
+<script type="module">
+import { QUESTIONS, LESSONS, HOST_KEY } from './questions.js';
+import { runTimer, escapeHtml, plural, letter, CARD_FIELDS, MIN_CARD_FIELDS, cardFilledCount, cardHours, ENTRY_URL, lsClearAll } from './app.js';
+import { participants, scoreOf, answeredOf, reportHTML, reportText, copyText } from './report.js';
+
+const content = document.getElementById('content');
+const key = new URLSearchParams(location.search).get('key');
+if (key !== HOST_KEY) {
+  document.getElementById('tabs').style.display = 'none';
+  content.innerHTML = '<div class="card warn"><div class="card-title">Нужен ключ ведущего</div><div class="card-body">Откройте ссылку ведущего с параметром <b>?key=…</b></div></div>';
+  throw new Error('no key');
+}
+
+const fb = await import('./firebase.js');
+let session = { ...fb.DEFAULT_SESSION };
+let users = {};
+let connected = false;
+let tab = 'lesson';
+let stopTimer = null;
+let lastSnap = '';
+let lastReport = '';
+
+fb.subscribeConnected((c) => { connected = c; renderNet(); });
+fb.subscribeSession((s) => { session = s; rerender(); });
+fb.subscribeUsers((u) => { users = u || {}; rerender(); });
+
+function renderNet() {
+  document.getElementById('net').innerHTML = connected ? '<i class="ph ph-wifi-high"></i> онлайн' : '<i class="ph ph-wifi-slash"></i> нет связи';
+  document.getElementById('net').className = 'net' + (connected ? '' : ' off');
+}
+renderNet();
+
+document.getElementById('tabs').addEventListener('click', (e) => {
+  const b = e.target.closest('.tab'); if (!b) return;
+  tab = b.dataset.tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === b));
+  content.style.display = tab === 'lesson' ? '' : 'none';
+  document.getElementById('report-pane').style.display = tab === 'report' ? '' : 'none';
+  if (tab === 'report') renderReport(true);
+});
+
+function list() { return participants(users).sort((a, b) => (a.seq || 999) - (b.seq || 999) || a.name.localeCompare(b.name, 'ru')); }
+
+function rerender() {
+  const snap = JSON.stringify({ session, users });
+  if (snap === lastSnap) return;
+  lastSnap = snap;
+  render();
+  if (tab === 'report') renderReport();
+}
+
+// ===== Отчёт =====
+document.getElementById('report-link').href = `report.html?key=${encodeURIComponent(HOST_KEY)}`;
+function renderReport(force) {
+  const html = reportHTML(users, QUESTIONS, LESSONS);
+  if (!force && html === lastReport) return;
+  lastReport = html;
+  document.getElementById('report-body').innerHTML = html;
+}
+document.getElementById('print-btn').addEventListener('click', () => {
+  if (tab !== 'report') document.querySelector('[data-tab=report]').click();
+  setTimeout(() => window.print(), 50);
+});
+document.getElementById('copy-btn').addEventListener('click', async () => {
+  const ok = await copyText(reportText(users, QUESTIONS, LESSONS));
+  const h = document.getElementById('tool-hint');
+  h.textContent = ok ? 'Скопировано, можно вставлять в письмо или мессенджер' : 'Откроется окно с текстом для копирования';
+  setTimeout(() => { h.textContent = ''; }, 3000);
+});
+
+// ===== QR =====
+let qrMade = false;
+document.getElementById('qr-btn').addEventListener('click', () => {
+  document.getElementById('qr').classList.add('open');
+  if (!qrMade && window.QRCode) {
+    new window.QRCode(document.getElementById('qr-box'), { text: ENTRY_URL, width: 1024, height: 1024, colorDark: '#14221d', colorLight: '#ffffff', correctLevel: window.QRCode.CorrectLevel.M });
+    qrMade = true;
+  } else if (!window.QRCode) {
+    document.getElementById('qr-box').innerHTML = '<div class="muted">QR не загрузился, покажите адрес ниже</div>';
+  }
+});
+document.getElementById('qr-close').addEventListener('click', () => document.getElementById('qr').classList.remove('open'));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.getElementById('qr').classList.remove('open'); document.getElementById('modal').classList.remove('open'); } });
+
+// ===== Урок =====
+const PHASES = [
+  ['lobby', 'ph-hourglass-medium', 'Лобби: вход по QR'],
+  ['test', 'ph-target', 'Тест с ведущим'],
+  ['test-self', 'ph-person-simple-run', 'Тест в своём темпе'],
+  ['discussion', 'ph-chat-circle-dots', 'Разбор: тепловая карта'],
+  ['card', 'ph-map-trifold', 'Карта внедрения'],
+  ['certificate', 'ph-certificate', 'Сертификаты'],
+  ['done', 'ph-flag-checkered', 'Урок завершён'],
+];
+
+function render() {
+  const L = list();
+  const cq = session.currentQuestion;
+  const q = session.phase === 'test' && cq >= 0 && cq < QUESTIONS.length ? QUESTIONS[cq] : null;
+  const online = L.filter(u => u.online).length;
+  const phaseIdx = PHASES.findIndex(p => p[0] === session.phase);
+  content.innerHTML = `
+    <div class="host-shell">
+      <div class="host-controls">
+        <div class="card" style="padding:16px">
+          <div class="phase-steps">${PHASES.map((p, i) => `<div class="phase-step ${p[0] === session.phase ? 'active' : (i < phaseIdx ? 'past' : '')}"><i class="ph ${p[2] ? p[1] : ''}"></i>${p[2]}</div>`).join('')}</div>
+          ${q ? `<div class="host-q"><span class="num">Вопрос ${cq + 1} из ${QUESTIONS.length} · занятие ${q.lesson} · ${escapeHtml(q.theme)}</span>${escapeHtml(q.text)}
+            <div class="correct"><i class="ph ph-check-circle"></i> Верно: <b>${letter(q.correct)}</b>. ${escapeHtml(q.options[q.correct])}</div></div>` : ''}
+          <div class="host-timer idle" id="big-timer">${session.phase === 'test-self' ? selfProgress(L) : ''}</div>
+          <div class="host-actions" id="actions">${actionsBlock()}</div>
+          <div class="muted small ta-c mt-2">${L.length} ${plural(L.length, 'участник', 'участника', 'участников')} · онлайн ${online}</div>
+        </div>
+        <div class="row no-print" style="justify-content:center">
+          <a class="btn btn-ghost btn-sm" href="index.html" target="_blank" rel="noopener"><i class="ph ph-device-mobile"></i> Экран участника</a>
+          <button class="btn btn-ghost btn-sm" id="json-btn"><i class="ph ph-download-simple"></i> JSON</button>
+          <button class="btn btn-danger btn-sm" id="reset-btn"><i class="ph ph-broom"></i> Очистить всё</button>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="h2" style="margin-top:0">Участники <span class="muted small">(${L.length})</span></h2>
+        <div class="host-grid">${gridBlock(L, q)}</div>
+
+        ${['discussion', 'test', 'test-self', 'card', 'certificate', 'done'].includes(session.phase) ? `
+        <h2 class="h2"><i class="ph ph-warning-circle"></i> Топ ошибок: что разбирать первым</h2>
+        <div class="muted small" style="margin-bottom:8px">Клик по строке или номеру вопроса открывает разбор с распределением ответов.</div>
+        <div>${topMistakesBlock(L)}</div>
+        <h2 class="h2">Тепловая карта · ${QUESTIONS.length} вопросов</h2>
+        <div class="heatmap">${heatmapBlock(L)}</div>` : ''}
+
+        ${['card', 'certificate', 'done', 'discussion'].includes(session.phase) ? `
+        <h2 class="h2"><i class="ph ph-map-trifold"></i> Карты внедрения</h2>
+        <div class="cards-list">${cardsBlock(L)}</div>` : ''}
+      </div>
+    </div>`;
+
+  document.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => doAction(b.dataset.act)));
+  document.querySelectorAll('[data-q]').forEach(el => el.addEventListener('click', () => showQuestion(Number(el.dataset.q), L)));
+  document.getElementById('reset-btn').addEventListener('click', resetEverything);
+  document.getElementById('json-btn').addEventListener('click', () => downloadJson(L));
+
+  if (stopTimer) { stopTimer(); stopTimer = null; }
+  const timerEl = document.getElementById('big-timer');
+  if (session.timerStartedAt && (session.phase === 'test' || session.phase === 'card') && !(session.phase === 'test' && session.showCorrect)) {
+    const dur = session.timerDurationSec || 30;
+    stopTimer = runTimer(session.timerStartedAt, dur, (rem) => {
+      timerEl.textContent = session.phase === 'card' ? `${Math.floor(rem / 60)}:${String(Math.floor(rem % 60)).padStart(2, '0')}` : String(Math.ceil(rem));
+      timerEl.className = 'host-timer' + (rem <= 5 ? ' danger' : rem <= 10 ? ' warn' : '');
+    }, () => { timerEl.textContent = '0'; timerEl.className = 'host-timer danger'; });
+  }
+}
+
+function selfProgress(L) {
+  const fin = L.filter(u => answeredOf(u, QUESTIONS) >= QUESTIONS.length).length;
+  return `<span style="font-size:22px;color:var(--ink)">Закончили ${fin} из ${L.length}</span>`;
+}
+
+function actionsBlock() {
+  const p = session.phase;
+  const B = (act, icon, text, cls = 'btn-primary btn-big') => `<button class="btn ${cls}" data-act="${act}"><i class="ph ${icon}"></i> ${text}</button>`;
+  if (p === 'lobby') return B('start-test', 'ph-target', 'Тест с ведущим') + B('start-self', 'ph-person-simple-run', 'Тест в своём темпе', 'btn-dark btn-big');
+  if (p === 'test') {
+    const cq = session.currentQuestion;
+    const out = [];
+    if (cq < 0) out.push(B('next-q', 'ph-play', 'Первый вопрос'));
+    else {
+      if (!session.showCorrect) out.push(B('reveal', 'ph-eye', 'Показать правильный', 'btn-ghost'));
+      if (cq < QUESTIONS.length - 1) out.push(B('next-q', 'ph-skip-forward', 'Следующий вопрос'));
+      else out.push(B('discussion', 'ph-chat-circle-dots', 'К разбору'));
+    }
+    out.push(B('start-self', 'ph-person-simple-run', 'Дальше в своём темпе', 'btn-dark'));
+    out.push(B('discussion', 'ph-pause', 'Пауза: к разбору', 'btn-ghost'));
+    return out.join('');
+  }
+  if (p === 'test-self') return B('discussion', 'ph-chat-circle-dots', 'К разбору') + B('resume-test', 'ph-arrow-left', 'Вернуть тест с ведущим', 'btn-ghost');
+  if (p === 'discussion') return B('start-card', 'ph-map-trifold', 'Карта внедрения (10 мин)') + B('certificate', 'ph-certificate', 'Сразу выдать сертификаты', 'btn-ghost') + B('start-self', 'ph-arrow-left', 'Вернуть тест в своём темпе', 'btn-ghost');
+  if (p === 'card') return B('certificate', 'ph-certificate', 'Выдать сертификаты', 'btn-coral btn-big') + B('extend-card', 'ph-timer', 'Ещё 5 минут на карту', 'btn-ghost');
+  if (p === 'certificate') return `<div class="muted small ta-c">Кто заполнил карту (от ${MIN_CARD_FIELDS} полей), уже видит сертификат. Остальные увидят, как только допишут.</div>` + B('end', 'ph-flag-checkered', 'Завершить урок') + B('start-card', 'ph-arrow-left', 'Вернуться к карте', 'btn-ghost');
+  if (p === 'done') return `<div class="muted small ta-c">Сертификаты остаются на экранах участников.</div>` + B('certificate', 'ph-certificate', 'Снова фаза сертификатов', 'btn-ghost') + B('back-lobby', 'ph-arrow-counter-clockwise', 'Вернуть в лобби', 'btn-ghost');
+  return '';
+}
+
+async function doAction(act) {
+  try {
+    switch (act) {
+      case 'start-test': await fb.setSession({ phase: 'test', currentQuestion: -1, timerStartedAt: null, showCorrect: false }); break;
+      case 'start-self': await fb.setSession({ phase: 'test-self', timerStartedAt: null, showCorrect: false }); break;
+      case 'resume-test': await fb.setSession({ phase: 'test', timerStartedAt: null, showCorrect: false }); break;
+      case 'next-q': {
+        const next = (session.currentQuestion ?? -1) + 1;
+        if (next >= QUESTIONS.length) await fb.setSession({ phase: 'discussion', timerStartedAt: null, showCorrect: false });
+        else await fb.setSession({ currentQuestion: next, timerStartedAt: Date.now(), timerDurationSec: 30, showCorrect: false });
+        break;
+      }
+      case 'reveal': await fb.setSession({ showCorrect: true, timerStartedAt: null }); break;
+      case 'discussion': await fb.setSession({ phase: 'discussion', timerStartedAt: null, showCorrect: false }); break;
+      case 'start-card': await fb.setSession({ phase: 'card', timerStartedAt: Date.now(), timerDurationSec: 600, showCorrect: false }); break;
+      case 'extend-card': {
+        const started = session.timerStartedAt || Date.now();
+        const rem = Math.max(0, (session.timerDurationSec || 600) - (Date.now() - started) / 1000);
+        await fb.setSession({ timerStartedAt: Date.now(), timerDurationSec: Math.round(rem + 300) });
+        break;
+      }
+      case 'certificate': await fb.setSession({ phase: 'certificate', timerStartedAt: null }); break;
+      case 'end': await fb.setSession({ phase: 'done', timerStartedAt: null }); break;
+      case 'back-lobby': await fb.setSession({ phase: 'lobby', currentQuestion: -1, timerStartedAt: null, showCorrect: false }); break;
+    }
+  } catch (e) { alert('Не получилось: ' + e.message); }
+}
+
+async function resetEverything() {
+  const word = prompt('Это удалит всех участников, ответы и карты внедрения без возможности вернуть. Участники войдут заново.\n\nЧтобы подтвердить, введите слово ОЧИСТИТЬ');
+  if (word == null) return;
+  if (word.trim().toUpperCase() !== 'ОЧИСТИТЬ') { alert('Слово не совпало, ничего не удалено.'); return; }
+  try { await fb.resetAll(); lsClearAll(); alert('Готово: сессия чистая.'); }
+  catch (e) { alert('Ошибка: ' + e.message); }
+}
+
+function gridBlock(L, q) {
+  if (!L.length) return `<div class="card" style="grid-column:1/-1"><div class="muted">Пока никого. Нажмите «QR на вход» сверху и покажите его на экране.</div></div>`;
+  const p = session.phase;
+  return L.map(u => {
+    const on = `<span class="online ${u.online ? 'on' : ''}" title="${u.online ? 'онлайн' : 'не в сети'}"></span>`;
+    const ans = answeredOf(u, QUESTIONS);
+    const sc = scoreOf(u, QUESTIONS);
+    const fc = cardFilledCount(u.card || {});
+    let cls = '', status = '', big = '';
+    if (p === 'lobby') { status = 'в лобби'; }
+    else if (p === 'test' && q) {
+      const my = u.answers[session.currentQuestion];
+      if (my == null) { cls = 'wait'; status = 'думает'; }
+      else { cls = my === q.correct ? 'ok' : 'no'; status = my === q.correct ? 'верно' : 'ошибка'; big = letter(my); }
+    } else if (p === 'test' || p === 'test-self') {
+      cls = ans >= QUESTIONS.length ? 'done' : 'wait'; status = ans >= QUESTIONS.length ? 'закончил(а)' : `ответов ${ans}/${QUESTIONS.length}`; big = `${sc}`;
+    } else if (p === 'discussion') { cls = 'done'; status = `тест, ответов ${ans}`; big = `${sc}/${QUESTIONS.length}`; }
+    else if (p === 'card') { cls = fc >= MIN_CARD_FIELDS ? 'done' : (fc ? 'wait' : ''); status = fc >= CARD_FIELDS.length ? 'карта готова' : fc ? 'пишет карту' : 'не начал(а) карту'; big = `${fc}/${CARD_FIELDS.length}`; }
+    else { cls = u.certIssued ? 'ok' : (fc >= MIN_CARD_FIELDS ? 'done' : 'wait'); status = u.certIssued ? 'сертификат получен' : (fc >= MIN_CARD_FIELDS ? 'карта есть' : `карта ${fc}/${CARD_FIELDS.length}, нужно ${MIN_CARD_FIELDS}`); big = u.certIssued ? '<i class="ph ph-certificate"></i>' : ''; }
+    return `<div class="host-cell ${cls}">${on}<div class="name">${escapeHtml(u.name)}</div><div class="status">${status}</div>${big ? `<div class="big">${big}</div>` : ''}</div>`;
+  }).join('');
+}
+
+function qStats(L) {
+  return QUESTIONS.map((q, i) => {
+    let answered = 0, wrong = 0;
+    L.forEach(u => { const a = u.answers[i]; if (a != null) { answered++; if (a !== q.correct) wrong++; } });
+    return { i, q, answered, wrong };
+  });
+}
+
+function topMistakesBlock(L) {
+  const st = qStats(L);
+  if (!st.some(s => s.answered)) return '<div class="muted">Ответов пока нет.</div>';
+  const top = st.filter(s => s.wrong > 0).sort((a, b) => b.wrong / b.answered - a.wrong / a.answered || b.wrong - a.wrong).slice(0, 5);
+  if (!top.length) return '<div class="card sage"><div class="card-body"><i class="ph ph-check-circle"></i> Ошибок нет, разбирать нечего.</div></div>';
+  return top.map(s => `<div class="mistake-row" data-q="${s.i}"><div class="n">${s.i + 1}</div>
+    <div><div class="t">${escapeHtml(s.q.theme)} · занятие ${s.q.lesson}</div><div class="s">ошиблись ${s.wrong} из ${s.answered}</div></div>
+    <div class="muted small">разбор <i class="ph ph-arrow-right"></i></div></div>`).join('');
+}
+
+function heatmapBlock(L) {
+  if (!L.length) return '<div class="muted" style="padding:12px">Нет участников.</div>';
+  const st = qStats(L);
+  return `<table><tr><th class="name">Участник</th>${QUESTIONS.map((_, i) => `<th class="qcol ${session.phase === 'test' && i === session.currentQuestion ? 'current' : ''}" data-q="${i}">${i + 1}${st[i].wrong ? `<span class="err">${st[i].wrong}</span>` : ''}</th>`).join('')}<th>Итог</th></tr>
+    ${L.map(u => `<tr><td class="name">${escapeHtml(u.name)}</td>${QUESTIONS.map((q, i) => {
+      const a = u.answers[i];
+      if (a == null) return '<td class="pending">·</td>';
+      return a === q.correct ? '<td class="ok"><i class="ph ph-check"></i></td>' : `<td class="bad">${letter(a)}</td>`;
+    }).join('')}<td><b>${scoreOf(u, QUESTIONS)}</b></td></tr>`).join('')}</table>`;
+}
+
+function cardsBlock(L) {
+  const withCards = L.filter(u => cardFilledCount(u.card || {}) > 0);
+  if (!withCards.length) return '<div class="muted">Карт пока нет.</div>';
+  return withCards.map(u => {
+    const h = cardHours(u.card);
+    return `<div class="card-view"><h4><span>${escapeHtml(u.name)}</span><span class="muted small">${cardFilledCount(u.card)}/${CARD_FIELDS.length}${h ? ` · ${String(Math.round(h * 10) / 10).replace('.', ',')} ч/нед` : ''}</span></h4>
+      ${CARD_FIELDS.map(f => (u.card[f.key] || '').trim() ? `<div class="lbl">${escapeHtml(f.short)}</div><div class="txt">${escapeHtml(u.card[f.key].trim())}</div>` : '').join('')}</div>`;
+  }).join('');
+}
+
+function showQuestion(i, L) {
+  const q = QUESTIONS[i];
+  const counts = [0, 0, 0, 0]; const who = {};
+  L.forEach(u => { const a = u.answers[i]; if (a != null) { counts[a]++; (who[a] = who[a] || []).push(u.name); } });
+  const total = counts.reduce((a, b) => a + b, 0);
+  document.getElementById('modal-body').innerHTML = `
+    <div class="card-tag">Вопрос ${i + 1} · занятие ${q.lesson} · ${escapeHtml(q.theme)}</div>
+    <div class="q-text">${escapeHtml(q.text)}</div>
+    ${q.options.map((o, k) => `<div class="opt-stat ${k === q.correct ? 'correct' : ''}"><div class="head"><div><b>${letter(k)}${k === q.correct ? ' <i class="ph ph-check-circle"></i>' : ''}</b> ${escapeHtml(o)}</div><b>${counts[k]}/${total}</b></div>
+      ${who[k] ? `<div class="muted small mt-2">${who[k].map(escapeHtml).join(', ')}</div>` : ''}</div>`).join('')}
+    <div class="card sage mt-4"><div class="card-tag sage">Объяснение</div><div class="card-body">${escapeHtml(q.explanation)}</div>
+    <div class="muted small mt-2"><b>Подсказка ведущему:</b> ${escapeHtml(q.hostNote || '')}</div></div>`;
+  document.getElementById('modal').classList.add('open');
+}
+document.getElementById('modal-close').addEventListener('click', () => document.getElementById('modal').classList.remove('open'));
+document.getElementById('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') e.currentTarget.classList.remove('open'); });
+
+function downloadJson(L) {
+  const data = { exportedAt: new Date().toISOString(), session, participants: L.map(u => ({ name: u.name, seq: u.seq || null, score: scoreOf(u, QUESTIONS), answers: u.answers, card: u.card, certIssued: !!u.certIssued, certSerial: u.certSerial || null })) };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `perspektiva-lt-final-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+
+render();
+</script>
+</body>
+</html>

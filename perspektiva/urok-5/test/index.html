@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Финал курса · ООО «Перспектива» · команда LT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-top"><span class="brand-dot"></span>neovida · Нейропросвещение</div>
+    <div class="brand-sub">ООО «Перспектива» · команда LT · финал курса</div>
+  </div>
+  <div class="user-chip" id="user-chip"></div>
+</header>
+
+<main class="wrap">
+  <div id="banner"></div>
+  <div id="content"></div>
+</main>
+
+<script type="module">
+import {
+  getMe, setMe, clearMe, lsGet, lsSet, lsRemove, normalizeName, nameError, nameToSlug,
+  escapeHtml, plural, debounce, letter, runTimer, CARD_FIELDS, MIN_CARD_FIELDS, cardFilledCount,
+  serialFor, certificateHTML, fitCert, downloadCertificate, triggerCelebration,
+} from './app.js';
+import { QUESTIONS, LESSONS, scoreFor } from './questions.js';
+
+const content = document.getElementById('content');
+const bannerEl = document.getElementById('banner');
+const userChip = document.getElementById('user-chip');
+
+let fb = null;                 // модуль firebase.js (null, пока не загрузился или нет связи)
+let connected = false;
+let everConnected = false;
+let offlineSuspected = false;
+let session = { phase: 'lobby', currentQuestion: -1, timerStartedAt: null, timerDurationSec: 30, showCorrect: false, epoch: 0 };
+let sessionLoaded = false;
+let me = getMe();
+let answers = {};
+let card = {};
+let cert = null;
+let selfFeedback = null;       // { idx } после ответа в своём темпе, до кнопки «Дальше»
+let stopTimer = null;
+let lastViewKey = '';
+let unsubUser = null;
+let unsubPresence = null;
+let currentView = '';
+let lastPhase = null;
+let allowAutoCert = true;      // авто-показ сертификата только при смене фазы или загрузке, не посреди набора карты
+let staleCert = false;         // сертификат из прошлой (очищенной) сессии: показываем, но в новую сессию не пишем
+
+function loadLocalState() {
+  if (!me) { answers = {}; card = {}; cert = null; return; }
+  answers = lsGet('answers:' + me.slug, {}) || {};
+  card = lsGet('card:' + me.slug, {}) || {};
+  cert = lsGet('cert:' + me.slug, null);
+}
+loadLocalState();
+
+const localMode = () => lsGet('localMode', false) === true;
+const cardEarly = () => me && lsGet('cardEarly:' + me.slug, false) === true;
+const answeredCount = () => QUESTIONS.filter((_, i) => answers[i] != null).length;
+const allAnswered = () => answeredCount() >= QUESTIONS.length;
+const firstUnanswered = () => QUESTIONS.findIndex((_, i) => answers[i] == null);
+const myScore = () => scoreFor(answers);
+
+// ===== Шапка =====
+function renderChip() {
+  if (!me) { userChip.innerHTML = ''; return; }
+  const net = (fb && connected) ? '<span class="net"><i class="ph ph-wifi-high"></i></span>'
+    : (offlineSuspected ? '<span class="net off" title="Нет связи с сервером, всё сохраняется в телефоне"><i class="ph ph-wifi-slash"></i></span>' : '');
+  userChip.innerHTML = `${net}<div class="user-ava">${escapeHtml((me.name[0] || '?').toUpperCase())}</div><span class="nm">${escapeHtml(me.name)}</span>`;
+}
+
+function renderBanner() {
+  if (!me || cert) { bannerEl.innerHTML = ''; return; }
+  if (localMode()) {
+    bannerEl.innerHTML = `<div class="banner off"><i class="ph ph-wifi-slash"></i><div>Режим без связи: тест идёт в телефоне, баллы считаются здесь.${(fb && connected) ? ' Связь вернулась. <button class="linkbtn" id="leave-local">Вернуться к ведущему</button>' : ''}</div></div>`;
+    const b = document.getElementById('leave-local');
+    if (b) b.addEventListener('click', () => { lsSet('localMode', false); syncAll(); render(true); });
+    return;
+  }
+  if (offlineSuspected && !(fb && connected)) {
+    bannerEl.innerHTML = `<div class="banner off"><i class="ph ph-wifi-slash"></i><div>Нет связи с сервером. Ответы сохраняются в телефоне и уйдут, когда связь появится.</div></div>`;
+    return;
+  }
+  bannerEl.innerHTML = '';
+}
+
+// ===== Какой экран показывать =====
+function computeView() {
+  if (!me) return 'register';
+  if (cert) return 'cert';
+  const filled = cardFilledCount(card);
+  if (localMode()) {
+    if (!allAnswered()) return 'self';
+    return lsGet('localResultSeen:' + me.slug, false) ? 'card' : 'result';
+  }
+  const p = session.phase;
+  if (p === 'certificate' || p === 'done') {
+    if (filled >= MIN_CARD_FIELDS && (currentView !== 'card' || allowAutoCert)) return 'cert-issue';
+    return 'card';
+  }
+  if (p === 'card') return 'card';
+  if (cardEarly() && (p === 'test-self' || p === 'discussion') && allAnswered()) return 'card';
+  if (p === 'test') return 'host-q';
+  if (p === 'test-self') return allAnswered() ? 'result' : 'self';
+  if (p === 'discussion') return 'result';
+  return 'lobby';
+}
+
+function viewKey(view) {
+  if (view === 'host-q') return `host-q:${session.currentQuestion}:${session.showCorrect}:${session.timerStartedAt}:${answers[session.currentQuestion]}`;
+  if (view === 'self') return `self:${firstUnanswered()}:${selfFeedback ? selfFeedback.idx : ''}`;
+  if (view === 'result') return `result:${session.phase}:${answeredCount()}`;
+  if (view === 'card') return `card:${session.phase}:${localMode()}:${session.timerStartedAt}`;
+  if (view === 'lobby') return `lobby:${offlineSuspected}:${fb && connected}`;
+  return view;
+}
+
+function render(force = false) {
+  renderChip();
+  renderBanner();
+  let view = computeView();
+  allowAutoCert = false;
+  if (view === 'cert-issue') { issueCertificate(); view = 'cert'; }
+  currentView = view;
+  const key = viewKey(view);
+  if (!force && key === lastViewKey) return;
+  lastViewKey = key;
+  if (stopTimer) { stopTimer(); stopTimer = null; }
+  document.querySelector('main').classList.toggle('cert-mode', view === 'cert');
+  window.scrollTo({ top: 0 });
+  ({ register: renderRegister, lobby: renderLobby, 'host-q': renderHostQuestion, self: renderSelf,
+     result: renderResult, card: renderCard, cert: renderCert })[view]();
+}
+
+// ===== Регистрация =====
+function renderRegister(prefill = '') {
+  const notice = lsGet('resetNotice', false);
+  content.innerHTML = `
+    <div class="h1">Финальное занятие курса</div>
+    <div class="lead">Сегодня короткий тест по всем пяти занятиям, карта внедрения для компании и сертификат. Введите имя и фамилию так, как их нужно написать в сертификате.</div>
+    ${notice ? '<div class="banner on"><i class="ph ph-arrow-counter-clockwise"></i><div>Альберт начал новую сессию. Войдите, пожалуйста, ещё раз.</div></div>' : ''}
+    <div class="card accent">
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label" for="full-name">Имя и фамилия</label>
+        <div class="field-hint">Например: Ирина Петрова. Без сокращений и никнеймов, это пойдёт в сертификат.</div>
+        <input type="text" id="full-name" placeholder="Имя Фамилия" autocomplete="name" autocapitalize="words" value="${escapeHtml(prefill)}">
+        <div class="hint-line" id="hint"></div>
+      </div>
+      <button id="enter-btn" class="btn btn-primary btn-big btn-wide mt-2" disabled>Войти <i class="ph ph-arrow-right"></i></button>
+    </div>
+    <div class="muted small ta-c">Темп задаёт Альберт: вопросы появятся на этом экране сами, ничего обновлять не нужно.</div>
+  `;
+  const input = document.getElementById('full-name');
+  const btn = document.getElementById('enter-btn');
+  const hint = document.getElementById('hint');
+  const validate = () => {
+    const err = nameError(input.value);
+    btn.disabled = !!err;
+    if (!input.value.trim()) { hint.textContent = ''; hint.className = 'hint-line'; }
+    else if (err) { hint.textContent = err; hint.className = 'hint-line bad'; }
+    else { hint.innerHTML = `В сертификате будет: <b>${escapeHtml(normalizeName(input.value))}</b>`; hint.className = 'hint-line ok'; }
+  };
+  input.addEventListener('input', validate);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !btn.disabled) btn.click(); });
+  validate();
+  btn.addEventListener('click', async () => {
+    if (nameError(input.value)) return;
+    const name = normalizeName(input.value);
+    const slug = nameToSlug(name);
+    btn.disabled = true; btn.innerHTML = 'Входим…';
+    me = { slug, name, epoch: sessionLoaded ? (session.epoch || 0) : null, seq: null };
+    setMe(me);
+    lsRemove('resetNotice');
+    loadLocalState();
+    await ensureRegistered();
+    render(true);
+  });
+}
+
+// Регистрация в базе с таймаутом: без связи входим локально
+async function ensureRegistered() {
+  if (!me || !fb || staleCert) return;
+  try {
+    const data = await Promise.race([
+      fb.registerUser(me.slug, me.name),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000)),
+    ]);
+    if (data) {
+      me.seq = data.seq || me.seq || null;
+      if (sessionLoaded) me.epoch = session.epoch || 0;
+      setMe(me);
+      mergeRemote(data);
+    }
+    startUserSync();
+  } catch (e) { console.warn('register later', e.message); }
+}
+
+function mergeRemote(remote) {
+  if (!remote || !me) return;
+  let changed = false;
+  const ra = remote.answers || {};
+  Object.keys(ra).forEach(k => { if (answers[k] == null && ra[k] != null) { answers[k] = ra[k]; changed = true; } });
+  if (changed) lsSet('answers:' + me.slug, answers);
+  if (remote.card && cardFilledCount(card) === 0 && cardFilledCount(remote.card) > 0) {
+    const { filledCount, totalFields, ts, ...rest } = remote.card;
+    card = rest; lsSet('card:' + me.slug, card);
+  }
+  if (remote.seq && !me.seq) { me.seq = remote.seq; setMe(me); }
+  if (remote.certIssued && !cert) { cert = { serial: remote.certSerial || serialFor(me.seq, me.slug) }; lsSet('cert:' + me.slug, cert); }
+}
+
+function startUserSync() {
+  if (!fb || !me || unsubUser) return;
+  let first = true;
+  unsubUser = fb.subscribeUser(me.slug, (u) => {
+    if (!u && first && connected) { first = false; ensureRegistered(); return; }
+    first = false;
+    if (u) { mergeRemote(u); render(); }
+  });
+  if (!unsubPresence) unsubPresence = fb.startPresence(me.slug);
+}
+
+function syncAll() {
+  if (!fb || !me || staleCert) return;
+  const sc = myScore();
+  Object.keys(answers).forEach(k => fb.pushAnswer(me.slug, Number(k), answers[k], sc, allAnswered()).catch(() => {}));
+  if (cardFilledCount(card) > 0) pushCardNow();
+  if (cert) fb.markCertificate(me.slug, cert.serial).catch(() => {});
+}
+
+// ===== Лобби =====
+function renderLobby() {
+  content.innerHTML = `
+    <div class="card accent ta-c" style="padding:34px 22px">
+      <div class="big-icon"><i class="ph ph-hourglass-medium"></i></div>
+      <div class="card-title">${escapeHtml(me.name.split(' ')[0])}, вы в списке</div>
+      <div class="card-body">Альберт скоро запустит тест. Экран не закрывайте: вопрос появится сам.</div>
+      <div class="muted small mt-4">20 вопросов по всем пяти занятиям: от ИИ-грамотности до блокнотов, Canvas и платного ChatGPT.</div>
+    </div>
+    ${offlineSuspected && !(fb && connected) ? `
+    <div class="card warn">
+      <div class="card-tag"><i class="ph ph-wifi-slash"></i> Нет связи</div>
+      <div class="card-body">Если связь не появится, можно пройти тест самостоятельно в своём темпе. Баллы посчитаются в телефоне, а ответы уйдут Альберту, когда интернет вернётся.</div>
+      <button class="btn btn-primary mt-2" id="go-local"><i class="ph ph-play"></i> Пройти тест без связи</button>
+    </div>` : ''}
+    <div class="ta-c"><button class="linkbtn" id="fix-name">Исправить имя</button></div>
+  `;
+  const gl = document.getElementById('go-local');
+  if (gl) gl.addEventListener('click', () => { lsSet('localMode', true); render(true); });
+  document.getElementById('fix-name').addEventListener('click', renderFixName);
+}
+
+function renderFixName() {
+  lastViewKey = 'fix-name';
+  content.innerHTML = `
+    <div class="h1">Исправить имя</div>
+    <div class="card accent">
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label" for="full-name">Имя и фамилия для сертификата</label>
+        <input type="text" id="full-name" value="${escapeHtml(me.name)}" autocapitalize="words">
+        <div class="hint-line" id="hint"></div>
+      </div>
+      <div class="row mt-2">
+        <button id="save-name" class="btn btn-primary"><i class="ph ph-check"></i> Сохранить</button>
+        <button id="cancel-name" class="btn btn-ghost">Отмена</button>
+      </div>
+    </div>
+    <div class="muted small">Ответы и карта останутся за вами. Если за этим телефоном теперь другой человек, <button class="linkbtn" id="other-person">войдите заново</button>.</div>
+  `;
+  const input = document.getElementById('full-name');
+  const hint = document.getElementById('hint');
+  input.addEventListener('input', () => {
+    const err = nameError(input.value);
+    hint.textContent = err || ('В сертификате будет: ' + normalizeName(input.value));
+    hint.className = 'hint-line ' + (err ? 'bad' : 'ok');
+  });
+  document.getElementById('save-name').addEventListener('click', () => {
+    if (nameError(input.value)) { hint.textContent = nameError(input.value); hint.className = 'hint-line bad'; return; }
+    me.name = normalizeName(input.value); setMe(me);
+    if (fb) fb.registerUser(me.slug, me.name).catch(() => {});
+    render(true);
+  });
+  document.getElementById('cancel-name').addEventListener('click', () => render(true));
+  document.getElementById('other-person').addEventListener('click', () => {
+    if (!confirm('Выйти и войти под другим именем? Ответы этого участника останутся у Альберта.')) return;
+    logout();
+  });
+}
+
+function logout() {
+  if (unsubUser) { unsubUser(); unsubUser = null; }
+  if (unsubPresence) { unsubPresence(); unsubPresence = null; }
+  registeredOnce = false;
+  clearMe(); me = null; loadLocalState(); lsSet('localMode', false); render(true);
+}
+
+// ===== Тест с ведущим =====
+function qMeta(q, idx) {
+  const lvl = { easy: ['easy', 'простой'], mid: ['', 'средний'], hard: ['hard', 'сложный'] }[q.difficulty] || ['', ''];
+  return `<span>Вопрос ${idx + 1} из ${QUESTIONS.length}</span><span class="pill">Занятие ${q.lesson}</span><span class="pill ${lvl[0]}">${lvl[1]}</span>`;
+}
+function dotsHtml(current) {
+  return QUESTIONS.map((q, i) => {
+    if (i === current) return '<span class="dot current"></span>';
+    if (answers[i] != null) return `<span class="dot done"></span>`;
+    return '<span class="dot"></span>';
+  }).join('');
+}
+
+function renderHostQuestion() {
+  const idx = session.currentQuestion;
+  if (idx == null || idx < 0 || idx >= QUESTIONS.length) {
+    content.innerHTML = `
+      <div class="card accent ta-c" style="padding:34px 22px">
+        <div class="big-icon"><i class="ph ph-target"></i></div>
+        <div class="card-title">Тест начинается</div>
+        <div class="card-body">Альберт вот-вот покажет первый вопрос. На каждый 30 секунд, ответ можно выбрать один раз.</div>
+      </div>`;
+    return;
+  }
+  const q = QUESTIONS[idx];
+  const my = answers[idx];
+  const reveal = session.showCorrect === true;
+  const locked = my != null || reveal;
+  content.innerHTML = `
+    <div class="progress-row">${dotsHtml(idx)}</div>
+    ${session.timerStartedAt && !reveal ? `<div class="timer-text"><span>Время на ответ</span><span class="left" id="timer-left">${session.timerDurationSec || 30} сек</span></div>
+    <div class="timer-bar"><div class="fill" id="timer-fill"></div></div>` : ''}
+    <div class="q-counter">${qMeta(q, idx)}</div>
+    <div class="q-text">${escapeHtml(q.text)}</div>
+    <div id="opts"></div>
+    ${reveal ? `<div class="feedback ${my === q.correct ? 'ok' : 'no'}"><b>${my == null ? 'Правильный ответ: ' + letter(q.correct) : (my === q.correct ? 'Верно' : 'Правильный ответ: ' + letter(q.correct))}</b>${escapeHtml(q.explanation)}</div>` : ''}
+    <div class="status-line" id="status">${reveal ? '<i class="ph ph-eye"></i> Альберт открыл правильный ответ'
+      : (my != null ? '<i class="ph ph-check-circle"></i> Ответ принят. Ждём остальных и следующий вопрос' : '<i class="ph ph-hand-pointing"></i> Выберите один вариант')}</div>
+  `;
+  const opts = document.getElementById('opts');
+  q.options.forEach((opt, i) => {
+    const b = document.createElement('button');
+    let cls = 'q-opt';
+    if (reveal) { if (i === q.correct) cls += ' correct'; else if (my === i) cls += ' wrong'; else cls += ' dim'; }
+    else if (my === i) cls += ' selected';
+    b.className = cls; b.disabled = locked;
+    b.innerHTML = `<span class="letter">${letter(i)}</span><span>${escapeHtml(opt)}</span>`;
+    b.addEventListener('click', () => { if (!locked) answer(idx, i); });
+    opts.appendChild(b);
+  });
+  if (session.timerStartedAt && !reveal) {
+    const fill = document.getElementById('timer-fill');
+    const left = document.getElementById('timer-left');
+    stopTimer = runTimer(session.timerStartedAt, session.timerDurationSec || 30, (rem, frac) => {
+      fill.style.width = (frac * 100) + '%';
+      left.textContent = Math.ceil(rem) + ' сек';
+      fill.className = 'fill' + (rem < 5 ? ' danger' : rem < 10 ? ' warn' : '');
+    }, () => {
+      if (answers[idx] == null) {
+        const st = document.getElementById('status');
+        if (st) st.innerHTML = '<i class="ph ph-alarm"></i> Время вышло. Ждём следующий вопрос';
+        opts.querySelectorAll('button').forEach(b => { b.disabled = true; });
+      }
+    });
+  }
+}
+
+function answer(idx, opt) {
+  if (answers[idx] != null) return;
+  answers[idx] = opt;
+  lsSet('answers:' + me.slug, answers);
+  if (fb) fb.pushAnswer(me.slug, idx, opt, myScore(), allAnswered()).catch(e => console.warn('answer later', e.message));
+  render();
+}
+
+// ===== Тест в своём темпе =====
+function renderSelf() {
+  let idx = selfFeedback ? selfFeedback.idx : firstUnanswered();
+  if (idx < 0) { selfFeedback = null; render(true); return; }
+  const q = QUESTIONS[idx];
+  const my = answers[idx];
+  const done = my != null;
+  content.innerHTML = `
+    <div class="progress-row">${dotsHtml(idx)}</div>
+    <div class="q-counter">${qMeta(q, idx)}<span class="pill">в своём темпе</span></div>
+    <div class="q-text">${escapeHtml(q.text)}</div>
+    <div id="opts"></div>
+    ${done ? `<div class="feedback ${my === q.correct ? 'ok' : 'no'}"><b>${my === q.correct ? 'Верно' : 'Не совсем. Правильный ответ: ' + letter(q.correct)}</b>${escapeHtml(q.explanation)}</div>
+      <button class="btn btn-primary btn-big btn-wide" id="next-btn">${firstUnanswered() < 0 ? 'Посмотреть результат' : 'Следующий вопрос'} <i class="ph ph-arrow-right"></i></button>`
+      : `<div class="status-line"><i class="ph ph-hand-pointing"></i> Выберите один вариант. После ответа покажем объяснение.</div>`}
+  `;
+  const opts = document.getElementById('opts');
+  q.options.forEach((opt, i) => {
+    const b = document.createElement('button');
+    let cls = 'q-opt';
+    if (done) { if (i === q.correct) cls += ' correct'; else if (my === i) cls += ' wrong'; else cls += ' dim'; }
+    b.className = cls; b.disabled = done;
+    b.innerHTML = `<span class="letter">${letter(i)}</span><span>${escapeHtml(opt)}</span>`;
+    b.addEventListener('click', () => {
+      if (answers[idx] != null) return;
+      answer(idx, i);
+      selfFeedback = { idx };
+      render(true);
+    });
+    opts.appendChild(b);
+  });
+  const nb = document.getElementById('next-btn');
+  if (nb) nb.addEventListener('click', () => { selfFeedback = null; render(true); });
+}
+
+// ===== Результат =====
+function scoreTag(s) {
+  if (s >= 18) return ['ph-star', 'Уверенный пользователь ИИ'];
+  if (s >= 15) return ['ph-fire', 'Крепкая база, почти всё знаете'];
+  if (s >= 10) return ['ph-thumbs-up', 'Ядро курса освоено'];
+  return ['ph-target', 'Есть что освежить, и это нормально'];
+}
+
+function renderResult() {
+  const s = myScore();
+  const [icon, tag] = scoreTag(s);
+  const byLesson = Object.keys(LESSONS).map(l => {
+    const qs = QUESTIONS.map((q, i) => ({ q, i })).filter(x => String(x.q.lesson) === String(l));
+    const ok = qs.filter(x => answers[x.i] === x.q.correct).length;
+    return { l, title: LESSONS[l], ok, total: qs.length };
+  });
+  const wrong = QUESTIONS.map((q, i) => ({ q, i })).filter(x => answers[x.i] != null && answers[x.i] !== x.q.correct);
+  const missed = QUESTIONS.filter((_, i) => answers[i] == null).length;
+  const p = session.phase;
+  const local = localMode();
+  const waitText = local ? 'Дальше карта внедрения: шесть коротких полей о том, что вы делаете с этими знаниями для компании.'
+    : p === 'discussion' ? 'Альберт разбирает вопросы, где ошибались чаще всего. Карта внедрения откроется следующим шагом.'
+    : 'Тест пройден. Ждём остальных, потом разбор и карта внедрения.';
+  content.innerHTML = `
+    <div class="score-hero">
+      <div class="lbl">Ваш результат</div>
+      <div class="num">${s}<span>/${QUESTIONS.length}</span></div>
+      <div class="tag"><i class="ph ${icon}"></i> ${tag}</div>
+    </div>
+    <div class="card sage">
+      <div class="card-tag sage"><i class="ph ph-info"></i> ${p === 'discussion' && !local ? 'Разбор' : 'Что дальше'}</div>
+      <div class="card-body">${waitText}</div>
+      ${local ? `<button class="btn btn-primary mt-2" id="to-card"><i class="ph ph-map-trifold"></i> Открыть карту внедрения</button>`
+        : `<button class="btn btn-ghost btn-sm mt-2" id="card-early"><i class="ph ph-pencil-simple"></i> Начать карту заранее</button>`}
+    </div>
+    <div class="card">
+      <div class="card-tag"><i class="ph ph-chart-bar"></i> По занятиям</div>
+      <div class="lesson-bars">${byLesson.map(b => `
+        <div class="lesson-bar"><span>${b.l}. ${escapeHtml(b.title)}</span><b class="ta-c">${b.ok}/${b.total}</b>
+        <div class="track"><i style="width:${b.total ? (b.ok / b.total * 100) : 0}%"></i></div></div>`).join('')}
+      </div>
+      ${missed ? `<div class="muted small mt-2">Без ответа: ${missed} ${plural(missed, 'вопрос', 'вопроса', 'вопросов')}.</div>` : ''}
+    </div>
+    ${wrong.length ? `<div class="card">
+      <div class="card-tag"><i class="ph ph-arrow-clockwise"></i> Стоит освежить</div>
+      ${wrong.map(x => `<div class="mistake-item"><div class="q">${x.i + 1}. ${escapeHtml(x.q.text)}</div>
+        <div class="a"><i class="ph ph-check"></i> ${letter(x.q.correct)}. ${escapeHtml(x.q.options[x.q.correct])}</div>
+        <div class="muted small">${escapeHtml(x.q.explanation)}</div></div>`).join('')}
+    </div>` : `<div class="card sage"><div class="card-body"><i class="ph ph-check-circle"></i> Ни одной ошибки. Сильно.</div></div>`}
+  `;
+  const tc = document.getElementById('to-card');
+  if (tc) tc.addEventListener('click', () => { lsSet('localResultSeen:' + me.slug, true); render(true); });
+  const ce = document.getElementById('card-early');
+  if (ce) ce.addEventListener('click', () => { lsSet('cardEarly:' + me.slug, true); render(true); });
+}
+
+// ===== Карта внедрения =====
+const pushCardDebounced = debounce(() => pushCardNow(), 700);
+function pushCardNow() {
+  if (!me) return;
+  const filledCount = cardFilledCount(card);
+  const payload = { ...card, filledCount, totalFields: CARD_FIELDS.length, ts: Date.now() };
+  const hint = document.getElementById('save-hint');
+  if (!fb) { if (hint) hint.innerHTML = savedText(filledCount, true); return; }
+  fb.pushCard(me.slug, payload).then(() => {
+    const h = document.getElementById('save-hint');
+    if (h) h.innerHTML = savedText(filledCount, false);
+  }).catch(() => {
+    const h = document.getElementById('save-hint');
+    if (h) h.innerHTML = '<i class="ph ph-warning"></i> Нет связи: карта сохранена в телефоне, отправим позже';
+    setTimeout(pushCardNow, 6000);
+  });
+}
+function savedText(n, localOnly) {
+  return `<i class="ph ph-check-circle"></i> Заполнено ${n} из ${CARD_FIELDS.length}. ${localOnly ? 'Сохранено в телефоне' : 'Сохранено'}`;
+}
+
+function renderCard() {
+  const p = session.phase;
+  const local = localMode();
+  const issued = p === 'certificate' || p === 'done' || local;
+  content.innerHTML = `
+    <div class="h1">Что я делаю с этими знаниями для компании</div>
+    <div class="lead">Карта внедрения: шесть коротких полей. Пишите конкретно, на своих задачах. Альберт соберёт карты в отчёт руководству «Перспективы».</div>
+    ${issued ? `<div class="banner on"><i class="ph ph-certificate"></i><div><b>Сертификат уже ждёт вас.</b> Заполните минимум ${MIN_CARD_FIELDS} поля из ${CARD_FIELDS.length}, и он откроется.</div></div>` : ''}
+    ${p === 'card' && session.timerStartedAt && !local ? `<div class="timer-text"><span>Время на карту</span><span class="left" id="timer-left"></span></div>
+      <div class="timer-bar"><div class="fill" id="timer-fill"></div></div>` : ''}
+    <div class="card accent">
+      ${CARD_FIELDS.map((f, i) => `
+        <div class="field" ${i === CARD_FIELDS.length - 1 ? 'style="margin-bottom:0"' : ''}>
+          <label class="field-label" for="f-${f.key}"><span class="field-num" id="n-${f.key}">${i + 1}</span><span>${escapeHtml(f.label)}</span></label>
+          <div class="field-hint">${escapeHtml(f.hint)}</div>
+          ${f.withHours ? `<div class="hours-row"><input type="number" inputmode="decimal" min="0" max="80" step="0.5" id="f-hoursNum" placeholder="0" value="${escapeHtml(card.hoursNum || '')}"><span class="muted small">часов в неделю (примерно)</span></div>` : ''}
+          <textarea id="f-${f.key}" placeholder="${escapeHtml(f.placeholder)}">${escapeHtml(card[f.key] || '')}</textarea>
+        </div>`).join('')}
+    </div>
+    <div class="muted small" id="save-hint">${savedText(cardFilledCount(card), !fb)}</div>
+    <div id="card-cta" class="mt-4"></div>
+    ${(cardEarly() && p !== 'card' && !issued) ? '<div class="ta-c mt-2"><button class="linkbtn" id="back-result">Назад к результату теста</button></div>' : ''}
+  `;
+  const updateMarks = () => {
+    CARD_FIELDS.forEach(f => {
+      const n = document.getElementById('n-' + f.key);
+      const filled = f.withHours ? ((card[f.key] || '').trim() || Number(card.hoursNum) > 0) : (card[f.key] || '').trim();
+      if (n) n.className = 'field-num' + (filled ? ' done' : '');
+    });
+    renderCardCta();
+  };
+  CARD_FIELDS.forEach(f => {
+    const el = document.getElementById('f-' + f.key);
+    el.addEventListener('input', () => { card[f.key] = el.value; onCardChange(); updateMarks(); });
+  });
+  const hn = document.getElementById('f-hoursNum');
+  if (hn) hn.addEventListener('input', () => { card.hoursNum = hn.value; onCardChange(); updateMarks(); });
+  const br = document.getElementById('back-result');
+  if (br) br.addEventListener('click', () => { lsSet('cardEarly:' + me.slug, false); render(true); });
+  updateMarks();
+  if (p === 'card' && session.timerStartedAt && !local) {
+    const fill = document.getElementById('timer-fill');
+    const left = document.getElementById('timer-left');
+    stopTimer = runTimer(session.timerStartedAt, session.timerDurationSec || 600, (rem, frac) => {
+      fill.style.width = (frac * 100) + '%';
+      left.textContent = `${Math.floor(rem / 60)}:${String(Math.floor(rem % 60)).padStart(2, '0')}`;
+      fill.className = 'fill' + (rem < 45 ? ' danger' : rem < 120 ? ' warn' : '');
+    }, () => { const l = document.getElementById('timer-left'); if (l) l.textContent = 'можно дописать'; });
+  }
+}
+
+function onCardChange() {
+  lsSet('card:' + me.slug, card);
+  const hint = document.getElementById('save-hint');
+  if (hint) hint.innerHTML = '<i class="ph ph-cloud-arrow-up"></i> Сохраняем…';
+  pushCardDebounced();
+}
+
+function renderCardCta() {
+  const el = document.getElementById('card-cta');
+  if (!el) return;
+  const n = cardFilledCount(card);
+  const p = session.phase;
+  const issued = p === 'certificate' || p === 'done' || localMode();
+  const left = Math.max(0, MIN_CARD_FIELDS - n);
+  if (issued) {
+    el.innerHTML = `<button class="btn btn-coral btn-big btn-wide" id="get-cert" ${left ? 'disabled' : ''}><i class="ph ph-certificate"></i> ${left ? `Заполните ещё ${left} ${plural(left, 'поле', 'поля', 'полей')}` : 'Получить сертификат'}</button>`;
+    const b = document.getElementById('get-cert');
+    if (b) b.addEventListener('click', () => { if (cardFilledCount(card) >= MIN_CARD_FIELDS) { pushCardNow(); issueCertificate(); render(true); } });
+  } else {
+    el.innerHTML = `<div class="card sage" style="margin:0"><div class="card-body"><i class="ph ph-info"></i> ${n >= MIN_CARD_FIELDS
+      ? 'Карта сохранена и уже у Альберта. Сертификат появится на этом экране, когда Альберт его выдаст.'
+      : `Для сертификата нужно минимум ${MIN_CARD_FIELDS} поля из ${CARD_FIELDS.length}. Сейчас заполнено ${n}.`}</div></div>`;
+  }
+}
+
+// ===== Сертификат =====
+function issueCertificate() {
+  if (cert) return;
+  cert = { serial: serialFor(me.seq, me.slug), at: Date.now() };
+  lsSet('cert:' + me.slug, cert);
+  if (fb) fb.markCertificate(me.slug, cert.serial).catch(() => {});
+}
+
+function renderCert() {
+  const s = myScore();
+  const answered = answeredCount();
+  content.innerHTML = `
+    <div class="cert-screen">
+      <div class="kicker ta-c"><i class="ph ph-confetti"></i> Поздравляем с окончанием курса</div>
+      <div class="h1 ta-c">${escapeHtml(me.name)}</div>
+      <div class="lead ta-c" style="margin-bottom:6px">Вы прошли корпоративный курс «ИИ. Новая реальность». Сохраните сертификат: кнопка ниже скачает его в хорошем качестве.</div>
+      <div class="cert-wrap" id="cert-wrap">${certificateHTML(me.name, cert.serial)}</div>
+      <div class="row" style="justify-content:center">
+        <button class="btn btn-coral btn-big" id="dl-pdf"><i class="ph ph-download-simple"></i> Скачать сертификат (PDF)</button>
+        <button class="btn btn-ghost" id="dl-png"><i class="ph ph-image"></i> Картинкой (PNG)</button>
+      </div>
+      <div class="hint-line ta-c" id="dl-hint"></div>
+      <div class="card sage mt-4">
+        <div class="card-body">${answered ? `Тест: <b>${s} из ${QUESTIONS.length}</b>. ` : ''}${(fb && connected) ? 'Карта внедрения сохранена и ушла Альберту.' : 'Карта внедрения сохранена в телефоне и уйдёт Альберту, когда появится связь.'} Спасибо за пять занятий!</div>
+      </div>
+      <div class="ta-c"><button class="linkbtn" id="cert-exit">Это не мой сертификат</button></div>
+    </div>
+  `;
+  const wrap = document.getElementById('cert-wrap');
+  const doFit = () => fitCert(wrap);
+  doFit();
+  window.removeEventListener('resize', window.__certFit || (() => {}));
+  window.__certFit = doFit;
+  window.addEventListener('resize', doFit);
+  const img = wrap.querySelectorAll('img');
+  img.forEach(i => i.addEventListener('load', doFit));
+  const dl = async (format, btn) => {
+    const hint = document.getElementById('dl-hint');
+    const orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="ph ph-spinner"></i> Готовим файл…';
+    try {
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      await downloadCertificate(document.getElementById('cert'), me.name, format);
+      hint.className = 'hint-line ok'; hint.textContent = 'Готово. Файл в загрузках.';
+    } catch (e) {
+      console.error(e);
+      hint.className = 'hint-line bad'; hint.textContent = 'Не получилось скачать. Сделайте снимок экрана или откройте страницу в Chrome или Safari.';
+    } finally { btn.disabled = false; btn.innerHTML = orig; }
+  };
+  document.getElementById('dl-pdf').addEventListener('click', (e) => dl('pdf', e.currentTarget));
+  document.getElementById('dl-png').addEventListener('click', (e) => dl('png', e.currentTarget));
+  document.getElementById('cert-exit').addEventListener('click', () => {
+    if (!confirm('Выйти из этого имени? Сертификат останется у участника в базе, но с этого экрана исчезнет.')) return;
+    lsRemove('cert:' + me.slug); logout();
+  });
+  requestAnimationFrame(() => triggerCelebration());
+}
+
+// ===== Firebase (грузится асинхронно, без него всё работает локально) =====
+setTimeout(() => { if (!everConnected) { offlineSuspected = true; render(true); } }, 7000);
+
+import('./firebase.js').then((mod) => {
+  fb = mod;
+  fb.subscribeConnected((c) => {
+    connected = c;
+    if (c) { everConnected = true; offlineSuspected = false; if (me && sessionLoaded) { ensureRegisteredOnce(); syncAll(); } }
+    render(true);
+  });
+  fb.subscribeSession((s) => {
+    if (lastPhase !== null && s.phase !== lastPhase) allowAutoCert = true;
+    lastPhase = s.phase;
+    session = s;
+    sessionLoaded = true;
+    // «Очистить всё» у ведущего: новая эпоха сессии. Участник входит заново (сертификат на экране сохраняется).
+    if (me && !cert) {
+      if (me.epoch == null) { me.epoch = s.epoch || 0; setMe(me); }
+      else if ((s.epoch || 0) !== me.epoch) {
+        ['answers:', 'card:', 'cardEarly:', 'localResultSeen:'].forEach(k => lsRemove(k + me.slug));
+        lsSet('resetNotice', true);
+        logout();
+        return;
+      }
+    }
+    if (me && cert && me.epoch != null && (s.epoch || 0) !== me.epoch) staleCert = true;
+    if (me && !staleCert) ensureRegisteredOnce();
+    render();
+  });
+}).catch((e) => {
+  console.warn('Firebase недоступен, работаем локально', e);
+  offlineSuspected = true;
+  render(true);
+});
+
+let registeredOnce = false;
+function ensureRegisteredOnce() {
+  if (registeredOnce || !me) return;
+  registeredOnce = true;
+  ensureRegistered();
+}
+
+render(true);
+</script>
+</body>
+</html>
