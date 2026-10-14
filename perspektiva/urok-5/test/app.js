@@ -176,7 +176,7 @@ export function serialFor(seq, slug) {
     for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
     num = Math.abs(h).toString(36).slice(0, 4).toUpperCase().padStart(4, '0');
   }
-  return `NV · AIB · 2026 · PRS-LT · ${num}`;
+  return `NV · AIB · 2026 · PRS · ${num}`;
 }
 
 export function certificateHTML(name, serial) {
@@ -198,7 +198,7 @@ export function certificateHTML(name, serial) {
       <div class="cert-sub">настоящим подтверждается, что</div>
       <div class="cert-name" style="font-size:${size}px">${n}</div>
       <div class="cert-rule"></div>
-      <div class="cert-text">прошёл(ла) корпоративный курс <b>«ИИ. Новая реальность»</b><br>для команды LT ООО «Перспектива»</div>
+      <div class="cert-text">прошёл(ла) корпоративный курс <b>«ИИ. Новая реальность»</b><br>для ООО «Перспектива»</div>
       <div class="cert-meta">5 занятий · сентябрь–октябрь 2026</div>
     </div>
     <div class="cert-foot">
@@ -210,7 +210,7 @@ export function certificateHTML(name, serial) {
       </div>
       <img class="cert-stamp" src="stamp.png" alt="">
       <div class="cert-serial-block">
-        <div class="cert-prog"><b>Программа</b><br>ИИ-грамотность, промпты, Gem-боты,<br>блокноты, Canvas, ChatGPT</div>
+        <div class="cert-prog"><b>Программа</b><br>ИИ-грамотность, промпт-инженерия,<br>ассистентный подход, агентный сценарий,<br>создание приложений с помощью ИИ</div>
         <div class="cert-serial">${escapeHtml(serial)}</div>
       </div>
     </div>
