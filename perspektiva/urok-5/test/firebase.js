@@ -86,6 +86,10 @@ export function pushAnswer(slug, qIdx, answer, score, finished) {
   });
 }
 
+export function pushTime(slug, qIdx, sec) {
+  return update(ref(db, `${ROOT}/users/${slug}/times`), { [qIdx]: sec });
+}
+
 export function pushCard(slug, card) {
   return set(ref(db, `${ROOT}/users/${slug}/card`), card);
 }

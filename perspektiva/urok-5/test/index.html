@@ -165,7 +165,7 @@ function renderRegister(prefill = '') {
       </div>
       <button id="enter-btn" class="btn btn-primary btn-big btn-wide mt-2" disabled>Войти <i class="ph ph-arrow-right"></i></button>
     </div>
-    <div class="muted small ta-c">Темп задаёт Альберт: вопросы появятся на этом экране сами, ничего обновлять не нужно.</div>
+    <div class="muted small ta-c">Тест начнётся по команде Альберта, экран обновится сам. Дальше каждый идёт в своём темпе: на вопрос 30 секунд.</div>
   `;
   const input = document.getElementById('full-name');
   const btn = document.getElementById('enter-btn');
@@ -251,7 +251,7 @@ function renderLobby() {
     <div class="card accent ta-c" style="padding:34px 22px">
       <div class="big-icon"><i class="ph ph-hourglass-medium"></i></div>
       <div class="card-title">${escapeHtml(me.name.split(' ')[0])}, вы в списке</div>
-      <div class="card-body">Альберт скоро запустит тест. Экран не закрывайте: вопрос появится сам.</div>
+      <div class="card-body">Альберт скоро запустит тест. Экран не закрывайте: первый вопрос появится сам. На каждый вопрос 30 секунд, время пошло, тест сам переходит дальше.</div>
       <div class="muted small mt-4">20 вопросов по всем пяти занятиям: от ИИ-грамотности до блокнотов, Canvas и платного ChatGPT.</div>
     </div>
     ${offlineSuspected && !(fb && connected) ? `
@@ -386,21 +386,32 @@ function answer(idx, opt) {
   render();
 }
 
-// ===== Тест в своём темпе =====
+// ===== Тест: каждый идёт сам после команды Альберта, 30 секунд на вопрос =====
+const Q_SEC = 30;
+const AUTO_NEXT_SEC = 8;
+let autoNext = null;
+function qStartKey(idx) { return 'qstart:' + me.slug + ':' + idx; }
 function renderSelf() {
+  if (autoNext) { clearInterval(autoNext); autoNext = null; }
   let idx = selfFeedback ? selfFeedback.idx : firstUnanswered();
   if (idx < 0) { selfFeedback = null; render(true); return; }
   const q = QUESTIONS[idx];
   const my = answers[idx];
   const done = my != null;
+  let started = lsGet(qStartKey(idx), null);
+  if (!done && !started) { started = Date.now(); lsSet(qStartKey(idx), started); }
+  const timedOut = my === -1;
   content.innerHTML = `
     <div class="progress-row">${dotsHtml(idx)}</div>
-    <div class="q-counter">${qMeta(q, idx)}<span class="pill">в своём темпе</span></div>
+    ${!done ? `<div class="timer-text"><span>Время на ответ</span><span class="left" id="timer-left">${Q_SEC} сек</span></div>
+    <div class="timer-bar"><div class="fill" id="timer-fill"></div></div>` : ''}
+    <div class="q-counter">${qMeta(q, idx)}<span class="pill">30 сек на вопрос</span></div>
     <div class="q-text">${escapeHtml(q.text)}</div>
     <div id="opts"></div>
-    ${done ? `<div class="feedback ${my === q.correct ? 'ok' : 'no'}"><b>${my === q.correct ? 'Верно' : 'Не совсем. Правильный ответ: ' + letter(q.correct)}</b>${escapeHtml(q.explanation)}</div>
-      <button class="btn btn-primary btn-big btn-wide" id="next-btn">${firstUnanswered() < 0 ? 'Посмотреть результат' : 'Следующий вопрос'} <i class="ph ph-arrow-right"></i></button>`
-      : `<div class="status-line"><i class="ph ph-hand-pointing"></i> Выберите один вариант. После ответа покажем объяснение.</div>`}
+    ${done ? `<div class="feedback ${my === q.correct ? 'ok' : 'no'}"><b>${my === q.correct ? 'Верно' : (timedOut ? 'Время вышло. Правильный ответ: ' + letter(q.correct) : 'Не совсем. Правильный ответ: ' + letter(q.correct))}</b>${escapeHtml(q.explanation)}</div>
+      <button class="btn btn-primary btn-big btn-wide" id="next-btn">${firstUnanswered() < 0 ? 'Посмотреть результат' : 'Следующий вопрос'} <i class="ph ph-arrow-right"></i></button>
+      <div class="muted small ta-c" id="auto-next">Дальше сам через ${AUTO_NEXT_SEC} сек</div>`
+      : `<div class="status-line"><i class="ph ph-hand-pointing"></i> Выберите один вариант. На вопрос 30 секунд, потом тест сам пойдёт дальше.</div>`}
   `;
   const opts = document.getElementById('opts');
   q.options.forEach((opt, i) => {
@@ -411,14 +422,41 @@ function renderSelf() {
     b.innerHTML = `<span class="letter">${letter(i)}</span><span>${escapeHtml(opt)}</span>`;
     b.addEventListener('click', () => {
       if (answers[idx] != null) return;
-      answer(idx, i);
+      const sec = Math.min(Q_SEC, Math.round((Date.now() - started) / 100) / 10);
+      saveTime(idx, sec);
       selfFeedback = { idx };
+      answer(idx, i);
       render(true);
     });
     opts.appendChild(b);
   });
+  const goNext = () => { if (autoNext) { clearInterval(autoNext); autoNext = null; } selfFeedback = null; render(true); };
   const nb = document.getElementById('next-btn');
-  if (nb) nb.addEventListener('click', () => { selfFeedback = null; render(true); });
+  if (nb) {
+    nb.addEventListener('click', goNext);
+    let left = AUTO_NEXT_SEC; const an = document.getElementById('auto-next');
+    autoNext = setInterval(() => { left -= 1; if (an) an.textContent = `Дальше сам через ${left} сек`; if (left <= 0) goNext(); }, 1000);
+  }
+  if (!done) {
+    const fill = document.getElementById('timer-fill');
+    const leftEl = document.getElementById('timer-left');
+    stopTimer = runTimer(started, Q_SEC, (rem, frac) => {
+      fill.style.width = (frac * 100) + '%';
+      leftEl.textContent = Math.ceil(rem) + ' сек';
+      fill.className = 'fill' + (rem < 5 ? ' danger' : rem < 10 ? ' warn' : '');
+    }, () => {
+      if (answers[idx] != null) return;
+      saveTime(idx, Q_SEC);
+      selfFeedback = { idx };
+      answer(idx, -1);
+      render(true);
+    });
+  }
+}
+function saveTime(idx, sec) {
+  const t = lsGet('times:' + me.slug, {}) || {};
+  t[idx] = sec; lsSet('times:' + me.slug, t);
+  if (fb && fb.pushTime) fb.pushTime(me.slug, idx, sec).catch(() => {});
 }
 
 // ===== Результат =====
