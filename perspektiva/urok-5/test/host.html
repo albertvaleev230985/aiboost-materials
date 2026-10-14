@@ -73,9 +73,29 @@ let stopTimer = null;
 let lastSnap = '';
 let lastReport = '';
 
-fb.subscribeConnected((c) => { connected = c; renderNet(); });
-fb.subscribeSession((s) => { session = s; rerender(); });
-fb.subscribeUsers((u) => { users = u || {}; rerender(); });
+// 14.10.2026: у ведущего живое соединение Firebase (websocket) может резаться провайдером даже с VPN.
+// Поэтому дашборд читает и пишет базу обычными веб-запросами (REST), опрос каждые 2 секунды.
+const DBURL = 'https://ai-boost-8195c-default-rtdb.europe-west1.firebasedatabase.app/' + fb.ROOT;
+let restOk = false;
+async function restPoll() {
+  try {
+    const r = await fetch(DBURL + '.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = (await r.json()) || {};
+    session = { ...fb.DEFAULT_SESSION, ...(d.session || {}) };
+    users = d.users || {};
+    restOk = true; connected = true; renderNet(); rerender();
+  } catch (e) { restOk = false; connected = false; renderNet(); }
+}
+async function restSetSession(patch) {
+  const r0 = await fetch(DBURL + '/session.json?t=' + Date.now(), { cache: 'no-store' });
+  const cur = (await r0.json()) || {};
+  const merged = { ...fb.DEFAULT_SESSION, epoch: cur.epoch || 0, ...cur, ...patch };
+  const r = await fetch(DBURL + '/session.json', { method: 'PUT', body: JSON.stringify(merged) });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  session = merged; rerender();
+}
+restPoll(); setInterval(restPoll, 2000);
 
 function renderNet() {
   document.getElementById('net').innerHTML = connected ? '<i class="ph ph-wifi-high"></i> онлайн' : '<i class="ph ph-wifi-slash"></i> нет связи';
@@ -237,27 +257,27 @@ function actionsBlock() {
 async function doAction(act) {
   try {
     switch (act) {
-      case 'start-test': await fb.setSession({ phase: 'test', currentQuestion: -1, timerStartedAt: null, showCorrect: false }); break;
-      case 'start-self': await fb.setSession({ phase: 'test-self', timerStartedAt: null, showCorrect: false }); break;
-      case 'resume-test': await fb.setSession({ phase: 'test', timerStartedAt: null, showCorrect: false }); break;
+      case 'start-test': await restSetSession({ phase: 'test', currentQuestion: -1, timerStartedAt: null, showCorrect: false }); break;
+      case 'start-self': await restSetSession({ phase: 'test-self', timerStartedAt: null, showCorrect: false }); break;
+      case 'resume-test': await restSetSession({ phase: 'test', timerStartedAt: null, showCorrect: false }); break;
       case 'next-q': {
         const next = (session.currentQuestion ?? -1) + 1;
-        if (next >= QUESTIONS.length) await fb.setSession({ phase: 'discussion', timerStartedAt: null, showCorrect: false });
-        else await fb.setSession({ currentQuestion: next, timerStartedAt: Date.now(), timerDurationSec: 30, showCorrect: false });
+        if (next >= QUESTIONS.length) await restSetSession({ phase: 'discussion', timerStartedAt: null, showCorrect: false });
+        else await restSetSession({ currentQuestion: next, timerStartedAt: Date.now(), timerDurationSec: 30, showCorrect: false });
         break;
       }
-      case 'reveal': await fb.setSession({ showCorrect: true, timerStartedAt: null }); break;
-      case 'discussion': await fb.setSession({ phase: 'discussion', timerStartedAt: null, showCorrect: false }); break;
-      case 'start-card': await fb.setSession({ phase: 'card', timerStartedAt: Date.now(), timerDurationSec: 600, showCorrect: false }); break;
+      case 'reveal': await restSetSession({ showCorrect: true, timerStartedAt: null }); break;
+      case 'discussion': await restSetSession({ phase: 'discussion', timerStartedAt: null, showCorrect: false }); break;
+      case 'start-card': await restSetSession({ phase: 'card', timerStartedAt: Date.now(), timerDurationSec: 600, showCorrect: false }); break;
       case 'extend-card': {
         const started = session.timerStartedAt || Date.now();
         const rem = Math.max(0, (session.timerDurationSec || 600) - (Date.now() - started) / 1000);
-        await fb.setSession({ timerStartedAt: Date.now(), timerDurationSec: Math.round(rem + 300) });
+        await restSetSession({ timerStartedAt: Date.now(), timerDurationSec: Math.round(rem + 300) });
         break;
       }
-      case 'certificate': await fb.setSession({ phase: 'certificate', timerStartedAt: null }); break;
-      case 'end': await fb.setSession({ phase: 'done', timerStartedAt: null }); break;
-      case 'back-lobby': await fb.setSession({ phase: 'lobby', currentQuestion: -1, timerStartedAt: null, showCorrect: false }); break;
+      case 'certificate': await restSetSession({ phase: 'certificate', timerStartedAt: null }); break;
+      case 'end': await restSetSession({ phase: 'done', timerStartedAt: null }); break;
+      case 'back-lobby': await restSetSession({ phase: 'lobby', currentQuestion: -1, timerStartedAt: null, showCorrect: false }); break;
     }
   } catch (e) { alert('Не получилось: ' + e.message); }
 }
