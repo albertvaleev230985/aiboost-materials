@@ -9,7 +9,7 @@ export const LS_PREFIX = LS_BASE + (PROFILE ? `p-${PROFILE}:` : '');
 export const ENTRY_URL = 'https://materials.neovida.ai/potok-22-09/urok-8/test/';
 export const BRAND = 'neovida · Нейропросвещение';
 export const CLIENT_LINE = '«ИИ. Новая реальность» · поток 6 · финал курса';
-export const MIN_CARD_FIELDS = 4;
+export const MIN_CARD_FIELDS = 0;  // поток 6: рефлексию в приложении не проводим (решение 15.10), сертификат сразу после разбора
 
 // ===== localStorage (всё обёрнуто: в приватном режиме может падать) =====
 export function lsGet(key, fallback = null) {
