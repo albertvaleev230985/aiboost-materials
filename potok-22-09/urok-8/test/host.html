@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<style>@media (min-width:1300px){body{zoom:1.3}}</style>
 </head>
 <body>
 
@@ -160,6 +161,7 @@ const PHASES = [
   ['lobby', 'ph-hourglass-medium', 'Лобби: вход по QR'],
   ['test-self', 'ph-timer', 'Тест: 30 сек на вопрос'],
   ['discussion', 'ph-chat-circle-dots', 'Разбор: тепловая карта'],
+  ['card', 'ph-pen-nib', 'Манифест'],
   ['certificate', 'ph-certificate', 'Сертификаты'],
   ['done', 'ph-flag-checkered', 'Урок завершён'],
 ];
@@ -199,6 +201,10 @@ function render() {
         <div>${topMistakesBlock(L)}</div>
         <h2 class="h2">Тепловая карта · ${QUESTIONS.length} вопросов</h2>
         <div class="heatmap">${heatmapBlock(L)}</div>` : ''}
+
+        ${['card', 'certificate', 'done'].includes(session.phase) ? `
+        <h2 class="h2"><i class="ph ph-pen-nib"></i> Манифесты</h2>
+        <div class="cards-list">${cardsBlock(L)}</div>` : ''}
 
 
       </div>
@@ -244,8 +250,8 @@ function actionsBlock() {
     return out.join('');
   }
   if (p === 'test-self') return `<div class="muted small ta-c">Слева видно, кто на каком вопросе и сколько верных. Когда все закончили, нажмите «К разбору».</div>` + B('discussion', 'ph-chat-circle-dots', 'К разбору');
-  if (p === 'discussion') return `<div class="muted small ta-c">Тепловая карта ниже: какие занятия красные, туда глубже в разборе курса. Сертификаты выдаём в финале урока.</div>` + B('certificate', 'ph-certificate', 'Сразу выдать сертификаты', 'btn-coral btn-big') + B('start-self', 'ph-arrow-left', 'Вернуть тест (кто не закончил, допройдёт)', 'btn-ghost');
-  if (p === 'card') return B('certificate', 'ph-certificate', 'Выдать сертификаты', 'btn-coral btn-big') + B('extend-card', 'ph-timer', 'Ещё 5 минут на карту', 'btn-ghost');
+  if (p === 'discussion') return `<div class="muted small ta-c">Разберите 3–5 самых красных вопросов, потом откройте манифест.</div>` + B('start-card', 'ph-pen-nib', 'Манифест (5 мин)', 'btn-coral btn-big') + B('certificate', 'ph-certificate', 'Сразу выдать сертификаты', 'btn-ghost') + B('start-self', 'ph-arrow-left', 'Вернуть тест (кто не закончил, допройдёт)', 'btn-ghost');
+  if (p === 'card') return `<div class="muted small ta-c">Манифесты появляются ниже, под тепловой картой. Прочитайте 3–4 вслух. Сертификаты выдаём в финале урока.</div>` + B('certificate', 'ph-certificate', 'Выдать сертификаты', 'btn-coral btn-big') + B('extend-card', 'ph-timer', 'Ещё 5 минут на манифест', 'btn-ghost');
   if (p === 'certificate') return `<div class="muted small ta-c">У каждого на телефоне сертификат с салютом и кнопкой «Скачать». Номер как у бумажного.</div>` + B('end', 'ph-flag-checkered', 'Завершить урок') + B('discussion', 'ph-arrow-left', 'Вернуться к разбору', 'btn-ghost');
   if (p === 'done') return `<div class="muted small ta-c">Сертификаты остаются на экранах участников.</div>` + B('certificate', 'ph-certificate', 'Снова фаза сертификатов', 'btn-ghost') + B('back-lobby', 'ph-arrow-counter-clockwise', 'Вернуть в лобби', 'btn-ghost');
   return '';
@@ -280,7 +286,7 @@ async function doAction(act) {
 }
 
 async function resetEverything() {
-  const word = prompt('Это удалит всех участников, ответы и карты рефлексии без возможности вернуть. Участники войдут заново.\n\nЧтобы подтвердить, введите слово ОЧИСТИТЬ');
+  const word = prompt('Это удалит всех участников, ответы и манифесты без возможности вернуть. Участники войдут заново.\n\nЧтобы подтвердить, введите слово ОЧИСТИТЬ');
   if (word == null) return;
   if (word.trim().toUpperCase() !== 'ОЧИСТИТЬ') { alert('Слово не совпало, ничего не удалено.'); return; }
   try { await fb.resetAll(); lsClearAll(); alert('Готово: сессия чистая.'); }

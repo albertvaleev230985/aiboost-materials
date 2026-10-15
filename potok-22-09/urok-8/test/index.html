@@ -154,7 +154,7 @@ function renderRegister(prefill = '') {
   const notice = lsGet('resetNotice', false);
   content.innerHTML = `
     <div class="h1">Финальное занятие курса</div>
-    <div class="lead">Сегодня тест по всем семи занятиям, разбор курса и сертификат. Введите имя и фамилию так, как их нужно написать в сертификате.</div>
+    <div class="lead">Сегодня тест по всем семи занятиям, ваш манифест и сертификат. Введите имя и фамилию так, как их нужно написать в сертификате.</div>
     ${notice ? '<div class="banner on"><i class="ph ph-arrow-counter-clockwise"></i><div>Альберт начал новую сессию. Войдите, пожалуйста, ещё раз.</div></div>' : ''}
     <div class="card accent">
       <div class="field" style="margin-bottom:0">
@@ -479,9 +479,9 @@ function renderResult() {
   const missed = QUESTIONS.filter((_, i) => answers[i] == null).length;
   const p = session.phase;
   const local = localMode();
-  const waitText = local ? 'Ниже по каждому вопросу: верный ответ и почему. Сертификат Альберт выдаст после разбора.'
-    : p === 'discussion' ? 'Альберт разбирает вопросы, где ошибались чаще всего. Сертификат появится на этом экране после разбора.'
-    : 'Тест пройден. Ждём остальных, потом разбор и сертификаты.';
+  const waitText = local ? 'Следующий шаг: ваш манифест ИИ-мышления, одна фраза. Ниже по каждому вопросу верный ответ и почему.'
+    : p === 'discussion' ? 'Альберт разбирает вопросы, где ошибались чаще всего. Следующий шаг: ваш манифест, одна фраза.'
+    : 'Тест пройден. Следующий шаг: ваш манифест ИИ-мышления, одна фраза.';
   content.innerHTML = `
     <div class="score-hero">
       <div class="lbl">Ваш результат</div>
@@ -491,7 +491,7 @@ function renderResult() {
     <div class="card sage">
       <div class="card-tag sage"><i class="ph ph-info"></i> ${p === 'discussion' && !local ? 'Разбор' : 'Что дальше'}</div>
       <div class="card-body">${waitText}</div>
-
+      <button class="btn btn-coral btn-big btn-wide mt-2" id="card-early"><i class="ph ph-pen-nib"></i> Дальше: мой манифест</button>
     </div>
     <div class="card">
       <div class="card-tag"><i class="ph ph-chart-bar"></i> По занятиям</div>
@@ -527,7 +527,7 @@ function pushCardNow() {
     if (h) h.innerHTML = savedText(filledCount, false);
   }).catch(() => {
     const h = document.getElementById('save-hint');
-    if (h) h.innerHTML = '<i class="ph ph-warning"></i> Нет связи: карта сохранена в телефоне, отправим позже';
+    if (h) h.innerHTML = '<i class="ph ph-warning"></i> Нет связи: манифест сохранён в телефоне, отправим позже';
     setTimeout(pushCardNow, 6000);
   });
 }
@@ -540,8 +540,8 @@ function renderCard() {
   const local = localMode();
   const issued = p === 'certificate' || p === 'done' || local;
   content.innerHTML = `
-    <div class="h1">Было, стало, дальше</div>
-    <div class="lead">Рефлексия по курсу: шесть коротких полей. Пишите конкретно, на своих задачах. Можно вставить ответы из финального интервью с ИИ (шаг 2 шпаргалки). Манифесты Альберт прочитает вслух.</div>
+    <div class="h1">Ваш манифест ИИ-мышления</div>
+    <div class="lead">Одна фраза: как вы теперь думаете вместе с ИИ. Десять примеров в шпаргалке, шаг 3. Манифесты приходят Альберту на экран, несколько он прочитает вслух.</div>
     ${issued ? `<div class="banner on"><i class="ph ph-certificate"></i><div><b>Сертификат уже ждёт вас.</b> Заполните минимум ${MIN_CARD_FIELDS} поля из ${CARD_FIELDS.length}, и он откроется.</div></div>` : ''}
     ${p === 'card' && session.timerStartedAt && !local ? `<div class="timer-text"><span>Время на карту</span><span class="left" id="timer-left"></span></div>
       <div class="timer-bar"><div class="fill" id="timer-fill"></div></div>` : ''}
@@ -606,7 +606,7 @@ function renderCardCta() {
     if (b) b.addEventListener('click', () => { if (cardFilledCount(card) >= MIN_CARD_FIELDS) { pushCardNow(); issueCertificate(); render(true); } });
   } else {
     el.innerHTML = `<div class="card sage" style="margin:0"><div class="card-body"><i class="ph ph-info"></i> ${n >= MIN_CARD_FIELDS
-      ? 'Карта сохранена и уже у Альберта. Сертификат появится на этом экране, когда Альберт его выдаст.'
+      ? 'Манифест сохранён и уже у Альберта. Сертификат появится на этом экране в финале урока.'
       : `Для сертификата нужно минимум ${MIN_CARD_FIELDS} поля из ${CARD_FIELDS.length}. Сейчас заполнено ${n}.`}</div></div>`;
   }
 }
@@ -634,7 +634,7 @@ function renderCert() {
       </div>
       <div class="hint-line ta-c" id="dl-hint"></div>
       <div class="card sage mt-4">
-        <div class="card-body">${answered ? `Тест: <b>${s} из ${QUESTIONS.length}</b>. ` : ''}${(fb && connected) ? 'Результат теста у Альберта.' : 'Результат сохранён в телефоне и уйдёт Альберту, когда появится связь.'} Спасибо за восемь занятий!</div>
+        <div class="card-body">${answered ? `Тест: <b>${s} из ${QUESTIONS.length}</b>. ` : ''}${(fb && connected) ? 'Результат теста и манифест у Альберта.' : 'Результат сохранён в телефоне и уйдёт Альберту, когда появится связь.'} Спасибо за восемь занятий!</div>
       </div>
       <div class="ta-c"><button class="linkbtn" id="cert-exit">Это не мой сертификат</button></div>
     </div>
