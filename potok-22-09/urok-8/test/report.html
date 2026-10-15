@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="robots" content="noindex, nofollow">
+<title>Итоги потока 6 · ИИ. Новая реальность</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-top"><span class="brand-dot"></span>neovida · Нейропросвещение</div>
+    <div class="brand-sub">«ИИ. Новая реальность» · поток 6 · итоги для Альберта</div>
+  </div>
+</header>
+<main class="wrap" style="max-width:960px">
+  <div class="report-tools no-print" id="tools">
+    <button class="btn btn-primary" id="print-btn"><i class="ph ph-file-pdf"></i> Скачать PDF / печать</button>
+    <button class="btn btn-ghost" id="copy-btn"><i class="ph ph-copy"></i> Скопировать отчёт текстом</button>
+    <span class="muted small" id="tool-hint"></span>
+  </div>
+  <div id="content"><div class="card"><div class="muted">Загружаем данные…</div></div></div>
+</main>
+<script type="module">
+import { QUESTIONS, LESSONS, HOST_KEY } from './questions.js';
+import { reportHTML, reportText, copyText } from './report.js';
+
+const content = document.getElementById('content');
+const key = new URLSearchParams(location.search).get('key');
+if (key !== HOST_KEY) {
+  document.getElementById('tools').style.display = 'none';
+  content.innerHTML = '<div class="card warn"><div class="card-title">Нужна ссылка с ключом</div><div class="card-body">Этот отчёт открывается по ссылке, которую прислал Альберт.</div></div>';
+} else {
+  let users = {};
+  let last = '';
+  const { subscribeUsers } = await import('./firebase.js');
+  subscribeUsers((u) => {
+    users = u || {};
+    const html = reportHTML(users, QUESTIONS, LESSONS);
+    if (html !== last) { last = html; content.innerHTML = html; }
+  });
+  document.getElementById('print-btn').addEventListener('click', () => window.print());
+  document.getElementById('copy-btn').addEventListener('click', async () => {
+    const ok = await copyText(reportText(users, QUESTIONS, LESSONS));
+    const h = document.getElementById('tool-hint');
+    h.textContent = ok ? 'Скопировано, можно вставлять в письмо или мессенджер' : 'Откроется окно с текстом для копирования';
+    setTimeout(() => { h.textContent = ''; }, 4000);
+  });
+}
+</script>
+</body>
+</html>
