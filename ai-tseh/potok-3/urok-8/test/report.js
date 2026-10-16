@@ -1,4 +1,4 @@
-// Итоги потока 6 для Альберта: общий для host.html (вкладка) и report.html (ссылка)
+// Итоги Цеха 3 для Альберта: общий для host.html (вкладка) и report.html (ссылка)
 import { CARD_FIELDS, MIN_CARD_FIELDS, cardFilledCount, cardHours, escapeHtml, plural, letter } from './app.js';
 
 export function participants(users) {
