@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Разбор по Лиане</title>
+<style>
+:root{
+  --bg:#F5F3F2; --surface:#FFFFFF; --sunk:#EFEBE9; --ink:#1F1B1A; --muted:#6B6360; --line:#E2DAD6;
+  --coral:#E07461; --coral-ink:#A9452F; --coral-soft:#FBE6E0;
+  --ok:#2C7A51; --ok-soft:#E1F1E7; --late:#9A6300; --late-soft:#FAEFD6;
+  --part:#3A6599; --part-soft:#E2EBF6; --no:#B3261E; --no-soft:#F8E0DD;
+  --open:#6B6360; --open-soft:#ECE7E4;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#151312; --surface:#1E1B1A; --sunk:#262220; --ink:#F0EAE7; --muted:#A69D99; --line:#36302D;
+    --coral:#EC8A78; --coral-ink:#F2A595; --coral-soft:#3A2420;
+    --ok:#73C99A; --ok-soft:#1C3226; --late:#E2B455; --late-soft:#3A2D12;
+    --part:#92B7E4; --part-soft:#1D2A3A; --no:#F08A7F; --no-soft:#3C1F1B;
+    --open:#A69D99; --open-soft:#2A2523;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#151312; --surface:#1E1B1A; --sunk:#262220; --ink:#F0EAE7; --muted:#A69D99; --line:#36302D;
+  --coral:#EC8A78; --coral-ink:#F2A595; --coral-soft:#3A2420;
+  --ok:#73C99A; --ok-soft:#1C3226; --late:#E2B455; --late-soft:#3A2D12;
+  --part:#92B7E4; --part-soft:#1D2A3A; --no:#F08A7F; --no-soft:#3C1F1B;
+  --open:#A69D99; --open-soft:#2A2523;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.55;margin:0;padding-inline:16px;padding-block:0 64px;-webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:clamp(30px,6vw,44px);font-weight:750;letter-spacing:-.02em}
+h2{font-size:24px;font-weight:700;letter-spacing:-.01em}
+h3{font-size:17px;font-weight:650}
+p{margin:0}
+.num,td.n,.tab{font-variant-numeric:tabular-nums}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--coral-ink);font-weight:650}
+.muted{color:var(--muted)}
+a{color:var(--coral-ink)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--coral);outline-offset:2px;border-radius:6px}
+
+header.top{padding-block:28px 18px;display:grid;gap:10px}
+header.top .meta{color:var(--muted);font-size:15px}
+
+nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);margin-inline:-16px;padding:10px 16px;border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+nav.toc::-webkit-scrollbar{display:none}
+nav.toc a{flex:0 0 auto;text-decoration:none;color:var(--ink);font-size:14px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+nav.toc a:hover{border-color:var(--coral)}
+
+section{padding-block:34px 6px;display:grid;gap:16px;scroll-margin-top:60px}
+section > .lead{font-size:16px;color:var(--muted);max-width:65ch}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:4px}
+.stat b{font-size:26px;font-weight:750;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stat span{font-size:13px;color:var(--muted);line-height:1.35}
+@media (max-width:640px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.three{grid-template-columns:1fr}}
+.col{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:10px;align-content:start}
+.col h3{display:flex;align-items:center;gap:8px}
+.dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+ul.clean{margin:0;padding-left:18px;display:grid;gap:8px}
+ul.clean li{padding-left:2px}
+
+.decision{background:var(--coral-soft);border-radius:14px;padding:18px;display:grid;gap:10px}
+.decision h3{color:var(--coral-ink)}
+.decision .row{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.decision .big{font-size:28px;font-weight:750;font-variant-numeric:tabular-nums}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:10px}
+.note{font-size:14px;color:var(--muted)}
+.callout{border-left:3px solid var(--coral);padding:4px 0 4px 14px;display:grid;gap:6px}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:650;background:var(--sunk)}
+tr:last-child td{border-bottom:0}
+td.n{text-align:right;white-space:nowrap}
+tr.total td{font-weight:700;background:var(--sunk)}
+
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.s-ok{color:var(--ok);background:var(--ok-soft)}
+.s-late{color:var(--late);background:var(--late-soft)}
+.s-part{color:var(--part);background:var(--part-soft)}
+.s-no{color:var(--no);background:var(--no-soft)}
+.s-open{color:var(--open);background:var(--open-soft)}
+
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{font:inherit;font-size:14px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.filters .cnt{font-variant-numeric:tabular-nums;color:inherit;opacity:.7;margin-left:4px}
+
+.zone{display:grid;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.zone > h3{padding:14px 16px;background:var(--sunk);border-bottom:1px solid var(--line);font-size:15px}
+.task{display:grid;grid-template-columns:62px 1fr auto;gap:4px 14px;padding:13px 16px;border-bottom:1px solid var(--line)}
+.task:last-child{border-bottom:0}
+.task .d{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:2px}
+.task .t{font-weight:600}
+.task .r{grid-column:2 / 4;font-size:15px;color:var(--ink)}
+.task .r .src{color:var(--muted);font-size:13px}
+.task .st{align-self:start}
+@media (max-width:560px){
+  .task{grid-template-columns:1fr auto}
+  .task .d{grid-column:1 / 3;order:-1}
+  .task .r{grid-column:1 / 3}
+}
+
+.split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:700px){.split{grid-template-columns:1fr}}
+
+.focus{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.focus .sum{font-size:20px;font-weight:750;font-variant-numeric:tabular-nums;color:var(--coral-ink);white-space:nowrap}
+.focus .body{display:grid;gap:8px}
+@media (max-width:560px){.focus{grid-template-columns:1fr}}
+
+.calc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:14px}
+.calc .line{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;padding-bottom:12px;border-bottom:1px dashed var(--line)}
+.calc .line:last-of-type{border-bottom:0}
+.calc .lbl{display:grid;gap:2px}
+.calc .lbl small{color:var(--muted);font-size:13px;line-height:1.35}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex-wrap:wrap}
+.seg button{font:inherit;font-size:14px;padding:7px 11px;border:0;background:var(--surface);color:var(--ink);cursor:pointer;border-right:1px solid var(--line);font-variant-numeric:tabular-nums}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--coral);color:#fff}
+.calc .out{grid-column:1 / 3;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calc .totalrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;padding-top:4px}
+.calc .totalrow b{font-size:30px;font-weight:750;font-variant-numeric:tabular-nums}
+@media (max-width:560px){.calc .line{grid-template-columns:1fr}.calc .out{grid-column:1}}
+
+ol.steps{margin:0;padding-left:22px;display:grid;gap:12px}
+ol.steps li b{display:block}
+.qa{display:grid;gap:8px;counter-reset:q;margin:0;padding:0;list-style:none}
+.qa li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.phr{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.phr li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-style:italic}
+
+footer{padding-block:40px 0;color:var(--muted);font-size:13px;display:grid;gap:6px}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+html{scroll-behavior:smooth}
+
+body{font-size:17px}
+th.r{text-align:right}
+ol.pri,ol.steps{margin:0;padding-left:24px;display:grid;gap:9px}
+ol.pri li::marker,ol.steps li::marker{color:var(--coral-ink);font-weight:700}
+ol.timeline{list-style:none;margin:0;padding:0;display:grid;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+ol.timeline li{display:grid;grid-template-columns:110px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+ol.timeline li:last-child{border-bottom:0}
+.tm{font-weight:700;color:var(--coral-ink);font-variant-numeric:tabular-nums}
+@media (max-width:520px){ol.timeline li{grid-template-columns:1fr;gap:4px}}
+.tpl{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px}
+.tpl-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tpl pre{margin:0;white-space:pre-wrap;font-family:inherit;font-size:16px;background:var(--sunk);border-radius:8px;padding:12px;line-height:1.5}
+.hot{background:var(--coral-soft);border-radius:14px;padding:18px;display:grid;gap:10px}
+.hot h2{color:var(--coral-ink)}
+.copy{font:inherit;font-size:14px;padding:6px 12px;border-radius:8px;border:1px solid var(--coral);background:var(--coral);color:#fff;cursor:pointer}
+
+.callout p+p{margin-top:8px}
+.decision .tablewrap{background:var(--surface)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Для Сергея Шаталова · от Альберта Валеева</p>
+  <h1>Лиана после 4 октября: разбор по фактам</h1>
+  <p class="meta">Период 5–21 октября 2026. Источники: переписка (124 голосовых расшифрованы), «Рука на пульсе», переписка рабочего телефона, реестр счетов. Без смягчений.</p>
+</header>
+
+<nav class="toc" aria-label="Разделы">
+  <a href="#itog">Итог</a>
+  <a href="#vnedreno">Что внедрили</a>
+  <a href="#fakty">Факты</a>
+  <a href="#dengi">Деньги</a>
+  <a href="#vremya">Время</a>
+  <a href="#povtory">Повторы</a>
+  <a href="#nasha">Наша сторона</a>
+  <a href="#varianty">Варианты</a>
+</nav>
+
+<section id="itog">
+  <div class="callout">
+    <p><b>Итог.</b> После нашего разговора 4 октября внедрено почти всё, что вы советовали. С неё сняли заявки и школу и наняли под это отдельного сотрудника. Базовое поведение не поменялось: нет плана утром, отчёты не в срок и без цифр, задачи с дедлайном не доводятся до конца. Самостоятельная часть работы («Бизнес-100», сообщества) за две недели почти не сдвинулась. Деньги в её зоне пришли от тёплых людей, которых привёл и которым уже продал Альберт.</p>
+    <p>По оценке Альберта, её работа на процессах стоит не больше 40 000 в месяц, а выплаты рассчитаны на 150 000.</p>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>1 из 12</b><span>рабочих дней с планом дня в группе</span></div>
+    <div class="stat"><b>4 из 12</b><span>отчётов в срок, с цифрами 1</span></div>
+    <div class="stat"><b>21%</b><span>задачи по AI Цеху к сроку: 90 000 из 425 000</span></div>
+    <div class="stat"><b>10 · 2 · 0</b><span>клиентов, которым она написала с рабочего номера 19, 20 и 21.10</span></div>
+  </div>
+</section>
+
+<section id="vnedreno">
+  <p class="eyebrow">После 04.10</p>
+  <h2>Что внедрили по вашим советам</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Совет</th><th>Что сделано</th></tr></thead>
+      <tbody>
+        <tr><td>Разделить роли</td><td>13.10 вышел отдельный сотрудник (Айгуль). К 21.10 заявки, ученики и вторая оплата полностью у неё. Лиане оставлены «Бизнес-100», мастер-классы, сообщества и AI Цех</td></tr>
+        <tr><td>Три фокуса, остальное по остаточному принципу</td><td>Записано в памятке и порядке работы 05.10, повторено в закрепе 19.10</td></tr>
+        <tr><td>Фикс и до трёх KPI</td><td>50 000 фикс и до 100 000: мастер-классы 40 000, заявки 40 000, «Бизнес-100» 20 000. Чек-лист мотивации на одной странице</td></tr>
+        <tr><td>Утром созвон, вечером отчёт</td><td>Рабочая группа с ботом: бот утром напоминает, вечером сам собирает отчёт, цифры подставляет из CRM, ей остаётся дописать пару строк</td></tr>
+        <tr><td>Критерии на задачу</td><td>Памятка: что сделать, результат, бюджет, срок. Шаблон отчёта с цифрами</td></tr>
+        <tr><td>Хронометраж</td><td>Снят: она сказала, что заинтересована и ответственная. Взамен Альберт требует отчёт в цифрах (голосовое 10.10)</td></tr>
+        <tr><td>Контроль</td><td>С 18.10 рабочий телефон и номер, переписка с клиентами сама попадает в карточку CRM</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="fakty">
+  <p class="eyebrow">Факты</p>
+  <h2>Договорённость и результат</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Договорились</th><th>Факт</th><th>Итог</th></tr></thead>
+      <tbody>
+        <tr><td>План дня в группу утром (с 19.10 до 9:30)</td><td>6–21.10: один раз, 21.10 в 9:29, две строки</td><td><span class="pill s-no">1 из 12</span></td></tr>
+        <tr><td>Отчёт вечером цифрами (до 19.10 до 21:00, потом до 20:30)</td><td>В срок 07, 08, 09, 13.10. С цифрами только 13.10. 15.10 и 21.10 отчёта нет. 20.10 по AI Цеху ни одной цифры</td><td><span class="pill s-no">4 из 12</span></td></tr>
+        <tr><td>CRM: к 09.10 ни одной карточки без шага</td><td>09.10 вечером 36</td><td><span class="pill s-no">не сделано</span></td></tr>
+        <tr><td>Ответ на заявку за час (пока заявки были у неё)</td><td>Цапенко ждал сутки, Радик почти 2 часа. Партнёр Каменев Альберту 07.10: «она же мне не звонила, только написала»</td><td><span class="pill s-no">нарушается</span></td></tr>
+        <tr><td>AI Цех: к 21.10 дожать 7 человек из списка на 425 000</td><td>Оплачено 90 000 (Ильвир с девушкой, продал Альберт). Шамиль: следующий поток. Хакимов: доплата 26.10. Зелёву счёт не выставлен. Ильмир, Островский, НТЦ не оплатили. Островского нет в наборе AI Цеха в CRM</td><td><span class="pill s-no">21%</span></td></tr>
+        <tr><td>К 21.10 передать школу и выйти из неё</td><td>На ней 52 активные карточки, новый сотрудник забирает их по одной сам</td><td><span class="pill s-no">не сделано</span></td></tr>
+        <tr><td>С 19.10 по работе только рабочий номер</td><td>Клиентам с рабочего: 19.10 десяти людям, 20.10 двоим, 21.10 никому. Рабочий номер не смотрит: 21.10 Альберт дважды писал на личный «я написал тебе в рабочий». Перенос отчёта 21.10 прислала с личного</td><td><span class="pill s-no">не выполняется</span></td></tr>
+        <tr><td>«Бизнес-100»: список собственников и сообществ</td><td>За неделю списка с именами и количеством нет. 21.10 скриншот одного клуба, 6 человек, по оценке Альберта не того уровня. Работа на день-два</td><td><span class="pill s-no">не сдвинулось</span></td></tr>
+        <tr><td>Мастер-классы: два до 19.10, два на ноябрь</td><td>Проведены 08.10 и 14.10 (после 14.10 заявок 0, по её отчёту). Ноябрь: FOUNDER без даты, «Про.Движение» 19.11 в работе</td><td><span class="pill s-ok">частично</span></td></tr>
+        <tr><td>Не успеваешь, предупреди до срока</td><td>21.10: перенос отчёта через 1,5 часа после срока и после вопроса Альберта, причина «годовщина свадьбы, не брала телефон»</td><td><span class="pill s-no">не выполняется</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Утро: 14.10 пропустила созвон, потому что заказывала конфеты (её слова). 19.10 не пришла на Zoom с командой, объяснения в чатах нет. Рабочий день по договорённости: офис до 15:00, дальше работа из дома до вечера. 21.10 после 16:38 от неё ничего.</p>
+</section>
+
+<section id="dengi">
+  <p class="eyebrow">Деньги</p>
+  <h2>Сколько платим и за что</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Период</th><th>Факт</th><th class="n">₽</th></tr></thead>
+      <tbody>
+        <tr><td>Сентябрь, выплачено</td><td>Фикс 50 000 + процент 84 300 + бонус 5 000 = 139 300 по расчёту, выплачено с округлением</td><td class="n">145 000</td></tr>
+        <tr><td>Сентябрь, откуда процент</td><td>18 из 25 заявок с сайта оплатили: люди после обучения и мастер-классов Альберта. Медиана ответа на заявку 4 часа, сама отправила 1 отчёт из 28</td><td class="n"></td></tr>
+        <tr><td>Октябрь, оплаты в её зоне</td><td>Около 290 000: Камалетдиновы 110 000, Радик 55 000, Ильвир 90 000, авансы. Почти все люди Альберта или его партнёров, нужно было выставить счёт и напомнить</td><td class="n">~290 000</td></tr>
+        <tr><td>Октябрь, её собственные новые люди</td><td>Не видно ни одного человека, которого она нашла сама и довела до оплаты</td><td class="n">0</td></tr>
+        <tr><td>Октябрь по схеме</td><td>Заявки 40 000: промахов больше шести, по правилу 0 (часть промахов формальные). Мастер-классы: 2 засчитанных, 20 000. «Бизнес-100» до 20 000. Итого около 70–90 тысяч плюс обещанные 52 400 за поток 05.11 при старте</td><td class="n">70–90 тыс.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="vremya">
+  <p class="eyebrow">Фокус</p>
+  <h2>Куда уходит время</h2>
+  <p class="lead">Альберт видит в этом имитацию бурной деятельности. Факты: задачи, которые не ставились или стоят в самом низу, делаются, пока горят главные.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Дата</th><th>Что</th><th>Что в это время горело</th></tr></thead>
+      <tbody>
+        <tr><td class="tab">14.10</td><td>Конфеты для офиса, из-за них пропущен созвон</td><td>План дня</td></tr>
+        <tr><td class="tab">11, 14.10</td><td>Дизайн стены офиса, сообщения в 01:00</td><td>CRM, отчёты</td></tr>
+        <tr><td class="tab">16.10</td><td>Зеркало, конфеты, мусорное ведро, 7 848 ₽</td><td>Выпускники на AI Цех</td></tr>
+        <tr><td class="tab">21.10</td><td>Мастер по вытяжке и проводке, 25 000 и 10 000</td><td>Список «Бизнес-100», отчёт</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="povtory">
+  <p class="eyebrow">Повторы</p>
+  <h2>Семь раз за 16 дней</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Когда</th><th>Что</th></tr></thead>
+      <tbody>
+        <tr><td class="tab">05.10</td><td>Встреча по вашему сценарию: порядок работы, памятка, мотивация</td></tr>
+        <tr><td class="tab">06.10</td><td>Рабочая группа, бот, памятка в закрепе</td></tr>
+        <tr><td class="tab">10.10</td><td>Голосовые Альберта: отчёт цифрами, состояние каждой группы каждый вечер</td></tr>
+        <tr><td class="tab">12.10</td><td>Оперативка: в отчёте только факты и цифры</td></tr>
+        <tr><td class="tab">14.10</td><td>Голосовое: созвон каждое утро, план, вечером отчёт, «я же не попугай»</td></tr>
+        <tr><td class="tab">19.10</td><td>Закреп: план до 9:30, отчёт до 20:30, предупреждать до срока</td></tr>
+        <tr><td class="tab">20.10</td><td>Голосовое: «если это не делается, это уже саботаж», больше повторять не буду</td></tr>
+        <tr><td class="tab">21.10</td><td>План две строки, отчёта нет, перенос с личного номера после срока</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">На разбор 20.10 она ответила голосом: перечислила оплаты и сказала «ты не услышал результата, потому что я всё это отписываю в «Руке на пульсе»». 21.10 попросила перенести утро с 9:15 на 9:30: отвозит детей в садик и прибегает в офис в 9:14.</p>
+</section>
+
+<section id="nasha">
+  <p class="eyebrow">Честно о нашей стороне</p>
+  <h2>Что не так у Альберта и в системе</h2>
+  <ul class="clean">
+    <li>Время утра записано в пяти местах по-разному: бот и закреп «план до 9:30», Zoom 19.10 «9:15», голосовое 20.10 «8:15 оперативка, план в 8:30», старый закреп бота «отчёт до 21:00».</li>
+    <li>Бот до сих пор утром пишет ей про опоздания по заявкам, которые с 19.10 ведёт другой сотрудник.</li>
+    <li>14.10 вечером бот отчёта сломался (наша ошибка). Отчёт она прислала текстом.</li>
+    <li>Звонки рабочей АТС в CRM не подключены: сколько и с какого номера она звонит, не видно.</li>
+    <li>Личные поручения Альберта: 19.10 утром китайские QR-коды, 21.10 около часа на японские визы.</li>
+    <li>Её ограничения известны с начала: утром садик, вечером 21:00–22:30 укладывает детей.</li>
+  </ul>
+  <p class="note">Ничто из этого не объясняет отсутствие плана с 6 по 20 октября, отчётов 15 и 21 октября и недоведённый AI Цех.</p>
+</section>
+
+<section id="varianty">
+  <p class="eyebrow">Решение</p>
+  <h2>Варианты и вопрос к вам</h2>
+  <div class="three">
+    <div class="col">
+      <h3><span class="dot" style="background:var(--coral)"></span>А. Новый формат</h3>
+      <ul class="clean">
+        <li>Октябрь по старой схеме, дальше фикс 40 000</li>
+        <li>10 000 за мастер-класс, 5 000 за оплатившего участника «Бизнес-100», 10 000 за своего ученика</li>
+        <li>Три правила: рабочий номер, план 9:30 и отчёт 20:30, предупреждать до срока. Три пропуска, и формат заканчивается</li>
+        <li>Ответ «Принимаю» или «Не подходит» до 23.10</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3><span class="dot" style="background:var(--no)"></span>Б. Расстаться сейчас</h3>
+      <ul class="clean">
+        <li>Октябрь по договорённости, передача дел</li>
+        <li>Минус: «Бизнес-100» 28–29.11, людей для него искать некому, Альберт в Японии до 05.11</li>
+        <li>Нужен найм под проекты</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3><span class="dot" style="background:var(--open)"></span>В. Ещё раунд правил</h3>
+      <ul class="clean">
+        <li>Семь раз за 16 дней не сработало</li>
+        <li>Не рекомендуем</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Что важно услышать от вас</h3>
+    <ul class="clean">
+      <li>Согласны ли вы, что это уже вопрос соответствия роли, а не того, как с ней поговорить?</li>
+      <li>Вариант А или Б?</li>
+      <li>Как провести такой разговор удалённо: Альберт в Японии до 5 ноября.</li>
+    </ul>
+  </div>
+</section>
+
+</div>
+
+</body>
+</html>
