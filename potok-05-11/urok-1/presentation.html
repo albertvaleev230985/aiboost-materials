@@ -152,6 +152,8 @@
 .rk-scene.launched .rk-ready{opacity:0}
 .rk-snd{position:absolute;right:56px;bottom:52px;z-index:8;display:flex;align-items:center;gap:10px;background:rgba(14,12,10,.72);border:1px solid rgba(243,238,228,.25);color:#f3eee4;border-radius:10px;padding:10px 14px;font:600 15px Inter,sans-serif;cursor:pointer}
 .rk-snd svg{width:22px;height:22px}
+.rk-snd.locked{border-color:var(--cu2);color:var(--cu2);animation:rksnd 1.8s infinite}
+@keyframes rksnd{0%{box-shadow:0 0 0 0 rgba(224,140,70,.55)}70%{box-shadow:0 0 0 14px rgba(224,140,70,0)}100%{box-shadow:0 0 0 0 rgba(224,140,70,0)}}
 #overview button.skip{opacity:.62}#overview button.skip b::after{content:" · можно пропустить";color:#9fb3a8;font-weight:500}
 .plan-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,13,11,.9),rgba(9,13,11,.78) 40%,rgba(9,13,11,.9))}
 .slide:has(.plan-shade) .plan-card{background:rgba(20,28,24,.82);border:1px solid rgba(245,241,232,.12)}
@@ -298,16 +300,46 @@ Never use the em dash character as punctuation.
     var rocket=sec.querySelector('.rk-rocket'), shaker=sec.querySelector('.rk-shaker'), count=sec.querySelector('.rk-count');
     var sndBtn=sec.querySelector('.rk-snd'), hasSky=!!sec.querySelector('.rk-sky');
     var RX=885, RY=300, RW=150, RH=570, NOZ_X=RX+RW/2, NOZ_DY=RH*742/760, GROUND=RY+RH+6;
-    var state='off', y=0, vy=0, raf=null, parts=[], smoke=[], power=0.35, shake=0, goneAt=0;
+    var state='off', y=0, vy=0, raf=null, parts=[], smoke=[], steam=[], power=0.35, shake=0, goneAt=0, nextVent=0, jet=null;
+    var VENTS=[{y:RY+136,side:-1},{y:RY+136,side:1},{y:RY+312,side:1}];   // боковые клапаны: под верхним и средним медным поясом
     function sprite(stops,size){var c=document.createElement('canvas');c.width=c.height=size;var g=c.getContext('2d');var gr=g.createRadialGradient(size/2,size/2,0,size/2,size/2,size/2);stops.forEach(function(s){gr.addColorStop(s[0],s[1]);});g.fillStyle=gr;g.fillRect(0,0,size,size);return c;}
     var SP={
       core:sprite([[0,'rgba(255,252,235,1)'],[.35,'rgba(255,230,170,.9)'],[1,'rgba(255,200,120,0)']],64),
       flame:sprite([[0,'rgba(255,190,90,.95)'],[.45,'rgba(240,120,40,.55)'],[1,'rgba(200,70,20,0)']],64),
       ember:sprite([[0,'rgba(210,80,30,.7)'],[.5,'rgba(140,40,15,.3)'],[1,'rgba(90,20,10,0)']],64),
       smoke:sprite([[0,'rgba(120,112,104,.55)'],[.55,'rgba(80,74,68,.25)'],[1,'rgba(50,46,42,0)']],128),
-      glow:sprite([[0,'rgba(255,190,110,.55)'],[.4,'rgba(224,140,70,.18)'],[1,'rgba(199,122,58,0)']],256)
+      glow:sprite([[0,'rgba(255,190,110,.55)'],[.4,'rgba(224,140,70,.18)'],[1,'rgba(199,122,58,0)']],256),
+      steam:sprite([[0,'rgba(232,226,218,.8)'],[.35,'rgba(206,200,192,.42)'],[.7,'rgba(170,166,160,.12)'],[1,'rgba(150,148,146,0)']],128)
     };
     function spawn(){var nx=NOZ_X,ny=RY+y+NOZ_DY,n=Math.round(5+power*16);for(var i=0;i<n;i++){parts.push({x:nx+(Math.random()-.5)*30*(.6+power*.4),y:ny,vx:(Math.random()-.5)*(1.2+power*1.6),vy:4+Math.random()*5+power*8,life:0,max:12+Math.random()*10+power*14,s:18+Math.random()*12+power*16});}}
+    /* Пар на стартовом столе: ракета на заправке шипит и парит, пока ждёт команду */
+    function vent(v,burst){
+      var n=burst?2:1;
+      for(var k=0;k<n;k++){var sp=burst?(3.2+Math.random()*3.6):(0.7+Math.random()*1.1);
+        steam.push({x:NOZ_X+v.side*30,y:v.y+(Math.random()-.5)*8,vx:v.side*sp,vy:(Math.random()-.3)*(burst?0.9:0.35),s:burst?(12+Math.random()*16):(12+Math.random()*12),g:burst?1.15:0.5,a:burst?0.15:0.18,life:0,max:burst?(80+Math.random()*60):(90+Math.random()*60),fr:0.955,fall:burst?0.008:0.018});}
+    }
+    function steamSpawn(){
+      var ign=state==='ignite', n=ign?3:(Math.random()<0.8?1:0);
+      for(var k=0;k<n;k++){var side=Math.random()<.5?-1:1;
+        steam.push({x:NOZ_X+side*(10+Math.random()*60),y:GROUND-10-Math.random()*22,vx:side*(ign?(2+Math.random()*4.5):(0.7+Math.random()*1.6)),vy:-0.12-Math.random()*(ign?0.6:0.42),s:50+Math.random()*50,g:ign?0.9:(0.5+Math.random()*0.5),a:ign?0.2:(0.12+Math.random()*0.09),life:0,max:ign?(160+Math.random()*120):(240+Math.random()*130),fr:0.994,fall:0});}
+      if(state==='ready'){
+        /* столб пара поднимается из-под ракеты вдоль корпуса */
+        if(Math.random()<.4){var sd=Math.random()<.5?-1:1;steam.push({x:NOZ_X+sd*(40+Math.random()*55),y:GROUND-26-Math.random()*20,vx:sd*(0.1+Math.random()*0.45),vy:-0.55-Math.random()*0.7,s:40+Math.random()*34,g:0.6,a:0.08+Math.random()*0.06,life:0,max:150+Math.random()*90,fr:0.99,fall:0.0035});}
+        if(Math.random()<.5)vent(VENTS[(Math.random()*VENTS.length)|0],false);
+        var now=performance.now();
+        if(now>nextVent){jet={v:VENTS[(Math.random()*VENTS.length)|0],until:now+650};Snd.vent();nextVent=now+2400+Math.random()*2600;}
+        if(jet&&now<jet.until)vent(jet.v,true);   // выброс струёй около полсекунды, а не одним облаком
+      }
+    }
+    function steamMove(){
+      for(var i=steam.length-1;i>=0;i--){var s=steam[i];s.life++;s.x+=s.vx;s.y+=s.vy;s.vx*=s.fr;s.vy+=s.fall;s.s+=s.g;s.x+=Math.sin((s.life+s.y)*0.04)*0.25;if(s.life>=s.max)steam.splice(i,1);}
+      if(steam.length>520)steam.splice(0,steam.length-520);
+    }
+    function steamDraw(sx,sy){
+      for(var i=0;i<steam.length;i++){var s=steam[i],f=s.life/s.max,a=s.a*Math.min(1,s.life/12)*(1-f);
+        var d=s.x-NOZ_X;if(d<-200)a*=Math.max(0,1-(-d-200)/130);else if(d>260)a*=Math.max(0,1-(d-260)/220);   // к тексту слева пар не доползает
+        if(a<=0.003)continue;cx.globalAlpha=a;cx.drawImage(SP.steam,s.x-s.s/2+sx,s.y-s.s/2+sy,s.s,s.s);}
+    }
     function step(){
       if(state==='lift'){vy-=0.015+(-y)*0.00008;y+=vy;power=Math.min(1,power+0.02);shake=Math.max(0,shake*0.985);if(RY+y+RH<-220){state='gone';goneAt=performance.now();}}
       else if(state==='ignite'){power=Math.min(.95,power+0.012);shake=Math.min(5,shake+0.08);}
@@ -316,9 +348,11 @@ Never use the em dash character as punctuation.
       var sx=(Math.random()-.5)*shake, sy=(Math.random()-.5)*shake;
       shaker.style.transform='translate3d('+sx+'px,'+sy+'px,0)';
       if(state!=='gone'&&state!=='ready')spawn();
-      if(state==='ready'&&Math.random()<.18)smoke.push({x:NOZ_X+(Math.random()-.5)*90,y:GROUND-10-Math.random()*20,vx:(Math.random()-.5)*0.9,vy:-0.15-Math.random()*0.35,s:40+Math.random()*40,g:0.45,a:.11,life:0,max:140+Math.random()*80});
+      if(state==='ready'||state==='ignite')steamSpawn();
+      steamMove();
       cx.clearRect(0,0,1920,1080);
       cx.globalCompositeOperation='source-over';
+      steamDraw(sx,sy);
       for(var i=smoke.length-1;i>=0;i--){var s=smoke[i];s.life++;s.x+=s.vx;s.y+=s.vy;s.vx*=0.97;s.s+=s.g;s.x+=Math.sin((s.life+s.y)*0.05)*0.3;var a=s.a*(1-s.life/s.max);if(s.life>=s.max){smoke.splice(i,1);continue;}cx.globalAlpha=Math.max(0,a);cx.drawImage(SP.smoke,s.x-s.s/2+sx,s.y-s.s/2+sy,s.s,s.s);}
       cx.globalCompositeOperation='lighter';
       var ny=RY+y+NOZ_DY, fl=.75+Math.random()*.25;
@@ -341,28 +375,45 @@ Never use the em dash character as punctuation.
     }
     /* звук: синтез гула двигателя, без файлов */
     var Snd=(function(){
-      var ac=null,master,low,crackG,hiss;
-      function noise(ctx,brown){var len=ctx.sampleRate*3,b=ctx.createBuffer(1,len,ctx.sampleRate),d=b.getChannelData(0),last=0;for(var i=0;i<len;i++){var w=Math.random()*2-1;if(brown){last=(last+0.02*w)/1.02;d[i]=last*3.5;}else d[i]=w;}var s=ctx.createBufferSource();s.buffer=b;s.loop=true;return s;}
+      var ac=null,master,low,crackG,hiss,rumble,steamG,subG,wbuf;
+      function noise(ctx,brown){var len=ctx.sampleRate*3,b=ctx.createBuffer(1,len,ctx.sampleRate),d=b.getChannelData(0),last=0;for(var i=0;i<len;i++){var w=Math.random()*2-1;if(brown){last=(last+0.02*w)/1.02;d[i]=last*3.5;}else d[i]=w;}if(!brown)wbuf=b;var s=ctx.createBufferSource();s.buffer=b;s.loop=true;return s;}
       function init(){
         if(ac)return;try{ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
         master=ac.createGain();master.gain.value=0;master.connect(ac.destination);
-        var br=noise(ac,true);low=ac.createBiquadFilter();low.type='lowpass';low.frequency.value=140;var g1=ac.createGain();g1.gain.value=1.4;br.connect(low);low.connect(g1);g1.connect(master);br.start();
+        var br=noise(ac,true);low=ac.createBiquadFilter();low.type='lowpass';low.frequency.value=140;rumble=ac.createGain();rumble.gain.value=1.4;br.connect(low);low.connect(rumble);rumble.connect(master);br.start();
         var wn=noise(ac,false);var bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1800;bp.Q.value=0.7;crackG=ac.createGain();crackG.gain.value=0.05;wn.connect(bp);bp.connect(crackG);crackG.connect(master);wn.start();
         var hn=noise(ac,false);var hp=ac.createBiquadFilter();hp.type='highpass';hp.frequency.value=4000;hiss=ac.createGain();hiss.gain.value=0.02;hn.connect(hp);hp.connect(hiss);hiss.connect(master);hn.start();
-        var sub=ac.createOscillator();sub.type='sine';sub.frequency.value=38;var sg=ac.createGain();sg.gain.value=0.35;sub.connect(sg);sg.connect(master);sub.start();
+        var sub=ac.createOscillator();sub.type='sine';sub.frequency.value=38;subG=ac.createGain();subG.gain.value=0.35;sub.connect(subG);subG.connect(master);sub.start();
+        /* шипение пара на заправке */
+        var sn=noise(ac,false);var shp=ac.createBiquadFilter();shp.type='highpass';shp.frequency.value=1400;var slp=ac.createBiquadFilter();slp.type='lowpass';slp.frequency.value=7500;steamG=ac.createGain();steamG.gain.value=0;sn.connect(shp);shp.connect(slp);slp.connect(steamG);steamG.connect(master);sn.start();
       }
-      function update(p,st){if(!ac)return;var t=ac.currentTime;var target=muted?0:(st==='gone'?Math.max(0,p*0.5):(st==='ready'?0.1:0.1+p*0.7));master.gain.setTargetAtTime(target,t,0.25);low.frequency.setTargetAtTime(120+p*700,t,0.3);crackG.gain.setTargetAtTime((0.03+p*0.12)*(0.6+Math.random()*0.8),t,0.05);hiss.gain.setTargetAtTime(0.015+p*0.06,t,0.3);}
+      /* выброс пара из клапана: короткое «пшшш» */
+      function vent(){if(!ac||muted||ac.state!=='running')return;var t=ac.currentTime,src=ac.createBufferSource();src.buffer=wbuf;src.loop=true;
+        var bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=2600+Math.random()*900;bp.Q.value=0.6;var g=ac.createGain();g.gain.value=0;
+        src.connect(bp);bp.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(1.1,t+0.07);g.gain.setTargetAtTime(0,t+0.35,0.42);
+        bp.frequency.setTargetAtTime(1800,t+0.3,0.6);src.start(t,Math.random()*2);src.stop(t+2.6);}
+      function update(p,st){if(!ac)return;var t=ac.currentTime,rd=st==='ready';
+        var target=muted?0:(st==='gone'?Math.max(0,p*0.5):(rd?0.55:0.1+p*0.7));master.gain.setTargetAtTime(target,t,0.25);
+        low.frequency.setTargetAtTime(rd?85:120+p*700,t,0.3);rumble.gain.setTargetAtTime(rd?0.7:1.4,t,0.3);subG.gain.setTargetAtTime(rd?0.12:0.35,t,0.3);
+        crackG.gain.setTargetAtTime(rd?0.004:(0.03+p*0.12)*(0.6+Math.random()*0.8),t,0.05);hiss.gain.setTargetAtTime(rd?0.025:0.015+p*0.06,t,0.3);
+        steamG.gain.setTargetAtTime(rd?0.085+0.03*Math.sin(t*1.3):(st==='ignite'?0.05:0),t,0.4);}
       function beep(f,d){if(!ac||muted)return;var o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f;g.gain.value=0;o.connect(g);g.connect(ac.destination);var t=ac.currentTime;g.gain.linearRampToValueAtTime(0.22,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.start(t);o.stop(t+d+0.05);}
       function stop(){if(ac)master.gain.setTargetAtTime(0,ac.currentTime,0.15);}
       function resume(){if(ac&&ac.state==='suspended')ac.resume();}
-      return {init:init,update:update,beep:beep,stop:stop,resume:resume};
+      function running(){return !!ac&&ac.state==='running';}
+      return {init:init,update:update,beep:beep,stop:stop,resume:resume,vent:vent,running:running};
     })();
-    function sndIcon(){sndBtn.innerHTML=muted?ICON_OFF:ICON_ON;}
-    function mute(){muted=!muted;sndIcon();Snd.init();Snd.resume();}
+    function sndIcon(){var lock=!muted&&state!=='off'&&!Snd.running();sndBtn.classList.toggle('locked',lock);sndBtn.innerHTML=lock?ICON_OFF.replace('Звук выключен','Включить звук'):(muted?ICON_OFF:ICON_ON);}
+    function unlock(){Snd.init();Snd.resume();setTimeout(sndIcon,250);}
+    function mute(){if(sndBtn.classList.contains('locked')){muted=false;unlock();return;}muted=!muted;sndIcon();Snd.init();Snd.resume();}
+    /* Браузер даёт звук только после нажатия на странице: включаем его с первого же клика или клавиши, ещё на заставке */
+    ['pointerdown','keydown','touchstart'].forEach(function(ev){document.addEventListener(ev,unlock,true);});
     sndBtn.addEventListener('click',function(e){e.stopPropagation();mute();sndBtn.blur();});
     sndIcon();
-    function reset(){state='ready';y=0;vy=0;power=0.2;shake=0;parts=[];smoke=[];scene.classList.remove('launched','done','sky');count.className='rk-count';count.textContent='';}
-    function enter(){reset();if(!raf)raf=requestAnimationFrame(step);}
+    function reset(){state='ready';y=0;vy=0;power=0.2;shake=0;parts=[];smoke=[];steam=[];jet=null;nextVent=performance.now()+900;scene.classList.remove('launched','done','sky');count.className='rk-count';count.textContent='';}
+    /* Слайд открывается уже с паром: прогреваем облака заранее, чтобы не было пустого кадра */
+    function prewarm(){for(var i=0;i<260;i++){steamSpawn();steamMove();}nextVent=performance.now()+700;}
+    function enter(){reset();prewarm();Snd.init();Snd.resume();sndIcon();setTimeout(sndIcon,400);if(!raf)raf=requestAnimationFrame(step);}
     function leave(){state='off';if(raf){cancelAnimationFrame(raf);raf=null;}cx.clearRect(0,0,1920,1080);Snd.stop();shaker.style.transform='';rocket.style.transform='';}
     function launch(){
       Snd.init();Snd.resume();
