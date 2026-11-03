@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Анкета перед первой встречей · neovida</title>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" async onload="window.drawIcons && drawIcons()"></script>
+<style>
+  :root {
+    --coral: #E07461;
+    --coral-light: #F0A090;
+    --coral-dark: #C55A48;
+    --purple: #8B6EB5;
+    --green: #50C878;
+    --bg: #08080D;
+    --surface: rgba(255,255,255,0.03);
+    --surface-hover: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --text: #E8E8ED;
+    --text-secondary: #8888A0;
+    --text-dim: #44445A;
+    --font: -apple-system, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  .lucide { flex-shrink: 0; }
+
+  /* ═══ SPLASH ═══ */
+  .splash {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
+    transition: opacity 0.6s, transform 0.6s;
+  }
+  .splash.hide { opacity: 0; transform: scale(1.05); pointer-events: none; }
+
+  .splash-logo {
+    width: 72px; height: 72px; border-radius: 20px;
+    background: linear-gradient(135deg, var(--coral), var(--coral-dark));
+    display: flex; align-items: center; justify-content: center;
+    animation: splashPulse 1.5s ease infinite;
+    font-size: 36px; font-weight: 900; color: #fff; letter-spacing: -2px;
+  }
+  @keyframes splashPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(224,116,97,0.4); }
+    50% { box-shadow: 0 0 0 20px rgba(224,116,97,0); }
+  }
+  .splash-text {
+    font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--coral); opacity: 0; animation: fadeUp 0.6s 0.3s forwards;
+  }
+  .splash-bar {
+    width: 120px; height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden;
+    opacity: 0; animation: fadeUp 0.4s 0.5s forwards;
+  }
+  .splash-bar-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--coral), var(--coral-light));
+    border-radius: 2px; animation: barFill 1.6s 0.5s cubic-bezier(0.4,0,0.2,1) forwards;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes barFill { to { width: 100%; } }
+
+  /* ═══ Particles ═══ */
+  .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .particle { position: absolute; border-radius: 50%; opacity: 0; animation: particleFloat linear infinite; }
+  @keyframes particleFloat {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ═══ Progress bar ═══ */
+  .progress-bar {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--coral), var(--coral-light), var(--purple));
+    background-size: 200% 100%;
+    animation: shimmer 3s ease infinite;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+    z-index: 100;
+  }
+  @keyframes shimmer { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+  /* ═══ Main ═══ */
+  .main {
+    position: relative; z-index: 1;
+    max-width: 540px; margin: 0 auto; padding: 0 20px;
+    opacity: 0; transition: opacity 0.5s 0.2s;
+  }
+  .main.visible { opacity: 1; }
+
+  /* ═══ Hero ═══ */
+  .hero { text-align: center; padding: 48px 0 28px; animation: heroIn 0.8s cubic-bezier(0.16,1,0.3,1); }
+  @keyframes heroIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(224,116,97,0.08); border: 1px solid rgba(224,116,97,0.15);
+    border-radius: 100px; padding: 6px 18px;
+    font-size: 12px; font-weight: 700; color: var(--coral); letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 { font-size: 34px; font-weight: 900; color: #fff; margin-bottom: 10px; letter-spacing: -0.5px; line-height: 1.15; }
+  .hero h1 span {
+    background: linear-gradient(135deg, var(--coral), var(--coral-light));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero-subtitle { font-size: 15px; color: var(--text-secondary); max-width: 420px; margin: 0 auto; min-height: 1.6em; }
+  .hero-meta {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 14px;
+    padding: 7px 14px; border-radius: 100px;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 13px; color: var(--text-secondary); font-weight: 600;
+  }
+  .hero-meta .lucide { width: 14px; height: 14px; color: var(--coral); }
+
+  .typing-cursor {
+    display: inline-block; width: 2px; height: 1em; background: var(--coral);
+    margin-left: 2px; vertical-align: text-bottom; animation: blink 0.8s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ═══ Step indicator ═══ */
+  .step-indicator {
+    display: flex; justify-content: center; align-items: center;
+    margin: 8px 0 36px;
+    animation: heroIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+  }
+  .step-dot {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--border); color: var(--text-dim); background: var(--bg);
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    position: relative; z-index: 2; flex-shrink: 0;
+  }
+  .step-dot .lucide { width: 18px; height: 18px; stroke-width: 2; }
+  .step-dot.active {
+    border-color: var(--coral); color: #fff; background: var(--coral);
+    box-shadow: 0 0 20px rgba(224,116,97,0.3), 0 0 60px rgba(224,116,97,0.1);
+    animation: dotPulse 2s ease infinite;
+  }
+  .step-dot.done { border-color: var(--coral); color: #fff; background: var(--coral); }
+  .step-dot.done .step-icon { display: none; }
+  .step-dot .step-check { display: none; }
+  .step-dot.done .step-check { display: flex; }
+  .step-dot.done .step-check .lucide { animation: checkPop 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes dotPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(224,116,97,0.3), 0 0 60px rgba(224,116,97,0.1); }
+    50% { box-shadow: 0 0 30px rgba(224,116,97,0.5), 0 0 80px rgba(224,116,97,0.15); }
+  }
+  @keyframes checkPop { from { transform: scale(0); } to { transform: scale(1); } }
+  .step-line { width: 36px; height: 2px; background: var(--border); transition: background 0.4s; flex-shrink: 0; }
+  .step-line.done { background: var(--coral); }
+
+  /* ═══ Floating step counter ═══ */
+  .step-counter {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: rgba(15,15,25,0.85); backdrop-filter: blur(12px);
+    border: 1px solid var(--border); border-radius: 100px; padding: 8px 20px;
+    font-size: 13px; font-weight: 600; color: var(--text-secondary);
+    z-index: 50; display: flex; align-items: center; gap: 8px; transition: opacity 0.3s;
+    white-space: nowrap; pointer-events: none;
+  }
+  .step-counter .lucide { width: 14px; height: 14px; color: var(--coral); }
+  .step-counter .current { color: var(--coral); font-weight: 800; }
+  .step-counter.typing { opacity: 0; pointer-events: none; }
+
+  /* ═══ Toast ═══ */
+  .toast {
+    position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%) translateY(10px);
+    background: rgba(224,116,97,0.95); color: #fff;
+    border-radius: 12px; padding: 10px 18px;
+    font-size: 14px; font-weight: 600; z-index: 60;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s;
+    max-width: calc(100vw - 40px); text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ═══ Step content ═══ */
+  .step { display: none; }
+  .step.active { display: block; animation: stepIn 0.45s cubic-bezier(0.16,1,0.3,1); }
+  .step.leaving { animation: stepOut 0.25s cubic-bezier(0.4,0,1,1) forwards; }
+  @keyframes stepIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes stepOut { from { opacity: 1; } to { opacity: 0; transform: translateX(-40px); } }
+
+  .step-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--coral);
+    margin-bottom: 24px; display: flex; align-items: center; gap: 10px;
+  }
+  .step-title .lucide { width: 16px; height: 16px; stroke-width: 2.5; }
+  .step-title::after { content: ''; flex: 1; height: 1px; background: rgba(224,116,97,0.15); }
+
+  /* ═══ Fields ═══ */
+  .field { margin-bottom: 26px; }
+  .field label { display: block; font-size: 15px; font-weight: 600; color: #D0D0DD; margin-bottom: 8px; line-height: 1.4; }
+  .field label .req { color: var(--coral); }
+  .field .hint { font-size: 13px; color: #7A7A92; margin: -4px 0 10px; }
+
+  input[type="text"], input[type="tel"], textarea {
+    width: 100%; padding: 14px 16px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 14px; color: var(--text);
+    font-size: 15px; font-family: inherit;
+    transition: all 0.25s; outline: none;
+  }
+  textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
+  input[type="text"]:focus, input[type="tel"]:focus, textarea:focus {
+    border-color: rgba(224,116,97,0.5); background: var(--surface-hover);
+    box-shadow: 0 0 0 4px rgba(224,116,97,0.08);
+  }
+  input::placeholder, textarea::placeholder { color: var(--text-dim); }
+  .field-error { display: none; color: var(--coral); font-size: 12px; margin-top: 6px; }
+  .field-error.show { display: block; }
+
+  /* ═══ Options ═══ */
+  .radio-group, .checkbox-group { display: flex; flex-direction: column; gap: 8px; border-radius: 16px; transition: box-shadow 0.3s; }
+  .radio-group.error, .checkbox-group.error { box-shadow: 0 0 0 2px rgba(224,116,97,0.35); }
+
+  .option {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 16px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 14px; cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    user-select: none; -webkit-user-select: none; position: relative; overflow: hidden;
+  }
+  .option:hover { background: var(--surface-hover); border-color: var(--border-hover); transform: translateY(-1px); }
+  .option:active { transform: translateY(0) scale(0.99); }
+  .option.selected {
+    background: rgba(224,116,97,0.06); border-color: rgba(224,116,97,0.3);
+    box-shadow: 0 0 20px rgba(224,116,97,0.06);
+  }
+
+  .ripple {
+    position: absolute; border-radius: 50%; background: rgba(224,116,97,0.15);
+    transform: scale(0); animation: rippleAnim 0.6s ease-out forwards; pointer-events: none;
+  }
+  @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+  .radio-dot {
+    width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.15);
+    flex-shrink: 0; transition: all 0.25s; display: flex; align-items: center; justify-content: center;
+  }
+  .selected .radio-dot { border-color: var(--coral); }
+  .selected .radio-dot::after {
+    content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--coral);
+    animation: dotPopIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .check-box {
+    width: 20px; height: 20px; border-radius: 7px; border: 2px solid rgba(255,255,255,0.15);
+    flex-shrink: 0; transition: all 0.25s; display: flex; align-items: center; justify-content: center;
+  }
+  .selected .check-box { border-color: var(--coral); background: var(--coral); animation: boxPop 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+  .check-box .lucide { display: none; }
+  .selected .check-box .lucide { display: block; width: 12px; height: 12px; color: #fff; stroke-width: 3; }
+  @keyframes dotPopIn { from { transform: scale(0); } to { transform: scale(1); } }
+  @keyframes boxPop { 50% { transform: scale(1.15); } }
+
+  .option-text { font-size: 14px; color: #B0B0C0; transition: color 0.2s; line-height: 1.4; }
+  .selected .option-text { color: var(--text); }
+
+  .sparkle-burst { position: absolute; pointer-events: none; width: 4px; height: 4px; border-radius: 50%; animation: sparkleFly 0.5s ease-out forwards; z-index: 5; }
+  @keyframes sparkleFly {
+    from { transform: translate(0,0) scale(1); opacity: 1; }
+    to { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+  }
+
+  /* ═══ Buttons ═══ */
+  .nav-row { display: flex; gap: 12px; margin-top: 32px; padding-bottom: 90px; }
+  .btn {
+    flex: 1; padding: 16px; border-radius: 14px;
+    font-size: 15px; font-weight: 700; font-family: inherit;
+    cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    border: none; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn .lucide { width: 18px; height: 18px; stroke-width: 2.5; }
+  .btn-next { background: linear-gradient(135deg, var(--coral), var(--coral-dark)); color: #fff; }
+  .btn-next::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 200%; height: 100%;
+    background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.12) 50%, transparent 75%);
+    transition: left 0.6s;
+  }
+  .btn-next:hover::before { left: 100%; }
+  .btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(224,116,97,0.35); }
+  .btn-next:disabled { opacity: 0.5; cursor: wait; transform: none !important; box-shadow: none !important; }
+  .btn-back {
+    background: var(--surface); border: 1.5px solid var(--border);
+    color: var(--text-secondary); flex: 0 0 auto; width: 52px; padding: 16px 0;
+  }
+  .btn-back:hover { background: var(--surface-hover); color: var(--text); }
+
+  /* ═══ SUCCESS / PROFILE ═══ */
+  .success { display: none; text-align: center; padding: 40px 0 80px; }
+  .success.visible { display: block; animation: successIn 0.6s cubic-bezier(0.16,1,0.3,1); }
+  @keyframes successIn { from { opacity: 0; transform: scale(0.95) translateY(20px); } to { opacity: 1; transform: none; } }
+
+  .profile-card {
+    background: linear-gradient(135deg, rgba(224,116,97,0.06), rgba(139,110,181,0.04));
+    border: 1px solid rgba(224,116,97,0.12); border-radius: 20px;
+    padding: 32px 24px; margin-bottom: 24px; text-align: left;
+    animation: cardIn 0.5s 0.2s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+
+  .profile-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .profile-avatar {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: linear-gradient(135deg, var(--coral), var(--purple));
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .profile-avatar .lucide { width: 28px; height: 28px; color: #fff; stroke-width: 1.5; }
+  .profile-name { font-size: 20px; font-weight: 800; color: #fff; }
+  .profile-role { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+  .level-block { margin-bottom: 18px; }
+  .level-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--coral); margin-bottom: 10px; }
+  .level-row { display: flex; align-items: center; gap: 14px; }
+  .level-dots { display: flex; gap: 6px; }
+  .level-dot { width: 26px; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.08); }
+  .level-dot.on { background: linear-gradient(90deg, var(--coral), var(--coral-light)); box-shadow: 0 0 12px rgba(224,116,97,0.35); }
+  .level-name { font-size: 16px; font-weight: 800; color: #fff; }
+
+  .profile-insight { padding: 16px; background: rgba(255,255,255,0.02); border-radius: 12px; margin-bottom: 16px; border-left: 3px solid var(--coral); }
+  .profile-insight p { font-size: 14px; line-height: 1.6; color: #C0C0D0; }
+  .highlight { color: var(--coral); font-weight: 600; }
+
+  .profile-powers-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--coral);
+    margin: 20px 0 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .profile-powers-title .lucide { width: 14px; height: 14px; }
+
+  .program-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.03); opacity: 0; animation: powerIn 0.4s forwards; }
+  .program-item:last-child { border: none; }
+  .program-num {
+    width: 28px; height: 28px; border-radius: 8px; background: rgba(224,116,97,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; color: var(--coral); flex-shrink: 0;
+  }
+  .program-text { font-size: 14px; color: #C0C0D0; line-height: 1.5; padding-top: 3px; }
+  .program-text strong { color: var(--text); font-weight: 600; }
+  @keyframes powerIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+
+  .success-footer { animation: cardIn 0.5s 0.5s cubic-bezier(0.16,1,0.3,1) both; }
+  .success-badge {
+    display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    font-size: 14px; color: var(--text); margin-bottom: 12px;
+  }
+  .success-badge .lucide { width: 16px; height: 16px; color: var(--coral); }
+  .success-note { font-size: 14px; color: var(--text-secondary); margin-top: 12px; line-height: 1.6; }
+
+  /* ═══ Confetti ═══ */
+  .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 200; overflow: hidden; }
+  .confetti-piece { position: absolute; top: -20px; opacity: 0; animation: confettiFall linear forwards; }
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    75% { opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg) scale(0.5); opacity: 0; }
+  }
+
+  .footer { text-align: center; padding: 24px; font-size: 12px; color: var(--text-dim); display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .footer a { color: var(--coral); text-decoration: none; }
+
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25%,75% { transform: translateX(-6px); } 50% { transform: translateX(6px); } }
+  .shake { animation: shake 0.4s; }
+
+  @media (max-width: 480px) {
+    .hero { padding: 36px 0 22px; }
+    .hero h1 { font-size: 28px; }
+    .step-dot { width: 36px; height: 36px; }
+    .step-dot .lucide { width: 16px; height: 16px; }
+    .step-line { width: 20px; }
+    .profile-card { padding: 24px 18px; }
+    .level-dot { width: 20px; }
+  }
+  @media (max-width: 360px) {
+    .step-dot { width: 32px; height: 32px; }
+    .step-dot .lucide { width: 14px; height: 14px; }
+    .step-line { width: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ SPLASH ═══ -->
+<div class="splash" id="splash">
+  <div class="splash-logo">N</div>
+  <div class="splash-text">neovida</div>
+  <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+</div>
+
+<div class="particles" id="particles"></div>
+<div class="progress-bar" id="progress" style="width: 0%"></div>
+
+<div class="main" id="mainContent">
+
+  <div class="hero" id="heroBlock">
+    <div class="hero-badge"><span style="font-weight:900;font-size:14px;letter-spacing:-1px">N</span> neovida</div>
+    <h1>Анкета перед <span>первой встречей</span></h1>
+    <p class="hero-subtitle" id="heroSubtitle"></p>
+    <div class="hero-meta"><i data-lucide="calendar"></i> Первая встреча: пятница, 6 ноября, 14:00 · анкета на 7–10 минут</div>
+  </div>
+
+  <div class="step-indicator" id="stepIndicator">
+    <div class="step-dot active" data-step="0"><span class="step-icon"><i data-lucide="user"></i></span><span class="step-check"><i data-lucide="check"></i></span></div>
+    <div class="step-line" data-line="0"></div>
+    <div class="step-dot" data-step="1"><span class="step-icon"><i data-lucide="briefcase"></i></span><span class="step-check"><i data-lucide="check"></i></span></div>
+    <div class="step-line" data-line="1"></div>
+    <div class="step-dot" data-step="2"><span class="step-icon"><i data-lucide="target"></i></span><span class="step-check"><i data-lucide="check"></i></span></div>
+    <div class="step-line" data-line="2"></div>
+    <div class="step-dot" data-step="3"><span class="step-icon"><i data-lucide="brain"></i></span><span class="step-check"><i data-lucide="check"></i></span></div>
+    <div class="step-line" data-line="3"></div>
+    <div class="step-dot" data-step="4"><span class="step-icon"><i data-lucide="laptop"></i></span><span class="step-check"><i data-lucide="check"></i></span></div>
+  </div>
+
+  <!-- ═══ Step 0: О вас ═══ -->
+  <div class="step active" data-step="0">
+    <div class="step-title"><i data-lucide="user"></i> О вас</div>
+    <div class="field">
+      <label>Как вас зовут <span class="req">*</span></label>
+      <div class="hint">Имя и фамилия</div>
+      <input type="text" id="f_name" placeholder="Например: Анна Иванова" autocomplete="name">
+    </div>
+    <div class="field">
+      <label>Ваш ник в Telegram</label>
+      <div class="hint">Необязательно. Мы и так на связи в Telegram</div>
+      <input type="text" id="f_telegram" placeholder="@username" autocomplete="off">
+      <div class="field-error" id="tgError">Ник в формате @username (латиница, от 4 символов) или оставьте поле пустым</div>
+    </div>
+    <div class="field">
+      <label>Телефон</label>
+      <div class="hint">Необязательно</div>
+      <input type="tel" id="f_phone" placeholder="Например: +7 917 000-00-00" autocomplete="tel">
+      <div class="field-error" id="phoneError">Похоже, в номере не хватает цифр</div>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-next" onclick="nextStep()">Начнём <i data-lucide="arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- ═══ Step 1: Ваша работа ═══ -->
+  <div class="step" data-step="1">
+    <div class="step-title"><i data-lucide="briefcase"></i> Ваша работа</div>
+    <div class="field">
+      <label>Чем вы занимаетесь <span class="req">*</span></label>
+      <div class="hint">Компания и ваша зона ответственности, одной-двумя фразами</div>
+      <input type="text" id="f_business_desc" placeholder="Например: управляю кофейней">
+    </div>
+    <div class="field">
+      <label>Ваша роль <span class="req">*</span></label>
+      <div class="radio-group" data-field="role">
+        <div class="option" data-value="Собственник"><div class="radio-dot"></div><span class="option-text">Собственник</span></div>
+        <div class="option" data-value="Совладелец или партнёр"><div class="radio-dot"></div><span class="option-text">Совладелец или партнёр</span></div>
+        <div class="option" data-value="Франчайзи"><div class="radio-dot"></div><span class="option-text">Франчайзи</span></div>
+        <div class="option" data-value="Директор или управляющий по найму"><div class="radio-dot"></div><span class="option-text">Директор или управляющий по найму</span></div>
+        <div class="option" data-value="Руководитель направления"><div class="radio-dot"></div><span class="option-text">Руководитель направления</span></div>
+        <div class="option" data-value="Другое"><div class="radio-dot"></div><span class="option-text">Другое</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Сколько человек в команде <span class="req">*</span></label>
+      <div class="radio-group" data-field="team_size">
+        <div class="option" data-value="Без команды"><div class="radio-dot"></div><span class="option-text">Работаю без команды</span></div>
+        <div class="option" data-value="2–5"><div class="radio-dot"></div><span class="option-text">2–5 человек</span></div>
+        <div class="option" data-value="6–15"><div class="radio-dot"></div><span class="option-text">6–15 человек</span></div>
+        <div class="option" data-value="16–50"><div class="radio-dot"></div><span class="option-text">16–50 человек</span></div>
+        <div class="option" data-value="Больше 50"><div class="radio-dot"></div><span class="option-text">Больше 50 человек</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Что у вас в управлении</label>
+      <div class="hint">Точки, направления, проекты. Так поймём масштаб</div>
+      <textarea id="f_directions" rows="3" placeholder="Например: две точки, команда 15 человек, доставка через агрегаторы, свои соцсети"></textarea>
+    </div>
+    <div class="field">
+      <label>Как выглядит ваш обычный рабочий день <span class="req">*</span></label>
+      <div class="hint">С утра до вечера: что делаете, с кем общаетесь, какие отчёты и переписки. Чем подробнее, тем точнее подберём, что передать ИИ</div>
+      <textarea id="f_daily" rows="5" placeholder="Например: утром смотрю выручку за вчера и свежие отзывы, потом планёрка с командой, днём поставщики и закупки, вечером отвечаю в рабочих чатах и проверяю график смен"></textarea>
+    </div>
+    <div class="field">
+      <label>Что делаете сами, своими руками</label>
+      <div class="hint">Можно несколько. Это то, что в первую очередь можно передать ИИ</div>
+      <div class="checkbox-group" data-field="my_tasks">
+        <div class="option" data-value="Переписка в рабочих чатах и ответы команде"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Переписка в рабочих чатах и ответы команде</span></div>
+        <div class="option" data-value="Графики смен и замены"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Графики смен и замены</span></div>
+        <div class="option" data-value="Закупки и поставщики"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Закупки и поставщики</span></div>
+        <div class="option" data-value="Остатки, списания, инвентаризация"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Остатки, списания, инвентаризация</span></div>
+        <div class="option" data-value="Отчёты по выручке и цифрам"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Отчёты по выручке и цифрам</span></div>
+        <div class="option" data-value="Ответы на отзывы гостей"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Ответы на отзывы гостей</span></div>
+        <div class="option" data-value="Соцсети и контент"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Соцсети и контент</span></div>
+        <div class="option" data-value="Акции, меню и маркетинг"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Акции, меню и маркетинг</span></div>
+        <div class="option" data-value="Найм и собеседования"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Найм и собеседования</span></div>
+        <div class="option" data-value="Обучение и стандарты для персонала"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Обучение и стандарты для персонала</span></div>
+        <div class="option" data-value="Контроль качества и чек-листы"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Контроль качества и чек-листы</span></div>
+        <div class="option" data-value="Планёрки и встречи"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Планёрки и встречи</span></div>
+        <div class="option" data-value="Письма, договоры и документы"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Письма, договоры и документы</span></div>
+        <div class="option" data-value="Отчёты для собственника или управляющей компании"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Отчёты для собственника или управляющей компании</span></div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-back" onclick="prevStep()"><i data-lucide="arrow-left"></i></button>
+      <button class="btn btn-next" onclick="nextStep()">Далее <i data-lucide="arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- ═══ Step 2: Задачи и цели ═══ -->
+  <div class="step" data-step="2">
+    <div class="step-title"><i data-lucide="target"></i> Задачи и цели</div>
+    <div class="field">
+      <label>Чего хотите добиться от наших встреч <span class="req">*</span></label>
+      <div class="hint">Что должно появиться у вас в руках, чтобы вы сказали: не зря</div>
+      <textarea id="f_goal" rows="4" placeholder="Например: свой ИИ-помощник настроен, и понятно, как работать с ним каждый день; отчёты и ответы готовятся за минуты; освобождается пара часов в день"></textarea>
+    </div>
+    <div class="field">
+      <label>Каким вы видите своего ИИ-помощника</label>
+      <div class="hint">Что он должен делать, с какими данными работать, кто ещё будет им пользоваться. Своими словами, даже если пока смутно</div>
+      <textarea id="f_agent" rows="4" placeholder="Например: каждое утро собирает выручку и отзывы в короткую сводку; пишет черновики ответов гостям и сообщений команде; помогает готовить инструкции для новых сотрудников"></textarea>
+    </div>
+    <div class="field">
+      <label>Что больше всего съедает ваше время <span class="req">*</span></label>
+      <div class="hint">Две-три задачи, которые повторяются каждый день или каждую неделю</div>
+      <textarea id="f_time_eaters" rows="4" placeholder="Например: каждый день вручную сверяю отчёты; отвечаю на одни и те же вопросы сотрудников; собираю заявки поставщикам из разных чатов"></textarea>
+    </div>
+    <div class="field">
+      <label>Что хотите передать ИИ в первую очередь <span class="req">*</span></label>
+      <div class="hint">Можно несколько. С этого начнём практику</div>
+      <div class="checkbox-group" data-field="tools_wanted">
+        <div class="option" data-value="Утренняя сводка: выручка, отзывы, задачи на день"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Утренняя сводка: выручка, отзывы, задачи на день</span></div>
+        <div class="option" data-value="Ответы на отзывы гостей"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Ответы на отзывы гостей</span></div>
+        <div class="option" data-value="Посты и тексты для соцсетей"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Посты и тексты для соцсетей</span></div>
+        <div class="option" data-value="Анализ отзывов: что хвалят и на что жалуются"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Анализ отзывов: что хвалят и на что жалуются</span></div>
+        <div class="option" data-value="Отчёты по продажам из таблиц"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Отчёты по продажам из таблиц</span></div>
+        <div class="option" data-value="Графики смен"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Графики смен</span></div>
+        <div class="option" data-value="Инструкции и стандарты для персонала"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Инструкции и стандарты для персонала</span></div>
+        <div class="option" data-value="Вакансии и разбор откликов"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Вакансии и разбор откликов</span></div>
+        <div class="option" data-value="Письма и сообщения поставщикам и партнёрам"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Письма и сообщения поставщикам и партнёрам</span></div>
+        <div class="option" data-value="Протоколы планёрок и задачи из голосовых"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Протоколы планёрок и задачи из голосовых</span></div>
+        <div class="option" data-value="Идеи для меню, акций и событий"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Идеи для меню, акций и событий</span></div>
+        <div class="option" data-value="Расчёт себестоимости и цен"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Расчёт себестоимости и цен</span></div>
+        <div class="option" data-value="Личный помощник: почта, календарь, напоминания"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Личный помощник: почта, календарь, напоминания</span></div>
+        <div class="option" data-value="Другое, напишу ниже"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Другое, напишу ниже</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>С какой задачей прийти на первую встречу</label>
+      <div class="hint">Одна живая рабочая задача, на которой удобно разбираться</div>
+      <textarea id="f_first_task" rows="3" placeholder="Например: собрать из таблицы продаж за месяц понятный отчёт для собственника; или написать стандарт приготовления напитков для новых сотрудников"></textarea>
+    </div>
+    <div class="field">
+      <label>Кто будет пользоваться тем, что настроим</label>
+      <div class="radio-group" data-field="users">
+        <div class="option" data-value="Только я"><div class="radio-dot"></div><span class="option-text">Только я</span></div>
+        <div class="option" data-value="Я и пара сотрудников"><div class="radio-dot"></div><span class="option-text">Я и пара сотрудников</span></div>
+        <div class="option" data-value="Вся команда"><div class="radio-dot"></div><span class="option-text">Вся команда</span></div>
+        <div class="option" data-value="Пока не знаю"><div class="radio-dot"></div><span class="option-text">Пока не знаю</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Сколько времени в неделю готовы уделять практике между встречами <span class="req">*</span></label>
+      <div class="hint">Подстроим темп под ваш ответ</div>
+      <div class="radio-group" data-field="practice_time">
+        <div class="option" data-value="До 1 часа"><div class="radio-dot"></div><span class="option-text">До 1 часа</span></div>
+        <div class="option" data-value="1–3 часа"><div class="radio-dot"></div><span class="option-text">1–3 часа</span></div>
+        <div class="option" data-value="3–5 часов"><div class="radio-dot"></div><span class="option-text">3–5 часов</span></div>
+        <div class="option" data-value="Больше 5 часов"><div class="radio-dot"></div><span class="option-text">Больше 5 часов</span></div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-back" onclick="prevStep()"><i data-lucide="arrow-left"></i></button>
+      <button class="btn btn-next" onclick="nextStep()">Далее <i data-lucide="arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- ═══ Step 3: Ваш опыт с ИИ ═══ -->
+  <div class="step" data-step="3">
+    <div class="step-title"><i data-lucide="brain"></i> Ваш опыт с ИИ</div>
+    <div class="field">
+      <label>Насколько вы знакомы с нейросетями <span class="req">*</span></label>
+      <div class="hint">Выберите то, что ближе всего к правде сегодня</div>
+      <div class="radio-group" data-field="ai_level">
+        <div class="option" data-value="Опыта пока нет"><div class="radio-dot"></div><span class="option-text">Опыта пока нет</span></div>
+        <div class="option" data-value="Было пару раз"><div class="radio-dot"></div><span class="option-text">Было пару раз: простые вопросы</span></div>
+        <div class="option" data-value="Пользуюсь иногда"><div class="radio-dot"></div><span class="option-text">Пользуюсь иногда: тексты, идеи, ответы на вопросы</span></div>
+        <div class="option" data-value="Пользуюсь регулярно"><div class="radio-dot"></div><span class="option-text">Пользуюсь регулярно: веду диалог, загружаю файлы, есть свои запросы</span></div>
+        <div class="option" data-value="Есть свои ассистенты или проекты"><div class="radio-dot"></div><span class="option-text">Есть свои ассистенты или проекты под задачи</span></div>
+        <div class="option" data-value="Строю автоматизации и агентов"><div class="radio-dot"></div><span class="option-text">Строю автоматизации и агентов</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Какими нейросетями пользовались</label>
+      <div class="hint">Можно несколько</div>
+      <div class="checkbox-group" data-field="ai_tools">
+        <div class="option" data-value="ChatGPT"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">ChatGPT</span></div>
+        <div class="option" data-value="Gemini"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Gemini</span></div>
+        <div class="option" data-value="Claude"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Claude</span></div>
+        <div class="option" data-value="DeepSeek"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">DeepSeek</span></div>
+        <div class="option" data-value="Qwen"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Qwen</span></div>
+        <div class="option" data-value="Алиса или GigaChat"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Алиса или GigaChat</span></div>
+        <div class="option" data-value="Perplexity"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Perplexity</span></div>
+        <div class="option" data-value="Grok"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Grok</span></div>
+        <div class="option" data-value="Нейросети для картинок"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Нейросети для картинок</span></div>
+        <div class="option" data-value="Нейросети для видео"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Нейросети для видео</span></div>
+        <div class="option" data-value="ИИ внутри сервисов"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">ИИ внутри сервисов: Яндекс, iiko, Битрикс</span></div>
+        <div class="option" data-value="Другое"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Другое</span></div>
+        <div class="option" data-value="Пока ничем"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Пока ничем</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Для чего уже применяли нейросети</label>
+      <div class="hint">Можно несколько</div>
+      <div class="checkbox-group" data-field="ai_usecases">
+        <div class="option" data-value="Тексты для соцсетей и рекламы"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Тексты для соцсетей и рекламы</span></div>
+        <div class="option" data-value="Ответы гостям и отзывы"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Ответы гостям и отзывы</span></div>
+        <div class="option" data-value="Письма и сообщения"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Письма и сообщения</span></div>
+        <div class="option" data-value="Таблицы и расчёты"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Таблицы и расчёты</span></div>
+        <div class="option" data-value="Анализ конкурентов и рынка"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Анализ конкурентов и рынка</span></div>
+        <div class="option" data-value="Поиск информации"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Поиск информации</span></div>
+        <div class="option" data-value="Разбор документов и договоров"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Разбор документов и договоров</span></div>
+        <div class="option" data-value="Картинки и визуал"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Картинки и визуал</span></div>
+        <div class="option" data-value="Инструкции и обучение для команды"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Инструкции и обучение для команды</span></div>
+        <div class="option" data-value="Личные вопросы: здоровье, обучение, путешествия"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Личные вопросы: здоровье, обучение, путешествия</span></div>
+        <div class="option" data-value="Пока ни для чего"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Пока ни для чего</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Что уже пробовали с ИИ и не получилось</label>
+      <div class="hint">Необязательно, но очень помогает: начнём с того, что мешало</div>
+      <textarea id="f_ai_fail" rows="3" placeholder="Например: ChatGPT путал цифры в отчёте из таблицы; тексты для соцсетей выходили шаблонными; не понятно, как дать ему свои документы"></textarea>
+    </div>
+    <div class="field">
+      <label>Какой у вас опыт с техникой и программами <span class="req">*</span></label>
+      <div class="hint">Чтобы подобрать темп встреч</div>
+      <div class="radio-group" data-field="tech_level">
+        <div class="option" data-value="Пользователь"><div class="radio-dot"></div><span class="option-text">Работаю в готовых программах</span></div>
+        <div class="option" data-value="Уверенный пользователь"><div class="radio-dot"></div><span class="option-text">Уверенно: формулы в таблицах, настройка сервисов, установка программ</span></div>
+        <div class="option" data-value="Есть опыт с интеграциями"><div class="radio-dot"></div><span class="option-text">Есть опыт с интеграциями: боты, выгрузки, автоматизации</span></div>
+        <div class="option" data-value="Есть опыт программирования"><div class="radio-dot"></div><span class="option-text">Есть опыт программирования</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>В каких сервисах живёт ваша работа</label>
+      <div class="hint">Можно несколько</div>
+      <div class="checkbox-group" data-field="work_services">
+        <div class="option" data-value="iiko"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">iiko</span></div>
+        <div class="option" data-value="r_keeper"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">r_keeper</span></div>
+        <div class="option" data-value="Poster"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Poster</span></div>
+        <div class="option" data-value="Эвотор или другая касса"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Эвотор или другая касса</span></div>
+        <div class="option" data-value="Google Таблицы"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Google Таблицы</span></div>
+        <div class="option" data-value="Excel"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Excel</span></div>
+        <div class="option" data-value="1С"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">1С</span></div>
+        <div class="option" data-value="Битрикс24 или amoCRM"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Битрикс24 или amoCRM</span></div>
+        <div class="option" data-value="Яндекс Карты и 2ГИС"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Яндекс Карты и 2ГИС</span></div>
+        <div class="option" data-value="Telegram или WhatsApp для команды"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Telegram или WhatsApp для команды</span></div>
+        <div class="option" data-value="Instagram, ВКонтакте или Telegram-канал"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Instagram, ВКонтакте или Telegram-канал</span></div>
+        <div class="option" data-value="Яндекс Еда или Деливери"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Яндекс Еда или Деливери</span></div>
+        <div class="option" data-value="Другое"><div class="check-box"><i data-lucide="check"></i></div><span class="option-text">Другое</span></div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-back" onclick="prevStep()"><i data-lucide="arrow-left"></i></button>
+      <button class="btn btn-next" onclick="nextStep()">Далее <i data-lucide="arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- ═══ Step 4: Техника и доступы ═══ -->
+  <div class="step" data-step="4">
+    <div class="step-title"><i data-lucide="laptop"></i> Техника и доступы</div>
+    <div class="field">
+      <label>На чём будете работать на встречах <span class="req">*</span></label>
+      <div class="hint">Лучше всего ноутбук: на нём и будем настраивать помощника</div>
+      <div class="radio-group" data-field="device">
+        <div class="option" data-value="MacBook"><div class="radio-dot"></div><span class="option-text">MacBook</span></div>
+        <div class="option" data-value="Ноутбук на Windows"><div class="radio-dot"></div><span class="option-text">Ноутбук на Windows</span></div>
+        <div class="option" data-value="Есть и то и другое"><div class="radio-dot"></div><span class="option-text">Есть и то и другое</span></div>
+        <div class="option" data-value="Только планшет или телефон"><div class="radio-dot"></div><span class="option-text">Только планшет или телефон</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Можно ли ставить программы на этот ноутбук <span class="req">*</span></label>
+      <div class="hint">Помощник ставится как программа. Если есть ограничения, лучше знать заранее</div>
+      <div class="radio-group" data-field="install_rights">
+        <div class="option" data-value="Да, ноутбук мой, ставлю что хочу"><div class="radio-dot"></div><span class="option-text">Да, ноутбук мой, ставлю что хочу</span></div>
+        <div class="option" data-value="Рабочий, но ставить можно"><div class="radio-dot"></div><span class="option-text">Рабочий, но ставить можно</span></div>
+        <div class="option" data-value="Рабочий, установка через IT-отдел или с ограничениями"><div class="radio-dot"></div><span class="option-text">Рабочий, установка через IT-отдел или с ограничениями</span></div>
+        <div class="option" data-value="Не знаю"><div class="radio-dot"></div><span class="option-text">Не знаю</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Какой у вас доступ к ChatGPT сейчас <span class="req">*</span></label>
+      <div class="hint">Если подписки пока нет, поможем оформить</div>
+      <div class="radio-group" data-field="chatgpt_plan">
+        <div class="option" data-value="Нет аккаунта"><div class="radio-dot"></div><span class="option-text">Нет аккаунта</span></div>
+        <div class="option" data-value="Бесплатный"><div class="radio-dot"></div><span class="option-text">Бесплатный</span></div>
+        <div class="option" data-value="Plus"><div class="radio-dot"></div><span class="option-text">Plus</span></div>
+        <div class="option" data-value="Pro"><div class="radio-dot"></div><span class="option-text">Pro (100 или 200 $)</span></div>
+        <div class="option" data-value="Business или Team"><div class="radio-dot"></div><span class="option-text">Business или Team</span></div>
+        <div class="option" data-value="Есть, тариф не знаю"><div class="radio-dot"></div><span class="option-text">Есть, но не знаю, какой тариф</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Чем можете оплачивать зарубежные сервисы <span class="req">*</span></label>
+      <div class="hint">ChatGPT и Claude не принимают российские карты. От этого зависит, как оформим подписку</div>
+      <div class="radio-group" data-field="foreign_payment">
+        <div class="option" data-value="Есть зарубежная карта, оплата проходит"><div class="radio-dot"></div><span class="option-text">Есть зарубежная карта, оплата проходит</span></div>
+        <div class="option" data-value="Есть зарубежная карта, но оплата не проходит"><div class="radio-dot"></div><span class="option-text">Есть зарубежная карта, но оплата не проходит</span></div>
+        <div class="option" data-value="Нет зарубежной карты"><div class="radio-dot"></div><span class="option-text">Нет зарубежной карты</span></div>
+        <div class="option" data-value="Плачу через посредника или сервис оплаты"><div class="radio-dot"></div><span class="option-text">Плачу через посредника или сервис оплаты</span></div>
+        <div class="option" data-value="Не знаю"><div class="radio-dot"></div><span class="option-text">Не знаю</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Есть ли VPN <span class="req">*</span></label>
+      <div class="hint">Без VPN ChatGPT и часть сервисов не откроются. Если VPN нет или работает с перебоями, отметьте: настроим до встречи</div>
+      <div class="radio-group" data-field="vpn">
+        <div class="option" data-value="Да, на ноутбуке и на телефоне"><div class="radio-dot"></div><span class="option-text">Да, на ноутбуке и на телефоне</span></div>
+        <div class="option" data-value="Только на ноутбуке"><div class="radio-dot"></div><span class="option-text">Только на ноутбуке</span></div>
+        <div class="option" data-value="Только на телефоне"><div class="radio-dot"></div><span class="option-text">Только на телефоне</span></div>
+        <div class="option" data-value="Нет"><div class="radio-dot"></div><span class="option-text">Нет</span></div>
+        <div class="option" data-value="Не знаю"><div class="radio-dot"></div><span class="option-text">Не знаю</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Есть ли у вас аккаунт Google</label>
+      <div class="hint">Почта Gmail. Через неё открываются Gemini, Google Таблицы и часть сервисов</div>
+      <div class="radio-group" data-field="google_account">
+        <div class="option" data-value="Да, пользуюсь"><div class="radio-dot"></div><span class="option-text">Да, пользуюсь</span></div>
+        <div class="option" data-value="Есть, давно не пользуюсь"><div class="radio-dot"></div><span class="option-text">Есть, давно не пользуюсь</span></div>
+        <div class="option" data-value="Нет"><div class="radio-dot"></div><span class="option-text">Нет</span></div>
+        <div class="option" data-value="Не знаю"><div class="radio-dot"></div><span class="option-text">Не знаю</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Есть ли ограничения по данным компании</label>
+      <div class="hint">Помощник работает с вашими таблицами и документами. Так заранее поймём, что ему можно показывать</div>
+      <div class="radio-group" data-field="data_limits">
+        <div class="option" data-value="Ограничений нет"><div class="radio-dot"></div><span class="option-text">Ограничений нет</span></div>
+        <div class="option" data-value="Часть данных нельзя выносить за пределы компании"><div class="radio-dot"></div><span class="option-text">Часть данных нельзя выносить за пределы компании</span></div>
+        <div class="option" data-value="Нужно согласовать с собственником или управляющей компанией"><div class="radio-dot"></div><span class="option-text">Нужно согласовать с собственником или управляющей компанией</span></div>
+        <div class="option" data-value="Не знаю"><div class="radio-dot"></div><span class="option-text">Не знаю</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Какие дни и время удобны для следующих встреч</label>
+      <div class="hint">Встречи по часу</div>
+      <input type="text" id="f_schedule" placeholder="Например: вторник или пятница, с 10:00 до 12:00">
+    </div>
+    <div class="field">
+      <label>Что ещё важно знать Альберту</label>
+      <textarea id="f_question" rows="3" placeholder="Например: как вам удобнее, чтобы объясняли; что смущает в ИИ; любые вопросы"></textarea>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-back" onclick="prevStep()"><i data-lucide="arrow-left"></i></button>
+      <button class="btn btn-next" id="submitBtn" onclick="submitForm()"><i data-lucide="send"></i> Отправить анкету</button>
+    </div>
+  </div>
+
+  <!-- ═══ PROFILE SCREEN ═══ -->
+  <div class="success" id="profileScreen">
+    <div id="profileContent"></div>
+  </div>
+
+</div>
+
+<div class="step-counter" id="stepCounter">
+  <i data-lucide="layers"></i>
+  Шаг <span class="current" id="stepNum">1</span> из 5
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="footer"><span style="font-weight:900;letter-spacing:-1px;color:var(--coral)">N</span> <a href="https://neovida.ai">neovida.ai</a> · 2026</div>
+<div class="confetti-container" id="confetti"></div>
+
+<script>
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbybNxodSevTQSglBBlaVjYvirKwrpW35wNM9HibQ0qh03idmXnKYedlETx65ajw7yRE/exec';
+  const COURSE_META = {
+    course_id: 'personal-azamatova',
+    cohort_id: 'personal-azamatova-2026-11',
+    source: 'materials.neovida.ai/personal/azamatova/anketa/'
+  };
+  const TOTAL_STEPS = 5;
+  const STORAGE_KEY = 'nv-anketa-personal-azamatova-2026-11';
+
+  const emptyState = () => ({
+    name:'', telegram:'', phone:'',
+    business_desc:'', role:'', team_size:'', directions:'', daily:'', my_tasks:[],
+    goal:'', agent:'', time_eaters:'', tools_wanted:[], first_task:'', users:'', practice_time:'',
+    ai_level:'', ai_tools:[], ai_usecases:[], ai_fail:'', tech_level:'', work_services:[],
+    device:'', install_rights:'', chatgpt_plan:'', foreign_payment:'', vpn:'', google_account:'', data_limits:'',
+    schedule:'', question:''
+  });
+  let state = emptyState();
+  let currentStep = 0;
+  let responseId = '';
+
+  function makeResponseId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'r-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  }
+
+  const textFields = {
+    f_name:'name', f_telegram:'telegram', f_phone:'phone', f_business_desc:'business_desc', f_directions:'directions',
+    f_daily:'daily', f_goal:'goal', f_agent:'agent', f_time_eaters:'time_eaters', f_first_task:'first_task',
+    f_ai_fail:'ai_fail', f_schedule:'schedule', f_question:'question'
+  };
+
+  // Иконки приходят из интернета, и у части людей этот адрес не открывается.
+  // Анкета обязана работать и без них, поэтому вызов всегда безопасный.
+  function drawIcons() {
+    try { if (window.lucide && lucide.createIcons) lucide.createIcons(); } catch (e) {}
+  }
+  drawIcons();
+
+  // ═══ Splash → form ═══
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('hide');
+    document.getElementById('mainContent').classList.add('visible');
+    typeText('heroSubtitle', 'Пять коротких шагов, чтобы встречи шли под ваши задачи');
+  }, 2300);
+
+  function typeText(id, text) {
+    const el = document.getElementById(id);
+    el.innerHTML = '<span class="typing-cursor"></span>';
+    let i = 0;
+    const interval = setInterval(() => {
+      el.innerHTML = text.slice(0, ++i) + '<span class="typing-cursor"></span>';
+      if (i >= text.length) {
+        clearInterval(interval);
+        setTimeout(() => { el.innerHTML = text; }, 1500);
+      }
+    }, 28);
+  }
+
+  // ═══ Particles ═══
+  (function() {
+    const c = document.getElementById('particles');
+    const colors = ['rgba(224,116,97,0.15)', 'rgba(139,110,181,0.12)', 'rgba(240,160,144,0.1)'];
+    for (let i = 0; i < 20; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const s = 3 + Math.random() * 5;
+      p.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}%;background:${colors[i%3]};animation-duration:${15+Math.random()*25}s;animation-delay:${Math.random()*20}s;`;
+      c.appendChild(p);
+    }
+  })();
+
+  // ═══ Ripple + sparkles ═══
+  function addRipple(e, el) {
+    const r = document.createElement('div');
+    r.className = 'ripple';
+    const rect = el.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px;`;
+    el.appendChild(r);
+    setTimeout(() => r.remove(), 600);
+  }
+
+  function addSparkles(el) {
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width * 0.1;
+    const cy = rect.top + rect.height / 2;
+    const colors = ['#E07461', '#F0A090', '#8B6EB5', '#FFD700'];
+    for (let i = 0; i < 6; i++) {
+      const s = document.createElement('div');
+      s.className = 'sparkle-burst';
+      const angle = (Math.PI * 2 / 6) * i + Math.random() * 0.5;
+      const dist = 20 + Math.random() * 25;
+      s.style.cssText = `position:fixed;left:${cx}px;top:${cy}px;background:${colors[i%4]};--tx:${Math.cos(angle)*dist}px;--ty:${Math.sin(angle)*dist}px;`;
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 500);
+    }
+  }
+
+  // ═══ Radio groups ═══
+  document.querySelectorAll('.radio-group').forEach(g => {
+    const f = g.dataset.field;
+    g.querySelectorAll('.option').forEach(o => {
+      o.addEventListener('click', (e) => {
+        g.querySelectorAll('.option').forEach(x => x.classList.remove('selected'));
+        o.classList.add('selected');
+        state[f] = o.dataset.value;
+        g.classList.remove('error');
+        addRipple(e, o);
+        saveDraft();
+      });
+    });
+  });
+
+  // ═══ Checkbox groups ═══
+  document.querySelectorAll('.checkbox-group').forEach(g => {
+    const f = g.dataset.field;
+    g.querySelectorAll('.option').forEach(o => {
+      o.addEventListener('click', (e) => {
+        const wasSelected = o.classList.contains('selected');
+        o.classList.toggle('selected');
+        state[f] = Array.from(g.querySelectorAll('.option.selected')).map(x => x.dataset.value);
+        g.classList.remove('error');
+        addRipple(e, o);
+        if (!wasSelected) addSparkles(o);
+        saveDraft();
+      });
+    });
+  });
+
+  // ═══ Text inputs ═══
+  Object.keys(textFields).forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', e => {
+      const key = textFields[id];
+      state[key] = key === 'telegram' ? normalizeTg(e.target.value) : e.target.value;
+      if (key === 'telegram') validateTgLive(e.target.value);
+      if (key === 'phone') document.getElementById('phoneError').classList.remove('show');
+      saveDraft();
+    });
+  });
+
+  // На телефоне клавиатура поднимает поле под плавающий счётчик, поэтому прячем его на время ввода.
+  document.querySelectorAll('input, textarea').forEach(el => {
+    el.addEventListener('focus', () => document.getElementById('stepCounter').classList.add('typing'));
+    el.addEventListener('blur', () => document.getElementById('stepCounter').classList.remove('typing'));
+  });
+
+  // ═══ Telegram ═══
+  function normalizeTg(val) {
+    let v = (val || '').trim();
+    v = v.replace(/^https?:\/\//i, '').replace(/^(www\.)?t\.me\//i, '').replace(/^@+/, '');
+    v = v.replace(/[\/?#].*$/, '');
+    return v ? '@' + v : '';
+  }
+  function isValidTg(v) {
+    return /^@[A-Za-z0-9_]{4,32}$/.test(v || '');
+  }
+  function validateTgLive(raw) {
+    const err = document.getElementById('tgError');
+    if (raw.trim().length > 3 && state.telegram && !isValidTg(state.telegram)) err.classList.add('show');
+    else err.classList.remove('show');
+  }
+  document.getElementById('f_telegram').addEventListener('blur', e => {
+    if (isValidTg(state.telegram) && e.target.value !== state.telegram) e.target.value = state.telegram;
+  });
+
+  function isValidPhone(v) {
+    const digits = (v || '').replace(/\D/g, '');
+    return digits.length === 0 || (digits.length >= 10 && digits.length <= 15);
+  }
+
+  // ═══ Validation ═══
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  function flagGroup(field, msg) {
+    const g = document.querySelector(`[data-field="${field}"]`);
+    if (g) {
+      g.classList.add('error');
+      g.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    showToast(msg);
+    return false;
+  }
+
+  function shakeField(id, msg) {
+    const el = document.getElementById(id);
+    el.classList.add('shake'); el.style.borderColor = 'var(--coral)';
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.focus({ preventScroll: true });
+    setTimeout(() => { el.classList.remove('shake'); el.style.borderColor = ''; }, 600);
+    if (msg) showToast(msg);
+    return false;
+  }
+
+  function validateStep(s) {
+    if (s === 0) {
+      if (!state.name.trim()) return shakeField('f_name', 'Напишите, как вас зовут');
+      if (state.telegram && !isValidTg(state.telegram)) { document.getElementById('tgError').classList.add('show'); return shakeField('f_telegram', 'Проверьте ник или оставьте поле пустым'); }
+      if (!isValidPhone(state.phone)) { document.getElementById('phoneError').classList.add('show'); return shakeField('f_phone', 'Проверьте номер телефона'); }
+      if (state.telegram) document.getElementById('f_telegram').value = state.telegram;
+    }
+    if (s === 1) {
+      if (!state.business_desc.trim()) return shakeField('f_business_desc', 'Напишите, чем вы занимаетесь');
+      if (!state.role) return flagGroup('role', 'Выберите вашу роль');
+      if (!state.team_size) return flagGroup('team_size', 'Укажите размер команды');
+      if (!state.daily.trim()) return shakeField('f_daily', 'Опишите ваш обычный рабочий день');
+    }
+    if (s === 2) {
+      if (!state.goal.trim()) return shakeField('f_goal', 'Напишите, чего хотите добиться');
+      if (!state.time_eaters.trim()) return shakeField('f_time_eaters', 'Напишите, что съедает время');
+      if (!Array.isArray(state.tools_wanted) || !state.tools_wanted.length) return flagGroup('tools_wanted', 'Отметьте хотя бы одну задачу');
+      if (!state.practice_time) return flagGroup('practice_time', 'Укажите время на практику');
+    }
+    if (s === 3) {
+      if (!state.ai_level) return flagGroup('ai_level', 'Выберите, насколько вы знакомы с нейросетями');
+      if (!state.tech_level) return flagGroup('tech_level', 'Выберите опыт с техникой');
+    }
+    if (s === 4) {
+      if (!state.device) return flagGroup('device', 'Укажите, на чём будете работать');
+      if (!state.install_rights) return flagGroup('install_rights', 'Укажите, можно ли ставить программы');
+      if (!state.chatgpt_plan) return flagGroup('chatgpt_plan', 'Укажите доступ к ChatGPT');
+      if (!state.foreign_payment) return flagGroup('foreign_payment', 'Укажите, чем можете оплачивать');
+      if (!state.vpn) return flagGroup('vpn', 'Укажите, есть ли VPN');
+    }
+    return true;
+  }
+
+  // Перед отправкой проверяем ВСЕ шаги, а не только последний.
+  // Иначе человек, вернувшийся к черновику с пустым полем на раннем шаге,
+  // увидел бы «анкета принята», а строка в таблицу не попала бы.
+  function validateAllSteps() {
+    for (let s = 0; s < TOTAL_STEPS; s++) {
+      if (!validateStep(s)) {
+        if (currentStep !== s) goToStep(s);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // ═══ Navigation ═══
+  function goToStep(n, instant) {
+    const old = document.querySelector('.step.active');
+    const next = document.querySelector(`.step[data-step="${n}"]`);
+    const apply = () => {
+      if (old) old.classList.remove('leaving');
+      next.classList.add('active');
+      currentStep = n; updateIndicator(); updateProgress();
+      document.getElementById('stepNum').textContent = n + 1;
+      window.scrollTo({ top: 0, behavior: instant ? 'auto' : 'smooth' });
+      saveDraft();
+    };
+    if (instant || !old) { if (old) old.classList.remove('active'); apply(); return; }
+    old.classList.remove('active'); old.classList.add('leaving');
+    setTimeout(apply, 250);
+  }
+
+  function nextStep() { if (validateStep(currentStep) && currentStep < TOTAL_STEPS - 1) goToStep(currentStep + 1); }
+  function prevStep() { if (currentStep > 0) goToStep(currentStep - 1); }
+
+  function updateIndicator() {
+    document.querySelectorAll('.step-dot').forEach(d => {
+      const s = parseInt(d.dataset.step);
+      d.classList.remove('active', 'done');
+      if (s < currentStep) d.classList.add('done');
+      else if (s === currentStep) d.classList.add('active');
+    });
+    document.querySelectorAll('.step-line').forEach(l => {
+      l.classList.toggle('done', parseInt(l.dataset.line) < currentStep);
+    });
+  }
+
+  function updateProgress() {
+    document.getElementById('progress').style.width = Math.round(((currentStep + 1) / TOTAL_STEPS) * 100) + '%';
+  }
+
+  // ═══ Draft: autosave in this browser ═══
+  function saveDraft() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, step: currentStep, responseId })); } catch (e) {}
+  }
+  function clearDraft() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  }
+  function restoreDraft() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) {}
+    if (!saved || !saved.state) return;
+    state = Object.assign(emptyState(), saved.state);
+    // Номер анкеты переживает перезагрузку: повторная отправка после сбоя
+    // не создаст вторую строку, если первая всё-таки дошла.
+    if (saved.responseId) responseId = saved.responseId;
+    Object.keys(textFields).forEach(id => {
+      const el = document.getElementById(id);
+      if (el && state[textFields[id]]) el.value = state[textFields[id]];
+    });
+    document.querySelectorAll('.radio-group').forEach(g => {
+      const v = state[g.dataset.field];
+      g.querySelectorAll('.option').forEach(o => o.classList.toggle('selected', !!v && o.dataset.value === v));
+    });
+    document.querySelectorAll('.checkbox-group').forEach(g => {
+      const arr = Array.isArray(state[g.dataset.field]) ? state[g.dataset.field] : [];
+      g.querySelectorAll('.option').forEach(o => o.classList.toggle('selected', arr.includes(o.dataset.value)));
+    });
+    const step = Math.min(Math.max(parseInt(saved.step) || 0, 0), TOTAL_STEPS - 1);
+    if (step > 0) goToStep(step, true);
+  }
+  restoreDraft();
+
+  // ═══ Level ═══
+  const LEVELS = [
+    { name: 'Стартую с нуля',      n: 1 },
+    { name: 'Пробую',              n: 2 },
+    { name: 'Пользуюсь каждый день', n: 3 },
+    { name: 'Настраиваю под себя', n: 4 },
+    { name: 'Строю систему',       n: 5 }
+  ];
+  const levelByAnswer = {
+    'Опыта пока нет': 0,
+    'Было пару раз': 0,
+    'Пользуюсь иногда': 1,
+    'Пользуюсь регулярно': 2,
+    'Есть свои ассистенты или проекты': 3,
+    'Строю автоматизации и агентов': 4
+  };
+  function computeLevel() {
+    let idx = levelByAnswer[state.ai_level] ?? 0;
+    const noAccounts = state.chatgpt_plan === 'Нет аккаунта';
+    if (noAccounts && idx > 1) idx = 1;
+    return idx;
+  }
+  function levelLabel(idx) { return LEVELS[idx].n + ' · ' + LEVELS[idx].name; }
+
+  // ═══ Submit ═══
+  function resetSubmitButton() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="send"></i> Отправить анкету';
+    drawIcons();
+  }
+
+  // Понятный текст вместо служебного кода ошибки сервера.
+  function errorText(code) {
+    if (/^missing_/.test(code)) return 'Один из ответов не дошёл. Пройдите шаги ещё раз, пожалуйста';
+    if (code === 'invalid_cohort_id' || code === 'unknown_course_id') return 'Ссылка устарела. Напишите Альберту, он пришлёт новую';
+    return 'Сервер не принял анкету. Попробуйте ещё раз через минуту';
+  }
+
+  async function submitForm() {
+    if (!validateAllSteps()) return;
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i data-lucide="loader-circle"></i> Отправляем';
+    drawIcons();
+
+    const levelIdx = computeLevel();
+    // Номер анкеты живёт до успешной отправки: если анкета уйдёт дважды,
+    // приёмник узнает повтор по нему и не создаст вторую строку.
+    if (!responseId) responseId = makeResponseId();
+    const payload = {
+      ...state,
+      response_id: responseId,
+      level_label: levelLabel(levelIdx),
+      course_id: COURSE_META.course_id,
+      cohort_id: COURSE_META.cohort_id,
+      source: COURSE_META.source,
+      client_submitted_at: new Date().toISOString()
+    };
+    const body = JSON.stringify(payload);
+
+    // Google отвечает с разрешающим заголовком, поэтому обычным запросом мы ЧИТАЕМ ответ
+    // и точно знаем, записалась строка или нет. Показывать экран успеха вслепую нельзя:
+    // человек уйдёт довольным, а анкеты у нас не будет.
+    let confirmed = false;
+    try {
+      const response = await Promise.race([
+        fetch(SCRIPT_URL, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000))
+      ]);
+      const result = await response.json().catch(() => null);
+      if (result && result.status === 'ok') {
+        confirmed = true;
+      } else if (result && result.status === 'error') {
+        resetSubmitButton();
+        showToast(errorText(result.error));
+        return;
+      }
+    } catch (e) {
+      // Ответ прочитать не вышло: браузер, прокси или медленная связь.
+      // Досылаем вслепую, чтобы анкета всё-таки ушла.
+      try {
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body });
+      } catch (e2) {
+        resetSubmitButton();
+        showToast('Не удалось отправить. Проверьте интернет и попробуйте ещё раз');
+        return;
+      }
+    }
+
+    if (confirmed) clearDraft();
+    showProfile(levelIdx);
+  }
+
+  // ═══ Profile screen ═══
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
+
+  function showProfile(levelIdx) {
+    document.querySelectorAll('.step.active, .step.leaving').forEach(el => el.classList.remove('active', 'leaving'));
+    document.getElementById('stepIndicator').style.display = 'none';
+    document.getElementById('heroBlock').style.display = 'none';
+    document.getElementById('stepCounter').style.display = 'none';
+    document.getElementById('progress').style.width = '100%';
+
+    const firstName = escapeHtml(state.name.trim().split(/\s+/)[0]);
+    const level = LEVELS[levelIdx];
+
+    const insights = [
+      `${firstName}, спасибо! Начнём с основ, всё под ваши задачи.`,
+      `${firstName}, спасибо! Первый опыт уже есть, будем развивать его на ваших задачах.`,
+      `${firstName}, спасибо! Вы уже работаете с нейросетями регулярно, это хорошая база.`,
+      `${firstName}, спасибо! У вас уже есть ассистенты или проекты, это уровень выше среднего.`,
+      `${firstName}, спасибо! Вы уже строите автоматизации, это сильная база.`
+    ];
+
+    const dots = LEVELS.map((l, i) => `<div class="level-dot ${i <= levelIdx ? 'on' : ''}"></div>`).join('');
+
+    const html = `
+      <div class="profile-card">
+        <div class="profile-header">
+          <div class="profile-avatar"><i data-lucide="user-round"></i></div>
+          <div>
+            <div class="profile-name">${escapeHtml(state.name.trim())}</div>
+            <div class="profile-role">Первая встреча: пятница, 6 ноября, 14:00</div>
+          </div>
+        </div>
+        <div class="level-block">
+          <div class="level-label">Ваш уровень сейчас</div>
+          <div class="level-row">
+            <div class="level-dots">${dots}</div>
+            <div class="level-name">${level.n} из 5 · ${level.name}</div>
+          </div>
+        </div>
+        <div class="profile-insight"><p>${insights[levelIdx]}</p></div>
+      </div>
+      <div class="success-footer">
+        <div class="success-badge"><i data-lucide="check-circle"></i> Анкета принята, спасибо</div>
+        <p class="success-note">Возьмите с собой ноутбук с зарядкой и телефон.<br>Уфа, Верхнеторговая площадь, 4, подъезд 1, 14 этаж, помещение 1408.<br>До встречи в пятницу в 14:00!</p>
+      </div>
+    `;
+
+    document.getElementById('profileContent').innerHTML = html;
+    document.getElementById('profileScreen').classList.add('visible');
+    drawIcons();
+    launchConfetti();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ═══ Confetti ═══
+  function launchConfetti() {
+    const c = document.getElementById('confetti');
+    const colors = ['#E07461', '#F0A090', '#8B6EB5', '#FFD700', '#50C878', '#3B82F6', '#fff'];
+    for (let i = 0; i < 60; i++) {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const shape = ['circle', 'square', 'strip'][Math.floor(Math.random() * 3)];
+      let w = 8 + Math.random() * 6, h = shape === 'strip' ? w * 2.5 : w;
+      p.style.cssText = `left:${Math.random()*100}%;width:${w}px;height:${h}px;background:${color};border-radius:${shape==='circle'?'50%':'2px'};animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*0.5}s;`;
+      c.appendChild(p);
+    }
+    setTimeout(() => c.innerHTML = '', 4000);
+  }
+
+  updateProgress();
+</script>
+</body>
+</html>
