@@ -1,0 +1,239 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>AI Цех · OpenCode и подписка Go</title><link rel="icon" href="data:,"><link rel="stylesheet" href="../fonts.css"><style>:root{--bg:#0d0f11;--card:#15181b;--card2:#1b1f23;--line:#2a2f34;--ink:#f2eee6;--muted:#a9a296;--soft:#d8d2c7;--copper:#e09a62;--green:#8CC084;--barh:76px;--c:#E7E1D6;--mono:'JB Mono',ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html{scroll-padding-top:calc(var(--barh) + 10px)}
+html.lib-open,html.lib-open body{overflow:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-text-size-adjust:100%;-webkit-font-smoothing:antialiased}
+svg{width:18px;height:18px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+a{color:var(--copper)}
+.wrap{max-width:900px;margin:0 auto;padding:22px 16px 100px}
+/* ---------- липкая панель */
+.bar{position:sticky;top:0;z-index:30;background:rgba(13,15,17,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:3px solid var(--c);transition:border-color .25s}
+.bar-in{max-width:900px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:8px 16px 4px}
+.bar-brand{font-weight:800;color:var(--ink);text-decoration:none;font-size:15px}
+.route{display:flex;gap:6px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.route::-webkit-scrollbar{display:none}
+.rt{flex:0 0 auto;display:flex;align-items:center;gap:6px;height:34px;padding:0 10px 0 4px;border-radius:9px;text-decoration:none;color:var(--ink);background:var(--cbg);border:1.5px solid var(--cln);font-size:13.5px;font-weight:700;transition:all .2s}
+.rt b{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:var(--c);color:#0d0f11;font-size:14px;font-weight:900}
+.rt span{display:none}
+.rt.on{background:var(--c);border-color:var(--c);color:#0d0f11}
+.rt.on b{background:#0d0f11;color:var(--c)}
+.rt.on span{display:inline}
+.rt.done{opacity:.55}
+.bar-lib{flex:0 0 auto;display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:9px;border:1.5px solid var(--copper);background:var(--copper);color:#0d0f11;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+.bar-now{max-width:900px;margin:0 auto;padding:0 16px 7px;display:flex;align-items:center;gap:8px;font:600 13px/1.4 Inter,sans-serif;color:var(--c);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-now i{width:10px;height:10px;border-radius:50%;background:var(--c);flex:0 0 auto}
+/* ---------- шапка */
+.brand{font:500 12.5px/1.4 var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;scroll-margin-top:200px}.brand b{color:var(--ink)}
+h1{font-size:42px;line-height:1.04;margin:12px 0 10px;letter-spacing:-.03em;font-weight:800}
+h1 span{color:var(--copper)}
+.sub{color:var(--muted);font-size:15.5px;margin:0 0 20px}.sub b{color:var(--ink)}
+.box{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--copper);border-radius:12px;padding:14px 16px;margin:14px 0;font-size:15.5px;color:var(--soft)}
+.box b{color:var(--ink)}
+.legend,.routebox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:14px 0}
+.lg-h{font:500 12px/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.lg{display:grid;grid-template-columns:132px 1fr;gap:12px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.lg:first-of-type{border-top:0}
+.lg p{margin:0;font-size:15px;color:var(--soft)}.lg p b{color:var(--ink)}
+.lg-num{width:40px;height:40px;border-radius:10px;background:var(--c);color:#0d0f11;display:grid;place-items:center;font-weight:900;font-size:22px}
+.lg-copy,.lg-prac,.lg-lib,.pr-tag,.watch-tag,.prac-tag{display:inline-flex;align-items:center;gap:6px;font:500 11.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:6px 9px;border-radius:7px;width:max-content}
+.watch-tag{background:#22272b;color:#cfd6d3;border:1.5px dashed #5d6a66}
+.lg-copy,.pr-tag{background:#ece6db;color:#0d0f11}
+.lg-prac{background:var(--green);color:#0d0f11}
+.lg-lib{background:transparent;color:var(--ink);border:1.5px solid var(--copper)}
+.rlist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.rlist a{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;text-decoration:none;color:var(--ink);background:var(--cbg);border:1px solid var(--cln);border-left:5px solid var(--c);border-radius:10px;padding:8px 10px;font-size:15px}
+.rlist i{font-style:normal;width:30px;height:30px;border-radius:8px;background:var(--c);color:#0d0f11;display:grid;place-items:center;font-weight:900}
+.rlist em{font-style:normal;color:var(--c);font:500 12px/1.3 var(--mono)}
+/* ---------- блок урока */
+.st{margin:56px 0 0;padding:0 0 4px 16px;border-left:6px solid var(--c);scroll-margin-top:calc(var(--barh) + 8px)}
+.st-band{display:flex;gap:14px;align-items:center;background:var(--cbg);border:1px solid var(--cln);border-radius:14px;padding:12px 14px;margin-left:-4px}
+.num{flex:0 0 58px;height:58px;border-radius:13px;background:var(--c);color:#0d0f11;display:grid;place-items:center;font-size:28px;font-weight:900}
+.st h2{margin:2px 0 0;font-size:25px;line-height:1.2;letter-spacing:-.015em}
+.meta{font:500 12px/1.4 var(--mono);color:var(--c);letter-spacing:.07em;text-transform:uppercase}
+.subh{margin:32px 0 4px;font-size:19px;color:var(--c);letter-spacing:-.005em}
+.tx{margin:14px 0;color:var(--soft)}.tx b{color:var(--ink)}
+.tip{background:#171b1e;border:1px dashed #3a4247;border-radius:12px;padding:12px 14px;margin:14px 0;font-size:15.5px;color:var(--soft)}.tip b{color:var(--ink)}
+.warn{display:flex;gap:12px;align-items:flex-start;background:var(--cbg);border:1.5px solid var(--c);border-radius:12px;padding:12px 14px;margin:14px 0;color:var(--soft);font-size:15.5px}
+.warn svg{color:var(--c);width:22px;height:22px;margin-top:2px}.warn b{color:var(--ink)}
+.go{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#1c1916;border:1px solid #5a4331;color:var(--copper);text-decoration:none;font-weight:700;padding:13px 16px;border-radius:12px;margin:10px 0;word-break:break-word}
+.lessons{display:grid;gap:6px;margin:12px 0}
+.ls-i{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:15px;color:var(--soft)}
+.ls-i b{font:500 12.5px/1.6 var(--mono);color:var(--muted)}
+.ls-i strong{display:block;color:var(--ink)}
+.ls-i.now{border-color:var(--c);background:var(--cbg)}.ls-i.now b{color:var(--c)}
+.parts5,.terms5{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.parts5 div,.terms5 div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px;color:var(--soft)}
+.parts5 i{font:500 12px var(--mono);color:var(--c);font-style:normal;display:block}
+.parts5 b,.terms5 b{display:block;color:var(--ink);font-size:16.5px;margin-bottom:2px}
+.terms5 div.hot{border-color:var(--c);background:var(--cbg)}
+.checklist{list-style:none;margin:10px 0;padding:0;display:grid;gap:6px}
+.checklist li{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:10px;padding:10px 12px;color:var(--soft);font-size:15.5px}
+.checklist b{color:var(--ink)}
+/* ---------- КОПИРУЕМ */
+.pr{background:var(--card);border:1.5px solid #3c444a;border-radius:14px;margin:14px 0;overflow:hidden;scroll-margin-top:calc(var(--barh) + 12px)}
+.pr-head{display:flex;align-items:center;gap:10px;padding:10px 10px 0 12px;flex-wrap:wrap}
+.pr-where{flex:1;min-width:150px;font-size:13.5px;color:var(--muted)}.pr-where b{color:var(--ink);font-weight:600}
+.pr-path{padding:8px 14px 0;font:500 12px/1.4 var(--mono);color:var(--c);letter-spacing:.03em}
+.pr-title{padding:4px 14px 0;font-weight:700;font-size:16.5px}
+.pr pre,.bot pre{white-space:pre-wrap;word-wrap:break-word;margin:0;padding:10px 14px 14px;font:14px/1.6 var(--mono);color:#ebe5da}
+.cp{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;background:#ece6db;border:1.5px solid #ece6db;color:#0d0f11;font:inherit;font-weight:800;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;padding:8px 14px;border-radius:9px;cursor:pointer}
+.cp.ok{background:var(--green);border-color:var(--green);color:#0d2016}
+.pr:target{box-shadow:0 0 0 3px var(--c)}
+/* ---------- СМОТРИМ */
+.watch{border:2px dashed #5d6a66;border-radius:12px;padding:14px;margin:18px 0;background:#121618}
+.watch h3{margin:10px 0 6px;font-size:20px}.watch>p{margin:0 0 8px;color:var(--soft)}
+/* ---------- ПРАКТИКА */
+.prac{background:var(--cbg);border:2px solid var(--c);border-radius:16px;padding:0 0 14px;margin:22px 0 8px;overflow:hidden;scroll-margin-top:calc(var(--barh) + 12px)}
+.prac-top{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--c);color:#0d0f11;padding:9px 14px}
+.prac-tag{padding:0;font-size:12.5px}
+.prac-min{font-weight:900;font-size:15px;white-space:nowrap}
+.prac h3{margin:12px 14px 4px;font-size:23px;letter-spacing:-.015em}
+.prac-where{margin:0 14px 8px;color:var(--muted);font-size:14.5px}.prac-where b{color:var(--ink);font-weight:600}
+.prac ol{margin:0 14px;padding-left:22px;color:var(--soft)}.prac li{margin:5px 0}
+.prac-res{margin:10px 14px 0;color:var(--soft);font-size:15.5px}.prac-res b{color:var(--c)}
+/* ---------- кнопка библиотеки */
+.libbtn{display:flex;width:100%;align-items:center;gap:12px;text-align:left;background:transparent;color:var(--ink);border:2px solid var(--c);border-radius:14px;padding:12px 14px;margin:16px 0;font:inherit;cursor:pointer}
+.libbtn svg{width:26px;height:26px;color:var(--c)}
+.libbtn span{flex:1;font-size:15px;color:var(--soft)}.libbtn span b{display:block;color:var(--ink);font-size:17px}
+.libbtn i{font-style:normal;font:500 11.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:#0d0f11;background:var(--c);border-radius:7px;padding:7px 9px;white-space:nowrap}
+.next{display:flex;align-items:center;gap:10px;margin:32px 0 0;padding:12px 14px;border-radius:12px;text-decoration:none;color:#0d0f11;background:var(--c);font-weight:800}
+.next span{font:500 11.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;opacity:.75}.next b{flex:1;font-size:17px}
+.links h2{margin:0 0 10px}
+.links{border-left-color:#E7E1D6}
+/* ---------- карточки библиотеки */
+.bot{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:14px;padding:14px;margin:14px 0;scroll-margin-top:12px}
+.bot:target,.bot.hit{box-shadow:0 0 0 3px var(--c)}
+.bot-head{display:flex;gap:12px;align-items:center;margin-bottom:6px}
+.blogo{width:42px;height:42px;border-radius:10px;object-fit:contain;background:#fff;padding:6px;flex:none}
+.blogo.dark{background:#22272b}
+.bot-tag{font:500 11.5px/1.3 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--c)}
+.bot h3{margin:2px 0 0;font-size:20px}
+.io{margin:8px 0;font-size:15px;color:var(--soft)}.io span{display:block;font:500 11.5px/1.4 var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.io.out span{color:var(--c)}
+.pr.inlib{margin:8px 0;border-color:#323a40;background:#111416}
+.pr.inlib pre{font-size:13.5px}
+.hid{display:none}
+/* ---------- домашка */
+.hw-step{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:18px 0;scroll-margin-top:calc(var(--barh) + 12px)}
+.hw-n{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:#0d0f11;background:var(--c);border-radius:6px;padding:6px 9px;display:inline-block}
+.hw-step h3{margin:10px 0 6px;font-size:21px;letter-spacing:-.01em}
+.hw-step p{margin:6px 0;color:var(--soft);font-size:15.5px}.hw-step p b{color:var(--ink)}
+.hw-res b{color:var(--c)!important}
+.hw-fix{border-top:1px dashed var(--line);padding-top:8px}
+/* ---------- библиотека поверх */
+.lib{position:fixed;inset:0;z-index:50;background:rgba(5,6,7,.7);display:flex;justify-content:flex-end}
+.lib[hidden]{display:none}
+.lib-panel{width:min(780px,100%);height:100%;background:var(--bg);border-left:1px solid var(--line);display:flex;flex-direction:column;box-shadow:-20px 0 60px #000a}
+.lib-top{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.lib-close{display:flex;align-items:center;gap:8px;background:#ece6db;color:#0d0f11;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:800;font-size:15px;cursor:pointer}
+.lib-title{font-size:17px}
+.ltabs{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px 4px}
+.ltab{flex:0 0 auto;display:flex;align-items:center;gap:6px;background:var(--cbg);border:1.5px solid var(--cln);color:var(--ink);border-radius:999px;padding:6px 12px 6px 6px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.ltab i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--c);color:#0d0f11;display:grid;place-items:center;font-size:12px;font-weight:900}
+.ltab em{font-style:normal;color:var(--c);font-weight:800}
+.ltab.on{background:var(--c);border-color:var(--c);color:#0d0f11}.ltab.on em{color:#0d0f11}.ltab.on i{background:#0d0f11;color:var(--c)}
+#q{margin:8px 14px;width:calc(100% - 28px);font:inherit;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.lib-body{position:relative;flex:1;overflow-y:auto;overscroll-behavior:contain;padding:0 14px 60px;-webkit-overflow-scrolling:touch}
+.lsec{padding-top:6px}
+.lsec h2{display:flex;align-items:center;gap:10px;margin:18px 0 4px;font-size:24px;color:var(--ink)}
+.lsec h2 i{font-style:normal;width:32px;height:32px;border-radius:9px;background:var(--c);color:#0d0f11;display:grid;place-items:center;font-size:17px;font-weight:900}
+.lib-sub{color:var(--muted);margin:0 0 10px;font-size:15px}
+.nores{color:var(--muted);text-align:center;margin:40px 0}
+@keyframes flash{0%{box-shadow:0 0 0 0 var(--c)}30%{box-shadow:0 0 0 6px var(--c)}100%{box-shadow:0 0 0 0 transparent}}
+.flash{animation:flash 1.1s ease-out}
+.backpill{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:40;display:flex;align-items:center;gap:8px;max-width:calc(100% - 32px);background:#ece6db;color:#0d0f11;border:0;border-radius:999px;padding:11px 16px;font:inherit;font-size:14.5px;font-weight:800;box-shadow:0 8px 30px #000b;cursor:pointer}
+.backpill[hidden]{display:none}
+.backpill b{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:560px){
+ :root{--barh:76px}
+ body{font-size:16.5px}
+ .bar-brand{display:none}
+ .bar-in{padding:7px 10px 3px;gap:6px}
+ .route{gap:4px;overflow:visible;flex:1;justify-content:space-between}
+ .rt{height:34px;padding:0 3px;gap:0}.rt b{width:28px;height:28px;font-size:14px}
+ .rt.on span{display:none}.rt.on{padding:0 3px}
+ .bar-lib{height:32px;padding:0 9px}.bar-lib span{display:none}
+ .bar-now{padding:0 10px 6px}
+ h1{font-size:31px}.st{padding-left:10px;border-left-width:5px}.st h2{font-size:21px}
+ .num{flex-basis:46px;height:46px;font-size:22px}
+ .lg{grid-template-columns:1fr;gap:6px}
+ .parts5,.terms5{grid-template-columns:1fr}
+ .ls-i{grid-template-columns:1fr;gap:2px}
+ .pr pre,.bot pre{font-size:13px}
+ .rlist a{grid-template-columns:30px 1fr;font-size:14.5px}.rlist em{grid-column:2}
+ .libbtn{flex-wrap:wrap}.libbtn i{margin-left:38px}
+}
+@media print{.bar,.backpill,.lib,.cp,.libbtn,#q{display:none!important}body{background:#fff;color:#111}.pr,.bot,.box,.tip,.prac,.watch,.legend,.routebox,.hw-step{background:#fff!important;color:#111}.pr pre{color:#111}}
+
+.ph2{margin:40px 0 8px;font-size:24px;letter-spacing:-.015em;padding-left:14px;border-left:5px solid #7FA6D6}
+.fl{padding-left:22px;color:var(--soft)}.fl li{margin:7px 0}.ls{padding-left:20px;color:var(--soft)}.ls li{margin:6px 0}
+code{font:14px var(--mono);background:#1d2226;padding:2px 6px;border-radius:5px;color:#f0b27a}
+.fixes{display:grid;gap:6px;margin:12px 0}.fixes div{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px}
+.fixes b{color:var(--ink)}.fixes span{color:var(--soft)}
+@media(max-width:560px){.fixes div{grid-template-columns:1fr;gap:4px}}
+</style></head><body><main class="wrap"><div class="brand"><b>neovida</b> · Нейропросвещение · AI Цех · поток 4</div><h1>OpenCode и подписка Go<br><span>ставим до первого занятия</span></h1><p class="tx">AI Цех · поток 4 · сделать до понедельника, 9 ноября, 19:00 по Уфе</p>
+<h2 class="ph2">Зачем это</h2>
+<p class="tx">Codex на подписке Plus работает отлично, пока не кончился лимит. А кончается он обычно посреди работы. OpenCode это запасная машина: открываете в нём ту же папку, с теми же файлами, и продолжаете. Только внутри не модели OpenAI, а целый набор других: GLM, Kimi, Qwen, MiniMax и американские тоже.</p>
+<p class="tx">Сама программа бесплатная. Платим только за доступ к моделям: подписка OpenCode Go, 10 долларов в месяц. Вместе с Plus выходит 30 долларов в месяц на всю рабочую машину.</p>
+<h2 class="ph2">Что понадобится</h2>
+<ul class="ls"><li>Ноутбук, на котором уже стоит Codex.</li><li>VPN. Держите его включённым на всех шагах, как для ChatGPT.</li><li>Способ оплаты зарубежных сервисов. Если платили им ChatGPT Plus, подойдёт он же.</li><li>20–30 минут. Оплата из России иногда проходит не с первого раза, поэтому лучше начать сегодня.</li></ul>
+<h2 class="ph2">Шаг 1. Узнайте свою рабочую папку в Codex</h2>
+<p class="tx">Откройте Codex в вашей рабочей папке и напишите:</p>
+<div class="pr" id="cmd-1"><div class="pr-head"><span class="pr-tag"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Копируем</span><span class="pr-where"></span><button class="cp" type="button"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Копировать</button></div><pre>Напиши полный путь к папке, в которой мы сейчас работаем. Ничего не меняй.</pre></div>
+<p class="tx"><b>Что должно получиться.</b> Строка вроде <code>/Users/ivan/Desktop/workspace</code> на Mac или <code>C:\Users\Ivan\Desktop\workspace</code> на Windows. Запомните её: эту же папку откроем в OpenCode.</p>
+<p class="tx"><b>Если не так.</b> Рабочей папки ещё нет: создайте на Рабочем столе папку <code>workspace</code> и откройте её в Codex. В ней и будем работать на уроке.</p>
+<h2 class="ph2">Шаг 2. Оплатите OpenCode Go</h2>
+<h3 class="subh">Чем платить</h3>
+<p class="tx">Российские карты не проходят, вот два проверенных способа:</p>
+<ul class="ls"><li>Виртуальная карта «Плати по миру»: официальный бот <a href="https://t.me/platipomiru_bot" target="_blank" rel="noopener">https://t.me/platipomiru_bot</a>, у него синяя галочка Telegram. Выпускаете карту, пополняете рублями и оплачиваете Go сами. Карта уже есть после ChatGPT Plus: пополните её на 12–13 долларов. Ровно 10 может не хватить, при оплате бывает проверочное списание.</li><li>Посредник Oplatym: платите рублями, они помогают оформить подписку. Пишите им только по ссылке с сайта <a href="https://oplatym.ru" target="_blank" rel="noopener">https://oplatym.ru</a>: у них много поддельных аккаунтов с похожими именами.</li></ul>
+<h3 class="subh">Как оформить подписку</h3>
+<ol class="fl"><li>Включите VPN и откройте <a href="https://opencode.ai/go" target="_blank" rel="noopener">https://opencode.ai/go</a>. Откроется страница тарифов.</li><li>Нажмите «Subscribe to Go». Нужен именно Go за 10 долларов. Go Plus за 40 и Go Teams не берём.</li><li>Сайт попросит войти. Создайте аккаунт и запомните, через что входили: в кабинет потом заходите так же.</li><li>Введите данные карты: номер, срок, CVC и платёжный адрес. Адрес вводите ровно тот, что выдал сервис карты.</li><li>Подтвердите оплату кодом или в боте карты.</li></ol>
+<p class="tx"><b>Что должно получиться.</b> На странице Go в кабинете видно, что подписка активна.</p>
+<h3 class="subh">Где взять ключ</h3>
+<ol class="fl"><li>В кабинете <a href="https://opencode.ai/console" target="_blank" rel="noopener">https://opencode.ai/console</a> найдите раздел с ключами API (API Keys). Создайте ключ и скопируйте его.</li><li>Сохраните ключ в заметках на компьютере. Ключ это как пароль: в чат группы не выкладываем и никому не пересылаем.</li></ol>
+<p class="tx">Подписка продлевается сама раз в месяц. Отменить можно в любой момент на той же странице Go, она доработает до конца оплаченного месяца.</p>
+<h2 class="ph2">Шаг 3. Поставьте OpenCode на Mac</h2>
+<ol class="fl"><li>Узнайте, какой у вас Mac. Нажмите яблоко слева вверху, затем «Об этом Mac». Написано «Чип Apple M1» (M2, M3, M4 и дальше): у вас Apple Silicon. Написано «Процессор Intel»: у вас Intel.</li><li>Откройте <a href="https://opencode.ai/ru/desktop" target="_blank" rel="noopener">https://opencode.ai/ru/desktop</a> и нажмите «Скачать» в строке «macOS (Apple Silicon)» или «macOS (Intel)». Скачается файл около 330 МБ.</li><li>Откройте файл из «Загрузок». В окне перетащите значок OpenCode в папку «Программы».</li><li>Запустите OpenCode из «Программ» или Launchpad. Mac спросит, точно ли открыть программу из интернета: нажмите «Открыть».</li></ol>
+<p class="tx"><b>Что должно получиться.</b> Открылось окно OpenCode.</p>
+<p class="tx"><b>Если не так.</b> Mac пишет, что не удаётся проверить разработчика: «Системные настройки», раздел «Конфиденциальность и безопасность», внизу кнопка «Всё равно открыть».</p>
+<p class="tx">Кто пользуется Homebrew, можно одной командой в Терминале: <code>brew install --cask opencode-desktop</code></p>
+<h2 class="ph2">Шаг 3. Поставьте OpenCode на Windows</h2>
+<ol class="fl"><li>Узнайте тип системы: «Пуск», «Параметры», «Система», «О программе», строка «Тип системы». «Процессор x64» почти у всех. «На базе ARM» бывает у новых ноутбуков на Snapdragon.</li><li>Откройте <a href="https://opencode.ai/ru/desktop" target="_blank" rel="noopener">https://opencode.ai/ru/desktop</a> и нажмите «Скачать» в строке «Windows (x64)», а при ARM в строке «Windows (ARM64)». Скачается файл около 270 МБ.</li><li>Запустите файл из «Загрузок». Появилось синее окно «Система Windows защитила ваш компьютер»: нажмите «Подробнее», затем «Выполнить в любом случае». Файл с официального сайта, так можно.</li><li>Дождитесь установки. OpenCode откроется сам, потом его можно найти в меню «Пуск».</li></ol>
+<p class="tx"><b>Что должно получиться.</b> Открылось окно OpenCode.</p>
+<h3 class="subh">Не получается поставить руками</h3>
+<p class="tx">Попросите Codex сделать это за вас. Вставьте в Codex:</p>
+<div class="pr" id="cmd-2"><div class="pr-head"><span class="pr-tag"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Копируем</span><span class="pr-where"></span><button class="cp" type="button"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Копировать</button></div><pre>Поставь мне программу OpenCode Desktop. Скачивай только с официальной страницы https://opencode.ai/ru/desktop, файл под мою систему и мой процессор. Перед каждой командой одной строкой объясни, что она делает, и жди моего «да». В конце открой OpenCode и скажи, куда он установлен.</pre></div>
+<h2 class="ph2">Шаг 4. Откройте ту же папку, что в Codex</h2>
+<ol class="fl"><li>В OpenCode нажмите «Открыть проект». По-английски Open project, в некоторых версиях «Добавить проект».</li><li>Выберите папку из шага 1 и нажмите «Открыть».</li><li>Mac может спросить доступ к «Рабочему столу» или «Документам»: нажмите «Разрешить».</li></ol>
+<p class="tx"><b>Что должно получиться.</b> Название вашей папки видно в OpenCode.</p>
+<h2 class="ph2">Шаг 5. Подключите Go</h2>
+<ol class="fl"><li>В поле ввода внизу наберите <code>/connect</code> и нажмите Enter. Это же есть в меню команд: «Подключить провайдера» (Connect provider).</li><li>Выберите в списке «OpenCode Go». Начните печатать go, и он найдётся. Не путайте с просто «OpenCode»: там оплата за каждый запрос, нам это не нужно.</li><li>Вставьте ключ из шага 2 (на Mac Cmd+V, на Windows Ctrl+V) и подтвердите.</li></ol>
+<p class="tx"><b>Что должно получиться.</b> Сообщение, что OpenCode Go подключён.</p>
+<h2 class="ph2">Шаг 6. Выберите модель и проверьте</h2>
+<ol class="fl"><li>Нажмите «Новая сессия» (New session).</li><li>Выберите модель: наберите <code>/models</code> или нажмите на название модели у поля ввода. В разделе OpenCode Go возьмите GLM-5.3.</li><li>Агента внизу слева оставьте Build: он делает работу. Plan только обсуждает.</li><li>Вставьте проверочный запрос:</li></ol>
+<div class="pr" id="cmd-3"><div class="pr-head"><span class="pr-tag"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Копируем</span><span class="pr-where"></span><button class="cp" type="button"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Копировать</button></div><pre>Ответь по-русски тремя короткими строками:
+1. Какая ты модель.
+2. В какой папке мы сейчас работаем, полный путь.
+3. Какие папки и файлы здесь лежат, только названия.
+Ничего не меняй.</pre></div>
+<p class="tx"><b>Что должно получиться.</b> Ответ по-русски: модель GLM-5.3, тот же путь, что назвал Codex в шаге 1, и список ваших файлов. Всё, OpenCode работает.</p>
+<p class="tx"><b>Если не так.</b> Путь другой: вернитесь к шагу 4. Модель молчит или пишет ошибку: выберите другую модель из раздела OpenCode Go.</p>
+<p class="tx">Про лимиты. В Go у каждой модели свой лимит, он считается окнами: за 5 часов, за неделю и за месяц. Сильные модели кончаются быстрее, лёгкие почти не кончаются. Например, у GLM-5.3 около 220 запросов за 5 часов, у GLM-5.3-Flash больше 6 000. Какую модель под какую задачу брать, разберём на уроке.</p>
+<p class="tx">DeepSeek в списке может не отвечать: в Go он по умолчанию выключен. Включать не нужно, на курсе работаем без него.</p>
+<h2 class="ph2">Если оплатить не получилось</h2>
+<p class="tx">Урок не пропадёт. Сделайте шаги 3, 4 и 6, а в шаге 6 выберите любую модель с пометкой «Бесплатно» (Free). Они есть в списке у всех, и на уроке на них можно работать.</p>
+<p class="tx">Бесплатные модели временные: сегодня есть, через неделю могут пропасть. У них дневной лимит запросов, а часть не работает без VPN.</p>
+<p class="tx">Напишите в чат, на каком шаге встала оплата, и приложите скрин без номера карты. Доведём вместе.</p>
+<h2 class="ph2">Если что-то пошло не так</h2>
+<div class="fixes"><div><b>opencode.ai не открывается</b><span>Включите VPN и обновите страницу</span></div><div><b>Карта отклонена</b><span>Проверьте VPN, баланс с запасом (12–13 долларов), подтверждение в боте карты и платёжный адрес. После двух отказов подряд остановитесь и напишите в чат</span></div><div><b>Деньги списались, подписки нет</b><span>Подождите 10–20 минут, обновите страницу, проверьте, что вошли тем же способом, что при оплате</span></div><div><b>Не нашли ключ</b><span>Кабинет <a href="https://opencode.ai/console" target="_blank" rel="noopener">https://opencode.ai/console</a>, раздел с ключами API. Не нашли: скрин кабинета в чат, ключ на скрине закройте</span></div><div><b>Mac: «Не удаётся проверить разработчика»</b><span>«Системные настройки», «Конфиденциальность и безопасность», «Всё равно открыть»</span></div><div><b>Windows: синее окно «Система Windows защитила ваш компьютер»</b><span>«Подробнее», затем «Выполнить в любом случае»</span></div><div><b>Программа не запускается после установки</b><span>Скорее всего, скачали файл не под свой процессор. Удалите и скачайте другой вариант (шаг 3, пункт 1)</span></div><div><b>OpenCode на английском</b><span>Open project это «Открыть проект», Connect provider это «Подключить провайдера», New session это «Новая сессия»</span></div><div><b>В /connect нет OpenCode Go</b><span>Начните печатать go в поиске. Нет и так: скачайте OpenCode заново, у вас старая версия</span></div><div><b>Ключ вставили, а моделей Go нет</b><span>Проверьте, что выбрали OpenCode Go, а не OpenCode, и что ключ скопирован целиком. Потом /models ещё раз</span></div><div><b>Модель молчит или пишет ошибку</b><span>Выберите другую модель из раздела OpenCode Go</span></div><div><b>Отвечает на английском</b><span>Допишите в запрос: «Отвечай по-русски»</span></div><div><b>Кончился лимит модели</b><span>Переключитесь на другую модель Go или на бесплатную. Лимит вернётся через 5 часов</span></div></div>
+<h2 class="ph2">Чего не делаем</h2>
+<ul class="ls"><li>Не покупаем Go у перекупщиков и никому не даём пароль от аккаунта: такие доступы банят.</li><li>Не выкладываем ключ и номер карты в чат. На скринах их закрываем.</li><li>Не подключаем к OpenCode подписку Claude: Anthropic это запрещает, аккаунт могут заблокировать.</li><li>Не подключаем к OpenCode свой ChatGPT: лимит у него общий с Codex, запаса не получится.</li></ul>
+<h2 class="ph2">Что прислать в чат</h2>
+<p class="tx">Когда всё готово, одним сообщением:</p>
+<div class="pr" id="cmd-4"><div class="pr-head"><span class="pr-tag"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Копируем</span><span class="pr-where"></span><button class="cp" type="button"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Копировать</button></div><pre>OpenCode: стоит
+Go: оплачен (или: пока на бесплатной модели)
+Проверка: скрин ответа</pre></div>
+<p class="tx">Первое занятие: понедельник, 9 ноября, 19:00 по Уфе. Адрес: Верхнеторговая площадь, 4, подъезд 1, 14 этаж, помещение 1408.</p></main><script>document.querySelectorAll('.pr .cp').forEach(b=>b.onclick=()=>{const t=b.closest('.pr').querySelector('pre').textContent;
+const done=()=>{b.classList.add('ok');const o=b.innerHTML;b.textContent='Скопировано';setTimeout(()=>{b.classList.remove('ok');b.innerHTML=o},1600)};
+if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(done,()=>fb(t,done));else fb(t,done)});
+function fb(t,done){const a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();try{document.execCommand('copy');done()}catch(e){alert('Выделите текст и скопируйте вручную')}a.remove()}</script></body></html>
