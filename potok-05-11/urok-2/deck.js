@@ -7,8 +7,13 @@ function scale() {
   const viewport = byId('viewport');
   byId('stage').style.transform = `scale(${Math.min(viewport.clientWidth / 1600, viewport.clientHeight / 900)})`;
 }
+function warm(i) {
+  for (let k = i - 1; k <= i + 3; k++) { const sl = slides[k]; if (!sl) continue;
+    sl.querySelectorAll('img[data-src]').forEach(im => { im.src = im.dataset.src; im.removeAttribute('data-src'); }); }
+}
 function go(index) {
   current = Math.max(0, Math.min(slides.length - 1, Number.isFinite(index) ? index : 0));
+  warm(current);
   slides.forEach((slide, i) => { slide.classList.toggle('active', i === current); slide.setAttribute('aria-hidden', String(i !== current)); });
   byId('counter').value = `${current + 1} / ${slides.length}`;
   byId('progress').style.width = `${(current + 1) / slides.length * 100}%`;
@@ -46,3 +51,6 @@ byId('viewport').addEventListener('touchstart', event => { const t = event.chang
 byId('viewport').addEventListener('touchend', event => { if (!touch) return; const t = event.changedTouches[0], dx = t.clientX - touch[0], dy = t.clientY - touch[1]; if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) go(current + (dx < 0 ? 1 : -1)); touch = null; }, {passive:true});
 byId('viewport').addEventListener('touchcancel', () => { touch = null; }, {passive:true});
 scale(); go((parseInt(location.hash.slice(1), 10) || 1) - 1);
+
+// остальные картинки догружаем по одной в фоне, когда первый экран уже показан
+window.addEventListener('load', () => { (function next() { const im = document.querySelector('img[data-src]'); if (!im) return; im.onload = im.onerror = () => setTimeout(next, 30); im.src = im.dataset.src; im.removeAttribute('data-src'); })(); });
