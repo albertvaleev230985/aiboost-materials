@@ -15,7 +15,7 @@
 | Что | Адрес |
 | --- | --- |
 | архив конструктора | `https://materials.neovida.ai/kamil/tetrad/kamil-workbook-codex.zip` |
-| sha256 архива | `fa8466dd261c02d8ce143b44fda85e5ffa1f8936ddfea7b0be1d085392bcd1cc` |
+| sha256 архива | `a6e11260850e4dfb183dfa573cb585c45ef097ca9d7b0de10c453703544d5f5d` |
 
 ## Шаг 1. Место
 
