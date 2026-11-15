@@ -1,0 +1,361 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Практика · Урок 4 · Кодекс в Codex</title><link rel="icon" href="data:,"><link rel="stylesheet" href="fonts.css"><style>:root{--bg:#111615;--card:#1a2120;--card2:#212a28;--line:#2e3a37;--ink:#eee9e1;--muted:#a4afab;--copper:#e2a071;--green:#6fcf97;--barh:74px;--c:#E7E1D6}
+*{box-sizing:border-box}
+html{scroll-padding-top:calc(var(--barh) + 10px)}
+html.lib-open,html.lib-open body{overflow:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-text-size-adjust:100%}
+svg{width:18px;height:18px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+a{color:var(--copper)}
+.wrap{max-width:880px;margin:0 auto;padding:22px 16px 90px}
+
+/* ---------- липкая панель-маршрут */
+.bar{position:sticky;top:0;z-index:30;background:rgba(17,22,21,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:3px solid var(--c);transition:border-color .25s}
+.bar-in{max-width:880px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:8px 16px 4px}
+.bar-brand{font-weight:800;color:var(--ink);text-decoration:none;font-size:15px;letter-spacing:.01em}
+.route{display:flex;gap:5px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.route::-webkit-scrollbar{display:none}
+.rt{flex:0 0 auto;display:flex;align-items:center;gap:6px;height:34px;padding:0 9px 0 4px;border-radius:9px;text-decoration:none;color:var(--ink);background:var(--cbg);border:1.5px solid var(--cln);font-size:13.5px;font-weight:700;transition:all .2s}
+.rt b{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:var(--c);color:#14110d;font-size:15px;font-weight:900}
+.rt span{display:none}
+.rt.on{background:var(--c);border-color:var(--c);color:#14110d}
+.rt.on b{background:#14110d;color:var(--c)}
+.rt.on span{display:inline}
+.rt.done{opacity:.55}
+.bar-lib{flex:0 0 auto;display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:9px;border:1.5px solid #e7e1d6;background:#e7e1d6;color:#14110d;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+.bar-now{max-width:880px;margin:0 auto;padding:0 16px 7px;display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--c);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-now i{width:10px;height:10px;border-radius:50%;background:var(--c);flex:0 0 auto}
+
+/* ---------- шапка */
+.brand{font-size:14px;color:var(--muted);letter-spacing:.02em;scroll-margin-top:200px}.brand b{color:var(--ink)}
+h1{font-size:40px;line-height:1.08;margin:10px 0 8px;letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:15px;margin:0 0 20px}.sub b{color:var(--ink)}
+.box{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--copper);border-radius:10px;padding:14px 16px;margin:14px 0;font-size:15.5px}
+.legend,.routebox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:14px 0}
+.lg-h{font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.lg{display:grid;grid-template-columns:132px 1fr;gap:12px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.lg:first-of-type{border-top:0}
+.lg p{margin:0;font-size:15px;color:#d6d0c7}.lg p b{color:var(--ink)}
+.lg-num{width:40px;height:40px;border-radius:10px;background:var(--c);color:#14110d;display:grid;place-items:center;font-weight:900;font-size:22px}
+.lg-watch,.lg-copy,.lg-prac,.lg-lib,.pr-tag,.watch-tag,.prac-tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:7px;width:max-content}
+.lg-watch,.watch-tag{background:#2b3332;color:#cfd8d5;border:1.5px dashed #6f7d79}
+.lg-copy,.pr-tag{background:#e7e1d6;color:#14110d}
+.lg-prac{background:#8BD17C;color:#14110d}
+.lg-lib{background:transparent;color:var(--ink);border:1.5px solid #e7e1d6}
+.rlist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.rlist a{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;text-decoration:none;color:var(--ink);background:var(--cbg);border:1px solid var(--cln);border-left:5px solid var(--c);border-radius:10px;padding:7px 10px;font-size:15px}
+.rlist i{font-style:normal;width:30px;height:30px;border-radius:8px;background:var(--c);color:#14110d;display:grid;place-items:center;font-weight:900}
+.rlist em{font-style:normal;color:var(--c);font-size:13px;font-weight:700;white-space:nowrap}
+
+/* ---------- блок урока */
+.st{margin:54px 0 0;padding:0 0 4px 16px;border-left:6px solid var(--c);scroll-margin-top:calc(var(--barh) + 8px)}
+.st-band{display:flex;gap:14px;align-items:center;background:var(--cbg);border:1px solid var(--cln);border-radius:12px;padding:12px 14px;margin-left:-4px}
+.num{flex:0 0 58px;height:58px;border-radius:13px;background:var(--c);color:#14110d;display:grid;place-items:center;font-size:32px;font-weight:900}
+.st h2{margin:2px 0 0;font-size:25px;line-height:1.2;letter-spacing:-.01em}
+.meta{font-size:12.5px;color:var(--c);font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+.intro{color:#d6d0c7;margin:14px 0 10px}
+.subh{margin:28px 0 6px;font-size:18px;color:var(--c);letter-spacing:.01em}
+.tx{margin:12px 0;color:#d6d0c7}.tx b{color:var(--ink)}
+.tip{background:#1d2624;border:1px dashed #3d4b47;border-radius:10px;padding:12px 14px;margin:12px 0;font-size:15.5px;color:#d6d0c7}.tip b{color:var(--ink)}
+.go{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#23201c;border:1px solid #5a4331;color:var(--copper);text-decoration:none;font-weight:700;padding:13px 16px;border-radius:10px;margin:12px 0;word-break:break-word}
+.fl{list-style:none;counter-reset:f;padding:0;margin:14px 0}
+.fl li{counter-increment:f;position:relative;padding:10px 12px 10px 52px;background:var(--card2);border-radius:10px;margin:8px 0}
+.fl li:before{content:counter(f);position:absolute;left:12px;top:10px;width:28px;height:28px;border-radius:50%;background:var(--c);color:#14110d;font-weight:800;display:grid;place-items:center;font-size:14px}
+.fl b{display:block}.fl span{color:#cfc9bf;font-size:15.5px}
+.ls{margin:10px 0;padding-left:20px}.ls li{margin:4px 0}
+
+/* ---------- КОПИРУЕМ */
+.pr{background:var(--card);border:1.5px solid #4a5551;border-radius:12px;margin:16px 0;overflow:hidden;scroll-margin-top:calc(var(--barh) + 12px)}
+.pr-head{display:flex;align-items:center;gap:10px;padding:10px 10px 0 12px;flex-wrap:wrap}
+.pr-label{flex:1;min-width:140px;font-size:13px;font-weight:700;color:var(--muted)}
+.pr-title{padding:6px 14px 0;font-weight:700;font-size:16px}
+.pr pre,.bot pre,.peek{white-space:pre-wrap;word-wrap:break-word;margin:0;padding:10px 14px 14px;font:14.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#e9e3d8}
+.cp{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;background:#e7e1d6;border:1.5px solid #e7e1d6;color:#14110d;font:inherit;font-weight:800;font-size:13px;letter-spacing:.05em;text-transform:uppercase;padding:8px 14px;border-radius:9px;cursor:pointer}
+.cp.ok{background:var(--green);border-color:var(--green);color:#0d2016}
+.pr:target{box-shadow:0 0 0 3px var(--c)}
+
+/* ---------- СМОТРИМ */
+.watch{border:2px dashed #6f7d79;border-radius:12px;padding:14px;margin:18px 0;background:#161c1b}
+.watch h3{margin:10px 0 6px;font-size:20px}.watch>p{margin:0 0 8px;color:#d6d0c7}
+
+/* ---------- ПРАКТИКА */
+.prac{background:var(--cbg);border:2px solid var(--c);border-radius:14px;padding:0 0 12px;margin:22px 0;overflow:hidden;scroll-margin-top:calc(var(--barh) + 12px)}
+.prac-top{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--c);color:#14110d;padding:9px 14px}
+.prac-tag{padding:0;font-size:13.5px}
+.prac-min{font-weight:900;font-size:15px;white-space:nowrap}
+.prac h3{margin:12px 14px 6px;font-size:21px}
+.prac ol{margin:0 14px;padding-left:22px}.prac li{margin:5px 0}
+.prac-res{margin:10px 14px 0;color:#d6d0c7;font-size:15.5px}.prac-res b{color:var(--c)}
+
+/* ---------- БИБЛИОТЕКА: кнопка */
+.libbtn{display:flex;width:100%;align-items:center;gap:12px;text-align:left;background:transparent;color:var(--ink);border:2px solid var(--c);border-radius:12px;padding:12px 14px;margin:14px 0;font:inherit;cursor:pointer}
+.libbtn svg{width:26px;height:26px;color:var(--c)}
+.libbtn span{flex:1;font-size:15.5px;color:#d6d0c7}.libbtn span b{display:block;color:var(--ink);font-size:17px}
+.libbtn i{font-style:normal;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#14110d;background:var(--c);border-radius:7px;padding:6px 9px;white-space:nowrap}
+
+/* ---------- дальше */
+.next{display:flex;align-items:center;gap:10px;margin:30px 0 0;padding:12px 14px;border-radius:12px;text-decoration:none;color:#14110d;background:var(--c);font-weight:800}
+.next span{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.75}.next b{flex:1;font-size:17px}
+
+/* ---------- примеры, фишки, таблицы */
+.exd{margin:14px 0;border:1px solid var(--cln);border-radius:12px;background:var(--card);padding:0 12px}
+.exd>summary{cursor:pointer;padding:12px 2px;font-weight:800;color:var(--c);list-style-position:inside}
+.exgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 0 12px}
+.exc .peek{font-size:13.5px;padding:8px 0 0;color:#cfc9bf;max-height:9.5em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 70%,transparent)}
+.asks{background:var(--card2);border-radius:10px;padding:10px 12px;margin:10px 0}
+.asks-h{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--c);margin-bottom:6px}
+.chiprow{display:flex;flex-wrap:wrap;gap:6px}
+.ask{background:#2b3532;border:1px solid #3e4b47;color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:14.5px;cursor:pointer;text-align:left}
+.ask.ok{border-color:var(--green);color:var(--green)}
+.where{display:grid;gap:8px;margin:14px 0}.wh{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.wh span{color:#d6d0c7}.wh b{color:var(--c)}.wh p{grid-column:1/-1;margin:0;color:var(--muted);font-size:14.5px}
+.fix{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.fix div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}.fix b{display:block;color:var(--c)}.fix span{font-size:15px;color:#cfc9bf}
+.links h2{margin:0 0 10px}
+.links{border-left-color:#E7E1D6}
+
+/* ---------- карточки */
+.bot{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:12px;padding:14px;margin:14px 0;scroll-margin-top:12px}
+.bot:target,.bot.hit{box-shadow:0 0 0 3px var(--c)}
+.bot-tag{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--c)}
+.bot h3{margin:4px 0 8px;font-size:20px}
+.io{margin:4px 0;font-size:15.5px;color:#d6d0c7}.io span{display:block;font-weight:800;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.io.out span{color:var(--c)}
+.cp.big{display:flex;justify-content:center;width:100%;margin:12px 0 4px;padding:12px;font-size:13.5px}
+.hid{display:none}
+.kb{font-size:14.5px;color:var(--muted);margin:8px 0}.kb b{color:var(--ink)}
+.slug{font-style:normal;color:var(--c);font-size:13px}
+details.peekd{margin-top:6px}details.peekd>summary{cursor:pointer;color:var(--c);font-weight:700;font-size:15px}
+.appin{font-size:14.5px;color:#cfc9bf;padding:6px 0}.appin b{color:var(--ink)}.appin ul{margin:2px 0 8px;padding-left:20px}
+.dl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.dlbtn{display:flex;justify-content:center;align-items:center;background:var(--c);color:#14110d;font-weight:800;text-decoration:none;border-radius:10px;padding:12px;font-size:14px;text-transform:uppercase;letter-spacing:.05em}
+.dl .go{margin:0}
+
+/* ---------- библиотека поверх страницы */
+.lib{position:fixed;inset:0;z-index:50;background:rgba(5,8,8,.66);display:flex;justify-content:flex-end}
+.lib[hidden]{display:none}
+.lib-panel{width:min(760px,100%);height:100%;background:var(--bg);border-left:1px solid var(--line);display:flex;flex-direction:column;box-shadow:-20px 0 60px #000a}
+.lib-top{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.lib-close{display:flex;align-items:center;gap:8px;background:#e7e1d6;color:#14110d;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:800;font-size:15px;cursor:pointer}
+.lib-title{font-size:18px}
+.ltabs{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px 4px}
+.ltabs::-webkit-scrollbar{display:none}
+.ltab{flex:0 0 auto;display:flex;align-items:center;gap:6px;background:var(--cbg);border:1.5px solid var(--cln);color:var(--ink);border-radius:999px;padding:6px 12px 6px 6px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.ltab i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--c);color:#14110d;display:grid;place-items:center;font-size:12px;font-weight:900}
+.ltab em{font-style:normal;color:var(--c);font-weight:800}
+.ltab.on{background:var(--c);border-color:var(--c);color:#14110d}.ltab.on em{color:#14110d}.ltab.on i{background:#14110d;color:var(--c)}
+#q{margin:8px 14px 8px;width:calc(100% - 28px);font:inherit;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.lib-body{position:relative;flex:1;overflow-y:auto;overscroll-behavior:contain;padding:0 14px 60px;-webkit-overflow-scrolling:touch}
+.lsec{padding-top:6px}
+.lsec h2{display:flex;align-items:center;gap:10px;margin:18px 0 4px;font-size:24px;color:var(--ink)}
+.lsec h2 i{font-style:normal;width:32px;height:32px;border-radius:9px;background:var(--c);color:#14110d;display:grid;place-items:center;font-size:17px;font-weight:900}
+.lib-sub{color:var(--muted);margin:0 0 10px;font-size:15px}
+.grp{margin:24px 0 2px;font-size:18px;color:var(--c)}
+.grp-sub{margin:0 0 6px;color:var(--muted);font-size:14px}
+.nores{color:var(--muted);text-align:center;margin:40px 0}
+
+@keyframes flash{0%{box-shadow:0 0 0 0 var(--c)}30%{box-shadow:0 0 0 6px var(--c)}100%{box-shadow:0 0 0 0 transparent}}
+.flash{animation:flash 1.1s ease-out}
+/* ---------- вернуться */
+.backpill{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:40;display:flex;align-items:center;gap:8px;max-width:calc(100% - 32px);background:#e7e1d6;color:#14110d;border:0;border-radius:999px;padding:11px 16px;font:inherit;font-size:14.5px;font-weight:800;box-shadow:0 8px 30px #000b;cursor:pointer}
+.backpill[hidden]{display:none}
+.backpill b{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+@media(max-width:700px){.exgrid{grid-template-columns:1fr}}
+@media(max-width:560px){
+ :root{--barh:76px}
+ body{font-size:16.5px}
+ .bar-brand{display:none}
+ .bar-in{padding:7px 10px 3px;gap:6px}
+ .route{gap:4px;overflow:visible;flex:1;justify-content:space-between}
+ .rt{height:34px;padding:0 3px;gap:0}.rt b{width:28px;height:28px;font-size:15px}
+ .rt.on span{display:none}.rt.on{padding:0 3px}
+ .bar-lib{height:32px;padding:0 9px}.bar-lib span{display:none}
+ .bar-now{padding:0 10px 6px}
+ h1{font-size:30px}.st{padding-left:10px;border-left-width:5px}.st h2{font-size:21px}
+ .num{flex-basis:46px;height:46px;font-size:25px}
+ .lg{grid-template-columns:1fr;gap:6px}
+ .fix,.dl,.wh{grid-template-columns:1fr}
+ .pr pre,.bot pre{font-size:13.5px}
+ .rlist a{grid-template-columns:30px 1fr;font-size:14.5px}.rlist em{grid-column:2}
+ .libbtn{flex-wrap:wrap}.libbtn i{margin-left:38px}
+}
+@media print{.bar,.backpill,.lib,.cp,.libbtn,#q{display:none!important}body{background:#fff;color:#111}.pr,.bot,.box,.tip,.fl li,.prac,.watch,.legend,.routebox{background:#fff!important;color:#111}.hid{display:none!important}}
+
+.bar-lib{display:none!important}
+.report{border:1px solid var(--line);border-left:4px solid var(--c);background:var(--card2);border-radius:10px;padding:14px;margin:24px 0}
+.report h3{color:var(--c);margin:0}.report p{margin:8px 0}.report pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;color:var(--ink)}
+.rlist em{white-space:normal}
+</style></head><body><header class="bar" id="bar" data-word="Шаг" data-start="Начало · маршрут ниже"><div class="bar-in"><a class="bar-brand" href="#top">neovida</a><nav class="route" aria-label="Маршрут"><a class="rt" href="#step-1" data-n="1" style="--c:#F2CF5B;--cbg:rgba(242,207,91,0.11);--cln:rgba(242,207,91,0.42)" title="Подготовка: папка и досье"><b>1</b><span>Подготовка</span></a><a class="rt" href="#step-2" data-n="2" style="--c:#8BD17C;--cbg:rgba(139,209,124,0.11);--cln:rgba(139,209,124,0.42)" title="Промпт 1: Codex собирает ваш кодекс"><b>2</b><span>Кодекс</span></a><a class="rt" href="#step-3" data-n="3" style="--c:#5FB4E8;--cbg:rgba(95,180,232,0.11);--cln:rgba(95,180,232,0.42)" title="Промпт 2: кодекс в мозг агента"><b>3</b><span>AGENTS.md</span></a><a class="rt" href="#step-4" data-n="4" style="--c:#B49CF0;--cbg:rgba(180,156,240,0.11);--cln:rgba(180,156,240,0.42)" title="Промпт 3: проверка в новом чате"><b>4</b><span>Проверка</span></a></nav><button class="bar-lib" type="button" data-lib="lib-projects"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg><span>Библиотека</span></button></div><div class="bar-now"><i></i><span id="now">Начало · маршрут ниже</span></div></header><main class="wrap"><div class="brand" id="top"><b>neovida</b> · Нейропросвещение</div><h1>Практика после урока 4<br>Ваш кодекс: Codex узнаёт вас</h1><p class="sub">Три промпта по шагам. Персональный курс Михаила Лайтера · Альберт Валеев</p><div class="box"><b>Что сделали на уроке.</b> Поставили Codex целиком: вход, настройки, персонализация, инструкция и папка окружения. Codex у вас работает. Но про вас он пока знает только то, что вы скажете в чате, и каждый новый чат начинает с нуля.</div><div class="box"><b>Что делаем дома.</b> Codex проводит с вами глубокое интервью и сам сохраняет ваш кодекс файлом kodeks.md в папку окружения. Потом записывает в свои правила (AGENTS.md) читать этот файл перед любой задачей, в любой папке. Дальше каждый проект, который вы будете строить, он строит под вас: под ваши цели, ваш ритм и ваши границы, а не под усреднённого пользователя.</div><div class="legend"><div class="lg-h">Как читать страницу</div><div class="lg"><span class="lg-num" style="--c:#8BD17C;--cbg:rgba(139,209,124,0.11);--cln:rgba(139,209,124,0.42)">2</span><p><b>Номер = шаг.</b> Идите по порядку, панель сверху показывает, где вы сейчас.</p></div><div class="lg"><span class="lg-copy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></svg>Копируем</span><p><b>В рамке только текст для вставки.</b> Нажмите «Копировать» и вставьте в Codex. Всё в [квадратных скобках] замените своим, скобки удалите.</p></div></div><div class="routebox"><div class="lg-h">Маршрут · четыре шага, около часа</div><ol class="rlist"><li style="--c:#F2CF5B;--cbg:rgba(242,207,91,0.11);--cln:rgba(242,207,91,0.42)"><a href="#step-1"><i>1</i><span>Подготовка: папка и досье</span><em>5 минут</em></a></li><li style="--c:#8BD17C;--cbg:rgba(139,209,124,0.11);--cln:rgba(139,209,124,0.42)"><a href="#step-2"><i>2</i><span>Промпт 1: Codex собирает ваш кодекс</span><em>40 минут, можно в три захода</em></a></li><li style="--c:#5FB4E8;--cbg:rgba(95,180,232,0.11);--cln:rgba(95,180,232,0.42)"><a href="#step-3"><i>3</i><span>Промпт 2: кодекс в мозг агента</span><em>10 минут</em></a></li><li style="--c:#B49CF0;--cbg:rgba(180,156,240,0.11);--cln:rgba(180,156,240,0.42)"><a href="#step-4"><i>4</i><span>Промпт 3: проверка в новом чате</span><em>5 минут</em></a></li></ol></div><section class="st" id="step-1" data-n="1" style="--c:#F2CF5B;--cbg:rgba(242,207,91,0.11);--cln:rgba(242,207,91,0.42)"><div class="st-band"><div class="num">1</div><div><div class="meta">Шаг 1 из 4 · 5 минут</div><h2>Подготовка: папка и досье</h2></div></div><p class="intro">Кодекс ляжет файлом в вашу папку окружения, поэтому весь разговор идёт в Codex, в чате именно этой папки. Досье с урока 1 станет его стартом: что в нём уже есть, Codex спрашивать не будет.</p><p class="prac-res"><b>Готово, когда:</b> Открыт новый чат Codex в папке окружения, досье скопировано.</p><ol class="fl"><li><b>Codex</b><span>Откройте приложение ChatGPT на MacBook и слева вверху переключитесь на Codex.</span></li><li><b>Папка</b><span>Слева выберите папку окружения, которую подключили на уроке, и начните в ней новый чат. Не в другой папке и не в браузере: кодекс должен лечь именно сюда.</span></li><li><b>Как на уроке</b><span>В строке ввода GPT-6.1 Sol и «Полный доступ».</span></li><li><b>Досье</b><span>Откройте ChatGPT → Настройки → Персонализация, поле «Что ChatGPT должен знать о вас», или чат, где собирали досье на уроке 1 из архива ваших видео. Скопируйте текст: он нужен в шаге 2.</span></li></ol><div class="tip"><b>Досье не нашли?</b> Ничего страшного: кодекс соберётся и с нуля, просто вопросов будет больше.</div><a class="next" href="#step-2" style="--c:#8BD17C;--cbg:rgba(139,209,124,0.11);--cln:rgba(139,209,124,0.42)"><span>Дальше:</span><b>шаг 2 · Кодекс</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></a></section><section class="st" id="step-2" data-n="2" style="--c:#8BD17C;--cbg:rgba(139,209,124,0.11);--cln:rgba(139,209,124,0.42)"><div class="st-band"><div class="num">2</div><div><div class="meta">Шаг 2 из 4 · 40 минут, можно в три захода</div><h2>Промпт 1: Codex собирает ваш кодекс</h2></div></div><p class="intro">Досье отвечает на вопрос «кто я и с чем мне помогать». Кодекс отвечает на вопросы «что мне важно, куда я иду и по каким правилам живу». С ним Codex принимает решения так, как приняли бы вы. Двенадцать блоков, Codex спрашивает по одному, к каждому вопросу пояснение и пример.</p><p class="prac-res"><b>Готово, когда:</b> В папке окружения лежит файл kodeks.md: двенадцать блоков вашими словами и раздел «Противоречия».</p><ol class="fl"><li><b>Вставить</b><span>Скопируйте промпт целиком. В самом конце вместо скобок вставьте своё досье из шага 1 и отправьте.</span></li><li><b>Отвечать</b><span>Честно и своими словами, можно коротко и сумбурно, он разберётся. Голосом удобнее: диктовка Mac, клавиша с микрофоном на клавиатуре.</span></li><li><b>Пропустить</b><span>Не готовы отвечать, скажите «пропусти». Пустой блок честнее выдуманного.</span></li><li><b>Сохранить</b><span>В конце он покажет кодекс целиком. Поправьте словами, что не так, и ответьте «да»: он сохранит kodeks.md и назовёт путь к файлу.</span></li></ol><div class="pr" id="hw-kodeks"><div class="pr-head"><span class="pr-tag"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></svg>Копируем</span><span class="pr-label">Codex · новый чат в папке окружения · досье в конец</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Промпт 1 · Собери мой кодекс</div><pre>Ты не коуч и не мотиватор. Ты внимательный собеседник, который задаёт хорошие вопросы и ничего не забывает. Твоя задача собрать мой кодекс: документ о том, кто я, что мне важно и куда я иду. Дальше его будет читать каждый мой чат, ассистент, проект и кодер-агент.
+
+Ты работаешь в Codex, в моей папке окружения. Если в конце этого сообщения есть моё досье, начни с него: что в нём уже есть, считай известным и не спрашивай заново. Задавай только вопросы, ответов на которые в досье нет, и уточняй то, что могло устареть. Досье нет, собирай с нуля.
+
+Начни с рамки в две строки: «Соберём твой кодекс. Двенадцать блоков, я спрашиваю по одному, ты отвечаешь как есть, можно голосом. Займёт минут сорок. Начнём?» После моего согласия сразу первый вопрос.
+
+Как вести разговор:
+1. Вопросы задавай ПО ОДНОМУ. Дождись ответа, потом следующий. Список блоков заранее не показывай.
+2. К каждому вопросу давай расшифровку в скобках: что ты имеешь в виду и один-два примера ответа из обычной жизни. Например: «По каким правилам ты живёшь? (чего не делаешь никогда и что делаешь всегда. Например: не работаю по воскресеньям. Или: если пообещал, делаю, даже если стало невыгодно)».
+3. Мне можно отвечать голосом, коротко и сумбурно. Разбирайся сам, не заставляй формулировать красиво.
+4. Если ответ поверхностный, задай ОДИН углубляющий вопрос. Не больше одного подряд.
+5. Не подсказывай «правильные» ответы. Если я повторяю твой пример, спроси, как это выглядит у меня.
+6. Если я говорю «пропусти», иди дальше и пометь блок как незаполненный. Пустое место честнее выдуманного.
+7. Мои формулировки не улучшай. «Хочу перестать быть удобным для всех» лучше, чем «работа над личными границами».
+
+Двенадцать блоков, в этом порядке:
+1. Где я сейчас. Оценка от 1 до 10 по шести сферам: тело, дело, отношения, развитие, приключения, состояние. По каждой одна строка, почему такая цифра.
+2. Динамика. Какой сейчас период: подъём, стабильность, застой, спад, переход. По каким признакам это видно.
+3. Ценности. Что по-настоящему важно на этом этапе. Помоги сократить список до трёх-пяти, сокращаю я, ты только спрашиваешь, что важнее.
+4. Принципы. По каким правилам я живу и принимаю решения. Чего не делаю никогда и что делаю всегда.
+5. Смыслы. Ради чего всё это. Что должно остаться после меня.
+6. Сильные стороны. В чём я хорош, что даётся легче, чем другим, за чем ко мне приходят люди.
+7. Чего не хватает. Какое качество личности нужно развить, чтобы перейти на следующий уровень. Качество, а не навык вроде планирования.
+8. Куда я иду. Каким я хочу быть через год: что меня окружает, каким я стал, что чувствую. Проси язык ощущений, а не только список достижений.
+9. Цели. По каждой значимой сфере одна главная цель на год и одна на месяц. По каждой обязательно спроси, ради чего она. Цель без смысла в кодекс не идёт.
+10. Ритм. Как проходит день сейчас и как я хочу, чтобы он проходил. Раздели: что уже работает, а что пока только намерение.
+11. Энергия. Что стабильно забирает силы и что стабильно даёт.
+12. Границы. Чего мне не советовать, на что не давить, где нужна прямота, а где поддержка.
+
+Когда все блоки собраны, отдельным коротким разделом назови противоречия по фактам из разговора: ценность названа, а в целях и расписании её нет; цель требует времени, которого в описанном дне не существует; качество, которое я развиваю, не тренируется ни в одном действии; в образе будущего я другой, а ни одна цель к этому не ведёт; в источники энергии записано то, чего нет в описании недели. По каждому одна строка, без морали, решений не предлагай, пока не попрошу.
+
+Когда всё собрано:
+1. Покажи полную версию целиком: заголовок «=== МОЙ КОДЕКС ===», все двенадцать блоков моими словами, потом раздел «Противоречия, которые я заметил».
+2. Спроси, всё ли верно, и дождись моего «да». Поправки я говорю словами, ты переделываешь.
+3. После моего «да» сохрани её в файл kodeks.md в корне этой папки. Если такой файл уже есть, ничего не стирай и спроси меня. Кроме этого файла ничего не создавай и не меняй.
+4. Перечитай файл и назови полный путь к нему.
+
+Чего не делать: не переписывай мои слова литературным языком, не заполняй блоки за меня, не сглаживай противоречия, не давай советов и оценок без просьбы, не ставь диагнозов, не используй длинное тире.
+
+Моё досье:
+[вставьте сюда досье из шага 1. Досье нет: удалите эту строку и строку «Моё досье»]</pre></div><h3 class="subh">ПРИМЕРЫ живых ответов: так и оставляйте</h3><p class="tx">Codex не будет переписывать ваши слова красиво, и не надо. Вот как звучат хорошие ответы: «хочу перестать быть удобным для всех» · «деньги есть, а радости нет» · «утро съедают чужие срочности» · «не могу уволить человека, которого жалко» · «сильная сторона: вижу дыру в цифрах за минуту» · «не хватает терпения дождаться результата» · «через год хочу просыпаться без тревоги» · «цель года: выйти из операционки, ради вечеров с детьми» · «забирает силы переписка после 21:00» · «не давить на спорт, давить на сон» · «нет времени слушать звонки менеджеров, а надо» · «хочу видеть ошибки и деньги, которые утекают, раньше, чем клиент уйдёт».</p><div class="tip"><b>Прервались?</b> Вернитесь в тот же чат и напишите «продолжаем с блока 7»: он помнит, где остановились.</div><div class="tip"><b>Противоречия это самая ценная часть.</b> Не спорьте с ними и не просите смягчить: это ровно то, чего вы сами о себе не видите.</div><a class="next" href="#step-3" style="--c:#5FB4E8;--cbg:rgba(95,180,232,0.11);--cln:rgba(95,180,232,0.42)"><span>Дальше:</span><b>шаг 3 · AGENTS.md</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></a></section><section class="st" id="step-3" data-n="3" style="--c:#5FB4E8;--cbg:rgba(95,180,232,0.11);--cln:rgba(95,180,232,0.42)"><div class="st-band"><div class="num">3</div><div><div class="meta">Шаг 3 из 4 · 10 минут</div><h2>Промпт 2: кодекс в мозг агента</h2></div></div><p class="intro">Перед каждой задачей Codex читает файлы AGENTS.md: свой в папке окружения и глобальный, который действует в любой папке. В оба кладём ссылку: «перед работой прочитай kodeks.md». Сам кодекс остаётся в одном файле: обновили его, и Codex сразу знает новое.</p><p class="prac-res"><b>Готово, когда:</b> AGENTS.md в папке и глобальный ~/.codex/AGENTS.md ссылаются на kodeks.md, Codex пересказал, что понял о вас.</p><ol class="fl"><li><b>Тот же чат</b><span>Продолжаем в чате, где собирали кодекс.</span></li><li><b>Вставить</b><span>Промпт ниже целиком, менять в нём ничего не нужно.</span></li><li><b>План</b><span>Он покажет, что запишет в каждый файл. Всё верно, отвечайте «да».</span></li><li><b>Глазами</b><span>Откройте папку окружения в Finder: рядом с kodeks.md лежит AGENTS.md.</span></li></ol><div class="pr" id="hw-agents"><div class="pr-head"><span class="pr-tag"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></svg>Копируем</span><span class="pr-label">Codex · тот же чат</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Промпт 2 · Кодекс в мозг агента</div><pre>Теперь сделай так, чтобы ты знал меня в любой задаче и в любой папке. Мой кодекс один, он лежит в файле kodeks.md в корне этой папки. Сам кодекс никуда не копируй, только ссылайся на этот файл.
+
+1. Файл AGENTS.md в корне этой папки. Если его нет, создай. Если есть, ничего не стирай: там могут быть правила с урока. Добавь в самое начало раздел «Кто я»: перед любой задачей прочитай kodeks.md в корне этой папки и по нему понимай, кто я, что мне важно, мои цели, правила и границы. Если задача идёт против кодекса, скажи мне об этом прямо.
+2. Глобальный файл ~/.codex/AGENTS.md: его ты читаешь в любой папке. Если файла нет, создай. Если есть, ничего не стирай, добавь раздел «ЛИЧНЫЙ КОДЕКС»: полный путь к моему kodeks.md и то же правило, читать его перед каждой задачей.
+3. Сначала покажи, что именно и в какой файл запишешь, и дождись моего «да». Меняй файлы только после «да».
+4. Если записать не получится, не притворяйся, что всё вышло: скажи прямо, в чём причина, и предложи решение.
+5. После записи перечитай оба файла, проверь, что kodeks.md открывается по указанному пути, и своими словами скажи, что ты обо мне понял и как это изменит твою работу со мной.</pre></div><div class="tip"><b>Правила с урока не пропадут:</b> в промпте прямо сказано ничего не стирать, только добавить раздел.</div><div class="tip"><b>Записал «в память», а файлов нет?</b> Скажите: «Запиши это в файлы AGENTS.md, как в промпте, и покажи их».</div><a class="next" href="#step-4" style="--c:#B49CF0;--cbg:rgba(180,156,240,0.11);--cln:rgba(180,156,240,0.42)"><span>Дальше:</span><b>шаг 4 · Проверка</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></a></section><section class="st" id="step-4" data-n="4" style="--c:#B49CF0;--cbg:rgba(180,156,240,0.11);--cln:rgba(180,156,240,0.42)"><div class="st-band"><div class="num">4</div><div><div class="meta">Шаг 4 из 4 · 5 минут</div><h2>Промпт 3: проверка в новом чате</h2></div></div><p class="intro">Новый чат ничего не помнит из прошлого разговора. Если он перескажет вас точно и назовёт файлы, значит, кодекс читается сам, и так будет в любой задаче.</p><p class="prac-res"><b>Готово, когда:</b> Codex пересказал вас по кодексу и назвал файлы, из которых взял: AGENTS.md и kodeks.md.</p><ol class="fl"><li><b>Новый чат</b><span>Codex, новый чат в папке окружения.</span></li><li><b>Вопрос</b><span>Вставьте промпт ниже и отправьте.</span></li><li><b>Сверьте</b><span>Всё про вас верно и без выдумок? Значит, готово.</span></li></ol><div class="pr" id="hw-check"><div class="pr-head"><span class="pr-tag"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></svg>Копируем</span><span class="pr-label">Codex · новый чат в папке окружения</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Промпт 3 · Проверка: что ты знаешь обо мне</div><pre>Что ты знаешь обо мне? Ответь коротко и только по файлам, которые ты читаешь перед работой, ничего не додумывая. Назови, из каких файлов взял. Четыре блока: кто я и чем занимаюсь, что для меня важно, куда я иду в этом году, как со мной разговаривать. В конце одной строкой: чего ты обо мне пока не знаешь.</pre></div><div class="tip"><b>Не знает про вас?</b> Закройте Codex полностью (⌘ + Q), откройте заново и задайте тот же вопрос в новом чате. Снова не знает: «Прочитай ~/.codex/AGENTS.md и kodeks.md и скажи, почему ты их не увидел».</div><a class="next" href="#report"><span>Дальше:</span><b>Отчёт</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></a></section><div class="report" id="report" style="--c:#B49CF0;--cbg:rgba(180,156,240,0.11);--cln:rgba(180,156,240,0.42)"><h3>Отчёт · #кодекс</h3><p>После шага 4 напишите в Telegram: хэштег первой строкой, дальше своими словами.</p><ol><li>Сколько блоков заполнили и какое противоречие удивило.</li><li>Что ответил Codex в проверке и из каких файлов взял.</li><li>Где застряли, если застряли: шаг и скриншот.</li></ol><pre>#кодекс
+ПРИМЕР: ответы выдуманы, у вас свои.
+Кодекс собрал за два захода, пропустил блок «Приключения».
+Удивило противоречие: в ценностях семья, а в описании дня её нет ни часа.
+Проверка в новом чате: пересказал точно, взял из AGENTS.md и kodeks.md.</pre><p>Срок: до следующего урока.</p></div><div id="links"><h2>Ссылки</h2><a class="go" href="https://materials.neovida.ai/online-26-09/urok-5/handout.html" target="_blank" rel="noopener">Шпаргалка по Codex с урока: настройки, персонализация, мастер-промпт, папка<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M10 14 20 4"/><path d="M19 14v4.5A1.5 1.5 0 0 1 17.5 20h-12A1.5 1.5 0 0 1 4 18.5v-12A1.5 1.5 0 0 1 5.5 5H10"/></svg></a></div></main><button class="backpill" id="backpill" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span>Вернуться</span><b id="backto"></b></button><div class="lib" id="lib" hidden><div class="lib-panel"><div class="lib-top"><button class="lib-close" type="button" aria-label="Закрыть"></button></div><nav class="ltabs"></nav><input id="q" type="search" hidden aria-label="Поиск"><div class="lib-body" id="libbody"><p class="nores" hidden></p></div></div></div><script>'use strict';
+// Браузер не восстанавливает прокрутку сам: место на странице держим мы (17.10: «назад» на телефоне уводил к старому якорю).
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+// ---------- копирование: одна функция на все кнопки
+function copyText(t, btn, okText) {
+  const done = () => { const o = btn.innerHTML; btn.classList.add('ok'); if (okText) btn.textContent = okText; setTimeout(() => { btn.classList.remove('ok'); if (okText) btn.innerHTML = o; }, 1600); };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(done, () => fallback(t, done)); else fallback(t, done);
+}
+function fallback(t, done) {
+  const a = document.createElement('textarea'); a.value = t; a.style.position = 'fixed'; a.style.opacity = '0'; document.body.appendChild(a); a.select();
+  try { document.execCommand('copy'); done(); } catch (e) { alert('Выделите текст и скопируйте вручную'); } a.remove();
+}
+document.querySelectorAll('.pr .cp').forEach(b => b.onclick = () => copyText(b.closest('.pr').querySelector('pre').textContent, b, 'Скопировано'));
+document.querySelectorAll('.bot button.cp.big').forEach(b => b.onclick = () => {
+  const card = b.closest('.bot'); copyText(card.querySelector('pre.hid').textContent, b, 'Скопировано');
+  const d = card.querySelector('details.peekd'); if (d) d.open = true;
+});
+document.querySelectorAll('.ask').forEach(b => b.onclick = () => copyText(b.textContent, b));
+
+// ---------- где мы сейчас: панель-маршрут
+const bar = document.getElementById('bar'), now = document.getElementById('now');
+const word = bar.dataset.word || 'Блок';
+const secs = [...document.querySelectorAll('main section.st[data-n]')];
+const chips = [...document.querySelectorAll('.rt')];
+const names = {}; chips.forEach(c => names[c.dataset.n] = c.title);
+let cur = null;
+const route = document.querySelector('.route');
+// Только горизонтальная прокрутка своей ленты. scrollIntoView здесь нельзя: он обрывает плавную прокрутку страницы
+// (17.10: номера блоков 3, 4, 5 «не давали прокрутиться»).
+function centerIn(box, el) { box.scrollLeft = el.offsetLeft - box.offsetLeft - (box.clientWidth - el.offsetWidth) / 2; }
+function setBarH() { document.documentElement.style.setProperty('--barh', bar.offsetHeight + 'px'); }
+function spy() {
+  const line = bar.offsetHeight + 60; let s = null;
+  for (const x of secs) { if (x.getBoundingClientRect().top <= line) s = x; }
+  const n = s ? s.dataset.n : null;
+  if (n === cur) return; cur = n;
+  chips.forEach(c => { c.classList.toggle('on', c.dataset.n === n); c.classList.toggle('done', n !== null && +c.dataset.n < +n); });
+  if (n) {
+    const col = getComputedStyle(s).getPropertyValue('--c').trim();
+    bar.style.setProperty('--c', col); document.querySelector('.bar-now').style.setProperty('--c', col);
+    now.textContent = `${word} ${n} из ${secs.length} · ${names[n]}`;
+    const on = chips.find(c => c.dataset.n === n); if (on) centerIn(route, on);
+  } else { bar.style.removeProperty('--c'); document.querySelector('.bar-now').style.removeProperty('--c'); now.textContent = bar.dataset.start || 'Начало урока · маршрут ниже'; }
+}
+window.addEventListener('scroll', () => requestAnimationFrame(spy), { passive: true });
+window.addEventListener('resize', () => { setBarH(); spy(); });
+setBarH(); spy();
+
+// ---------- вернуться: после любого перехода по ссылке внутри страницы
+const pill = document.getElementById('backpill'), backto = document.getElementById('backto');
+let backY = null, pillTimer = null;
+function hereLabel() { return cur ? `${word.toLowerCase()} ${cur} · ${names[cur].split(':')[0]}` : 'к началу'; }
+function rememberHere() {
+  backY = window.scrollY; backto.textContent = hereLabel(); pill.hidden = false;
+  clearTimeout(pillTimer); pillTimer = setTimeout(() => { pill.hidden = true; }, 15000);
+}
+document.addEventListener('click', ev => {
+  const a = ev.target.closest('a[href^="#"]'); if (!a || a.closest('#lib')) return;
+  const id = decodeURIComponent(a.getAttribute('href').slice(1)); const el = id && document.getElementById(id); if (!el) return;
+  ev.preventDefault(); rememberHere();
+  goTo(el);
+});
+// Переход мгновенный: длинная плавная прокрутка на телефоне не доезжала до места. Куда приехали, показывает вспышка.
+function jump(y) { window.scrollTo(0, Math.max(0, Math.round(y))); }
+function goTo(el) {
+  const target = () => el.getBoundingClientRect().top + window.scrollY - bar.offsetHeight - 8;
+  jump(target()); requestAnimationFrame(() => { if (Math.abs(el.getBoundingClientRect().top - bar.offsetHeight - 8) > 4) jump(target()); });
+  const band = el.querySelector('.st-band') || el; band.classList.remove('flash'); void band.offsetWidth; band.classList.add('flash');
+}
+pill.onclick = () => { const yb = backY; if (yb !== null) { jump(yb); requestAnimationFrame(() => jump(yb)); } pill.hidden = true; backY = null; };
+
+// ---------- библиотека поверх страницы: открыли, закрыли, вы на том же месте
+const lib = document.getElementById('lib'), body = document.getElementById('libbody'), q = document.getElementById('q');
+const tabs = [...document.querySelectorAll('.ltab')], lsecs = [...document.querySelectorAll('.lsec')];
+const cards = [...lib.querySelectorAll('.bot')];
+let savedY = 0;
+const ltabs = document.querySelector('.ltabs');
+function markTab(id) { tabs.forEach(t => t.classList.toggle('on', t.dataset.tab === id)); const on = tabs.find(t => t.dataset.tab === id); if (on) centerIn(ltabs, on); }
+function goInside(id) {
+  const el = document.getElementById(id); if (!el || !lib.contains(el)) return;
+  if (q.value) { q.value = ''; filter(); }
+  const sec = el.closest('.lsec'); if (sec) markTab(sec.id);
+  body.scrollTop += el.getBoundingClientRect().top - body.getBoundingClientRect().top - (el === sec ? 4 : 10);
+  if (el.classList.contains('bot')) { el.classList.add('hit'); setTimeout(() => el.classList.remove('hit'), 2200); }
+}
+function openLib(id, push = true) {
+  if (lib.hidden) { savedY = window.scrollY; lib.hidden = false; document.documentElement.classList.add('lib-open'); if (push) history.pushState({ lib: 1 }, '', '#' + id); }
+  requestAnimationFrame(() => goInside(id));
+}
+function hideLib() { lib.hidden = true; document.documentElement.classList.remove('lib-open'); jump(savedY); requestAnimationFrame(() => jump(savedY)); setTimeout(() => jump(savedY), 60); }
+function closeLib() {
+  if (history.state && history.state.lib) { history.back(); return; }
+  hideLib(); history.replaceState(null, '', location.pathname + location.search);
+}
+document.querySelectorAll('[data-lib]').forEach(b => b.onclick = () => openLib(b.dataset.lib));
+lib.querySelector('.lib-close').onclick = closeLib;
+lib.addEventListener('click', ev => { if (ev.target === lib) closeLib(); });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !lib.hidden) closeLib(); });
+let skipHash = false;
+window.addEventListener('popstate', () => { if (!lib.hidden) { skipHash = true; hideLib(); } });
+tabs.forEach(t => t.onclick = () => goInside(t.dataset.tab));
+body.addEventListener('scroll', () => { let s = lsecs[0]; for (const x of lsecs) { if (x.offsetTop - 40 <= body.scrollTop) s = x; } if (s && !q.value) markTab(s.id); }, { passive: true });
+function filter() {
+  const v = q.value.trim().toLowerCase(); let shown = 0;
+  cards.forEach(c => { const hit = !v || c.textContent.toLowerCase().includes(v); c.hidden = !hit; if (hit) shown++; });
+  lib.querySelectorAll('.grp').forEach(g => { let n = g.nextElementSibling, vis = false; while (n && !n.classList.contains('grp')) { if (n.classList.contains('bot') && !n.hidden) vis = true; n = n.nextElementSibling; } g.hidden = !!v && !vis; const s = g.nextElementSibling; if (s && s.classList.contains('grp-sub')) s.hidden = g.hidden; });
+  lsecs.forEach(s => { s.hidden = !!v && !s.querySelector('.bot:not([hidden])'); });
+  lib.querySelector('.nores').hidden = shown > 0;
+}
+q.addEventListener('input', filter);
+
+// ---------- ссылки со слайдов: #id промпта на странице или карточки в библиотеке
+function openHash() {
+  let id; try { id = decodeURIComponent(location.hash.slice(1)); } catch (e) { return; }
+  if (!id) { if (!lib.hidden) hideLib(); return; }
+  const el = document.getElementById(id); if (!el) return;
+  if (lib.contains(el)) { openLib(id, false); history.replaceState({ lib: 0 }, '', location.pathname + location.search); return; }
+  if (!lib.hidden) hideLib();
+  el.querySelectorAll('details').forEach(d => d.open = true);
+  setTimeout(() => goTo(el), 40);
+}
+// ссылка с #якорем в уже открытой шпаргалке; после закрытия библиотеки «назад» место не трогаем
+window.addEventListener('hashchange', () => { if (skipHash) { skipHash = false; return; } openHash(); });
+openHash();
+</script></body></html>
