@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Жёсткие, мягкие и ИИ-мышление</title>
+<meta name="description" content="Альберт Валеев. Третий навык кадров будущего. Российский промышленный форум, Уфа, 18.11.2026">
+<meta property="og:title" content="Жёсткие, мягкие и ИИ-мышление">
+<meta property="og:description" content="Альберт Валеев. Третий навык кадров будущего. Российский промышленный форум, Уфа, 18.11.2026">
+<meta name="theme-color" content="#14191a">
+<style>
+@font-face{font-family:'Inter';src:url(assets/fonts/inter-400.woff2) format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Inter';src:url(assets/fonts/inter-600.woff2) format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:'Inter';src:url(assets/fonts/inter-700.woff2) format('woff2');font-weight:700;font-display:swap}
+@font-face{font-family:'Inter';src:url(assets/fonts/inter-800.woff2) format('woff2');font-weight:800;font-display:swap}
+:root{
+  --ink:#14191a; --ink2:#1d2426; --steel:#2a3335; --ivory:#f2ede3; --paper:#e8e1d3;
+  --muted:#9aa3a0; --sage:#b9c7b8; --acc:#e07461; --acc2:#f0a48f; --line:rgba(242,237,227,.16);
+  --font:'Inter',-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--ink);color:var(--ivory);font-family:var(--font);overflow:hidden;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--ink)}
+#stage{position:relative;width:1920px;height:1080px;flex:none;transform-origin:center center}
+.slide{position:absolute;inset:0;overflow:hidden;opacity:0;visibility:hidden;transition:opacity .45s ease,visibility 0s linear .45s;background:var(--ink)}
+.slide.on{opacity:1;visibility:visible;transition:opacity .45s ease}
+[data-step]{opacity:0;transform:translateY(18px);transition:opacity .45s ease,transform .45s ease}
+[data-step].shown{opacity:1;transform:none}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.shade-l{position:absolute;inset:0;background:linear-gradient(90deg,rgba(20,25,26,.94) 0%,rgba(20,25,26,.82) 38%,rgba(20,25,26,.25) 70%,rgba(20,25,26,0) 100%)}
+.shade-b{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,25,26,.15) 0%,rgba(20,25,26,.35) 45%,rgba(20,25,26,.92) 78%,rgba(20,25,26,.97) 100%)}
+.shade-all{position:absolute;inset:0;background:rgba(20,25,26,.78)}
+.pad{position:absolute;inset:0;padding:96px 120px 120px}
+.kicker{font-size:26px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+.brand{position:absolute;left:120px;top:56px;font-size:24px;font-weight:600;letter-spacing:.04em;color:rgba(242,237,227,.72)}
+.brand b{color:var(--ivory);font-weight:800}
+h1{font-size:112px;line-height:1.0;font-weight:800;letter-spacing:-.025em}
+h2{font-size:80px;line-height:1.04;font-weight:800;letter-spacing:-.02em}
+h3{font-size:46px;line-height:1.12;font-weight:700;letter-spacing:-.01em}
+p.lead{font-size:40px;line-height:1.3;color:rgba(242,237,227,.86);font-weight:400}
+.acc{color:var(--acc)}
+.foot{position:absolute;left:120px;right:120px;bottom:0;height:72px;border-top:1px solid var(--line);
+  display:flex;align-items:center;font-size:21px;color:rgba(242,237,227,.55);gap:24px}
+.foot .src{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.light{background:var(--ivory);color:var(--ink)}
+.light p.lead{color:#3b4446}
+.light .foot{border-top-color:rgba(20,25,26,.14);color:rgba(20,25,26,.55)}
+.light .brand{color:rgba(20,25,26,.6)} .light .brand b{color:var(--ink)}
+/* служебный слой */
+#hud{position:fixed;right:22px;bottom:16px;font:600 14px/1 var(--font);color:rgba(242,237,227,.7);
+  background:rgba(20,25,26,.55);padding:8px 12px;border-radius:8px;opacity:0;transition:opacity .4s;pointer-events:none;z-index:20}
+#hud.vis{opacity:1}
+#hint{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);font:500 14px/1.3 var(--font);color:rgba(242,237,227,.75);
+  background:rgba(20,25,26,.6);padding:8px 14px;border-radius:8px;opacity:0;transition:opacity .4s;pointer-events:none;z-index:20;white-space:nowrap}
+#hint.vis{opacity:1}
+#grid,#notes{position:fixed;inset:0;z-index:30;background:rgba(14,18,19,.97);display:none;overflow:auto}
+#grid.open,#notes.open{display:block}
+#grid .gwrap{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding:28px}
+#grid button{all:unset;cursor:pointer;display:block;border-radius:8px;overflow:hidden;outline:1px solid rgba(242,237,227,.12);background:var(--ink2)}
+#grid button:focus-visible,#grid button:hover{outline:3px solid var(--acc)}
+#grid .gthumb{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden}
+#grid .gthumb .slide{opacity:1;visibility:visible;transform-origin:0 0;width:1920px;height:1080px}
+#grid .gthumb [data-step]{opacity:1;transform:none}
+#grid .gcap{font:600 15px/1.3 var(--font);color:var(--ivory);padding:10px 12px}
+#notes .nwrap{max-width:980px;margin:0 auto;padding:48px 32px;font:400 26px/1.5 var(--font);color:var(--ivory)}
+#notes h4{font:700 18px/1 var(--font);color:var(--acc);letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}
+.closebtn{position:fixed;top:14px;right:18px;z-index:31;font:600 16px/1 var(--font);color:var(--ivory);background:var(--steel);border:0;border-radius:8px;padding:12px 16px;cursor:pointer}
+.notes-src{display:none}
+/* телефон вертикально: лента */
+@media (orientation:portrait) and (max-width:900px){
+  html,body{overflow:auto;height:auto}
+  #viewport{position:static;display:block}
+  #stage{transform:none!important;width:100%;height:auto}
+  .slide{position:relative;opacity:1;visibility:visible;width:1920px;height:1080px;transform-origin:0 0;margin-bottom:0}
+  .slot{position:relative;overflow:hidden;border-bottom:1px solid rgba(242,237,227,.1)}
+  [data-step]{opacity:1;transform:none}
+  #hud,#hint{display:none}
+}
+
+/* обложка */
+.cover .box{position:absolute;left:120px;top:0;bottom:0;width:1060px;display:flex;flex-direction:column;justify-content:center;gap:34px}
+.cover h1{font-size:128px}
+.cover .lead{font-size:46px;color:var(--ivory)}
+.cover .who{margin-top:26px;padding-top:30px;border-top:2px solid var(--acc);display:flex;flex-direction:column;gap:8px;width:720px}
+.cover .who b{font-size:40px;font-weight:800}
+.cover .who span{font-size:28px;color:rgba(242,237,227,.75)}
+/* обо мне */
+.about .photo{position:absolute;right:0;top:0;bottom:0;width:700px}
+.about .photo img{width:100%;height:100%;object-fit:cover;object-position:50% 20%}
+.about .photo::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--ink) 0%,rgba(20,25,26,0) 22%)}
+.about .box{position:absolute;left:120px;top:96px;bottom:96px;width:1020px;display:flex;flex-direction:column;justify-content:space-between}
+.about .role{font-size:34px;line-height:1.3;color:rgba(242,237,227,.85);margin-top:18px}
+.about .nums{display:flex;gap:64px}
+.about .num b{display:block;font-size:150px;line-height:.9;font-weight:800;color:var(--acc);letter-spacing:-.03em}
+.about .num span{display:block;font-size:28px;line-height:1.25;color:rgba(242,237,227,.85);margin-top:12px;max-width:430px}
+.about .facts{display:grid;grid-template-columns:1fr 1fr;gap:22px 40px}
+.about .fact{border-top:1px solid var(--line);padding-top:16px;font-size:27px;line-height:1.3;color:rgba(242,237,227,.9)}
+.about .fact b{display:block;font-size:20px;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);margin-bottom:6px;font-weight:600}
+/* чем занимаемся: триптих */
+.work .tri{position:absolute;right:0;top:0;bottom:0;width:1000px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--ink)}
+.work .tri figure{position:relative;overflow:hidden}
+.work .tri img{width:100%;height:100%;object-fit:cover}
+.work .tri figcaption{position:absolute;left:0;right:0;bottom:0;padding:70px 20px 22px;font-size:21px;line-height:1.3;color:var(--ivory);background:linear-gradient(180deg,rgba(20,25,26,0),rgba(20,25,26,.92))}
+.work .box{position:absolute;left:120px;top:96px;bottom:96px;width:740px;display:flex;flex-direction:column;justify-content:space-between}
+.work .rows{display:flex;flex-direction:column;gap:26px}
+.work .row{border-left:4px solid var(--acc);padding-left:24px}
+.work .row b{display:block;font-size:34px;line-height:1.15;font-weight:700}
+.work .row span{display:block;font-size:25px;line-height:1.35;color:rgba(242,237,227,.78);margin-top:6px}
+/* вопрос залу */
+.vote .box{position:absolute;left:120px;right:120px;top:110px;bottom:120px;display:flex;flex-direction:column;justify-content:space-between}
+.vote .q{font-size:76px;line-height:1.08;font-weight:800;letter-spacing:-.02em;max-width:1500px}
+.vote .q2{color:var(--acc)}
+.vote .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:40px}
+.vote .st{border-top:3px solid var(--ink);padding-top:22px}
+.vote .st b{display:block;font-size:130px;line-height:.95;font-weight:800;letter-spacing:-.03em}
+.vote .st span{display:block;font-size:28px;line-height:1.3;color:#3b4446;margin-top:12px}
+.vote .st.hot b{color:var(--acc)}
+/* цитата */
+.qt .box{position:absolute;left:120px;right:220px;top:0;bottom:90px;display:flex;flex-direction:column;justify-content:center;gap:40px}
+.qt q{quotes:none;font-size:74px;line-height:1.12;font-weight:700;letter-spacing:-.015em}
+.qt q::before{content:"«"}.qt q::after{content:"»"}
+.qt q b{color:var(--acc);font-weight:800}
+.qt .by{font-size:34px;font-weight:700;color:var(--ivory);padding-top:26px;border-top:2px solid var(--acc);width:560px}
+.qt .next{font-size:44px;line-height:1.2;font-weight:700;color:var(--sage)}
+/* большая цифра */
+.big .box{position:absolute;left:120px;right:120px;top:100px;bottom:110px;display:grid;grid-template-columns:1.05fr 1fr;gap:80px;align-items:center}
+.big .n{font-size:360px;line-height:.82;font-weight:800;letter-spacing:-.05em;color:var(--acc)}
+.big .n small{display:block;font-size:44px;letter-spacing:0;line-height:1.2;color:var(--ivory);font-weight:600;margin-top:28px}
+.big .was{display:flex;align-items:baseline;gap:22px;margin-top:40px;font-size:30px;color:rgba(242,237,227,.7)}
+.big .was b{font-size:96px;color:rgba(242,237,227,.55);font-weight:800}
+.big .side{display:flex;flex-direction:column;gap:36px}
+.big .card{background:rgba(242,237,227,.06);border:1px solid var(--line);border-radius:14px;padding:30px 34px}
+.big .card b{display:block;font-size:22px;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);margin-bottom:10px;font-weight:600}
+.big .card p{font-size:33px;line-height:1.3}
+.big .punch{font-size:46px;line-height:1.15;font-weight:800}
+/* фото слева тёмное, текст слева */
+.hl .box{position:absolute;left:120px;top:100px;bottom:120px;width:960px;display:flex;flex-direction:column;justify-content:center;gap:40px}
+.hl .stack{display:flex;flex-direction:column;gap:28px}
+.hl .stack .line{font-size:40px;line-height:1.25}
+.hl .stack .line b{color:var(--acc)}
+.hl .punch{font-size:54px;line-height:1.12;font-weight:800;padding-top:30px;border-top:2px solid var(--acc)}
+/* три навыка */
+.skills .cols{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--ink)}
+.skills .col{position:relative;overflow:hidden}
+.skills .col img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.skills .col::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,25,26,.7) 0%,rgba(20,25,26,.05) 30%,rgba(20,25,26,.25) 52%,rgba(20,25,26,.95) 80%)}
+.skills .lab{position:absolute;left:44px;right:44px;bottom:70px;z-index:2}
+.skills .lab i{font-style:normal;font-size:24px;font-weight:700;letter-spacing:.14em;color:var(--sage)}
+.skills .lab b{display:block;font-size:64px;line-height:1.02;font-weight:800;margin:10px 0 16px;letter-spacing:-.02em}
+.skills .lab span{display:block;font-size:29px;line-height:1.3;color:rgba(242,237,227,.88)}
+.skills .col img.z{transform:scale(1.45);transform-origin:50% 62%}
+.skills .col.ai .lab b,.skills .col.ai .lab i{color:var(--acc)}
+.skills .col.ai{outline:4px solid var(--acc);outline-offset:-4px}
+.skills .resume{position:absolute;left:0;right:0;top:0;z-index:4;padding:40px 120px 44px;background:rgba(20,25,26,.94);border-bottom:3px solid var(--acc)}
+.skills .resume q{quotes:none;display:block;font-size:44px;line-height:1.18;font-weight:700;max-width:1500px}
+.skills .resume span{display:block;font-size:22px;color:var(--sage);margin-top:14px}
+.skills .top{position:absolute;left:44px;top:56px;z-index:3;font-size:30px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ivory)}
+/* квадрат */
+.sq .side{position:absolute;right:0;top:0;bottom:0;width:560px}
+.sq .side img{width:100%;height:100%;object-fit:cover;object-position:60% 50%}
+.sq .box{position:absolute;left:120px;top:90px;bottom:100px;width:1160px;display:flex;flex-direction:column;gap:30px}
+.sq .grid4{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:22px}
+.sq .c{background:rgba(242,237,227,.06);border:1px solid var(--line);border-radius:16px;padding:28px 32px;display:flex;flex-direction:column;gap:10px}
+.sq .c i{font-style:normal;font-size:24px;font-weight:800;color:var(--acc);letter-spacing:.08em}
+.sq .c b{font-size:46px;line-height:1.05;font-weight:800}
+.sq .c span{font-size:27px;line-height:1.3;color:rgba(242,237,227,.85)}
+.sq .c em{font-style:normal;font-size:22px;line-height:1.35;color:var(--sage);margin-top:auto}
+.sq .c.tool{border-style:dashed}
+.sq .bar{font-size:36px;font-weight:700;line-height:1.2}
+.sq .bar b{color:var(--acc)}
+/* минтруд */
+.mt .box{position:absolute;left:120px;right:120px;top:96px;bottom:110px;display:flex;flex-direction:column;gap:40px}
+.mt .pair{flex:1;display:grid;grid-template-columns:1fr 120px 1fr;gap:0;align-items:stretch}
+.mt .col{border-radius:18px;padding:40px 44px;display:flex;flex-direction:column;gap:18px}
+.mt .col.l{background:#e3dccd}
+.mt .col.r{background:var(--ink);color:var(--ivory)}
+.mt .col i{font-style:normal;font-size:22px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.mt .col.l i{color:#6b5f4a}
+.mt .col.r i{color:var(--sage)}
+.mt .col h3{font-size:50px}
+.mt .col p{font-size:30px;line-height:1.35}
+.mt .col.l p{color:#3b4446}
+.mt .eq{display:flex;align-items:center;justify-content:center;font-size:90px;font-weight:800;color:var(--acc)}
+.mt .tag{display:inline-block;font-size:26px;font-weight:700;padding:10px 18px;border-radius:10px;margin:4px 8px 0 0}
+.mt .col.r .tag{background:rgba(242,237,227,.1)}
+.mt .tag.hot{background:var(--acc)!important;color:var(--ink)}
+/* мастер смены */
+.master .side{position:absolute;right:0;top:0;bottom:0;width:720px}
+.master .side img{width:100%;height:100%;object-fit:cover;object-position:55% 50%}
+.master .side::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--ink) 0%,rgba(20,25,26,0) 18%)}
+.master .box{position:absolute;left:120px;top:90px;bottom:100px;width:1020px;display:flex;flex-direction:column;gap:26px}
+.master .steps{flex:1;display:grid;grid-template-rows:repeat(4,1fr);gap:16px}
+.master .s{display:grid;grid-template-columns:230px 1fr;align-items:center;gap:26px;border-top:1px solid var(--line);padding-top:12px}
+.master .s i{font-style:normal;font-size:26px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+.master .s span{font-size:32px;line-height:1.28}
+/* стена сценариев */
+.wall .box{position:absolute;left:100px;right:100px;top:80px;bottom:90px;display:flex;flex-direction:column;gap:30px}
+.wall .g12{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:16px}
+.wall .t{background:rgba(20,25,26,.72);border:1px solid rgba(242,237,227,.14);border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:10px;backdrop-filter:blur(2px)}
+.wall .t i{font-style:normal;font-size:20px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--acc)}
+.wall .t span{font-size:27px;line-height:1.28}
+.wall .proof{font-size:32px;line-height:1.25;border-left:4px solid var(--acc);padding-left:24px}
+.wall .proof b{color:var(--acc)}
+/* эффект для новичка */
+.nov .side{position:absolute;right:0;top:0;bottom:0;width:900px}
+.nov .side img{width:100%;height:100%;object-fit:cover;object-position:72% 50%}
+.nov .side::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--ink) 0%,rgba(20,25,26,0) 22%)}
+.nov .box{position:absolute;left:120px;top:96px;bottom:120px;width:860px;display:flex;flex-direction:column;justify-content:center;gap:34px}
+.nov .eq{display:flex;align-items:flex-start;gap:34px}
+.nov .eq .a,.nov .eq .b{width:auto}
+.nov .eq .a b,.nov .eq .b b{display:block;font-size:170px;line-height:.85;font-weight:800;letter-spacing:-.04em}
+.nov .eq .a b{color:var(--acc)}
+.nov .eq span{display:block;font-size:28px;line-height:1.25;color:rgba(242,237,227,.8);margin-top:14px;max-width:260px}
+.nov .eq .is{font-size:120px;font-weight:800;line-height:1.1;color:rgba(242,237,227,.6)}
+.nov .lead{max-width:860px;font-size:36px}
+.nov .alert{border-left:4px solid var(--acc);padding-left:26px;font-size:34px;line-height:1.3}
+.nov .alert b{color:var(--acc)}
+/* МФЦ */
+.mfc .side{position:absolute;right:0;top:0;bottom:0;width:760px}
+.mfc .side img{width:100%;height:100%;object-fit:cover}
+.mfc .side::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--ink) 0%,rgba(20,25,26,0) 20%)}
+.mfc .box{position:absolute;left:120px;top:96px;bottom:110px;width:980px;display:flex;flex-direction:column;justify-content:space-between}
+.mfc .two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.mfc .c{background:rgba(242,237,227,.06);border:1px solid var(--line);border-radius:16px;padding:30px}
+.mfc .c b{display:block;font-size:38px;line-height:1.1;margin-bottom:12px}
+.mfc .c span{font-size:27px;line-height:1.35;color:rgba(242,237,227,.85)}
+.mfc .flow{font-size:36px;line-height:1.3;font-weight:700}
+.mfc .flow b{color:var(--acc)}
+/* понедельник */
+.mon .box{position:absolute;left:120px;right:120px;top:96px;bottom:110px;display:flex;flex-direction:column;gap:40px}
+.mon .g4{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.mon .c{background:#fff;border-radius:18px;padding:36px 32px;display:flex;flex-direction:column;gap:18px;box-shadow:0 1px 0 rgba(20,25,26,.06)}
+.mon .c i{font-style:normal;font-size:76px;font-weight:800;color:var(--acc);line-height:1}
+.mon .c b{font-size:38px;line-height:1.1}
+.mon .c span{font-size:26px;line-height:1.35;color:#3b4446}
+.mon .c em{font-style:normal;margin-top:auto;min-height:190px;font-size:24px;line-height:1.3;color:#14191a;border-top:1px solid rgba(20,25,26,.14);padding-top:16px}
+.mon .c em b{font-size:44px;color:var(--acc);display:block;line-height:1}
+/* финал */
+.fin .box{position:absolute;left:120px;right:120px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;gap:56px}
+.fin q{quotes:none;font-size:84px;line-height:1.08;font-weight:800;letter-spacing:-.02em;max-width:1500px}
+.fin q b{color:var(--acc)}
+.fin .who{display:flex;gap:60px;align-items:flex-end;border-top:2px solid var(--acc);padding-top:34px;width:1300px}
+.fin .who div b{display:block;font-size:42px;font-weight:800}
+.fin .who div span{display:block;font-size:28px;color:rgba(242,237,227,.78);margin-top:6px}
+</style></head>
+<body>
+<div id="viewport"><div id="stage">
+<section class="slide" data-title="Обложка">
+<img class="bg" src="assets/web/cover-shop-1920.webp" alt="">
+<div class="shade-l"></div>
+<div class="cover"><div class="box">
+  <div class="kicker">Российский промышленный форум · Кадры для промышленности будущего</div>
+  <h1>Жёсткие, мягкие<br>и <span class="acc">ИИ‑мышление</span></h1>
+  <p class="lead">Третий навык кадров будущего</p>
+  <div class="who"><b>Альберт Валеев</b><span>эксперт по внедрению ИИ в бизнес, основатель школы ИИ neovida.ai</span></div>
+</div></div>
+<div class="notes-src"><p>Пауза, пока представляют. Первая фраза: «Коллеги сегодня рассказывают про нейросети, агентов, базу знаний и проверку ответов ИИ. Я расскажу, на чём всё это держится».</p></div>
+</section>
+<section class="slide about" data-title="Кто я">
+<div class="photo"><img data-src="assets/web/albert-900.webp" alt="Альберт Валеев"></div>
+<div class="box">
+  <div>
+    <div class="kicker">Кто я</div>
+    <h2 style="margin-top:18px">Альберт Валеев</h2>
+    <p class="role">Эксперт по внедрению ИИ в бизнес. Основатель школы ИИ neovida.ai, автор методики «ИИ‑мышление»</p>
+  </div>
+  <div class="nums">
+    <div class="num"><b>2000+</b><span>человек научились думать вместе с ИИ</span></div>
+    <div class="num"><b>20+</b><span>проектов внедрения ИИ в бизнес</span></div>
+  </div>
+  <div class="facts">
+    <div class="fact"><b>Компании</b>Корпоративное обучение AI Boost: учим сотрудников под их процессы</div>
+    <div class="fact"><b>Госсектор</b>Минцифры РБ, МФЦ РБ. Благодарность министра цифрового развития РБ</div>
+    <div class="fact"><b>Медиа</b>Автор и ведущий «ИИ. Новая реальность» на радио «Комсомольская правда»</div>
+    <div class="fact"><b>Лицензия</b>Образовательная лицензия Минпросвещения РБ</div>
+  </div>
+</div>
+<div class="notes-src"><p>Коротко, 30 секунд. Главное: мы учим не айтишников, а обычных сотрудников, руководителей и госслужащих. Две цифры: больше 2000 человек, больше 20 проектов внедрения.</p></div>
+</section>
+<section class="slide work" data-title="Как мы учим">
+<div class="tri">
+  <figure><img data-src="assets/web/mk-frame-31-700.webp" alt=""><figcaption>Мастер-класс в учебном классе neovida</figcaption></figure>
+  <figure><img data-src="assets/web/radio-IMG_4339-700.webp" alt=""><figcaption>Радио «Комсомольская правда», своя передача</figcaption></figure>
+  <figure><img data-src="assets/web/letter-700.webp" alt=""><figcaption>Благодарственное письмо министра цифрового развития РБ</figcaption></figure>
+</div>
+<div class="box">
+  <div>
+    <div class="kicker">Что мы делаем</div>
+    <h2 style="margin-top:18px">Учим сотрудников думать вместе с ИИ</h2>
+  </div>
+  <div class="rows">
+    <div class="row"><b>Производство и нефтегаз</b><span>Команды руководителей и специалистов, обучение под процессы компании</span></div>
+    <div class="row"><b>Госсектор</b><span>Руководство Минцифры РБ, руководители МФЦ РБ</span></div>
+    <div class="row"><b>Собственники и руководители</b><span>Курсы «ИИ. Новая реальность» и «AI Цех», очно в Уфе и онлайн</span></div>
+  </div>
+</div>
+<div class="notes-src"><p>Можно пропустить, если время поджимает. Смысл: у нас не теория, мы каждую неделю учим живых людей и видим, где они застревают.</p></div>
+</section>
+<section class="slide light vote" data-title="Вопрос залу">
+<div class="box">
+  <div>
+    <div class="kicker">Вопрос залу</div>
+    <p class="q" style="margin-top:22px">Кто за последний месяц хоть раз спрашивал нейросеть?</p>
+    <p class="q q2" data-step="1" style="margin-top:28px">А кого этому учила компания?</p>
+  </div>
+  <div class="stats" data-step="2">
+    <div class="st"><b>66%</b><span>знакомых с нейросетями пользуются ими в работе</span></div>
+    <div class="st"><b>17%</b><span>из них получили корпоративный доступ от компании. Остальные работают в чём придётся</span></div>
+    <div class="st hot"><b>35%</b><span>говорят, что работодатель их обучает</span></div>
+  </div>
+</div>
+<div class="foot"><span class="src">«МТС Линк», опрос 1 010 человек, II квартал 2026 (ComNews, 01.07.2026)</span></div>
+<div class="notes-src"><p>Поднять руку самому. Обычно поднимают почти все. Клик: «А кого учила компания?» Поднимают единицы. Клик: цифры. «Люди уже работают с ИИ. Просто сами, без правил и без обучения».</p></div>
+</section>
+<section class="slide qt" data-title="Госсовет по кадрам">
+<img class="bg" data-src="assets/web/plant-wide-1920.webp" alt="">
+<div class="shade-all"></div>
+<div class="box">
+  <div class="kicker">Госсовет по подготовке кадров · 25 декабря 2025</div>
+  <q>Ни в коем случае нельзя допустить ситуацию, когда у нас будут интеллектуальные элиты и люди-автоматы, которые ничего не умеют, <b>кроме как кнопки нажимать</b></q>
+  <div class="by">Владимир Путин</div>
+  <div class="next" data-step="1">«Нужно изменить всю парадигму подготовки кадров, всю»</div>
+</div>
+<div class="foot"><span class="src">Стенограмма заседания Государственного Совета, kremlin.ru/events/president/news/78860</span></div>
+<div class="notes-src"><p>Это заседание было ровно про нашу тему, подготовку кадров. Там же Президент сказал: на одного безработного с рабочей профессией почти 28 вакансий, нужны умение ставить задачи, инженерное мышление и способность критически оценивать то, что предложил ИИ.</p></div>
+</section>
+<section class="slide big" data-title="Цель государства">
+<div class="box">
+  <div>
+    <div class="kicker">Национальная стратегия развития ИИ</div>
+    <div class="n" style="margin-top:20px">80%<small>работников с навыками ИИ к 2030 году</small></div>
+    <div class="was"><b>5%</b>было в 2022 году</div>
+  </div>
+  <div class="side">
+    <div class="card" data-step="1"><b>Февраль 2026</b><p>Поручение Президента: внести ИИ‑компетенции в профстандарты и ФГОС, сделать с работодателями отраслевые программы</p></div>
+    <div class="punch" data-step="2">Вопрос «учить ли» закрыт.<br><span class="acc">Остался вопрос «чему учить».</span></div>
+  </div>
+</div>
+<div class="foot"><span class="src">Указ Президента № 124 от 15.02.2024 · Перечень поручений Пр-270ГС от 10.02.2026, п. 9а</span></div>
+<div class="notes-src"><p>До 2030 года четыре года. За это время 8 из 10 работников должны уметь работать с ИИ. И вот тут главная ловушка.</p></div>
+</section>
+<section class="slide hl" data-title="Ловушка кнопок">
+<img class="bg" data-src="assets/web/lathe-old-1920.webp" alt="">
+<div class="shade-l"></div>
+<div class="box">
+  <div class="kicker">Ловушка</div>
+  <div class="stack">
+    <div class="line">Оборудование в машиностроении работает в среднем <b>11 лет</b>. Людей учат на нём один раз</div>
+    <div class="line" data-step="1">Только за 2025 год в мире вышло <b>109 заметных нейросетей</b>. Две в неделю</div>
+  </div>
+  <div class="punch" data-step="2">Учить кнопкам нейросети, как учить работать на станке, который через месяц заменят</div>
+</div>
+<div class="foot"><span class="src">ИСИЭЗ НИУ ВШЭ, «Машиностроение: ключевые тренды 2024 года», 2025 · Epoch AI, база Notable AI Models, 2025 год</span></div>
+<div class="notes-src"><p>Флагман ChatGPT с августа 2025 по сентябрь 2026 сменился семь раз. Большинство курсов по ИИ учат кнопкам: куда нажать в конкретной программе. Через три месяца программа другая, кнопки другие, обучение надо повторять.</p></div>
+</section>
+<section class="slide hl" data-title="Урок электромотора">
+<img class="bg" data-src="assets/web/hist-beltshop-1920.webp" alt="Цех с ременными трансмиссиями, начало XX века">
+<div class="shade-l" style="background:linear-gradient(90deg,rgba(20,25,26,.96) 0%,rgba(20,25,26,.9) 45%,rgba(20,25,26,.35) 75%,rgba(20,25,26,.1) 100%)"></div>
+<div class="box">
+  <div class="kicker">Это уже было с заводами</div>
+  <h2>Мотор поставили.<br>Рост не пришёл</h2>
+  <div class="stack">
+    <div class="line">1900-е: заводы ставят электромотор вместо паровой машины. Валы, ремни и работа людей прежние</div>
+    <div class="line" data-step="1">Рост пришёл <b>только в 1920-х</b>: мотор у каждого станка, новый цех и обученный рабочий</div>
+  </div>
+  <div class="punch" data-step="2">Сегодня ИИ ставят вместо поисковика и ждут чуда</div>
+</div>
+<div class="foot"><span class="src">Paul A. David, «The Dynamo and the Computer», AER, 1990 · Tim Harford, Financial Times, 2017 · фото: цех с трансмиссиями, около 1918, NARA</span></div>
+<div class="notes-src"><p>Почти 40 лет от первой электростанции до роста. Эффект дал не мотор, а перестройка цеха и обученный рабочий. История для заводского зала. Технологию купили, а мышление цеха осталось паровым. С ИИ то же самое: дали сотрудникам нейросеть, а думают они по-старому.</p></div>
+</section>
+<section class="slide skills" data-title="Три класса навыков">
+<div class="top">Навыки кадров будущего</div>
+<div class="resume" data-step="2"><q>30 лет назад в резюме писали «уверенный пользователь ПК». Сегодня требуются уверенные пользователи ИИ</q><span>Александр Ведяхин, первый зампред Сбера, «Ведомости», 23.07.2025</span></div>
+<div class="cols">
+  <div class="col"><img data-src="assets/web/skill-hard-1400.webp" alt=""><div class="lab"><i>01</i><b>Жёсткие</b><span>Что я умею: станок, чертёж, ГОСТ, технология</span></div></div>
+  <div class="col"><img class="z" data-src="assets/web/skill-soft-1400.webp" alt=""><div class="lab"><i>02</i><b>Мягкие</b><span>Как я работаю с людьми: договориться, объяснить, вести бригаду</span></div></div>
+  <div class="col ai" data-step="1"><img class="z" data-src="assets/web/skill-ai-1400.webp" alt=""><div class="lab"><i>03</i><b>ИИ‑мышление</b><span>Как я думаю вместе с ИИ: где он поможет, что спросить, как проверить</span></div></div>
+</div>
+<div class="notes-src"><p>Про жёсткие и мягкие навыки все знают. Клик: появился третий класс. Это не знание программ. Это умение думать вместе с ИИ.</p></div>
+</section>
+<section class="slide sq" data-title="ИИ-мышление: четыре шага">
+<div class="side"><img data-src="assets/web/bg-thinking-1100.webp" alt=""></div>
+<div class="box">
+  <div><div class="kicker">ИИ‑мышление</div><h2 style="margin-top:14px">Четыре шага, в этом порядке</h2></div>
+  <div class="grid4">
+    <div class="c" data-step="1"><i>01</i><b>Принципы</b><span>Как устроен ИИ и где он ошибается</span><em>Предсказывает слова, а не истину. Знает только то, что вы ему дали</em></div>
+    <div class="c" data-step="2"><i>02</i><b>Смыслы</b><span>Где в моей работе он даёт выгоду</span><em>Рапорт, письмо поставщику, разбор брака, инструктаж</em></div>
+    <div class="c" data-step="3"><i>03</i><b>Сценарии</b><span>Что спросить и с чего начать</span><em>Надиктовал голосом, получил черновик, проверил, поправил</em></div>
+    <div class="c tool" data-step="4"><i>04</i><b>Инструменты</b><span>Чем сделать сегодня</span><em>GigaChat, Алиса, корпоративный ИИ. Завтра другой</em></div>
+  </div>
+  <div class="bar" data-step="5">Инструменты меняются. <b>Первые три шага остаются.</b></div>
+</div>
+<div class="notes-src"><p>Главный слайд. Большинство начинает с четвёртого шага: какую нейросеть купить. Мы начинаем с первого. Тогда любой новый инструмент человек осваивает сам за вечер.</p></div>
+</section>
+<section class="slide light mt" data-title="Минтруд думает так же">
+<div class="box">
+  <div><div class="kicker">Минтруд, июнь 2026</div><h2 style="margin-top:14px">Профстандарт из двух частей</h2></div>
+  <div class="pair">
+    <div class="col l"><i>Предложение Минтруда</i><h3>Фундаментальная часть</h3><p>То, что не устаревает</p>
+      <div style="margin-top:auto"><h3>Технологическая часть</h3><p>Быстро обновляется вместе с работодателями</p></div></div>
+    <div class="eq">=</div>
+    <div class="col r"><i>ИИ‑мышление</i><h3>Принципы · смыслы · сценарии</h3><p>Учим один раз, работает с любой нейросетью</p>
+      <div style="margin-top:auto"><h3>Инструменты</h3><p>Обновляем каждый квартал</p></div></div>
+  </div>
+</div>
+<div class="foot"><span class="src">Министр труда и соцзащиты А. Котяков, «Ведомости», 05.06.2026</span></div>
+<div class="notes-src"><p>Это мост к теме секции «ИИ‑компетенции». Минтруд сам пришёл к той же логике: фундамент плюс быстро обновляемая часть. Наш квадрат и есть такой фундамент.</p></div>
+</section>
+<section class="slide master" data-title="Мастер смены">
+<div class="side"><img data-src="assets/web/master-voice-1100.webp" alt=""></div>
+<div class="box">
+  <div><div class="kicker">Один человек, четыре шага</div><h2 style="margin-top:14px">Мастер смены</h2></div>
+  <div class="steps">
+    <div class="s" data-step="1"><i>Принцип</i><span>ИИ не знает мой цех, пока я ему не расскажу. Отвечаю за результат я</span></div>
+    <div class="s" data-step="2"><i>Смысл</i><span>Конец смены уходит на рапорт и передачу дел, а это мой час</span></div>
+    <div class="s" data-step="3"><i>Сценарий</i><span>Надиктовал голосом итоги смены: получил рапорт, список проблем и задачи следующей смене</span></div>
+    <div class="s" data-step="4"><i>Инструмент</i><span>Любая нейросеть в телефоне, которую разрешила компания</span></div>
+  </div>
+</div>
+<div class="notes-src"><p>Можно добавить: мастер Toyota Мицуру Каваи (2014): «Чтобы быть хозяином машины, надо уметь её научить». Показать на одном человеке. Мастер не изучал программу. Он понял принцип, нашёл свою выгоду и знает, что спросить. Поменяется нейросеть, сценарий останется.</p></div>
+</section>
+<section class="slide wall" data-title="12 сценариев для завода">
+<img class="bg" data-src="assets/web/plant-wide-1920.webp" alt="">
+<div class="shade-all"></div>
+<div class="box">
+  <div><div class="kicker">От мастера до директора</div><h2 style="margin-top:12px">Двенадцать сценариев для завода</h2></div>
+  <div class="g12">
+    <div class="t"><i>Мастер</i><span>Голосом итоги смены: рапорт и задачи следующей смене</span></div>
+    <div class="t"><i>Новичок</i><span>Спросить наставника-ИИ по инструкции, не отрывая мастера</span></div>
+    <div class="t"><i>Наставник</i><span>Свой опыт в памятку и тест для новичка</span></div>
+    <div class="t"><i>Технолог</i><span>Техкарту переписать простым языком для рабочего</span></div>
+    <div class="t"><i>Технолог</i><span>Сверить техпроцесс с ТУ и найти расхождения</span></div>
+    <div class="t"><i>ОТК</i><span>Разбор брака «пять почему» и план мер</span></div>
+    <div class="t"><i>Снабженец</i><span>Пять КП поставщиков в одну таблицу: цена, срок, оплата, риски</span></div>
+    <div class="t"><i>Снабженец</i><span>Претензия поставщику за срыв срока: вежливо и твёрдо</span></div>
+    <div class="t"><i>Охрана труда</i><span>Инструктаж понятным языком и десять вопросов для проверки</span></div>
+    <div class="t"><i>HR</i><span>План адаптации новичка на 30 дней по профессии</span></div>
+    <div class="t"><i>Руководитель</i><span>Запись совещания: протокол, задачи, сроки, ответственные</span></div>
+    <div class="t"><i>Руководитель</i><span>Подготовка к переговорам: аргументы и возражения другой стороны</span></div>
+  </div>
+  <div class="proof" data-step="1"><b>Северсталь, 2025:</b> люди из закупок, HR и продаж за три недели собрали больше 200 прототипов ИИ‑помощников</div>
+</div>
+<div class="notes-src"><p>Источник про Северсталь: конкурс «Лидеры металлургИИ», итоги 23.12.2025, 429 заявок (metalinfo.ru, normacs.info). Не читать все. Выбрать два-три под зал. Смысл: ИИ‑мышление нужно каждому, не только айтишникам. И у каждого свои сценарии, которые он находит сам, когда понял первые три шага.</p></div>
+</section>
+<section class="slide nov" data-title="Опыт лучших новичкам">
+<div class="side"><img data-src="assets/web/mentor-novice-1400.webp" alt=""></div>
+<div class="box">
+  <div class="kicker">Почему это кадровый вопрос</div>
+  <div class="eq">
+    <div class="a"><b>2</b><span>месяца с ИИ‑помощником</span></div>
+    <div class="is">=</div>
+    <div class="b"><b>6+</b><span>месяцев стажа без него</span></div>
+  </div>
+  <p class="lead">Новичок с ИИ‑помощником работает как опытный сотрудник. ИИ передаёт приёмы лучших тем, кто только пришёл</p>
+  <div class="alert" data-step="1"><b>11,5 млн</b> человек уйдут на пенсию до 2032 года. Опыт уходит вместе с ними</div>
+</div>
+<div class="foot"><span class="src">Brynjolfsson, Li, Raymond, «Generative AI at Work», QJE 2025, 5 172 сотрудника · Госсовет 25.12.2025</span></div>
+<div class="notes-src"><p>Исследование Стэнфорда и MIT: служба поддержки, но механизм тот же, что в цеху. Помощник сокращает путь новичка втрое. А опыт тех, кто уходит на пенсию, можно сохранить, если наставники умеют думать вместе с ИИ.</p></div>
+</section>
+<section class="slide mfc" data-title="Как мы это делаем: МФЦ">
+<div class="side"><img data-src="assets/web/bg-corporate-1200.webp" alt=""></div>
+<div class="box">
+  <div><div class="kicker">Как мы это делаем сейчас</div><h2 style="margin-top:14px">МФЦ Республики Башкортостан</h2></div>
+  <div class="two">
+    <div class="c"><b>ИИ‑наставник</b><span>Отвечает сотрудникам по регламентам самых сложных услуг</span></div>
+    <div class="c"><b>Тренажёр для новичков</b><span>Новичок тренируется на 15 самых сложных услугах до работы с людьми</span></div>
+  </div>
+  <div class="flow">Для завода то же самое: <b>инструкции цеха → наставник → тренажёр</b></div>
+</div>
+<div class="notes-src"><p>Пилот согласован с МФЦ РБ, с новичками стартуем в декабре. Не обещать цифры результата, его ещё нет.</p></div>
+</section>
+<section class="slide light mon" data-title="Что сделать в понедельник">
+<div class="box">
+  <div><div class="kicker">Для директора и HR</div><h2 style="margin-top:14px">Что сделать в понедельник</h2></div>
+  <div class="g4">
+    <div class="c"><i>1</i><b>Начать с руководителей</b><span>Сотрудники смотрят, пользуется ли ИИ начальник</span><em><b>15% → 55%</b>позитивно настроенных к ИИ, когда руководитель поддерживает</em></div>
+    <div class="c"><i>2</i><b>Стратегия важнее инструментов</b><span>Сначала зачем и где, потом какую нейросеть купить</span><em><b>+25 против +5</b>п. п. к эффекту: ясная стратегия против лучших инструментов без неё</em></div>
+    <div class="c"><i>3</i><b>Каждый находит три свои задачи</b><span>Смыслы, а не кнопки. Учить практикой от 5 часов, а не лекцией</span><em><b>66%</b>не получают указаний, что делать со временем, которое сэкономил ИИ</em></div>
+    <div class="c"><i>4</i><b>Дать безопасный инструмент</b><span>Иначе люди уйдут в бесплатные сервисы, которые вы не контролируете</span><em><b>17%</b>пользователей получили корпоративный доступ к ИИ</em></div>
+  </div>
+</div>
+<div class="foot"><span class="src">BCG, AI at Work 2025 и 2026 (11 749 человек, 14 рынков) · «МТС Линк», II квартал 2026</span></div>
+<div class="notes-src"><p>Практический вывод для зала. Четыре шага, которые не требуют бюджета на разработку.</p></div>
+</section>
+<section class="slide fin" data-title="Финал">
+<img class="bg" data-src="assets/web/cover-shop-1920.webp" alt="">
+<div class="shade-all"></div>
+<div class="box">
+  <q>Нейросети будут меняться каждый квартал. <b>Человек, который умеет думать вместе с ИИ, не устареет ни с одной из них</b></q>
+  <div class="who"><div><b>Альберт Валеев</b><span>основатель школы ИИ neovida.ai</span></div><div><b>@neovidaAi</b><span>Telegram</span></div></div>
+</div>
+<div class="notes-src"><p>Финальная фраза медленно. Спасибо.</p></div>
+</section>
+</div></div>
+<div id="hud"></div>
+<div id="hint">→ пробел, кликер = дальше · ← назад · F на весь экран · G все слайды · N заметки</div>
+<div id="grid"><button class="closebtn" type="button">Закрыть</button><div class="gwrap"></div></div>
+<div id="notes"><button class="closebtn" type="button">Закрыть</button><div class="nwrap"></div></div>
+<script>
+(function(){
+  const stage=document.getElementById('stage');
+  const slides=[...stage.querySelectorAll(':scope > .slide')];
+  const hud=document.getElementById('hud'), hint=document.getElementById('hint');
+  const grid=document.getElementById('grid'), notes=document.getElementById('notes');
+  const isPhone=()=>matchMedia('(orientation:portrait) and (max-width:900px)').matches;
+  let cur=0, step=0;
+  function steps(i){return [...slides[i].querySelectorAll('[data-step]')].sort((a,b)=>(+a.dataset.step)-(+b.dataset.step))}
+  function maxStep(i){const s=steps(i);return s.length?Math.max(...s.map(e=>+e.dataset.step)):0}
+  function fit(){
+    if(isPhone()){layoutPhone();return}
+    unPhone();
+    const k=Math.min(innerWidth/1920,innerHeight/1080);
+    stage.style.transform='scale('+k+')';
+  }
+  // лента для телефона
+  let phoneOn=false;
+  function layoutPhone(){
+    const w=document.documentElement.clientWidth, k=w/1920;
+    slides.forEach(s=>{
+      if(!s.parentElement.classList.contains('slot')){const slot=document.createElement('div');slot.className='slot';s.before(slot);slot.appendChild(s)}
+      s.style.transform='scale('+k+')';
+      s.parentElement.style.height=(1080*k)+'px';
+      s.querySelectorAll('[data-step]').forEach(e=>e.classList.add('shown'));
+      s.querySelectorAll('img[data-src]').forEach(load);
+    });
+    phoneOn=true;
+  }
+  function unPhone(){
+    if(!phoneOn)return;
+    slides.forEach(s=>{const slot=s.parentElement; if(slot.classList.contains('slot')){slot.before(s);slot.remove()} s.style.transform=''});
+    phoneOn=false; show(cur,step,true);
+  }
+  function load(img){if(img.dataset.src){img.src=img.dataset.src;img.removeAttribute('data-src')}}
+  function preload(i){[i,i+1,i+2,i-1].forEach(j=>{if(slides[j])slides[j].querySelectorAll('img[data-src]').forEach(load)})}
+  function show(i,s,silent){
+    i=Math.max(0,Math.min(slides.length-1,i));
+    slides.forEach((el,j)=>el.classList.toggle('on',j===i));
+    cur=i; step=s;
+    steps(i).forEach(e=>e.classList.toggle('shown',+e.dataset.step<=step));
+    preload(i);
+    if(!silent) history.replaceState(null,'','#'+(i+1));
+    hud.textContent=(i+1)+' / '+slides.length;
+    slides[i].querySelectorAll('video').forEach(v=>{v.currentTime=0;v.play&&v.play().catch(()=>{})});
+    document.title=(slides[i].dataset.title||'')+' · ИИ-мышление';
+    if(notes.classList.contains('open')) fillNotes();
+  }
+  function next(){ if(step<maxStep(cur)) show(cur,step+1); else if(cur<slides.length-1) show(cur+1,0); }
+  function prev(){ if(step>0) show(cur,step-1); else if(cur>0) show(cur-1,maxStep(cur-1)); }
+  function flash(){hud.classList.add('vis');clearTimeout(flash.t);flash.t=setTimeout(()=>hud.classList.remove('vis'),1800)}
+  function full(){ if(!document.fullscreenElement){(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen||function(){}).call(document.documentElement)} else {(document.exitFullscreen||document.webkitExitFullscreen).call(document)} }
+  function openGrid(){
+    if(!grid.dataset.built){
+      const wrap=grid.querySelector('.gwrap');
+      slides.forEach((s,i)=>{
+        const b=document.createElement('button'); b.type='button';
+        const t=document.createElement('div'); t.className='gthumb';
+        const c=s.cloneNode(true); c.classList.add('on'); c.querySelectorAll('img[data-src]').forEach(load); c.querySelectorAll('video').forEach(v=>v.remove());
+        t.appendChild(c); b.appendChild(t);
+        const cap=document.createElement('div'); cap.className='gcap'; cap.textContent=(i+1)+'. '+(s.dataset.title||''); b.appendChild(cap);
+        b.addEventListener('click',()=>{closeAll();show(i,0)});
+        wrap.appendChild(b);
+      });
+      grid.dataset.built='1';
+    }
+    grid.classList.add('open'); scaleThumbs();
+  }
+  function scaleThumbs(){grid.querySelectorAll('.gthumb').forEach(t=>{const k=t.clientWidth/1920;t.firstChild.style.transform='scale('+k+')'})}
+  function fillNotes(){
+    const n=slides[cur].querySelector('.notes-src');
+    notes.querySelector('.nwrap').innerHTML='<h4>Слайд '+(cur+1)+' · '+(slides[cur].dataset.title||'')+'</h4>'+(n?n.innerHTML:'<p>Заметок нет.</p>');
+  }
+  function openNotes(){fillNotes();notes.classList.add('open')}
+  function closeAll(){grid.classList.remove('open');notes.classList.remove('open')}
+  addEventListener('keydown',e=>{
+    if(e.metaKey||e.ctrlKey||e.altKey)return;
+    const k=e.key;
+    if(grid.classList.contains('open')||notes.classList.contains('open')){ if(k==='Escape'||k==='g'||k==='G'&&grid.classList.contains('open')||((k==='n'||k==='N')&&notes.classList.contains('open'))){closeAll();e.preventDefault()} return; }
+    if(['ArrowRight','ArrowDown','PageDown',' ','Enter'].includes(k)){next();e.preventDefault()}
+    else if(['ArrowLeft','ArrowUp','PageUp','Backspace'].includes(k)){prev();e.preventDefault()}
+    else if(k==='Home'){show(0,0)} else if(k==='End'){show(slides.length-1,maxStep(slides.length-1))}
+    else if(k==='f'||k==='F'||k==='а'||k==='А'){full()}
+    else if(k==='g'||k==='G'||k==='п'||k==='П'){openGrid()}
+    else if(k==='n'||k==='N'||k==='т'||k==='Т'){openNotes()}
+    else return;
+    flash();
+  });
+  document.getElementById('viewport').addEventListener('click',e=>{
+    if(isPhone())return;
+    if(e.target.closest('a,button,video'))return;
+    if(e.clientX<innerWidth*0.3) prev(); else next(); flash();
+  });
+  document.getElementById('viewport').addEventListener('dblclick',e=>{if(!isPhone()){full();}});
+  let tx=null,ty=null;
+  addEventListener('touchstart',e=>{if(isPhone())return;tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+  addEventListener('touchend',e=>{if(isPhone()||tx===null)return;const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)){dx<0?next():prev()}tx=null},{passive:true});
+  let mt=null;
+  addEventListener('mousemove',()=>{if(isPhone())return;hint.classList.add('vis');hud.classList.add('vis');clearTimeout(mt);mt=setTimeout(()=>{hint.classList.remove('vis');hud.classList.remove('vis')},2200)});
+  document.querySelectorAll('.closebtn').forEach(b=>b.addEventListener('click',closeAll));
+  addEventListener('resize',()=>{fit();if(grid.classList.contains('open'))scaleThumbs()});
+  addEventListener('hashchange',()=>{const n=parseInt(location.hash.slice(1));if(n&&n-1!==cur)show(n-1,0,true)});
+  const h=parseInt(location.hash.slice(1)); show(h?h-1:0,0,true); fit();
+  window.__deck={next,prev,show,get cur(){return cur},get step(){return step},count:slides.length,maxStep};
+})();
+</script>
+</body></html>
