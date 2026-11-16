@@ -90,3 +90,34 @@ document.querySelectorAll('.sch').forEach(box => {
   }));
   paint();
 });
+
+// ---------- урок 2: «Агент = модель + харнес». Шаг = число показанных .rg-f (механизм .frag деки), кнопки и кольца прыгают на шаг.
+document.querySelectorAll('.rgx').forEach(box => {
+  const slide = box.closest('.slide');
+  const D = JSON.parse(box.querySelector('.rg-data').textContent);
+  const fs = [...box.querySelectorAll('.rg-f')];
+  const P = box.querySelector('.rg-panel');
+  const last = D.length - 1;
+  const mk = (tag, cls, txt) => { const x = document.createElement(tag); if (cls) x.className = cls; if (txt != null) x.textContent = txt; return x; };
+  function state() { return slide.classList.contains('stepping') ? fs.filter(f => f.classList.contains('shown')).length : last; }
+  function paint() {
+    const s = state(), vis = s >= 6 ? 5 : s, d = D[s];
+    box.classList.toggle('m0', s === 0); box.classList.toggle('skills', s === 6); box.classList.toggle('all', s === last);
+    box.querySelectorAll('.rg').forEach(g => { const r = +g.dataset.r; g.classList.toggle('vis', r <= vis); g.classList.toggle('foc', r === s); });
+    box.querySelectorAll('.rg-b').forEach(b => { const on = +b.dataset.s === s; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+    P.style.setProperty('--rc', d.c); P.replaceChildren(mk('p', 'rg-tag', d.tag), mk('h3', null, d.title));
+    d.rows.forEach(([a, b]) => { const r = mk('div', 'rg-row'); r.append(mk('b', null, a), mk('p', null, b)); P.append(r); });
+    if (d.ex.length) { const r = mk('div', 'rg-row'), ul = mk('ul', 'rg-ex'); r.append(mk('b', null, s === last ? 'Пять колец' : 'У вас')); d.ex.forEach(x => ul.append(mk('li', null, x))); r.append(ul); P.append(r); }
+    P.append(mk('p', 'rg-say', d.say));
+  }
+  function jump(k) {
+    slide.classList.add('stepping'); fs.forEach((f, i) => f.classList.toggle('shown', i < k));
+    byId('next').disabled = current === slides.length - 1 && !pending(); paint();
+  }
+  const mo = new MutationObserver(paint);
+  fs.forEach(f => mo.observe(f, { attributes: true, attributeFilter: ['class'] }));
+  mo.observe(slide, { attributes: true, attributeFilter: ['class'] });
+  box.querySelectorAll('.rg-b').forEach(b => b.addEventListener('click', () => { jump(+b.dataset.s); b.blur(); }));
+  box.querySelectorAll('.rg').forEach(g => g.addEventListener('click', () => { if (g.classList.contains('vis')) jump(+g.dataset.r); }));
+  paint();
+});
