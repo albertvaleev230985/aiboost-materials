@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Калькулятор КП на вентиляцию · neovida</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="fonts.css">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3eee4;color:#272921;font:16px/1.5 Inter,system-ui,sans-serif}
+main{max-width:980px;margin:auto;padding:clamp(22px,5vw,64px)}header{border-bottom:1px solid #b6ae9f;padding-bottom:16px}
+h1{font-size:clamp(35px,6vw,62px);line-height:1.02;letter-spacing:-.035em;margin:26px 0 8px}
+p{margin:8px 0 18px;color:#514d40}.preview{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:26px 0}
+form,.quote{padding:24px;border-radius:12px}form{background:#fffdf8;border:1px solid #b6ae9f}
+label{display:block;font-weight:650;margin:0 0 16px}input{display:block;width:100%;margin-top:6px;padding:8px 12px;font:inherit;color:#272921;background:#fffdf8;border:1px solid #7a7668;border-radius:6px}
+.quote{background:#24342b;color:#f7f0e4}dl{margin:8px 0 16px;display:grid;grid-template-columns:1fr auto;gap:8px}
+dd{margin:0;text-align:right}output{display:block;border-top:1px solid #9d9c89;padding:12px 0;font-size:clamp(25px,4vw,36px);font-weight:750}
+button{font:inherit;font-weight:650;color:#24342b;background:#f5e4d1;border:1px solid #f5e4d1;padding:8px 14px;border-radius:6px;cursor:pointer}
+button:disabled{opacity:.55;cursor:default}a{color:#244e3b;font-weight:650}#feedback{color:#f7f0e4}#error{color:#8b2e1a}
+textarea{width:100%;margin-top:12px;min-height:110px;font:inherit}
+@media(max-width:630px){.preview{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<header><strong>neovida · Нейропросвещение</strong></header>
+<h1>Калькулятор КП<br>на вентиляцию</h1>
+<p>Демо урока 5 · учебные тарифы. Результат пересчитывается при изменении полей.</p>
+<div class="preview">
+<form>
+  <label for="length">Длина трассы, м
+    <input id="length" type="number" inputmode="decimal" min="0.01" step="any" required value="12">
+  </label>
+  <label for="grilles">Количество решёток
+    <input id="grilles" type="number" inputmode="numeric" min="0" step="1" required value="4">
+  </label>
+  <p id="error" role="status" hidden>Укажите длину больше нуля и целое количество решёток от нуля.</p>
+</form>
+<section class="quote" aria-label="Предварительный расчёт">
+  <dl><dt>Трасса · 1 800 ₽/м</dt><dd id="route">21 600 ₽</dd>
+  <dt>Решётки · 1 200 ₽/шт.</dt><dd id="vents">4 800 ₽</dd>
+  <dt>Пусконаладка</dt><dd>9 000 ₽</dd></dl>
+  <output id="total">35 400 ₽</output>
+  <button id="copy" type="button">Копировать расчёт</button>
+  <textarea id="manual" aria-label="Текст расчёта" readonly hidden></textarea>
+  <span id="feedback" role="status"></span>
+</section>
+</div>
+<a href="handout.html#demo-project">Промпт, который собирает этот инструмент</a>
+</main>
+<script>
+const get = id => document.getElementById(id);
+const length = get('length'), grilles = get('grilles');
+const route = get('route'), vents = get('vents'), total = get('total'), copy = get('copy');
+const feedback = get('feedback'), manual = get('manual'), error = get('error');
+const rub = n => new Intl.NumberFormat('ru-RU', {
+  style: 'currency', currency: 'RUB', maximumFractionDigits: 2, minimumFractionDigits: 0
+}).format(n);
+let text = '';
+
+function calculate() {
+  const meters = length.valueAsNumber;
+  const units = grilles.valueAsNumber;
+  const metersPrice = Math.round(meters * 1800 * 100) / 100;
+  const unitsPrice = units * 1200;
+  const sum = metersPrice + unitsPrice + 9000;
+  const valid = length.validity.valid && grilles.validity.valid && Number.isFinite(sum);
+  error.hidden = valid;
+  copy.disabled = !valid;
+  feedback.textContent = '';
+  manual.hidden = true;
+  route.textContent = valid ? rub(metersPrice) : '…';
+  vents.textContent = valid ? rub(unitsPrice) : '…';
+  total.textContent = valid ? rub(sum) : 'Нет расчёта';
+  text = valid
+    ? `Предварительный расчёт КП\nТрасса: ${meters} м · ${rub(metersPrice)}\nРешётки: ${units} шт. · ${rub(unitsPrice)}\nПусконаладка: ${rub(9000)}\nИтого: ${rub(sum)}`
+    : '';
+}
+
+copy.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(text);
+    feedback.textContent = 'Скопировано';
+  } catch {
+    manual.value = text;
+    manual.hidden = false;
+    manual.select();
+    feedback.textContent = 'Выделено для копирования';
+  }
+});
+length.form.addEventListener('input', calculate);
+length.form.addEventListener('submit', event => event.preventDefault());
+calculate();
+</script>
+</body>
+</html>
