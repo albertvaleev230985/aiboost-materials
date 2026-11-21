@@ -1,0 +1,361 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Домашка 5 · Собираем Codex · очный поток 7</title><link rel="icon" href="data:,"><style>:root{--bg:#111615;--card:#1a2120;--card2:#212a28;--line:#2e3a37;--ink:#eee9e1;--muted:#a4afab;--copper:#e2a071;--green:#6fcf97;--barh:74px;--c:#E7E1D6}
+*{box-sizing:border-box}
+html{scroll-padding-top:calc(var(--barh) + 10px)}
+html.lib-open,html.lib-open body{overflow:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-text-size-adjust:100%}
+svg{width:18px;height:18px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+a{color:var(--copper)}
+.wrap{max-width:880px;margin:0 auto;padding:22px 16px 90px}
+
+/* ---------- липкая панель-маршрут */
+.bar{position:sticky;top:0;z-index:30;background:rgba(17,22,21,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:3px solid var(--c);transition:border-color .25s}
+.bar-in{max-width:880px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:8px 16px 4px}
+.bar-brand{font-weight:800;color:var(--ink);text-decoration:none;font-size:15px;letter-spacing:.01em}
+.route{display:flex;gap:5px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.route::-webkit-scrollbar{display:none}
+.rt{flex:0 0 auto;display:flex;align-items:center;gap:6px;height:34px;padding:0 9px 0 4px;border-radius:9px;text-decoration:none;color:var(--ink);background:var(--cbg);border:1.5px solid var(--cln);font-size:13.5px;font-weight:700;transition:all .2s}
+.rt b{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:var(--c);color:#14110d;font-size:15px;font-weight:900}
+.rt span{display:none}
+.rt.on{background:var(--c);border-color:var(--c);color:#14110d}
+.rt.on b{background:#14110d;color:var(--c)}
+.rt.on span{display:inline}
+.rt.done{opacity:.55}
+.bar-lib{flex:0 0 auto;display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:9px;border:1.5px solid #e7e1d6;background:#e7e1d6;color:#14110d;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+.bar-now{max-width:880px;margin:0 auto;padding:0 16px 7px;display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--c);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-now i{width:10px;height:10px;border-radius:50%;background:var(--c);flex:0 0 auto}
+
+/* ---------- шапка */
+.brand{font-size:14px;color:var(--muted);letter-spacing:.02em;scroll-margin-top:200px}.brand b{color:var(--ink)}
+h1{font-size:40px;line-height:1.08;margin:10px 0 8px;letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:15px;margin:0 0 20px}.sub b{color:var(--ink)}
+.box{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--copper);border-radius:10px;padding:14px 16px;margin:14px 0;font-size:15.5px}
+.legend,.routebox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:14px 0}
+.lg-h{font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.lg{display:grid;grid-template-columns:132px 1fr;gap:12px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.lg:first-of-type{border-top:0}
+.lg p{margin:0;font-size:15px;color:#d6d0c7}.lg p b{color:var(--ink)}
+.lg-num{width:40px;height:40px;border-radius:10px;background:var(--c);color:#14110d;display:grid;place-items:center;font-weight:900;font-size:22px}
+.lg-watch,.lg-copy,.lg-prac,.lg-lib,.pr-tag,.watch-tag,.prac-tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:7px;width:max-content}
+.lg-watch,.watch-tag{background:#2b3332;color:#cfd8d5;border:1.5px dashed #6f7d79}
+.lg-copy,.pr-tag{background:#e7e1d6;color:#14110d}
+.lg-prac{background:#8BD17C;color:#14110d}
+.lg-lib{background:transparent;color:var(--ink);border:1.5px solid #e7e1d6}
+.rlist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.rlist a{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;text-decoration:none;color:var(--ink);background:var(--cbg);border:1px solid var(--cln);border-left:5px solid var(--c);border-radius:10px;padding:7px 10px;font-size:15px}
+.rlist i{font-style:normal;width:30px;height:30px;border-radius:8px;background:var(--c);color:#14110d;display:grid;place-items:center;font-weight:900}
+.rlist em{font-style:normal;color:var(--c);font-size:13px;font-weight:700;white-space:nowrap}
+
+/* ---------- блок урока */
+.st{margin:54px 0 0;padding:0 0 4px 16px;border-left:6px solid var(--c);scroll-margin-top:calc(var(--barh) + 8px)}
+.st-band{display:flex;gap:14px;align-items:center;background:var(--cbg);border:1px solid var(--cln);border-radius:12px;padding:12px 14px;margin-left:-4px}
+.num{flex:0 0 58px;height:58px;border-radius:13px;background:var(--c);color:#14110d;display:grid;place-items:center;font-size:32px;font-weight:900}
+.st h2{margin:2px 0 0;font-size:25px;line-height:1.2;letter-spacing:-.01em}
+.meta{font-size:12.5px;color:var(--c);font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+.intro{color:#d6d0c7;margin:14px 0 10px}
+.subh{margin:28px 0 6px;font-size:18px;color:var(--c);letter-spacing:.01em}
+.tx{margin:12px 0;color:#d6d0c7}.tx b{color:var(--ink)}
+.tip{background:#1d2624;border:1px dashed #3d4b47;border-radius:10px;padding:12px 14px;margin:12px 0;font-size:15.5px;color:#d6d0c7}.tip b{color:var(--ink)}
+.go{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#23201c;border:1px solid #5a4331;color:var(--copper);text-decoration:none;font-weight:700;padding:13px 16px;border-radius:10px;margin:12px 0;word-break:break-word}
+.fl{list-style:none;counter-reset:f;padding:0;margin:14px 0}
+.fl li{counter-increment:f;position:relative;padding:10px 12px 10px 52px;background:var(--card2);border-radius:10px;margin:8px 0}
+.fl li:before{content:counter(f);position:absolute;left:12px;top:10px;width:28px;height:28px;border-radius:50%;background:var(--c);color:#14110d;font-weight:800;display:grid;place-items:center;font-size:14px}
+.fl b{display:block}.fl span{color:#cfc9bf;font-size:15.5px}
+.ls{margin:10px 0;padding-left:20px}.ls li{margin:4px 0}
+
+/* ---------- КОПИРУЕМ */
+.pr{background:var(--card);border:1.5px solid #4a5551;border-radius:12px;margin:16px 0;overflow:hidden;scroll-margin-top:calc(var(--barh) + 12px)}
+.pr-head{display:flex;align-items:center;gap:10px;padding:10px 10px 0 12px;flex-wrap:wrap}
+.pr-label{flex:1;min-width:140px;font-size:13px;font-weight:700;color:var(--muted)}
+.pr-title{padding:6px 14px 0;font-weight:700;font-size:16px}
+.pr pre,.bot pre,.peek{white-space:pre-wrap;word-wrap:break-word;margin:0;padding:10px 14px 14px;font:14.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#e9e3d8}
+.cp{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;background:#e7e1d6;border:1.5px solid #e7e1d6;color:#14110d;font:inherit;font-weight:800;font-size:13px;letter-spacing:.05em;text-transform:uppercase;padding:8px 14px;border-radius:9px;cursor:pointer}
+.cp.ok{background:var(--green);border-color:var(--green);color:#0d2016}
+.pr:target{box-shadow:0 0 0 3px var(--c)}
+
+/* ---------- СМОТРИМ */
+.watch{border:2px dashed #6f7d79;border-radius:12px;padding:14px;margin:18px 0;background:#161c1b}
+.watch h3{margin:10px 0 6px;font-size:20px}.watch>p{margin:0 0 8px;color:#d6d0c7}
+
+/* ---------- ПРАКТИКА */
+.prac{background:var(--cbg);border:2px solid var(--c);border-radius:14px;padding:0 0 12px;margin:22px 0;overflow:hidden;scroll-margin-top:calc(var(--barh) + 12px)}
+.prac-top{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--c);color:#14110d;padding:9px 14px}
+.prac-tag{padding:0;font-size:13.5px}
+.prac-min{font-weight:900;font-size:15px;white-space:nowrap}
+.prac h3{margin:12px 14px 6px;font-size:21px}
+.prac ol{margin:0 14px;padding-left:22px}.prac li{margin:5px 0}
+.prac-res{margin:10px 14px 0;color:#d6d0c7;font-size:15.5px}.prac-res b{color:var(--c)}
+
+/* ---------- БИБЛИОТЕКА: кнопка */
+.libbtn{display:flex;width:100%;align-items:center;gap:12px;text-align:left;background:transparent;color:var(--ink);border:2px solid var(--c);border-radius:12px;padding:12px 14px;margin:14px 0;font:inherit;cursor:pointer}
+.libbtn svg{width:26px;height:26px;color:var(--c)}
+.libbtn span{flex:1;font-size:15.5px;color:#d6d0c7}.libbtn span b{display:block;color:var(--ink);font-size:17px}
+.libbtn i{font-style:normal;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#14110d;background:var(--c);border-radius:7px;padding:6px 9px;white-space:nowrap}
+
+/* ---------- дальше */
+.next{display:flex;align-items:center;gap:10px;margin:30px 0 0;padding:12px 14px;border-radius:12px;text-decoration:none;color:#14110d;background:var(--c);font-weight:800}
+.next span{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.75}.next b{flex:1;font-size:17px}
+
+/* ---------- примеры, фишки, таблицы */
+.exd{margin:14px 0;border:1px solid var(--cln);border-radius:12px;background:var(--card);padding:0 12px}
+.exd>summary{cursor:pointer;padding:12px 2px;font-weight:800;color:var(--c);list-style-position:inside}
+.exgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 0 12px}
+.exc .peek{font-size:13.5px;padding:8px 0 0;color:#cfc9bf;max-height:9.5em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 70%,transparent)}
+.asks{background:var(--card2);border-radius:10px;padding:10px 12px;margin:10px 0}
+.asks-h{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--c);margin-bottom:6px}
+.chiprow{display:flex;flex-wrap:wrap;gap:6px}
+.ask{background:#2b3532;border:1px solid #3e4b47;color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:14.5px;cursor:pointer;text-align:left}
+.ask.ok{border-color:var(--green);color:var(--green)}
+.where{display:grid;gap:8px;margin:14px 0}.wh{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.wh span{color:#d6d0c7}.wh b{color:var(--c)}.wh p{grid-column:1/-1;margin:0;color:var(--muted);font-size:14.5px}
+.fix{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.fix div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}.fix b{display:block;color:var(--c)}.fix span{font-size:15px;color:#cfc9bf}
+.links h2{margin:0 0 10px}
+.links{border-left-color:#E7E1D6}
+
+/* ---------- карточки */
+.bot{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:12px;padding:14px;margin:14px 0;scroll-margin-top:12px}
+.bot:target,.bot.hit{box-shadow:0 0 0 3px var(--c)}
+.bot-tag{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--c)}
+.bot h3{margin:4px 0 8px;font-size:20px}
+.io{margin:4px 0;font-size:15.5px;color:#d6d0c7}.io span{display:block;font-weight:800;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.io.out span{color:var(--c)}
+.cp.big{display:flex;justify-content:center;width:100%;margin:12px 0 4px;padding:12px;font-size:13.5px}
+.hid{display:none}
+.kb{font-size:14.5px;color:var(--muted);margin:8px 0}.kb b{color:var(--ink)}
+.slug{font-style:normal;color:var(--c);font-size:13px}
+details.peekd{margin-top:6px}details.peekd>summary{cursor:pointer;color:var(--c);font-weight:700;font-size:15px}
+.appin{font-size:14.5px;color:#cfc9bf;padding:6px 0}.appin b{color:var(--ink)}.appin ul{margin:2px 0 8px;padding-left:20px}
+.dl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.dlbtn{display:flex;justify-content:center;align-items:center;background:var(--c);color:#14110d;font-weight:800;text-decoration:none;border-radius:10px;padding:12px;font-size:14px;text-transform:uppercase;letter-spacing:.05em}
+.dl .go{margin:0}
+
+/* ---------- библиотека поверх страницы */
+.lib{position:fixed;inset:0;z-index:50;background:rgba(5,8,8,.66);display:flex;justify-content:flex-end}
+.lib[hidden]{display:none}
+.lib-panel{width:min(760px,100%);height:100%;background:var(--bg);border-left:1px solid var(--line);display:flex;flex-direction:column;box-shadow:-20px 0 60px #000a}
+.lib-top{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.lib-close{display:flex;align-items:center;gap:8px;background:#e7e1d6;color:#14110d;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:800;font-size:15px;cursor:pointer}
+.lib-title{font-size:18px}
+.ltabs{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px 4px}
+.ltabs::-webkit-scrollbar{display:none}
+.ltab{flex:0 0 auto;display:flex;align-items:center;gap:6px;background:var(--cbg);border:1.5px solid var(--cln);color:var(--ink);border-radius:999px;padding:6px 12px 6px 6px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.ltab i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--c);color:#14110d;display:grid;place-items:center;font-size:12px;font-weight:900}
+.ltab em{font-style:normal;color:var(--c);font-weight:800}
+.ltab.on{background:var(--c);border-color:var(--c);color:#14110d}.ltab.on em{color:#14110d}.ltab.on i{background:#14110d;color:var(--c)}
+#q{margin:8px 14px 8px;width:calc(100% - 28px);font:inherit;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.lib-body{position:relative;flex:1;overflow-y:auto;overscroll-behavior:contain;padding:0 14px 60px;-webkit-overflow-scrolling:touch}
+.lsec{padding-top:6px}
+.lsec h2{display:flex;align-items:center;gap:10px;margin:18px 0 4px;font-size:24px;color:var(--ink)}
+.lsec h2 i{font-style:normal;width:32px;height:32px;border-radius:9px;background:var(--c);color:#14110d;display:grid;place-items:center;font-size:17px;font-weight:900}
+.lib-sub{color:var(--muted);margin:0 0 10px;font-size:15px}
+.grp{margin:24px 0 2px;font-size:18px;color:var(--c)}
+.grp-sub{margin:0 0 6px;color:var(--muted);font-size:14px}
+.nores{color:var(--muted);text-align:center;margin:40px 0}
+
+@keyframes flash{0%{box-shadow:0 0 0 0 var(--c)}30%{box-shadow:0 0 0 6px var(--c)}100%{box-shadow:0 0 0 0 transparent}}
+.flash{animation:flash 1.1s ease-out}
+/* ---------- вернуться */
+.backpill{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:40;display:flex;align-items:center;gap:8px;max-width:calc(100% - 32px);background:#e7e1d6;color:#14110d;border:0;border-radius:999px;padding:11px 16px;font:inherit;font-size:14.5px;font-weight:800;box-shadow:0 8px 30px #000b;cursor:pointer}
+.backpill[hidden]{display:none}
+.backpill b{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+@media(max-width:700px){.exgrid{grid-template-columns:1fr}}
+@media(max-width:560px){
+ :root{--barh:76px}
+ body{font-size:16.5px}
+ .bar-brand{display:none}
+ .bar-in{padding:7px 10px 3px;gap:6px}
+ .route{gap:4px;overflow:visible;flex:1;justify-content:space-between}
+ .rt{height:34px;padding:0 3px;gap:0}.rt b{width:28px;height:28px;font-size:15px}
+ .rt.on span{display:none}.rt.on{padding:0 3px}
+ .bar-lib{height:32px;padding:0 9px}.bar-lib span{display:none}
+ .bar-now{padding:0 10px 6px}
+ h1{font-size:30px}.st{padding-left:10px;border-left-width:5px}.st h2{font-size:21px}
+ .num{flex-basis:46px;height:46px;font-size:25px}
+ .lg{grid-template-columns:1fr;gap:6px}
+ .fix,.dl,.wh{grid-template-columns:1fr}
+ .pr pre,.bot pre{font-size:13.5px}
+ .rlist a{grid-template-columns:30px 1fr;font-size:14.5px}.rlist em{grid-column:2}
+ .libbtn{flex-wrap:wrap}.libbtn i{margin-left:38px}
+}
+@media print{.bar,.backpill,.lib,.cp,.libbtn,#q{display:none!important}body{background:#fff;color:#111}.pr,.bot,.box,.tip,.fl li,.prac,.watch,.legend,.routebox{background:#fff!important;color:#111}.hid{display:none!important}}
+.stp{margin:20px 0;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.stp-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+.stp-num{flex:0 0 30px;width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:var(--cbg);color:var(--c);font-weight:800}
+.stp h3{font-size:20px;line-height:1.2;margin:3px 0 0}.stp-meta{font-size:13px;color:var(--muted)}
+.stp-row{margin:10px 0;color:var(--soft)}.stp-row p{margin:5px 0}.lbl{font-size:12px;font-weight:800;color:var(--c);text-transform:uppercase;letter-spacing:.04em}
+.stp-row.done{padding:10px 12px;border-radius:8px;background:var(--cbg)}.stp-row.fix{display:block;padding-top:8px;border-top:1px solid var(--line)}
+.report{margin:24px 0;padding:14px;border:1px solid var(--line);border-left:4px solid var(--c);border-radius:10px;background:var(--card2)}
+.report h3{font-size:19px;color:var(--c);margin:0}.report p{margin:8px 0;color:var(--soft)}
+.rlist em{white-space:normal;max-width:125px;text-align:right}.rlist a{grid-template-columns:34px minmax(0,1fr) auto}
+.prep{display:grid;gap:12px;margin:20px 0}.prep .pr{margin:10px 0}.mini{font-size:14px;color:var(--muted)}
+.faq{display:grid;grid-template-columns:1fr 1fr;gap:10px}.faq div{padding:12px;background:var(--card2);border-radius:8px}.faq b{display:block}.faq p{font-size:15px;color:var(--soft);margin:6px 0 0}
+.day{font-weight:700;color:var(--c)}.links .go{display:block;margin:8px 0}
+.stp .fl{margin:10px 0}.stp .pr{margin:12px 0}.stp .exd{margin:14px 0}.card-use{font-size:13px;color:var(--muted)}
+@media(max-width:700px){.stp{padding:12px}.stp h3{font-size:19px}.rlist a{grid-template-columns:30px minmax(0,1fr)}.rlist em{grid-column:2;text-align:left;max-width:none}.faq{grid-template-columns:1fr}}
+
+:root{--barh:64px}
+.home-nav{width:min(880px,100%);margin:auto;padding:10px 16px;display:flex;gap:8px;align-items:center}
+.home-nav a{min-height:40px;display:flex;align-items:center;gap:6px;padding:6px 9px;font-size:13px;
+  color:var(--ink);border-radius:7px;text-decoration:none;white-space:nowrap}
+.home-nav a:not(.home-brand){border:1px solid var(--line);background:var(--card)}
+.home-nav a:not(.home-brand) span{font-weight:800;color:var(--copper)}
+.home-nav .home-brand{font-size:14px;font-weight:800;margin-right:auto;padding-left:0}
+.home-brand span{color:var(--muted);font-weight:650}
+a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,pre:focus-visible{
+  outline:2px solid var(--copper);outline-offset:3px}
+.wrap{padding-top:44px}
+.course{margin:9px 0 14px}
+.wrap h1{font-size:clamp(38px,7vw,64px);letter-spacing:-.045em}
+.lede{max-width:590px;margin:12px 0 25px;color:var(--muted);font-size:clamp(18px,3vw,22px)}
+.st{scroll-margin-top:8px}
+.stp-head{align-items:center}
+.stp h3{margin:0}
+.copy-state{margin:0;padding:0 14px;color:var(--muted);font-size:13px}
+.copy-state:not(:empty){padding-bottom:10px}
+.app-card{min-width:0;margin:12px 0;border:1px solid var(--line);border-radius:10px;
+  padding:0 14px;background:#171e1d}
+.app-card summary{padding:13px 0;color:var(--ink);cursor:pointer}
+.app-card summary strong{font-weight:750}
+.app-card[open]{padding-bottom:12px}
+.links{border-top:1px solid var(--line);margin-top:45px;padding-top:18px}
+.links a{display:inline-block;margin:7px 18px 0 0}
+@media(max-width:640px){
+  :root{--barh:98px}
+  .home-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:6px 10px}
+  .home-nav .home-brand{grid-column:1/-1;min-height:32px;padding:3px 0}
+  .home-nav a:not(.home-brand){justify-content:center;font-size:12px;padding:5px 3px}
+  .home-nav a:not(.home-brand) span{display:none}
+  .wrap{padding-top:26px}
+}
+@media(max-width:360px){
+  .home-nav a:not(.home-brand){font-size:11px}
+  .st{padding-left:9px}
+  .app-card{padding-left:9px;padding-right:9px}
+}
+</style></head><body><header class="bar"><nav class="home-nav" aria-label="Дни домашнего задания"><a class="home-brand" href="#top">neovida <span>· Нейропросвещение</span></a><a href="#day-1"><span>Сб</span>Досье</a><a href="#day-2"><span>Вс</span>Правила</a><a href="#day-3"><span>Пн</span>Приложение</a><a href="#day-4"><span>Вт</span>Отчёт</a></nav></header><main class="wrap" id="top"><div class="sub course">«ИИ. Новая реальность» · очный поток 7 · урок 19 ноября 2026</div><h1>Домашка 5<br>Собираем Codex</h1><p class="lede">Досье, правила работы и первый проверенный результат.</p><p class="box">После домашки у вас будут <strong>Досье.md, AGENTS.md и одно протестированное приложение.</strong> Сдать до 18:00 по Уфе во вторник, 24 ноября. <a href="#day-5">Дополнительно · личный Кодекс</a>.</p><p class="box"><strong>Как работать с промптом</strong> Над каждым текстом написано, куда его отправить. Копируйте целиком. Подставьте свои данные вместо текста в квадратных скобках, когда они есть. Попросили «да»? Сначала просмотрите предложенный текст, файл или план.</p><section class="st" id="day-1" style="--c:#e8b488;--cbg:color-mix(in srgb,#e8b488 13%,transparent);--cln:color-mix(in srgb,#e8b488 50%,transparent)"><header class="st-band"><span class="num">1</span><div><div class="meta">Суббота, 21 ноября · 25–35 минут</div><h2>Досье о себе</h2></div></header><p class="prac-res">В корне рабочей папки есть ваше Досье.md.</p><article class="stp"><header class="stp-head"><span class="stp-num">1</span><h3>Откройте окружение из урока</h3></header><p class="tx">От выбора папки зависит, какие инструкции агент увидит в новом чате.</p><p class="tx">В приложении откройте режим Codex. Выберите папку, с которой работали на уроке 19 ноября, и начните новый чат.</p><div class="pr" id="root-check"><div class="pr-head"><span class="pr-label">Codex · новый чат в корне рабочей папки</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Проверить, где живут правила</div><pre tabindex="0">Покажи путь к текущей рабочей папке. Проверь её корень и скажи, какие из этих файлов уже есть: Досье.md и AGENTS.md. Я хочу начать в корне окружения. Пока ничего не создавай и не меняй.</pre><p class="copy-state" role="status"></p></div><div class="stp-row done"><span class="lbl">Проверка результата</span><p>Codex назвал путь к нужной папке и какие файлы уже есть.</p></div><div class="stp-row fix"><span class="lbl">Если застряли</span><p>Сверьте путь в ответе. Если открыта подпапка проекта, переключитесь на корень и создайте новый чат там.</p></div></article><article class="stp"><header class="stp-head"><span class="stp-num">2</span><h3>Обновите досье или пройдите интервью</h3></header><p class="tx">Нужен ваш рабочий контекст, чтобы следующие задачи опирались на реальные сведения.</p><p class="tx">Если досье сохранилось с урока 1, возьмите его из того чата или из персонализации. Выберите один путь. В первом промпте вставьте прежний текст в квадратные скобки и уберите скобки.</p><details class="app-card"><summary><strong>У меня уже есть досье</strong></summary><div class="pr" id="dossier-update"><div class="pr-head"><span class="pr-label">Codex · новый чат в корне рабочей папки</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Обновить досье из первого урока</div><pre tabindex="0">Вот моё рабочее досье из первого урока или текст прямо из моей персонализации.
+[вставьте прежнее досье]
+
+Помоги обновить его для работы с тобой в этой папке. Коротко сверим мою нынешнюю роль, задачи, критерии хорошего результата и что изменилось со времени первого урока. Если в папке уже есть AGENTS.md или Досье.md, прочитай их и назови противоречия. Спрашивай по одному, только о пробелах и расхождениях. Добавь один мой конкретный пример хорошего результата и одно правило, когда нужно моё согласие. Собери обновлённое досье от первого лица. Отметь, что осталось уточнить. Файлы пока не меняй.</pre><p class="copy-state" role="status"></p></div></details><details class="app-card"><summary><strong>Собираю досье с нуля</strong></summary><div class="pr" id="dossier-interview"><div class="pr-head"><span class="pr-label">Codex · новый чат в корне рабочей папки</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Собрать рабочее досье с нуля</div><pre tabindex="0">Возьми у меня интервью, чтобы понять мою работу и настроиться под меня.
+
+Задавай по ОДНОМУ вопросу за раз и жди моего ответа. Не выкатывай все вопросы списком. Всего 10 вопросов, простым языком, без терминов.
+
+ВАЖНО: к каждому вопросу сразу добавляй короткую расшифровку в скобках, чтобы я точно понял, о чём ты спрашиваешь.
+Например так: «Чем занимается ваша компания? (что продаёте или производите, кто ваши клиенты)»
+
+Вопросы и расшифровки:
+1. Чем занимается компания, в которой я работаю (что продаёте или производите, кто клиенты)
+2. Моя роль и за что я отвечаю (что с меня спрашивают, за какой результат)
+3. Три задачи, которые съедают больше всего времени (то, что делаю руками каждую неделю)
+4. С чем я работаю каждый день (таблицы, переписка, звонки, документы, люди)
+5. Кому я обычно сдаю результат (руководителю, клиенту, коллегам, себе)
+6. Что для этого человека важно в результате (скорость, точность цифр, короткая форма, готовый вывод)
+7. Как мне удобнее получать ответы (коротко или подробно, с примерами или без, таблицей или текстом)
+8. Чего в ответах делать НЕ надо (что раздражает: вода, длинные вступления, лишняя вежливость)
+9. Что в моей работе выматывает сильнее всего (какая рутина бесит больше других)
+10. Что я хочу изменить в работе за ближайшие два месяца (какой результат будет считаться победой)
+
+Если мой ответ получился слишком коротким, задай один уточняющий вопрос и иди дальше.
+
+Когда закончишь все 10 вопросов, собери всё в один блок и выведи его так:
+
+=== РАБОЧЕЕ ДОСЬЕ ===
+(текст от первого лица, до 1500 символов с пробелами, без воды и без вступлений)
+
+Раньше десятого вопроса досье не показывай.</pre><p class="copy-state" role="status"></p></div></details><div class="stp-row done"><span class="lbl">Проверка результата</span><p>Вам есть что исправить или подтвердить: роль, повторяющиеся задачи, критерий качества и цель.</p></div><div class="stp-row fix"><span class="lbl">Если застряли</span><p>Если агент прислал все вопросы сразу, напишите в тот же чат «Задавай один вопрос и жди мой ответ». Проверьте, что досье написано от первого лица.</p></div></article><article class="stp"><header class="stp-head"><span class="stp-num">3</span><h3>Запишите Досье.md</h3></header><p class="tx">Досье будет доступно из рабочей папки в следующих чатах.</p><div class="pr" id="dossier-save"><div class="pr-head"><span class="pr-label">Codex · тот же чат · после интервью или обновления</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Сохранить Досье.md</div><pre tabindex="0">Собери из моих подтверждённых ответов текст Досье.md от первого лица. Включи мою роль, сферу, кому сдаю результат, повторяющиеся задачи, входные материалы, критерии качества, формат общения и цель на ближайшие два месяца. Сохрани мои примеры и формулировки. Если Досье.md уже есть, покажи изменения к нему и сохрани то, что я не просил менять.
+
+Сначала покажи готовый текст и точный путь в корне открытой папки. После моего «да» запиши Досье.md, перечитай и подтверди его путь.</pre><p class="copy-state" role="status"></p></div><div class="stp-row done"><span class="lbl">Проверка результата</span><p>После вашего подтверждения файл Досье.md виден в корне рабочей папки.</p></div><div class="stp-row fix"><span class="lbl">Если застряли</span><p>Если появился только текст в беседе, попросите показать путь к уже записанному файлу. Когда файла нет, повторите подтверждение в том же чате.</p></div></article></section><section class="st" id="day-2" style="--c:#a4c591;--cbg:color-mix(in srgb,#a4c591 13%,transparent);--cln:color-mix(in srgb,#a4c591 50%,transparent)"><header class="st-band"><span class="num">2</span><div><div class="meta">Воскресенье, 22 ноября · 20–30 минут</div><h2>Рабочие правила в AGENTS.md</h2></div></header><p class="prac-res">AGENTS.md содержит рабочее досье и даёт агенту конкретные правила.</p><article class="stp"><header class="stp-head"><span class="stp-num">1</span><h3>Упакуйте рабочее досье</h3></header><p class="tx">У агента появятся постоянные инструкции по вашим задачам, качеству и согласованиям.</p><p class="tx">Уже делали AGENTS.md в зале? Используйте промпт как сверку и дополнение. Проверьте предложенные изменения и подтвердите запись.</p><div class="pr" id="agents-pack"><div class="pr-head"><span class="pr-label">Codex · новый чат в корне рабочей папки</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Упаковать рабочее досье в AGENTS.md</div><pre tabindex="0">Прочитай Досье.md в корне этой папки. Если там уже есть AGENTS.md, прочитай его целиком. Подготовь AGENTS.md, по которому сможешь работать со мной в новом чате.
+
+Перенеси в AGENTS.md рабочие сведения из досье своими словами и сохрани мои точные формулировки там, где от них зависит результат. Разделы: моя роль и задачи, источники и инструменты, как со мной общаться, как выглядит хороший результат, что можешь сделать сам, где нужно моё решение, как проверяешь работу перед сдачей. Дай правила в форме конкретных действий, которые можно проверить. Добавь правило работы из корня окружения с проектами в подпапках. Сошлись на Досье.md для подробностей.
+
+Сохрани действующие правила, которые я не просил менять. Если правило и досье расходятся, покажи оба и спроси, какое выбрать. Покажи проект AGENTS.md и путь к файлу. Только после моего «да» запиши изменения, перечитай файл и назови два правила, которыми будешь руководствоваться.</pre><p class="copy-state" role="status"></p></div><div class="stp-row done"><span class="lbl">Проверка результата</span><p>В корне лежит один AGENTS.md. В нём есть конкретный критерий результата и понятная точка согласования.</p></div><div class="stp-row fix"><span class="lbl">Если застряли</span><p>Если агент предложил заменить старый файл целиком, попросите показать изменения к существующей версии. Проверьте, что рабочие правила сохранены.</p></div></article><article class="stp"><header class="stp-head"><span class="stp-num">2</span><h3>Проверьте правила в новом чате</h3></header><p class="tx">Свежий чат показывает, что инструкции лежат в файле и применяются к новой задаче.</p><div class="pr" id="agents-check"><div class="pr-head"><span class="pr-label">Codex · новый чат в корне рабочей папки</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Проверить, что агент взял правила из файла</div><pre tabindex="0">Сделай короткую сверку перед работой. Назови точный путь к AGENTS.md и приведи два моих рабочих правила с названиями разделов. Какое проверишь в готовом результате и в каком случае остановишься за подтверждением? Если чего-то в файлах нет, так и скажи. Пока ничего не меняй.</pre><p class="copy-state" role="status"></p></div><div class="stp-row done"><span class="lbl">Проверка результата</span><p>Codex назвал два ваших правила и указал, где они записаны.</p></div><div class="stp-row fix"><span class="lbl">Если застряли</span><p>Общие ответы? Сверьте, что файл называется AGENTS.md и чат открыт в корне рабочей папки. После правки создайте новый чат.</p></div></article></section><section class="st" id="day-3" style="--c:#87c2c8;--cbg:color-mix(in srgb,#87c2c8 13%,transparent);--cln:color-mix(in srgb,#87c2c8 50%,transparent)"><header class="st-band"><span class="num">3</span><div><div class="meta">Понедельник, 23 ноября · 35–50 минут</div><h2>Соберите «Диспетчер заявок»</h2></div></header><p class="prac-res">Работает приложение, в котором можно вести заявки и видеть просрочку.</p><article class="stp"><header class="stp-head"><span class="stp-num">1</span><h3>Дайте Codex заказ</h3></header><p class="tx">Диспетчер показывает, что пришло, что уже в работе и по каким заявкам пора ответить.</p><p class="tx">Откройте новый чат Codex в корне рабочей папки. Вставьте готовый заказ целиком. Можно добавить одну строку про свою сферу: какие заявки вы хотите вести. Например, запросы клиентов, заявки на закупку или задачи внутри команды. Посмотрите ТЗ и ответьте «да», чтобы Codex собрал приложение.</p><div class="pr" id="app-build"><div class="pr-head"><span class="pr-label">Codex · новый чат в корне рабочей папки</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Собери «Диспетчер заявок»</div><pre tabindex="0">Прочитай AGENTS.md в корне текущей рабочей папки. Перед началом назови одно моё правило, которое применишь, и объясни, как я увижу его в результате.
+
+Собери «Диспетчер заявок», чтобы я мог записать входящие запросы, видеть сроки и доводить их до результата. Если я не выбрал свою тему, используй обычные рабочие заявки. Подготовь простое ТЗ в нескольких пунктах и дождись моего «да».
+
+Что должно работать:
+1. На одном экране видны заявки и счётчики «Новые», «В работе», «Готово» и «Просрочено». Для первого открытия добавь четыре вымышленные заявки с разными статусами и сроками.
+2. Можно добавить и отредактировать заявку. Поля: что нужно сделать, кто отвечает, срок и статус. Обязательно только название. Заявку без названия или из одних пробелов не сохраняй. Новая заявка по умолчанию получает статус «Новая».
+3. Можно менять статус и включать фильтр «Просрочено». Просрочена заявка со сроком раньше сегодняшней календарной даты, если она ещё не готова. Срок сегодня и пустая дата не считаются просрочкой.
+4. Заявки и их изменения сохраняются в этом браузере после перезагрузки страницы. Учебные заявки появляются только при первом запуске.
+5. Сделай интерфейс на русском. Используй крупные подписи для полей и карточки, которые читаются и на узком экране.
+
+После моего «да» создай отдельную папку request-desk в рабочем окружении и собери один index.html. Если папка уже существует, сначала покажи её содержимое и предложи свободное имя для нового проекта. Используй обычные HTML, CSS и JavaScript. Приложение работает локально, без аккаунтов, внешних библиотек и внешних сервисов. Открой результат через локальное превью в браузере, проверь добавление, фильтр просрочки, смену статуса и сохранение после перезагрузки. Покажи, где открыть приложение и какой тест прошёл.</pre><p class="copy-state" role="status"></p></div><div class="stp-row done"><span class="lbl">Проверка результата</span><p>Codex назвал правило из AGENTS.md, собрал отдельный index.html и открыл его в браузере.</p></div><div class="stp-row fix"><span class="lbl">Если застряли</span><p>Если в чате только код, попросите сохранить его в index.html отдельной папки и запустить локальное превью.</p></div></article><article class="stp"><header class="stp-head"><span class="stp-num">2</span><h3>Пройдите три проверки в браузере</h3></header><p class="tx">Проверим основное: приложение сохраняет заявки и правильно показывает просрочку.</p><p class="tx">Отправьте следующий промпт в том же чате. Сами повторите первый сценарий на экране.</p><div class="pr" id="app-verify"><div class="pr-head"><span class="pr-label">Codex · тот же чат · после сборки приложения</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Проверить «Диспетчер заявок»</div><pre tabindex="0">Открой собранный «Диспетчер заявок» в браузере и проверь эти три сценария.
+
+1. Добавь «Уточнить срок поставки» со вчерашней датой. В фильтре «Просрочено» должна появиться новая заявка. Переведи её в «Готово»: из фильтра она должна уйти. Сними фильтр и перезагрузи страницу: заявка должна остаться со статусом «Готово».
+2. Проверь открытые заявки со сроком сегодня и с пустым сроком. Обе не должны попадать в «Просрочено».
+3. Попробуй сохранить заявку из одних пробелов. Приложение должно подсказать, что нужно название, а количество заявок не должно измениться.
+
+Для каждого теста назови ввод, ожидаемый и фактический результат. Затем покажи, где в приложении соблюдено одно моё правило из AGENTS.md. Если тест не прошёл, покажи причину и предложи точную правку. После моего согласия исправь и повтори тесты.</pre><p class="copy-state" role="status"></p></div><div class="stp-row done"><span class="lbl">Проверка результата</span><p>Готовая заявка сохранилась после перезагрузки, фильтр правильно различает сроки, пустое название не сохраняется.</p></div><div class="stp-row fix"><span class="lbl">Если застряли</span><p>Если результат расходится с ожидаемым, напишите, что ввели, что увидели и чего ждали. После правки повторите тесты.</p></div></article></section><section class="st" id="day-4" style="--c:#c5afe0;--cbg:color-mix(in srgb,#c5afe0 13%,transparent);--cln:color-mix(in srgb,#c5afe0 50%,transparent)"><header class="st-band"><span class="num">4</span><div><div class="meta">Вторник, 24 ноября · 5 минут</div><h2>Сдайте один отчёт</h2></div></header><p class="prac-res">В чате группы есть ваш результат и одна контрольная проверка.</p><article class="stp"><header class="stp-head"><span class="stp-num">1</span><h3>Ответьте по шаблону</h3></header><p class="tx">По отчёту видно, какая часть уже работает и на чём нужна помощь.</p><p class="tx">Отправьте отчёт до <strong>18:00 по Уфе во вторник, 24 ноября</strong>. Если есть скриншот, приложите экран приложения с результатом теста.</p><div class="stp-row done"><span class="lbl">Проверка результата</span><p>Отчёт с #домашка5 отправлен в чат группы.</p></div><div class="stp-row fix"><span class="lbl">Если застряли</span><p>Не успели закончить? Укажите конкретный шаг, что ответил агент и какую проверку уже сделали.</p></div></article><div class="pr" id="report"><div class="pr-head"><span class="pr-label">Чат группы Telegram · заполните строки</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Один отчёт о выполнении</div><pre tabindex="0">#домашка5
+Досье и AGENTS.md · [готово или на каком шаге остановился].
+Правило применилось · [какое рабочее действие изменилось].
+Приложение · [название]. Контрольный тест · [что ввёл → что получилось].
+Кодекс · [если сделали: связал с AGENTS.md].</pre><p class="copy-state" role="status"></p></div></section><aside class="links" aria-label="Материалы урока"><h2>Материалы урока</h2><a href="https://materials.neovida.ai/potok-05-11/urok-5/presentation.html">Презентация занятия 5</a><a href="https://materials.neovida.ai/potok-05-11/urok-5/handout.html">Шпаргалка занятия 5</a></aside><section class="st" id="day-5" style="--c:#e8b488;--cbg:color-mix(in srgb,#e8b488 13%,transparent);--cln:color-mix(in srgb,#e8b488 50%,transparent)"><header class="st-band"><span class="num">5</span><div><div class="meta">По желанию · 40–60 минут</div><h2>Дополнительно вы можете запустить личный Кодекс</h2></div></header><p class="prac-res">В рабочей папке появится Кодекс.md. В AGENTS.md будет правило, когда его открыть.</p><article class="stp"><header class="stp-head"><span class="stp-num">1</span><h3>Запустите отдельный промпт «Кодекс»</h3></header><p class="tx">Он помогает разобраться в личных целях, ценностях, ритме и границах.</p><p class="tx">Откройте новый чат Codex в корне рабочей папки и отправьте полный промпт ниже. Ничего подставлять не нужно. Codex начнёт с первого вопроса. Отвечайте по одному, голосом или текстом. Для пропуска скажите «пропусти». Если уже начали интервью на уроке, продолжите тот же чат.</p><div class="pr" id="deep-interview"><div class="pr-head"><span class="pr-label">Codex · новый чат в корне рабочей папки</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Кодекс · кто я, что мне важно, куда я иду</div><pre tabindex="0">Ты мой помощник по личной стратегии. Помоги мне собрать мой личный кодекс: документ о том, кто я, что для меня важно и куда я иду. Дальше этот документ будет основой для всей нашей работы.
+
+Правила работы:
+1. Задавай вопросы ПО ОДНОМУ. Дождись моего ответа, потом следующий. Не вываливай список.
+2. ОБЯЗАТЕЛЬНО: после каждого вопроса в скобках коротко расшифруй, что ты имеешь в виду, и дай один-два примера возможного ответа. Пример нужен, чтобы я понял вопрос, а не чтобы я его скопировал. Пиши примеры из обычной жизни, а не из книжек по саморазвитию.
+   Например: «Какой у тебя сейчас период жизни? (подъём, стабильность, застой, спад или переход. Например: подъём, если за последние месяцы выросли доход и энергия. Или переход, если старое уже не подходит, а новое ещё не собралось)»
+3. Мне можно отвечать голосом, коротко и сумбурно. Разбирайся сам.
+4. Если мой ответ поверхностный, задай один углубляющий вопрос. Не больше одного, не превращай это в допрос.
+5. Не подсказывай мне «правильный» ответ и не выбирай за меня. Примеры в скобках это подсказка про смысл вопроса, а не готовый ответ.
+6. Сохраняй мои формулировки. Не превращай живые слова в гладкий текст.
+7. Если я говорю «пропусти», иди дальше и пометь блок как незаполненный.
+
+Пройди по блокам в этом порядке:
+
+1. ГДЕ Я СЕЙЧАС. Оцени по десятибалльной шкале шесть сфер: тело, дело, отношения, развитие, приключения, состояние. По каждой одна строка, почему такая цифра.
+2. ДИНАМИКА. Какой у меня сейчас период жизни: подъём, стабильность, застой, спад, переход. По каким признакам это видно.
+3. ЦЕННОСТИ. Что для меня по-настоящему важно на этом этапе. Помоги сократить до трёх-пяти.
+4. ПРИНЦИПЫ. По каким правилам я живу и принимаю решения. Что я никогда не делаю и что делаю всегда.
+5. СМЫСЛЫ. Ради чего всё это. Что должно остаться после меня.
+6. СИЛЬНЫЕ СТОРОНЫ. В чём я хорош, что мне даётся легче, чем другим, за что ко мне приходят люди.
+7. ЧЕГО МНЕ НЕ ХВАТАЕТ. Какое качество мне нужно развить, чтобы перейти на следующий уровень.
+8. КУДА Я ИДУ. Каким я хочу быть через год: что меня окружает, каким человеком я стал, что я чувствую.
+9. ЦЕЛИ. По каждой значимой сфере одна главная цель на ближайший год и на ближайший месяц. По каждой цели обязательно спроси, ради чего она.
+10. МОЙ РИТМ. Как проходит мой день сейчас и как я хочу, чтобы он проходил. Что уже работает, а что пока только намерение.
+11. ЭНЕРГИЯ. Что стабильно забирает у меня силы и что стабильно даёт.
+12. ГРАНИЦЫ. Чего мне не советовать, на что не давить, где мне нужна прямота, а где поддержка.
+
+Когда пройдём все блоки, выдай мне документ «=== МОЙ КОДЕКС ===» со всеми блоками, моими словами, без воды.
+
+После документа отдельно напиши коротко: какие противоречия ты заметил между моими ценностями, целями и тем, как реально устроен мой день. Без морали, просто назови.
+
+И самым последним сообщением дай сжатую версию кодекса не длиннее 1400 знаков, чтобы я вставил её в настройки персонализации вместо досье.
+
+Начни с первого вопроса прямо сейчас. Сжатую версию выведи текстом. Настройки персонализации и рабочие файлы оставь как есть до отдельной команды на сохранение.</pre><p class="copy-state" role="status"></p></div><div class="stp-row done"><span class="lbl">Проверка результата</span><p>Есть документ «МОЙ КОДЕКС» по итогам интервью и отдельно замеченные противоречия.</p></div><div class="stp-row fix"><span class="lbl">Если застряли</span><p>Если Codex выдал все вопросы разом, напишите «Начни с первого вопроса и дождись ответа».</p></div></article><article class="stp"><header class="stp-head"><span class="stp-num">2</span><h3>Создайте Кодекс.md и свяжите его с AGENTS.md</h3></header><p class="tx">Так будущие чаты смогут прочитать личный Кодекс, когда это нужно для решения.</p><p class="tx">После интервью отправьте второй промпт в тот же чат. Проверьте текст будущего файла и одну добавляемую ссылку с правилом в AGENTS.md. Подтвердите запись словом «да».</p><div class="pr" id="deep-pack"><div class="pr-head"><span class="pr-label">Codex · тот же чат · после интервью</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Создать Кодекс.md и добавить ссылку в AGENTS.md</div><pre tabindex="0">Проверь, что в корне открытой папки есть AGENTS.md. Если его нет, остановись и попроси меня сначала выполнить обязательную часть домашки.
+
+Из итогового документа «МОЙ КОДЕКС» подготовь файл Кодекс.md в корне той же папки. Возьми все двенадцать блоков и раздел «Противоречия». Сохрани мои формулировки. Пометь темы, которые я пропустил. Если Кодекс.md уже есть, покажи изменения к существующему файлу. Если есть версия с другим регистром букв, покажи её путь и предложи переименовать в Кодекс.md после согласования, без второго файла.
+
+В AGENTS.md добавь только раздел «Кодекс» с таким правилом:
+Перед задачами про мои цели, планы, приоритеты, решения или тексты от моего имени прочитай [Кодекс.md](Кодекс.md).
+
+Если раздел уже есть, обнови его на месте. Другие разделы AGENTS.md и ответы интервью оставь в своих файлах.
+
+Сначала покажи текст Кодекс.md и предлагаемое изменение AGENTS.md. После моего «да» запиши оба изменения, перечитай файлы и подтверди точный путь к Кодекс.md и строку со ссылкой в AGENTS.md.</pre><p class="copy-state" role="status"></p></div><div class="stp-row done"><span class="lbl">Проверка результата</span><p>В корне папки видны Кодекс.md и AGENTS.md. В AGENTS.md указан путь к Кодексу и когда его читать.</p></div><div class="stp-row fix"><span class="lbl">Если застряли</span><p>Если агент только показал текст, попросите выполнить согласованную запись обоих изменений и назвать их точные пути.</p></div></article><article class="stp"><header class="stp-head"><span class="stp-num">3</span><h3>Проверьте связь в новом чате</h3></header><p class="tx">Убедитесь, что у следующего чата есть правило для работы с Кодексом.</p><div class="pr" id="deep-check"><div class="pr-head"><span class="pr-label">Codex · новый чат в корне рабочей папки</span><button class="cp" type="button">Копировать</button></div><div class="pr-title">Проверить, что агент видит связь с Кодексом</div><pre tabindex="0">Проверь, что в корне открытой папки есть Кодекс.md и что AGENTS.md ссылается именно на этот файл. Покажи путь к Кодекс.md и перечисли случаи, когда откроешь его по правилу из AGENTS.md. Ответов из интервью приводить не нужно. Пока ничего не меняй.</pre><p class="copy-state" role="status"></p></div><div class="stp-row done"><span class="lbl">Проверка результата</span><p>Codex нашёл файл и назвал случаи, когда прочитает его по правилу из AGENTS.md.</p></div><div class="stp-row fix"><span class="lbl">Если застряли</span><p>Сверьте имя Кодекс.md, ссылку в AGENTS.md и то, что новый чат открыт в корне той же папки.</p></div></article></section></main><script>
+'use strict';
+
+function selectPrompt(pre) {
+  const range = document.createRange();
+  range.selectNodeContents(pre);
+  pre.focus({preventScroll: true});
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+for (const box of document.querySelectorAll('.pr')) {
+  const button = box.querySelector('.cp');
+  const pre = box.querySelector('pre');
+  const state = box.querySelector('.copy-state');
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(pre.textContent);
+      state.textContent = 'Промпт скопирован.';
+    } catch {
+      selectPrompt(pre);
+      state.textContent = 'Текст выделен. Скопируйте его вручную.';
+    }
+  });
+}
+
+</script></body></html>
