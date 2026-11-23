@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Утренние заявки — учебный экран</title>
+  <style>
+    /* OD-LAYOUT-PRIMITIVES v1 — structure only: display, flex/grid, overflow, wrapping, ratio, geometry.
+       Put this @layer first; product CSS outside the layer wins ordinary layout rules.
+       Native hidden and closed-dialog states take precedence over component display rules. */
+    @layer od-layout {
+      [hidden]:not([hidden="until-found" i]) { display: none !important; }
+      dialog:not([open]) { display: none !important; }
+
+      :where(.od-stack,.od-row,.od-row-top,.od-cluster,.od-grid,.od-field,.od-stat,.od-cell,.od-tile) > :where(*) { min-width: 0; }
+
+      .od-stack   { display: flex; flex-direction: column; gap: var(--od-gap, 8px); }
+      .od-row     { display: flex; align-items: center; gap: var(--od-gap, 8px); }
+      .od-row-top { display: flex; align-items: flex-start; gap: var(--od-gap, 8px); }
+      .od-cluster { display: flex; flex-wrap: wrap; align-items: center; gap: var(--od-gap, 8px); }
+      .od-fill    { flex: 1 1 0; min-width: 0; }
+      .od-fixed   { flex: none; }
+      .od-grid    { display: grid; gap: var(--od-gap, 12px); grid-template-columns: repeat(var(--od-cols, 3), minmax(0, 1fr)); }
+
+      .od-stat, .od-field, .od-cell { display: grid; gap: var(--od-gap, 2px); }
+      :where(.od-stat,.od-field,.od-cell) > :where(*) { display: block; }
+      .od-tile { display: grid; grid-template-rows: auto 1fr; }
+      :where(.od-tile) > :where(*) { display: block; }
+
+      .od-media { display: block; width: 100%; height: auto; aspect-ratio: var(--od-ratio, auto); }
+      .od-media-cover { object-fit: cover; }
+
+      .od-icon { display: inline-block; inline-size: var(--od-icon-size, 1em); block-size: var(--od-icon-size, 1em); flex: none; }
+
+      .od-truncate { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+      .od-clamp-2, .od-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+      .od-clamp-2 { -webkit-line-clamp: 2; }
+      .od-clamp-3 { -webkit-line-clamp: 3; }
+      .od-lines-2 { min-height: calc(2 * 1.4em); }
+      .od-nowrap  { white-space: nowrap; }
+      .od-keep    { word-break: keep-all; overflow-wrap: anywhere; }
+
+      .od-screen { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; }
+      .od-scroll { overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
+
+      .od-rail { display: flex; gap: var(--od-gap, 8px); overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none;
+                 padding-inline: var(--od-rail-pad, 16px); scroll-padding-inline: var(--od-rail-pad, 16px); }
+      .od-rail::-webkit-scrollbar { display: none; }
+      :where(.od-rail) > :where(*) { flex: none; scroll-snap-align: start; }
+      :where(.od-rail) > :where(:last-child) { margin-inline-end: var(--od-rail-pad, 16px); }
+
+      .od-spacer { flex: none; visibility: hidden; pointer-events: none; }
+      .od-touch  { min-width: 44px; min-height: 44px; }
+    }
+    :root [hidden]:where(:not([hidden="until-found" i])) { display: none; }
+    /* /OD-LAYOUT-PRIMITIVES v1 */
+
+    :root {
+      --paper: #f4f7f5;
+      --surface: #ffffff;
+      --ink: #18211d;
+      --muted: #56635c;
+      --line: #dce4df;
+      --accent: #21634d;
+      --accent-soft: #e5f0eb;
+      --complete: #4f5d55;
+      --complete-soft: #edf1ee;
+      --focus: #174f3b;
+      --space-1: 8px;
+      --space-2: 12px;
+      --space-3: 16px;
+      --space-4: 20px;
+      --space-5: 24px;
+      --space-6: 32px;
+      --radius-small: 8px;
+      --radius-medium: 12px;
+      --text-small: 14px;
+      --text-body: 16px;
+      --motion-fast: 180ms;
+    }
+
+    [hidden]:not([hidden="until-found" i]) { display: none !important; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+      background:
+        radial-gradient(circle at 50% 15%, rgba(255,255,255,.94), transparent 35%),
+        var(--phone-stage-bg, #eaebee);
+      color: #191a1d;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .phone-frame {
+      position: relative;
+      width: calc(var(--phone-screen-width, 390px) + var(--phone-bezel, 10px) * 2);
+      height: calc(var(--phone-screen-height, 844px) + var(--phone-bezel, 10px) * 2);
+      padding: var(--phone-bezel, 10px);
+      border-radius: var(--phone-outer-radius, 52px);
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.2), transparent 17%),
+        linear-gradient(160deg, #3f4146 0%, #202227 48%, #0b0c0f 100%);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.13),
+        inset 0 0 0 2px rgba(0,0,0,.85),
+        0 32px 68px -20px rgba(10,12,16,.52),
+        0 10px 24px -10px rgba(10,12,16,.32);
+      isolation: isolate;
+    }
+
+    .phone-frame::before,
+    .phone-frame::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      top: 96px;
+      bottom: 96px;
+      width: 2px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,.13) 16%, transparent 30%, transparent 72%, rgba(255,255,255,.07) 88%, transparent);
+    }
+    .phone-frame::before { left: 0; }
+    .phone-frame::after { right: 0; }
+
+    .hardware-button {
+      position: absolute;
+      width: 4px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #08090b, #2a2d33 60%, #08090b);
+      box-shadow: inset 0 1px rgba(255,255,255,.08);
+    }
+    .hardware-button.volume { left: -3px; top: 222px; height: 86px; }
+    .hardware-button.power { right: -3px; top: 270px; height: 82px; }
+
+    .phone-screen {
+      position: relative;
+      width: var(--phone-screen-width, 390px);
+      height: var(--phone-screen-height, 844px);
+      overflow: hidden;
+      border-radius: var(--phone-screen-radius, 42px);
+      background: var(--phone-screen-bg, #f8f8f9);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+    }
+
+    .phone-content {
+      position: absolute;
+      inset: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-top: var(--phone-safe-top, 50px);
+      padding-bottom: var(--phone-safe-bottom, 29px);
+      background: var(--phone-screen-bg, #f8f8f9);
+    }
+    .phone-content::-webkit-scrollbar { display: none; }
+
+    .camera-dot {
+      position: absolute;
+      z-index: 20;
+      top: 13px;
+      left: 50%;
+      width: 10px;
+      height: 10px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 35%, #344154 0 12%, #0a0c10 34%, #000 76%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.06);
+      pointer-events: none;
+    }
+
+    .status-bar {
+      position: absolute;
+      z-index: 15;
+      inset: 0 0 auto;
+      height: var(--phone-safe-top, 50px);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr);
+      align-items: start;
+      padding: 14px 20px 0;
+      color: var(--phone-system-fg, #17181a);
+      opacity: .8;
+      pointer-events: none;
+    }
+    .status-time {
+      justify-self: start;
+      display: flex;
+      align-items: center;
+      height: 15px;
+      font-size: 14px;
+      font-weight: 560;
+      line-height: 1;
+      letter-spacing: .01em;
+    }
+    .status-cutout-zone { width: 56px; }
+    .status-icons {
+      justify-self: end;
+      display: inline-flex;
+      align-items: center;
+      height: 15px;
+      gap: 6px;
+    }
+    .status-icons svg {
+      display: block;
+      flex: none;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.35;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .status-icons .connectivity { width: 15px; height: 12px; }
+    .status-icons .wifi { width: 15px; height: 12px; }
+    .status-icons .battery { width: 19px; height: 11px; }
+
+    .gesture-indicator {
+      position: absolute;
+      z-index: 20;
+      left: 50%;
+      bottom: 8px;
+      width: 96px;
+      height: 4px;
+      transform: translateX(-50%);
+      border-radius: 99px;
+      background: var(--phone-system-fg, #17181a);
+      opacity: .86;
+      pointer-events: none;
+    }
+
+    .app-shell {
+      min-height: 100%;
+      padding: 24px 20px 36px;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .screen-header {
+      display: grid;
+      gap: 20px;
+    }
+    .screen-header h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 30px;
+      font-weight: 600;
+      line-height: 1.16;
+      letter-spacing: -.035em;
+    }
+    .settings-button,
+    .dialog-close {
+      min-height: 44px;
+      justify-self: start;
+      padding: 0 16px;
+      border: 1px solid #c9d4cd;
+      border-radius: var(--radius-small);
+      background: var(--surface);
+      color: var(--ink);
+      font: 650 var(--text-small)/1 system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      cursor: pointer;
+      transition: border-color var(--motion-fast) ease-out, background-color var(--motion-fast) ease-out;
+    }
+    .settings-button:hover,
+    .dialog-close:hover {
+      border-color: #8fa99a;
+      background: #f9fbfa;
+    }
+    .filter-section { margin-top: var(--space-6); }
+    .filter-section h2 {
+      margin: 0 0 var(--space-2);
+      color: var(--muted);
+      font-size: var(--text-small);
+      font-weight: 700;
+      line-height: 1.4;
+      letter-spacing: .02em;
+    }
+    .filter-control {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(72px, .7fr);
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid #e0e7e2;
+      border-radius: var(--radius-medium);
+      background: #e9efeb;
+    }
+    .filter-option {
+      display: block;
+      min-width: 0;
+      min-height: 48px;
+      padding: 0 8px;
+      border: 0;
+      border-radius: var(--radius-small);
+      background: transparent;
+      color: #3f4c45;
+      font: 650 14px/1.25 system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      cursor: pointer;
+      transition: background-color var(--motion-fast) ease-out, color var(--motion-fast) ease-out;
+    }
+    .filter-option:hover:not(.is-active) { background: #f6f8f7; }
+    .filter-option.is-active {
+      background: #18392d;
+      color: #ffffff;
+      box-shadow: 0 1px 2px rgba(18,40,30,.14);
+    }
+    .requests-section { margin-top: 28px; }
+    .request-list {
+      margin: 0;
+      padding: 0;
+      border-top: 1px solid var(--line);
+      list-style: none;
+    }
+    .request-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      min-height: 72px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .request-name {
+      min-width: 0;
+      color: var(--ink);
+      font-size: 17px;
+      font-weight: 650;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+    .request-status {
+      display: inline-flex;
+      align-items: center;
+      justify-self: end;
+      gap: 8px;
+      color: var(--complete);
+      font-size: var(--text-small);
+      font-weight: 650;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+    .request-status.is-open { color: var(--accent); }
+    .status-dot {
+      flex: none;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .settings-dialog {
+      width: min(340px, calc(100vw - 32px));
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: 0 20px 60px rgba(16,27,21,.18);
+    }
+    .settings-dialog::backdrop { background: rgba(16,24,19,.42); }
+    .settings-dialog h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 24px;
+      line-height: 1.2;
+    }
+    .settings-dialog p {
+      margin: 12px 0 20px;
+      color: var(--muted);
+      font-size: var(--text-body);
+      line-height: 1.55;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    :where(button):focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 359px) {
+      .app-shell { padding-inline: 16px; }
+      .screen-header h1 { font-size: 28px; }
+      .filter-option { padding-inline: 6px; font-size: 13px; }
+      .request-item { gap: 8px; }
+      .request-name { font-size: 16px; }
+      .request-status { gap: 6px; font-size: 13px; }
+    }
+    @media (max-height: 927px) { .phone-frame { zoom: 0.9; } }
+    @media (max-height: 840px) { .phone-frame { zoom: 0.82; } }
+    @media (max-height: 771px) { .phone-frame { zoom: 0.74; } }
+    @media (max-height: 702px) { .phone-frame { zoom: 0.66; } }
+    @media (max-width: 480px) {
+      body { padding: 0; display: block; }
+      .phone-frame { width: 100%; height: 100dvh; padding: 0; border-radius: 0; background: none; box-shadow: none; zoom: 1; }
+      .phone-frame::before, .phone-frame::after, .hardware-button { display: none; }
+      .phone-screen { width: 100%; height: 100%; border-radius: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-frame" data-phone-shell data-platform="neutral">
+    <span class="hardware-button volume" aria-hidden="true"></span>
+    <span class="hardware-button power" aria-hidden="true"></span>
+
+    <section class="phone-screen" data-phone-screen>
+      <main class="phone-content" data-phone-content>
+        <div class="app-shell">
+          <header class="screen-header">
+            <h1>Утренние заявки</h1>
+            <button class="settings-button" id="settings-open" type="button" aria-haspopup="dialog">Настройки</button>
+          </header>
+
+          <section class="filter-section" aria-labelledby="filters-title">
+            <h2 id="filters-title">Фильтры</h2>
+            <div class="filter-control" role="group" aria-label="Показывать заявки">
+              <button class="filter-option is-active" type="button" data-filter="open" aria-pressed="true">Только открытые</button>
+              <button class="filter-option" type="button" data-filter="all" aria-pressed="false">Все</button>
+            </div>
+          </section>
+
+          <section class="requests-section" aria-label="Список заявок">
+            <ul class="request-list" id="request-list">
+              <li class="request-item" data-status="open">
+                <span class="request-name">Запрос на расчёт</span>
+                <span class="request-status is-open"><span class="status-dot" aria-hidden="true"></span><span>Открыта</span></span>
+              </li>
+              <li class="request-item" data-status="complete" hidden>
+                <span class="request-name">Согласовать сроки</span>
+                <span class="request-status"><span class="status-dot" aria-hidden="true"></span><span>Завершена</span></span>
+              </li>
+            </ul>
+            <p class="sr-only" id="filter-announcement" aria-live="polite">Показана 1 открытая заявка</p>
+          </section>
+        </div>
+      </main>
+
+      <dialog class="settings-dialog" id="settings-dialog" aria-labelledby="settings-title" aria-describedby="settings-description">
+        <h2 id="settings-title">Настройки</h2>
+        <p id="settings-description">В этой учебной копии доступны только список заявок и фильтр. Остальные настройки остаются в исходном приложении.</p>
+        <button class="dialog-close" id="settings-close" type="button">Закрыть</button>
+      </dialog>
+
+      <div class="status-bar" aria-hidden="true">
+        <span class="status-time">9:41</span>
+        <span class="status-cutout-zone"></span>
+        <span class="status-icons">
+          <svg class="connectivity" viewBox="0 0 15 12"><path d="M1.5 10.5v-2m4 2v-4.5m4 4.5v-7m4 7v-9"/></svg>
+          <svg class="wifi" viewBox="0 0 16 12"><path d="M1.5 4.7a9.2 9.2 0 0 1 13 0M4.2 7.3a5.4 5.4 0 0 1 7.6 0M6.9 10a1.55 1.55 0 0 1 2.2 0"/></svg>
+          <svg class="battery" viewBox="0 0 20 11"><rect x=".75" y="1.25" width="16.5" height="8.5" rx="2"/><path d="M18.5 4v3M3.2 3.4h10.4v4.2H3.2z" fill="currentColor" stroke="none"/></svg>
+        </span>
+      </div>
+      <div class="camera-dot" aria-hidden="true"></div>
+      <div class="gesture-indicator" aria-hidden="true"></div>
+    </section>
+  </div>
+  <script>
+    const filterButtons = document.querySelectorAll("[data-filter]");
+    const requestItems = document.querySelectorAll(".request-item");
+    const filterAnnouncement = document.getElementById("filter-announcement");
+    const settingsDialog = document.getElementById("settings-dialog");
+    const settingsOpen = document.getElementById("settings-open");
+    const settingsClose = document.getElementById("settings-close");
+    let activeFilter = "open";
+
+    function setFilter(nextFilter) {
+      if (nextFilter !== "open" && nextFilter !== "all") return;
+      activeFilter = nextFilter;
+
+      requestItems.forEach((item) => {
+        item.hidden = activeFilter === "open" && item.dataset.status !== "open";
+      });
+      filterButtons.forEach((button) => {
+        const isActive = button.dataset.filter === activeFilter;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", String(isActive));
+      });
+      filterAnnouncement.textContent = activeFilter === "open"
+        ? "Показана 1 открытая заявка"
+        : "Показаны обе заявки";
+    }
+
+    filterButtons.forEach((button) => {
+      button.addEventListener("click", () => setFilter(button.dataset.filter));
+    });
+    settingsOpen.addEventListener("click", () => settingsDialog.showModal());
+    settingsClose.addEventListener("click", () => settingsDialog.close());
+    setFilter(activeFilter);
+  </script>
+</body>
+</html>
