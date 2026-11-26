@@ -56,7 +56,7 @@ h2{font-size:24px;letter-spacing:-.02em;margin:34px 0 12px}
   </div>
   <div class="under">
     <a href="https://172-245-142-12.nip.io/4c974d263db85f777c86/ai-tseh-potok-4/urok-05-2026-11-25.mp4">Открыть видео отдельно</a>
-    <span>Нажмите на тему ниже, и видео перемотается на это место</span>
+    <span>Первый запуск может занять до минуты, дальше видео идёт без остановок. Нажмите на тему ниже, и видео перемотается на это место.</span>
   </div>
 
   <h2>Что где в записи</h2>
@@ -98,9 +98,12 @@ h2{font-size:24px;letter-spacing:-.02em;margin:34px 0 12px}
 (function(){
   var v=document.getElementById('v'), btns=[].slice.call(document.querySelectorAll('.ch'));
   function mark(){var t=v.currentTime,cur=null;btns.forEach(function(b){if(+b.dataset.t<=t+0.5)cur=b});btns.forEach(function(b){b.classList.toggle('on',b===cur&&(t>0))})}
+  var pending=0, waiting=false;
   function go(t){
-    var seek=function(){v.currentTime=t;var p=v.play();if(p&&p.catch)p.catch(function(){})};
-    if(v.readyState>=1)seek();else{v.addEventListener('loadedmetadata',seek,{once:true});v.preload='metadata';v.load()}
+    pending=t;
+    if(v.readyState>=1){v.currentTime=t}
+    else if(!waiting){waiting=true;v.addEventListener('loadedmetadata',function(){waiting=false;v.currentTime=pending},{once:true})}
+    var p=v.play();if(p&&p.catch)p.catch(function(){});
     document.getElementById('player').scrollIntoView({behavior:'smooth',block:'start'});
   }
   btns.forEach(function(b){b.addEventListener('click',function(){go(+b.dataset.t)})});
